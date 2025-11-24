@@ -1,0 +1,640 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		277F96BD2ED2A9CD002B7782 /* Auth in Frameworks */ = {isa = PBXBuildFile; productRef = 277F96BC2ED2A9CD002B7782 /* Auth */; };
+		277F96BF2ED2A9CD002B7782 /* PostgREST in Frameworks */ = {isa = PBXBuildFile; productRef = 277F96BE2ED2A9CD002B7782 /* PostgREST */; };
+		277F96C12ED2A9CD002B7782 /* Storage in Frameworks */ = {isa = PBXBuildFile; productRef = 277F96C02ED2A9CD002B7782 /* Storage */; };
+		277F96C42ED2AA6C002B7782 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 277F96C32ED2AA6C002B7782 /* Supabase */; };
+		27E2E0772ED51473004B79DA /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = 27E2E0762ED51473004B79DA /* Kingfisher */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		277F96882ED2A6CA002B7782 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 277F966F2ED2A6C7002B7782 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 277F96762ED2A6C7002B7782;
+			remoteInfo = "Creator AI Studio";
+		};
+		277F96922ED2A6CA002B7782 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 277F966F2ED2A6C7002B7782 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 277F96762ED2A6C7002B7782;
+			remoteInfo = "Creator AI Studio";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		277F96772ED2A6C7002B7782 /* Creator AI Studio.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Creator AI Studio.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		277F96872ED2A6CA002B7782 /* Creator AI StudioTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Creator AI StudioTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		277F96912ED2A6CA002B7782 /* Creator AI StudioUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Creator AI StudioUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		277F96792ED2A6C7002B7782 /* Creator AI Studio */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "Creator AI Studio";
+			sourceTree = "<group>";
+		};
+		277F968A2ED2A6CA002B7782 /* Creator AI StudioTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "Creator AI StudioTests";
+			sourceTree = "<group>";
+		};
+		277F96942ED2A6CA002B7782 /* Creator AI StudioUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "Creator AI StudioUITests";
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		277F96742ED2A6C7002B7782 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				277F96C42ED2AA6C002B7782 /* Supabase in Frameworks */,
+				277F96C12ED2A9CD002B7782 /* Storage in Frameworks */,
+				277F96BF2ED2A9CD002B7782 /* PostgREST in Frameworks */,
+				277F96BD2ED2A9CD002B7782 /* Auth in Frameworks */,
+				27E2E0772ED51473004B79DA /* Kingfisher in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		277F96842ED2A6CA002B7782 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		277F968E2ED2A6CA002B7782 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		277F966E2ED2A6C7002B7782 = {
+			isa = PBXGroup;
+			children = (
+				277F96792ED2A6C7002B7782 /* Creator AI Studio */,
+				277F968A2ED2A6CA002B7782 /* Creator AI StudioTests */,
+				277F96942ED2A6CA002B7782 /* Creator AI StudioUITests */,
+				277F96C22ED2AA6C002B7782 /* Frameworks */,
+				277F96782ED2A6C7002B7782 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		277F96782ED2A6C7002B7782 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				277F96772ED2A6C7002B7782 /* Creator AI Studio.app */,
+				277F96872ED2A6CA002B7782 /* Creator AI StudioTests.xctest */,
+				277F96912ED2A6CA002B7782 /* Creator AI StudioUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		277F96C22ED2AA6C002B7782 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		277F96762ED2A6C7002B7782 /* Creator AI Studio */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 277F969B2ED2A6CA002B7782 /* Build configuration list for PBXNativeTarget "Creator AI Studio" */;
+			buildPhases = (
+				277F96732ED2A6C7002B7782 /* Sources */,
+				277F96742ED2A6C7002B7782 /* Frameworks */,
+				277F96752ED2A6C7002B7782 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				277F96792ED2A6C7002B7782 /* Creator AI Studio */,
+			);
+			name = "Creator AI Studio";
+			packageProductDependencies = (
+				277F96BC2ED2A9CD002B7782 /* Auth */,
+				277F96BE2ED2A9CD002B7782 /* PostgREST */,
+				277F96C02ED2A9CD002B7782 /* Storage */,
+				277F96C32ED2AA6C002B7782 /* Supabase */,
+				27E2E0762ED51473004B79DA /* Kingfisher */,
+			);
+			productName = "Creator AI Studio";
+			productReference = 277F96772ED2A6C7002B7782 /* Creator AI Studio.app */;
+			productType = "com.apple.product-type.application";
+		};
+		277F96862ED2A6CA002B7782 /* Creator AI StudioTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 277F969E2ED2A6CA002B7782 /* Build configuration list for PBXNativeTarget "Creator AI StudioTests" */;
+			buildPhases = (
+				277F96832ED2A6CA002B7782 /* Sources */,
+				277F96842ED2A6CA002B7782 /* Frameworks */,
+				277F96852ED2A6CA002B7782 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				277F96892ED2A6CA002B7782 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				277F968A2ED2A6CA002B7782 /* Creator AI StudioTests */,
+			);
+			name = "Creator AI StudioTests";
+			packageProductDependencies = (
+			);
+			productName = "Creator AI StudioTests";
+			productReference = 277F96872ED2A6CA002B7782 /* Creator AI StudioTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		277F96902ED2A6CA002B7782 /* Creator AI StudioUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 277F96A12ED2A6CA002B7782 /* Build configuration list for PBXNativeTarget "Creator AI StudioUITests" */;
+			buildPhases = (
+				277F968D2ED2A6CA002B7782 /* Sources */,
+				277F968E2ED2A6CA002B7782 /* Frameworks */,
+				277F968F2ED2A6CA002B7782 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				277F96932ED2A6CA002B7782 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				277F96942ED2A6CA002B7782 /* Creator AI StudioUITests */,
+			);
+			name = "Creator AI StudioUITests";
+			packageProductDependencies = (
+			);
+			productName = "Creator AI StudioUITests";
+			productReference = 277F96912ED2A6CA002B7782 /* Creator AI StudioUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		277F966F2ED2A6C7002B7782 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1620;
+				LastUpgradeCheck = 1620;
+				TargetAttributes = {
+					277F96762ED2A6C7002B7782 = {
+						CreatedOnToolsVersion = 16.2;
+					};
+					277F96862ED2A6CA002B7782 = {
+						CreatedOnToolsVersion = 16.2;
+						TestTargetID = 277F96762ED2A6C7002B7782;
+					};
+					277F96902ED2A6CA002B7782 = {
+						CreatedOnToolsVersion = 16.2;
+						TestTargetID = 277F96762ED2A6C7002B7782;
+					};
+				};
+			};
+			buildConfigurationList = 277F96722ED2A6C7002B7782 /* Build configuration list for PBXProject "Creator AI Studio" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 277F966E2ED2A6C7002B7782;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				277F96BB2ED2A9CD002B7782 /* XCRemoteSwiftPackageReference "supabase-swift" */,
+				27E2E0752ED51473004B79DA /* XCRemoteSwiftPackageReference "Kingfisher" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 277F96782ED2A6C7002B7782 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				277F96762ED2A6C7002B7782 /* Creator AI Studio */,
+				277F96862ED2A6CA002B7782 /* Creator AI StudioTests */,
+				277F96902ED2A6CA002B7782 /* Creator AI StudioUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		277F96752ED2A6C7002B7782 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		277F96852ED2A6CA002B7782 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		277F968F2ED2A6CA002B7782 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		277F96732ED2A6C7002B7782 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		277F96832ED2A6CA002B7782 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		277F968D2ED2A6CA002B7782 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		277F96892ED2A6CA002B7782 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 277F96762ED2A6C7002B7782 /* Creator AI Studio */;
+			targetProxy = 277F96882ED2A6CA002B7782 /* PBXContainerItemProxy */;
+		};
+		277F96932ED2A6CA002B7782 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 277F96762ED2A6C7002B7782 /* Creator AI Studio */;
+			targetProxy = 277F96922ED2A6CA002B7782 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		277F96992ED2A6CA002B7782 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		277F969A2ED2A6CA002B7782 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		277F969C2ED2A6CA002B7782 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"Creator AI Studio/Preview Content\"";
+				DEVELOPMENT_TEAM = A2UK5VZ977;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.michaelkogan.Creator-AI-Studio";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		277F969D2ED2A6CA002B7782 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"Creator AI Studio/Preview Content\"";
+				DEVELOPMENT_TEAM = A2UK5VZ977;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.michaelkogan.Creator-AI-Studio";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		277F969F2ED2A6CA002B7782 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = A2UK5VZ977;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.michaelkogan.Creator-AI-StudioTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Creator AI Studio.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Creator AI Studio";
+			};
+			name = Debug;
+		};
+		277F96A02ED2A6CA002B7782 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = A2UK5VZ977;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.michaelkogan.Creator-AI-StudioTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Creator AI Studio.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Creator AI Studio";
+			};
+			name = Release;
+		};
+		277F96A22ED2A6CA002B7782 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = A2UK5VZ977;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.michaelkogan.Creator-AI-StudioUITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = "Creator AI Studio";
+			};
+			name = Debug;
+		};
+		277F96A32ED2A6CA002B7782 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = A2UK5VZ977;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.michaelkogan.Creator-AI-StudioUITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = "Creator AI Studio";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		277F96722ED2A6C7002B7782 /* Build configuration list for PBXProject "Creator AI Studio" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				277F96992ED2A6CA002B7782 /* Debug */,
+				277F969A2ED2A6CA002B7782 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		277F969B2ED2A6CA002B7782 /* Build configuration list for PBXNativeTarget "Creator AI Studio" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				277F969C2ED2A6CA002B7782 /* Debug */,
+				277F969D2ED2A6CA002B7782 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		277F969E2ED2A6CA002B7782 /* Build configuration list for PBXNativeTarget "Creator AI StudioTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				277F969F2ED2A6CA002B7782 /* Debug */,
+				277F96A02ED2A6CA002B7782 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		277F96A12ED2A6CA002B7782 /* Build configuration list for PBXNativeTarget "Creator AI StudioUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				277F96A22ED2A6CA002B7782 /* Debug */,
+				277F96A32ED2A6CA002B7782 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		277F96BB2ED2A9CD002B7782 /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase/supabase-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.5.1;
+			};
+		};
+		27E2E0752ED51473004B79DA /* XCRemoteSwiftPackageReference "Kingfisher" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/onevcat/Kingfisher.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 8.6.2;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		277F96BC2ED2A9CD002B7782 /* Auth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 277F96BB2ED2A9CD002B7782 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Auth;
+		};
+		277F96BE2ED2A9CD002B7782 /* PostgREST */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 277F96BB2ED2A9CD002B7782 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = PostgREST;
+		};
+		277F96C02ED2A9CD002B7782 /* Storage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 277F96BB2ED2A9CD002B7782 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Storage;
+		};
+		277F96C32ED2AA6C002B7782 /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 277F96BB2ED2A9CD002B7782 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
+		};
+		27E2E0762ED51473004B79DA /* Kingfisher */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 27E2E0752ED51473004B79DA /* XCRemoteSwiftPackageReference "Kingfisher" */;
+			productName = Kingfisher;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 277F966F2ED2A6C7002B7782 /* Project object */;
+}
