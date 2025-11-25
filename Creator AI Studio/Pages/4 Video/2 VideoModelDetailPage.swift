@@ -100,7 +100,7 @@ struct VideoModelDetailPage: View {
                                     Spacer()
 
                                     VStack(alignment: .trailing, spacing: 2) {
-                                        Text(String(format: "$%.2f", item.cost))
+                                        Text("$\(NSDecimalNumber(decimal: item.cost).stringValue)")
                                             .font(.caption)
                                             .foregroundColor(.white)
                                             .padding(.horizontal, 8)
@@ -163,7 +163,7 @@ struct VideoModelDetailPage: View {
                             }
 
                             TextEditor(text: $prompt)
-                                .font(.system(size: 14)).opacity(0.8)
+                                .font(.system(size: 15)).opacity(0.8)
                                 .frame(minHeight: 140)
                                 .padding(8)
                                 .background(Color.gray.opacity(0.1))
@@ -275,7 +275,7 @@ struct VideoModelDetailPage: View {
                                     Text("×")
                                         .font(.caption)
                                         .foregroundColor(.secondary)
-                                    Text(String(format: "$%.2f", item.cost))
+                                    Text("$\(NSDecimalNumber(decimal: item.cost).stringValue)")
                                         .font(.subheadline)
                                         .fontWeight(.semibold)
                                         .foregroundColor(.purple)
@@ -284,7 +284,7 @@ struct VideoModelDetailPage: View {
 
                             Spacer()
 
-                            Text(String(format: "$%.2f", item.cost))
+                            Text("$\(NSDecimalNumber(decimal: item.cost).stringValue)")
                                 .font(.title3)
                                 .fontWeight(.bold)
                                 .foregroundColor(.purple)

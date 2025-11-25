@@ -50,6 +50,9 @@ struct ImageModelsPage: View {
     }
 
     var body: some View {
+        
+        let pageAccent = Color.white
+        
         NavigationView {
             ScrollView {
                 VStack(spacing: 12) {
@@ -68,21 +71,21 @@ struct ImageModelsPage: View {
                                     FilterPill(
                                         title: "All",
                                         isSelected: imageFilterIndex == 0,
-                                        color: .blue
+                                        color: pageAccent
                                     ) {
                                         withAnimation { imageFilterIndex = 0 }
                                     }
                                     FilterPill(
                                         title: "Text to Image",
                                         isSelected: imageFilterIndex == 1,
-                                        color: .blue
+                                        color: pageAccent
                                     ) {
                                         withAnimation { imageFilterIndex = 1 }
                                     }
                                     FilterPill(
                                         title: "Image to Image",
                                         isSelected: imageFilterIndex == 2,
-                                        color: .blue
+                                        color: pageAccent
                                     ) {
                                         withAnimation { imageFilterIndex = 2 }
                                     }
@@ -96,7 +99,7 @@ struct ImageModelsPage: View {
                                     Text("Clear")
                                         .font(.caption)
                                         .fontWeight(.medium)
-                                        .foregroundColor(.blue)
+                                        .foregroundColor(pageAccent)
                                 }
                             }
                         }
@@ -113,15 +116,15 @@ struct ImageModelsPage: View {
                             } label: {
                                 Image(systemName: isGridView ? "square.grid.2x2" : "line.3.horizontal")
                                     .font(.caption)
-                                    .foregroundColor(.blue)
+                                    .foregroundColor(pageAccent)
                                 Text(isGridView ? "Grid View " : "List View")
                                     .font(.caption)
-                                    .foregroundColor(.blue)
+                                    .foregroundColor(pageAccent)
                             }
 
                             Text(" | ")
                                 .font(.caption)
-                                .foregroundColor(.blue)
+                                .foregroundColor(pageAccent)
 
                             // Sort Button with Arrow Icons
                             Button {
@@ -144,14 +147,14 @@ struct ImageModelsPage: View {
                                             .font(.system(size: 10))
                                     }
                                 }
-                                .foregroundColor(.blue)
+                                .foregroundColor(pageAccent)
                             }
                         }
                     }
                     .padding(.horizontal)
                     .padding(.top, 8)
 
-                    // MARK: PHOTO GRID
+                    // MARK: GRID VIEW
 
                     VStack(alignment: .leading, spacing: 16) {
                         if filteredAndSortedImageModels.isEmpty {
@@ -205,9 +208,9 @@ struct ImageModelsPage: View {
                                                         .foregroundColor(.primary)
                                                         .lineLimit(2)
                                                     Spacer()
-                                                    Text("$\(item.cost, specifier: "%.2f")")
+                                                    Text("$\(NSDecimalNumber(decimal: item.cost).stringValue)")
                                                         .font(.system(size: 12, weight: .semibold, design: .rounded))
-                                                        .foregroundColor(.blue)
+                                                        .foregroundColor(pageAccent)
                                                 }
                                             }
                                         }
@@ -215,6 +218,8 @@ struct ImageModelsPage: View {
                                 }
                                 .padding(.horizontal)
                             } else {
+                                // MARK: LIST VIEW
+
                                 // List View
                                 VStack(spacing: 12) {
                                     ForEach(filteredAndSortedImageModels) { item in
@@ -247,9 +252,9 @@ struct ImageModelsPage: View {
                                                 Spacer()
                                                 VStack(alignment: .trailing) {
                                                     // Cost
-                                                    Text("$\(item.cost, specifier: "%.2f")")
+                                                    Text("$\(NSDecimalNumber(decimal: item.cost).stringValue)")
                                                         .font(.system(size: 15, weight: .semibold, design: .rounded))
-                                                        .foregroundColor(.blue)
+                                                        .foregroundColor(pageAccent)
                                                     Text("per image")
                                                         .font(.caption2)
                                                         .foregroundColor(.secondary)
@@ -302,7 +307,7 @@ struct ImageModelsPage: View {
                         Image(systemName: "diamond.fill")
                             .foregroundStyle(
                                 LinearGradient(
-                                    colors: [.blue, .blue],
+                                    colors: [.cyan, .cyan],
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
                                 )
@@ -326,7 +331,7 @@ struct ImageModelsPage: View {
                         RoundedRectangle(cornerRadius: 20)
                             .strokeBorder(
                                 LinearGradient(
-                                    colors: [.blue, .blue],
+                                    colors: [.cyan, .cyan],
                                     startPoint: .leading,
                                     endPoint: .trailing
                                 ),

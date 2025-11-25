@@ -14,9 +14,7 @@ struct Home: View {
         NavigationStack {
             ScrollView {
                 //        Title
-                VStack {
-
-                }
+                VStack {}
             }
 
             // MARK: NAVIGATION BAR
@@ -24,13 +22,13 @@ struct Home: View {
             .navigationTitle("")
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Text("Runspeed.ai")
+                    Text("RunSpeed AI")
                         .font(
                             .system(size: 28, weight: .bold, design: .rounded)
                         )
                         .foregroundStyle(
                             LinearGradient(
-                                colors: [.blue, .cyan],
+                                colors: [.cyan, .cyan],
                                 startPoint: .leading,
                                 endPoint: .trailing
                             )
@@ -51,7 +49,8 @@ struct Home: View {
                             .font(
                                 .system(
                                     size: 14, weight: .semibold,
-                                    design: .rounded)
+                                    design: .rounded
+                                )
                             )
                             .foregroundColor(.white)
                         Text("credits left")
@@ -65,7 +64,8 @@ struct Home: View {
                             .fill(Color.black.opacity(0.4))
                             .shadow(
                                 color: Color.black.opacity(0.2), radius: 4,
-                                x: 0, y: 2)
+                                x: 0, y: 2
+                            )
                     )
                     .overlay(
                         RoundedRectangle(cornerRadius: 20)

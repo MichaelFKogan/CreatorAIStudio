@@ -102,10 +102,10 @@ struct ImageModelDetailPage: View {
                                     )
 
                                     HStack(spacing: 4) {
-                                        Text(String(format: "$%.2f", item.cost))
+                                        Text("$\(NSDecimalNumber(decimal: item.cost).stringValue)")
                                             .font(.title3)
                                             .fontWeight(.bold)
-                                            .foregroundColor(.blue)
+                                            .foregroundColor(.white)
                                         Text("per image")
                                             .font(.caption)
                                             .foregroundColor(.secondary)
@@ -141,7 +141,7 @@ struct ImageModelDetailPage: View {
                                 }
 
                                 TextEditor(text: $prompt)
-                                    .font(.system(size: 14)).opacity(0.8)
+                                    .font(.system(size: 15, weight: .semibold)).opacity(0.9)
                                     .frame(minHeight: 140)
                                     .padding(8)
                                     .background(Color.gray.opacity(0.1))
@@ -253,7 +253,7 @@ struct ImageModelDetailPage: View {
                                         Text("×")
                                             .font(.caption)
                                             .foregroundColor(.secondary)
-                                        Text(String(format: "$%.2f", item.cost))
+                                        Text("$\(NSDecimalNumber(decimal: item.cost).stringValue)")
                                             .font(.subheadline)
                                             .fontWeight(.semibold)
                                             .foregroundColor(.blue)
@@ -262,7 +262,7 @@ struct ImageModelDetailPage: View {
 
                                 Spacer()
 
-                                Text(String(format: "$%.2f", item.cost))
+                                Text("$\(NSDecimalNumber(decimal: item.cost).stringValue)")
                                     .font(.title3)
                                     .fontWeight(.bold)
                                     .foregroundColor(.blue)
@@ -308,7 +308,7 @@ struct ImageModelDetailPage: View {
                             } else {
                                 Image(systemName: "photo.on.rectangle")
                             }
-                            Text(isGenerating ? "Generating..." : "Generate Image - \(String(format: "$%.2f", item.cost))")
+                            Text(isGenerating ? "Generating..." : "Generate Image - $\(NSDecimalNumber(decimal: item.cost).stringValue)")
                                 .fontWeight(.semibold)
                         }
                         .frame(maxWidth: .infinity)
@@ -401,25 +401,13 @@ struct ImageModelDetailPage: View {
                 )
             }
         }
-        .onAppear {
-            // Listen for keyboard notifications
-            NotificationCenter.default.addObserver(
-                forName: UIResponder.keyboardWillShowNotification,
-                object: nil,
-                queue: .main
-            ) { notification in
-                if let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect {
-                    keyboardHeight = keyboardFrame.height
-                }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { notification in
+            if let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect {
+                keyboardHeight = keyboardFrame.height
             }
-
-            NotificationCenter.default.addObserver(
-                forName: UIResponder.keyboardWillHideNotification,
-                object: nil,
-                queue: .main
-            ) { _ in
-                keyboardHeight = 0
-            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
+            keyboardHeight = 0
         }
     }
 
@@ -450,7 +438,12 @@ struct ImageModelDetailPage: View {
         }
 
         // Get user ID
-        let userId = authViewModel.user?.id.uuidString.lowercased() ?? ""
+        guard let userId = authViewModel.user?.id.uuidString.lowercased(), !userId.isEmpty else {
+            // Show error alert
+            print("❌ User not authenticated")
+            isGenerating = false
+            return
+        }
 
         // Start background generation using TaskCoordinator
         Task { @MainActor in
@@ -462,6 +455,11 @@ struct ImageModelDetailPage: View {
                     // Image generation completed successfully
                     self.isGenerating = false
                     // The TaskCoordinator and NotificationManager handle showing the result
+                },
+                onError: { error in
+                    // Image generation failed
+                    self.isGenerating = false
+                    print("Image generation failed: \(error.localizedDescription)")
                 }
             )
 

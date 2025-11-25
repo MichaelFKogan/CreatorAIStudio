@@ -27,7 +27,7 @@ class ImageGenerationTask: MediaGenerationTask {
         Output Format: \(item.apiConfig.outputFormat)
         Enable Sync Mode: \(item.apiConfig.enableSyncMode)
         Enable Base64 Output: \(item.apiConfig.enableBase64Output)
-        Cost: \(item.cost)
+        Cost: $\(NSDecimalNumber(decimal: item.cost).stringValue)
         ------------------------------
         """)
         
@@ -92,7 +92,7 @@ class ImageGenerationTask: MediaGenerationTask {
                 imageUrl: supabaseImageURL,
                 model: modelName.isEmpty ? nil : modelName,
                 title: item.display.title.isEmpty ? nil : item.display.title,
-                cost: item.cost > 0 ? item.cost : nil,
+                cost: (item.cost > 0 ? Double(truncating: item.cost as NSNumber) : nil),
                 type: item.type?.isEmpty == false ? item.type : nil,
                 endpoint: item.apiConfig.endpoint.isEmpty ? nil : item.apiConfig.endpoint,
                 prompt: item.prompt.isEmpty ? nil : item.prompt,

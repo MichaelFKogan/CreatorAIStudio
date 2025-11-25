@@ -73,7 +73,7 @@ let imageModelData = [
             exampleImages: []
         ),
         apiConfig: APIConfiguration(
-            endpoint: "https://api.wavespeed.ai/api/v3/bytedance/seedream-v4",
+            endpoint: "https://api.wavespeed.ai/api/v3/bytedance/seedream-v4/edit",
             outputFormat: "jpeg",
             enableSyncMode: false,
             enableBase64Output: false,

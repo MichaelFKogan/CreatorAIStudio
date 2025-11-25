@@ -20,9 +20,10 @@ struct Profile: View {
                                 viewModel.userId = user.id.uuidString
                             }
                             Task {
-//                            print("🔄 Profile appeared, fetching images for user: \(user.id.uuidString)")
-                                await viewModel.fetchUserImages(forceRefresh: false)
-//                            print("📸 Fetched \(viewModel.images.count) images")
+                                //                            print("🔄 Profile appeared, fetching images for user: \(user.id.uuidString)")
+                                await viewModel.fetchUserImages(
+                                    forceRefresh: false)
+                                //                            print("📸 Fetched \(viewModel.images.count) images")
                             }
                         }
                 } else {
@@ -64,34 +65,22 @@ struct ProfileViewContent: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 16) {
-                    // Header
-//                    profileHeader
-
-//                    // Edit Profile Button
-//                    Button(action: {}) {
-//                        Text("Edit Profile")
-//                            .font(.headline)
-//                            .foregroundColor(.white)
-//                            .frame(maxWidth: .infinity)
-//                            .padding()
-//                            .background(Color.blue)
-//                            .cornerRadius(12)
-//                    }
-//                    .padding(.horizontal)
 
                     // My Creations Section
                     VStack(alignment: .leading, spacing: 12) {
-//                        Text("My Creations")
-//                            .font(.title2)
-//                            .fontWeight(.semibold)
-//                            .padding(.horizontal)
-
                         if viewModel.isLoading {
                             ProgressView("Loading images…")
                                 .padding()
-                        } else if viewModel.images.isEmpty && notificationManager.activePlaceholders.isEmpty {
-                            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: 3), spacing: 4) {
-                                ForEach(0 ..< 9, id: \.self) { _ in
+                        } else if viewModel.images.isEmpty
+                            && notificationManager.activePlaceholders.isEmpty
+                        {
+                            LazyVGrid(
+                                columns: Array(
+                                    repeating: GridItem(
+                                        .flexible(), spacing: 4), count: 3),
+                                spacing: 4
+                            ) {
+                                ForEach(0..<9, id: \.self) { _ in
                                     RoundedRectangle(cornerRadius: 6)
                                         .fill(Color.gray.opacity(0.2))
                                         .overlay(
@@ -99,7 +88,7 @@ struct ProfileViewContent: View {
                                                 .foregroundColor(.gray)
                                                 .font(.title3)
                                         )
-                                        .aspectRatio(1 / 1.4, contentMode: .fit) // ✅ portrait ratio (≈0.714)
+                                        .aspectRatio(1 / 1.4, contentMode: .fit)  // ✅ portrait ratio (≈0.714)
                                 }
                             }
                             .padding(.horizontal)
@@ -107,7 +96,8 @@ struct ProfileViewContent: View {
                         } else {
                             ImageGridView(
                                 userImages: viewModel.userImages,
-                                placeholders: notificationManager.activePlaceholders
+                                placeholders: notificationManager
+                                    .activePlaceholders
                             ) { userImage in
                                 selectedUserImage = userImage
                             }
@@ -115,35 +105,22 @@ struct ProfileViewContent: View {
                     }
                 }
                 .padding(.top, 10)
-//                .navigationTitle("Profile")
+                //                .navigationTitle("Profile")
                 .toolbar {
-                    ToolbarItem(placement: .navigationBarLeading) {
-                        Text("My Creations")
-                            .font(.system(size: 28, weight: .bold, design: .rounded))
-                            .foregroundStyle(
-                                LinearGradient(
-                                    colors: [.blue, .purple],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
-                            )
-                    }
                     ToolbarItem(placement: .navigationBarTrailing) {
-                        creditsDisplay
-                    }
-                    ToolbarItem(placement: .navigationBarTrailing) {
-//                        NavigationLink(destination: SettingsView().environmentObject(authViewModel)) {
+                        //                        NavigationLink(destination: SettingsView().environmentObject(authViewModel)) {
                         Image(systemName: "gearshape.fill")
                             .font(.headline)
                             .foregroundColor(.gray)
-//                        }
+                        //                        }
                     }
                 }
             }
             .refreshable {
                 await viewModel.fetchUserImages(forceRefresh: true)
             }
-            .onChange(of: notificationManager.notifications.count) { oldCount, newCount in
+            .onChange(of: notificationManager.notifications.count) {
+                oldCount, newCount in
                 // When notification count decreases (notification dismissed), refresh images
                 if newCount < oldCount {
                     Task {
@@ -151,18 +128,18 @@ struct ProfileViewContent: View {
                     }
                 }
             }
-//            .sheet(item: $selectedUserImage) { userImage in
-//                FullScreenImageView(
-//                    userImage: userImage,
-//                    isPresented: Binding(
-//                        get: { selectedUserImage != nil },
-//                        set: { if !$0 { selectedUserImage = nil } }
-//                    )
-//                )
-//                .presentationDetents([.large])
-//                .presentationDragIndicator(.visible)
-//                .ignoresSafeArea()
-//            }
+            .sheet(item: $selectedUserImage) { userImage in
+                FullScreenImageView(
+                    userImage: userImage,
+                    isPresented: Binding(
+                        get: { selectedUserImage != nil },
+                        set: { if !$0 { selectedUserImage = nil } }
+                    )
+                )
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+                .ignoresSafeArea()
+            }
         }
     }
 
@@ -211,33 +188,6 @@ struct ProfileViewContent: View {
                 .foregroundColor(.secondary)
         }
     }
-
-    // MARK: CREDITS DISPLAY
-
-    private var creditsDisplay: some View {
-        HStack(spacing: 6) {
-            Image(systemName: "diamond.fill")
-                .foregroundStyle(
-                    LinearGradient(colors: [.blue, .purple], startPoint: .topLeading, endPoint: .bottomTrailing)
-                )
-                .font(.system(size: 8))
-            Text("$5.00")
-                .font(.system(size: 14, weight: .semibold, design: .rounded))
-                .foregroundColor(.primary)
-            Text("credits left")
-                .font(.caption2)
-                .foregroundColor(.secondary)
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 6)
-        .background(RoundedRectangle(cornerRadius: 20).fill(Color.secondary.opacity(0.1)))
-        .overlay(
-            RoundedRectangle(cornerRadius: 20)
-                .strokeBorder(
-                    LinearGradient(colors: [.blue, .purple], startPoint: .leading, endPoint: .trailing)
-                )
-        )
-    }
 }
 
 // MARK: IMAGE GRID (3×3 PORTRAIT)
@@ -256,7 +206,7 @@ struct ImageGridView: View {
         GeometryReader { proxy in
             let totalSpacing = spacing * 2
             let contentWidth = max(0, proxy.size.width - totalSpacing - 8)
-            let itemWidth = max(44, contentWidth / 3) // minimum thumbnail size
+            let itemWidth = max(44, contentWidth / 3)  // minimum thumbnail size
             let itemHeight = itemWidth * 1.4
 
             LazyVGrid(columns: gridColumns, spacing: spacing) {
@@ -271,8 +221,9 @@ struct ImageGridView: View {
 
                 // Then show completed images
                 ForEach(userImages) { userImage in
-                    if let displayUrl = userImage.isVideo ? userImage.thumbnail_url : userImage.image_url,
-                       let url = URL(string: displayUrl)
+                    if let displayUrl = userImage.isVideo
+                        ? userImage.thumbnail_url : userImage.image_url,
+                        let url = URL(string: displayUrl)
                     {
                         Button {
                             onSelect(userImage)
@@ -344,7 +295,8 @@ struct ImageGridView: View {
             }
             .padding(.horizontal, 4)
         }
-        .frame(height: calculateHeight(for: placeholders.count + userImages.count))
+        .frame(
+            height: calculateHeight(for: placeholders.count + userImages.count))
     }
 
     private func calculateHeight(for count: Int) -> CGFloat {
@@ -386,11 +338,16 @@ struct PlaceholderImageCard: View {
                 } else {
                     ZStack {
                         Circle()
-                            .fill(LinearGradient(
-                                colors: [.blue.opacity(0.3), .purple.opacity(0.3)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            ))
+                            .fill(
+                                LinearGradient(
+                                    colors: [
+                                        .blue.opacity(0.3),
+                                        .purple.opacity(0.3),
+                                    ],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
                             .frame(width: 50, height: 50)
 
                         Image(systemName: "photo.on.rectangle.angled")
@@ -416,7 +373,9 @@ struct PlaceholderImageCard: View {
 
                     Text(placeholder.message)
                         .font(.custom("Nunito-Regular", size: 9))
-                        .foregroundColor(placeholder.state == .failed ? .red : .secondary)
+                        .foregroundColor(
+                            placeholder.state == .failed ? .red : .secondary
+                        )
                         .lineLimit(2)
                         .multilineTextAlignment(.center)
                 }
@@ -449,7 +408,10 @@ struct PlaceholderImageCard: View {
                                             endPoint: .trailing
                                         )
                                     )
-                                    .frame(width: geometry.size.width * placeholder.progress, height: 4)
+                                    .frame(
+                                        width: geometry.size.width
+                                            * placeholder.progress, height: 4
+                                    )
                                     .overlay(
                                         LinearGradient(
                                             colors: [
@@ -480,11 +442,15 @@ struct PlaceholderImageCard: View {
         .frame(width: itemWidth, height: itemHeight)
         .onAppear {
             pulseAnimation = true
-            withAnimation(.linear(duration: 1.5).repeatForever(autoreverses: false)) {
+            withAnimation(
+                .linear(duration: 1.5).repeatForever(autoreverses: false)
+            ) {
                 shimmer = true
             }
         }
-        .animation(.easeInOut(duration: 1).repeatForever(autoreverses: true), value: pulseAnimation)
+        .animation(
+            .easeInOut(duration: 1).repeatForever(autoreverses: true),
+            value: pulseAnimation)
     }
 
     private var backgroundGradient: LinearGradient {

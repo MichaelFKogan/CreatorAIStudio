@@ -54,6 +54,9 @@ struct VideoModelsPage: View {
     }
 
     var body: some View {
+        
+        let pageAccent = Color.white
+        
         NavigationView {
             ScrollView {
                 VStack(spacing: 12) {
@@ -72,28 +75,28 @@ struct VideoModelsPage: View {
                                     FilterPill(
                                         title: "All",
                                         isSelected: videoFilterIndex == 0,
-                                        color: .purple
+                                        color: pageAccent
                                     ) {
                                         withAnimation { videoFilterIndex = 0 }
                                     }
                                     FilterPill(
                                         title: "Text to Video",
                                         isSelected: videoFilterIndex == 1,
-                                        color: .purple
+                                        color: pageAccent
                                     ) {
                                         withAnimation { videoFilterIndex = 1 }
                                     }
                                     FilterPill(
                                         title: "Image to Video",
                                         isSelected: videoFilterIndex == 2,
-                                        color: .purple
+                                        color: pageAccent
                                     ) {
                                         withAnimation { videoFilterIndex = 2 }
                                     }
                                     FilterPill(
                                         title: "Audio",
                                         isSelected: videoFilterIndex == 3,
-                                        color: .purple
+                                        color: pageAccent
                                     ) {
                                         withAnimation { videoFilterIndex = 3 }
                                     }
@@ -107,7 +110,7 @@ struct VideoModelsPage: View {
                                     Text("Clear")
                                         .font(.caption)
                                         .fontWeight(.medium)
-                                        .foregroundColor(.purple)
+                                        .foregroundColor(pageAccent)
                                 }
                             }
                         }
@@ -124,15 +127,15 @@ struct VideoModelsPage: View {
                             } label: {
                                 Image(systemName: isGridView ? "square.grid.2x2" : "line.3.horizontal")
                                     .font(.caption)
-                                    .foregroundColor(.purple)
+                                    .foregroundColor(pageAccent)
                                 Text(isGridView ? "Grid View" : "List View")
                                     .font(.caption)
-                                    .foregroundColor(.purple)
+                                    .foregroundColor(pageAccent)
                             }
 
                             Text(" | ")
                                 .font(.caption)
-                                .foregroundColor(.purple)
+                                .foregroundColor(pageAccent)
 
                             // Sort Button with Arrow Icons
                             Button {
@@ -155,14 +158,14 @@ struct VideoModelsPage: View {
                                             .font(.system(size: 10))
                                     }
                                 }
-                                .foregroundColor(.purple)
+                                .foregroundColor(pageAccent)
                             }
                         }
                     }
                     .padding(.horizontal)
                     .padding(.top, 8)
 
-                    // MARK: PHOTO GRID
+                    // MARK: GRID VIEW
 
                     VStack(alignment: .leading, spacing: 16) {
                         if filteredAndSortedVideoModels.isEmpty {
@@ -171,8 +174,6 @@ struct VideoModelsPage: View {
                                 message: "No video models found"
                             )
                         } else {
-                            // MARK: GRID VIEW
-
                             if isGridView {
                                 // Grid View
                                 LazyVGrid(
@@ -218,9 +219,9 @@ struct VideoModelsPage: View {
                                                         .foregroundColor(.primary)
                                                         .lineLimit(2)
                                                     Spacer()
-                                                    Text("$\(item.cost, specifier: "%.2f")")
+                                                    Text("$\(NSDecimalNumber(decimal: item.cost).stringValue)")
                                                         .font(.system(size: 12, weight: .semibold, design: .rounded))
-                                                        .foregroundColor(.purple)
+                                                        .foregroundColor(pageAccent)
                                                 }
                                             }
                                         }
@@ -262,9 +263,9 @@ struct VideoModelsPage: View {
                                                 Spacer()
                                                 VStack(alignment: .trailing) {
                                                     // Cost
-                                                    Text("$\(item.cost, specifier: "%.2f")")
+                                                    Text("$\(NSDecimalNumber(decimal: item.cost).stringValue)")
                                                         .font(.system(size: 15, weight: .semibold, design: .rounded))
-                                                        .foregroundColor(.purple)
+                                                        .foregroundColor(pageAccent)
                                                     Text("per 8s video")
                                                         .font(.caption2)
                                                         .foregroundColor(.secondary)

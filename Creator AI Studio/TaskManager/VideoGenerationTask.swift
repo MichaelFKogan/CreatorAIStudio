@@ -26,7 +26,7 @@ class VideoGenerationTask: MediaGenerationTask {
         Aspect Ratio: \(item.apiConfig.aspectRatio ?? "default")
         Output Format: \(item.apiConfig.outputFormat)
         Enable Sync Mode: \(item.apiConfig.enableSyncMode)
-        Cost: \(item.cost)
+        Cost: $\(NSDecimalNumber(decimal: item.cost).stringValue)
         ------------------------------------
         """)
         
@@ -126,7 +126,7 @@ class VideoGenerationTask: MediaGenerationTask {
                 thumbnailUrl: thumbnailUrl,
                 model: modelName.isEmpty ? nil : modelName,
                 title: item.display.title.isEmpty ? nil : item.display.title,
-                cost: item.cost > 0 ? item.cost : nil,
+                cost: (item.cost > 0 ? Double(truncating: item.cost as NSNumber) : nil),
                 type: item.type?.isEmpty == false ? item.type : nil,
                 endpoint: item.apiConfig.endpoint.isEmpty ? nil : item.apiConfig.endpoint,
                 fileExtension: fileExtension,
