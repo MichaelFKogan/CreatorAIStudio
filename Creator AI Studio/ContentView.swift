@@ -8,13 +8,19 @@ struct ContentView: View {
     @State private var previousTab = 0
     @State private var currentTransitionEdge: Edge = .trailing
     @State private var homeResetTrigger = UUID()
+    
+    struct LazyView<Content: View>: View {
+        let build: () -> Content
+        init(_ build: @autoclosure @escaping () -> Content) { self.build = build }
+        var body: some View { build() }
+    }
 
     var body: some View {
         ZStack {
             Group {
                 switch selectedTab {
                 case 0:
-                    Home(resetTrigger: homeResetTrigger)
+                    LazyView(Home(resetTrigger: homeResetTrigger))
                         .transition(
                             .asymmetric(
                                 insertion: .opacity.combined(
@@ -23,7 +29,7 @@ struct ContentView: View {
                                     with: .move(edge: .leading))
                             ))
                 case 1:
-                    PhotoFilters()
+                    LazyView(PhotoFilters())
                         .transition(
                             .asymmetric(
                                 insertion: .opacity.combined(
@@ -34,7 +40,7 @@ struct ContentView: View {
                                             ? .trailing : .leading))
                             ))
                 case 2:
-                    ImageModelsPage()
+                    LazyView(ImageModelsPage())
                         .transition(
                             .asymmetric(
                                 insertion: .opacity.combined(
@@ -45,7 +51,7 @@ struct ContentView: View {
                                             ? .trailing : .leading))
                             ))
                 case 3:
-                    VideoModelsPage()
+                    LazyView(VideoModelsPage())
                         .transition(
                             .asymmetric(
                                 insertion: .opacity.combined(
@@ -56,8 +62,7 @@ struct ContentView: View {
                                             ? .trailing : .leading))
                             ))
                 case 4:
-
-                    Profile()
+                    LazyView(Profile().environmentObject(authViewModel))
                         .environmentObject(authViewModel)
                         .transition(
                             .asymmetric(

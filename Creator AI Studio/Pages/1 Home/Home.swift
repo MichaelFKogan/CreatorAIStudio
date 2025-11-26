@@ -28,7 +28,7 @@ struct Home: View {
                         )
                         .foregroundStyle(
                             LinearGradient(
-                                colors: [.cyan, .cyan],
+                                colors: [.blue, .cyan],
                                 startPoint: .leading,
                                 endPoint: .trailing
                             )
@@ -39,7 +39,7 @@ struct Home: View {
                         Image(systemName: "diamond.fill")
                             .foregroundStyle(
                                 LinearGradient(
-                                    colors: [.cyan, .cyan],
+                                    colors: [.blue, .blue],
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
                                 )
@@ -71,7 +71,7 @@ struct Home: View {
                         RoundedRectangle(cornerRadius: 20)
                             .strokeBorder(
                                 LinearGradient(
-                                    colors: [.cyan, .cyan],
+                                    colors: [.blue, .blue],
                                     startPoint: .leading,
                                     endPoint: .trailing
                                 ),
