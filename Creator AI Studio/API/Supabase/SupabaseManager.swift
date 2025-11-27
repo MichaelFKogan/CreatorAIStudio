@@ -29,7 +29,7 @@ class SupabaseManager {
         )
     }
 
-    // MARK: IMAGE UPLOAD
+    // MARK: UPLOAD IMAGE
 
     /// Uploads an image to Supabase Storage and returns the public URL
 
@@ -137,7 +137,7 @@ class SupabaseManager {
     //     return try await uploadImage(image: image, userId: userId, modelName: modelName)
     // }
 
-    // MARK: VIDEO UPLOAD
+    // MARK: UPLOAD VIDEO
 
     /// Uploads a video to Supabase Storage and returns the public URL
 
