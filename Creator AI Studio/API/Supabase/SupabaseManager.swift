@@ -13,6 +13,8 @@ import UIKit
 class SupabaseManager {
     static let shared = SupabaseManager()
 
+    // MARK: CLIENT SETUP
+
     // Replace with your actual Supabase URL and anon key
     let client: SupabaseClient
 
@@ -26,6 +28,8 @@ class SupabaseManager {
             supabaseKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImluYWZmeW1vY3VwcHVkZHNld3lxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTQwMDgsImV4cCI6MjA3NjE5MDAwOH0.rsklD7VpItxb2UTCzH1RPYD8HWKpFifekJaUi8JYkNY"
         )
     }
+
+    // MARK: IMAGE UPLOAD
 
     /// Uploads an image to Supabase Storage and returns the public URL
     /// - Parameters:
@@ -63,7 +67,7 @@ class SupabaseManager {
                 let uploadResponse = try await client.storage
                     .from(imageStorageBucket)
                     .upload(
-                        filename,       // path
+                        filename, // path
                         data: imageData, // new argument label `data`
                         options: FileOptions(
                             contentType: "image/jpeg",
@@ -101,6 +105,8 @@ class SupabaseManager {
         throw lastError ?? NSError(domain: "StorageError", code: -1, userInfo: [NSLocalizedDescriptionKey: "Upload failed"])
     }
 
+    // MARK: DOWN/UP-LOAD IMAGE
+
     /// Downloads an image from a URL and uploads it to Supabase Storage
     /// - Parameters:
     ///   - urlString: The URL of the image to download
@@ -124,6 +130,8 @@ class SupabaseManager {
         // Upload to Supabase Storage
         return try await uploadImage(image: image, userId: userId, modelName: modelName)
     }
+
+    // MARK: VIDEO UPLOAD
 
     /// Uploads a video to Supabase Storage and returns the public URL
     /// - Parameters:
@@ -204,6 +212,8 @@ class SupabaseManager {
         throw lastError ?? NSError(domain: "StorageError", code: -1, userInfo: [NSLocalizedDescriptionKey: "Video upload failed"])
     }
 
+    // MARK: DOWN/UPLOAD VIDEO
+
     /// Downloads a video from a URL and uploads it to Supabase Storage
     /// - Parameters:
     ///   - urlString: The URL of the video to download
@@ -227,6 +237,8 @@ class SupabaseManager {
         // Upload to Supabase Storage
         return try await uploadVideo(videoData: data, userId: userId, modelName: modelName, fileExtension: fileExtension)
     }
+
+    // MARK: VIDEO THUMBNAIL
 
     /// Generates a thumbnail from video data
     /// - Parameter videoData: The video data
