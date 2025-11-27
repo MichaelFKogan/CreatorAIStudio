@@ -2,7 +2,7 @@ import Combine
 import PhotosUI
 import SwiftUI
 
-// MARK: - ImageModelsPage (entry)
+// MARK: MAIN CONTENT
 
 struct ImageModelsPage: View {
     @StateObject private var viewModel = ImageModelsViewModel(models: imageModelData)
@@ -34,7 +34,7 @@ struct ImageModelsPage: View {
     }
 }
 
-// MARK: - ViewModel (caching + updates)
+// MARK: ImageModelsViewModel
 
 final class ImageModelsViewModel: ObservableObject {
     // Input controls (changing these triggers updateModels)
@@ -119,7 +119,7 @@ private struct MainContent: View {
     }
 }
 
-// MARK: - FilterSection
+// MARK: FILTERS SECTION
 
 private struct FilterSection: View {
     @ObservedObject var viewModel: ImageModelsViewModel
@@ -158,7 +158,7 @@ private struct FilterSection: View {
     }
 }
 
-// MARK: - Sort & View Toggle
+// MARK: PRICE & VIEW TOGGLE
 
 private struct SortAndViewToggle: View {
     @ObservedObject var viewModel: ImageModelsViewModel
@@ -211,7 +211,7 @@ private struct SortAndViewToggle: View {
     }
 }
 
-// MARK: - ContentList (grid or list)
+// MARK: CONTENT LIST
 
 private struct ContentList: View {
     @ObservedObject var viewModel: ImageModelsViewModel
@@ -251,7 +251,7 @@ private struct ContentList: View {
     }
 }
 
-// MARK: - Grid Item View (extracted)
+// MARK: GRID VIEW
 
 private struct ImageModelGridItem: View {
     let item: InfoPacket
@@ -289,13 +289,13 @@ private struct ImageModelGridItem: View {
 
                 Text("$\(NSDecimalNumber(decimal: item.cost).stringValue)")
                     .font(.system(size: 12, weight: .semibold, design: .rounded))
-                    .foregroundColor(.white)
+                    .foregroundColor(.blue)
             }
         }
     }
 }
 
-// MARK: - List Item View (extracted)
+// MARK: LIST VIEW
 
 private struct ImageModelListItem: View {
     let item: InfoPacket
@@ -311,14 +311,14 @@ private struct ImageModelListItem: View {
             Text(item.display.title)
                 .font(.system(size: 16, weight: .bold, design: .rounded))
                 .foregroundColor(.primary)
-                .lineLimit(1)
+                .lineLimit(2)
 
             Spacer()
 
             VStack(alignment: .trailing) {
                 Text("$\(NSDecimalNumber(decimal: item.cost).stringValue)")
                     .font(.system(size: 15, weight: .semibold, design: .rounded))
-                    .foregroundColor(.white).opacity(0.9)
+                    .foregroundColor(.blue).opacity(0.9)
                 Text("per image")
                     .font(.caption2)
                     .foregroundColor(.secondary)
@@ -338,9 +338,7 @@ private struct ImageModelListItem: View {
     }
 }
 
-// MARK: - Toolbar Content (extracted)
-
-// MARK: - Toolbar Content (fixed)
+// MARK: TOOLBAR
 private struct CreditsToolbar: ToolbarContent {
     var body: some ToolbarContent {
         ToolbarItem(placement: .navigationBarTrailing) {
@@ -378,7 +376,7 @@ private struct CreditsToolbar: ToolbarContent {
 }
 
 
-// MARK: - Simple Filter Pill
+// MARK: FILTER PILL
 
 private struct FilterPill: View {
     let title: String
@@ -398,19 +396,19 @@ private struct FilterPill: View {
                 .fontWeight(.semibold)
                 .padding(.vertical, 6)
                 .padding(.horizontal, 10)
-                .background(isSelected ? Color.blue.opacity(0.15) : Color.clear)
-                .foregroundColor(isSelected ? .white : .white.opacity(0.8))
+                .background(isSelected ? .blue : .blue.opacity(0.12))
+                .foregroundColor(isSelected ? .white : .blue)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 10)
-                        .stroke(isSelected ? Color.blue.opacity(0.6) : Color.gray.opacity(0.5), lineWidth: 1)
+                    Capsule()
+                        .stroke(isSelected ? Color.clear : .blue.opacity(0.6), lineWidth: 1)
                 )
-                .clipShape(RoundedRectangle(cornerRadius: 10))
+                .clipShape(Capsule())
         }
         .buttonStyle(.plain)
     }
 }
 
-// MARK: - Empty state
+// MARK: EMPTY STATE VIEW
 
 private struct EmptyStateView: View {
     let icon: String

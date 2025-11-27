@@ -158,7 +158,7 @@ struct ImageModelDetailPage: View {
         }
     }
 
-    // MARK: FUNC GENERATE
+    // MARK: FUNCTION GENERATE
 
     private func generate() {
         guard !prompt.isEmpty else {
@@ -217,7 +217,7 @@ struct BannerSection: View {
                     .clipShape(RoundedRectangle(cornerRadius: 12))
 
                 VStack(alignment: .leading, spacing: 8) {
-                    Text(item.display.modelName)
+                    Text(item.display.title)
                         .font(.title2).fontWeight(.bold).foregroundColor(.primary)
                         .fixedSize(horizontal: false, vertical: true)
 
@@ -394,7 +394,7 @@ struct CostCardSection: View {
     }
 }
 
-// MARK: STRUCT GENERATE BUTTON
+// MARK: GENERATE BUTTON
 
 struct GenerateButton: View {
     let prompt: String

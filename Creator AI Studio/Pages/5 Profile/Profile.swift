@@ -65,7 +65,6 @@ struct ProfileViewContent: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 16) {
-
                     // My Creations Section
                     VStack(alignment: .leading, spacing: 12) {
                         if viewModel.isLoading {
@@ -77,10 +76,12 @@ struct ProfileViewContent: View {
                             LazyVGrid(
                                 columns: Array(
                                     repeating: GridItem(
-                                        .flexible(), spacing: 4), count: 3),
+                                        .flexible(), spacing: 4
+                                    ), count: 3
+                                ),
                                 spacing: 4
                             ) {
-                                ForEach(0..<9, id: \.self) { _ in
+                                ForEach(0 ..< 9, id: \.self) { _ in
                                     RoundedRectangle(cornerRadius: 6)
                                         .fill(Color.gray.opacity(0.2))
                                         .overlay(
@@ -88,7 +89,7 @@ struct ProfileViewContent: View {
                                                 .foregroundColor(.gray)
                                                 .font(.title3)
                                         )
-                                        .aspectRatio(1 / 1.4, contentMode: .fit)  // ✅ portrait ratio (≈0.714)
+                                        .aspectRatio(1 / 1.4, contentMode: .fit) // ✅ portrait ratio (≈0.714)
                                 }
                             }
                             .padding(.horizontal)
@@ -108,11 +109,11 @@ struct ProfileViewContent: View {
                 //                .navigationTitle("Profile")
                 .toolbar {
                     ToolbarItem(placement: .navigationBarTrailing) {
-                        //                        NavigationLink(destination: SettingsView().environmentObject(authViewModel)) {
-                        Image(systemName: "gearshape.fill")
-                            .font(.headline)
-                            .foregroundColor(.gray)
-                        //                        }
+                        NavigationLink(destination: Settings().environmentObject(authViewModel)) {
+                            Image(systemName: "gearshape.fill")
+                                .font(.headline)
+                                .foregroundColor(.gray)
+                        }
                     }
                 }
             }
@@ -206,7 +207,7 @@ struct ImageGridView: View {
         GeometryReader { proxy in
             let totalSpacing = spacing * 2
             let contentWidth = max(0, proxy.size.width - totalSpacing - 8)
-            let itemWidth = max(44, contentWidth / 3)  // minimum thumbnail size
+            let itemWidth = max(44, contentWidth / 3) // minimum thumbnail size
             let itemHeight = itemWidth * 1.4
 
             LazyVGrid(columns: gridColumns, spacing: spacing) {
@@ -450,7 +451,8 @@ struct PlaceholderImageCard: View {
         }
         .animation(
             .easeInOut(duration: 1).repeatForever(autoreverses: true),
-            value: pulseAnimation)
+            value: pulseAnimation
+        )
     }
 
     private var backgroundGradient: LinearGradient {

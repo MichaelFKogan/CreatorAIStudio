@@ -1,37 +1,40 @@
-How It Works Now
+SUMMARY
 
-1. User taps Generate Button in ImageModelDetailPage.swift → generate() is called which fires TaskCoordinator.shared.startImageGeneration() that starts a new task in TaskCoordinator.swift
+1. 📁 ImageModelDetailPage.swift
 
-ImageModelDetailPage.swift → TaskCoordinator.swift
+User Taps "Generate" Button
+↓
+Fires the startImageGeneration() function
+↓
+Inside ImageGenerationCoordinator.swift
 
-2. Notification appears → TaskCoordinator automatically shows a notification with progress
-   TaskCoordinator.swift
-   NotificationManager.shared.showNotification()
+2. 📁 ImageGenerationCoordinator.swift
 
-3. Task executes → TaskCoordinator creates ImageGenerationTask and calls task.execute() which handles the API call, download, and storage
-   TaskCoordinator.swift → ImageGenerationTask.swift
-   task.execute(onProgress: { }, onComplete: { })
+Inside func startImageGeneration() {
 
-4. Progress updates → task.execute() calls onProgress callback which fires NotificationManager.shared.updateProgress() to show real-time progress in notification bar
-   ImageGenerationTask.swift
-   NotificationManager.shared.updateProgress()
-   NotificationManager.shared.updateMessage()
+5 key steps are executed:
 
-5. Completion → task.execute() calls onComplete callback which triggers handleImageCompletion() in TaskCoordinator that sets isGenerating = false and fires NotificationManager.shared.markAsCompleted()
-   ImageGenerationTask.swift → TaskCoordinator.swift
-   handleImageCompletion() → NotificationManager.shared.markAsCompleted()
+Step 1: Generate unique taskId (UUID)
 
-6. Auto-dismiss → handleImageCompletion() waits 5 seconds then fires NotificationManager.shared.dismissNotification() and cleanupTask()
-   TaskCoordinator.swift
-   Task.sleep(for: .seconds(5))
-   NotificationManager.shared.dismissNotification()
-   cleanupTask()
+Step 2: NotificationManager.showNotification()
 
-The architecture now properly separates concerns:
+• Shows progress notification to user
+• Returns notificationId for tracking
 
-- UI Layer (ImageModelDetailPage) → Handles user interaction
-- Coordination Layer (TaskCoordinator) → Manages task lifecycle
-- Execution Layer (ImageGenerationTask) → Performs the actual work
-- Notification Layer (NotificationManager) → Shows progress to user
+Step 3: Create GenerationTaskInfo struct
 
-Everything is connected and ready to go! 🎉
+• Stores task metadata
+• Saved to generationTasks[taskId] dictionary
+
+Step 4: Create ImageGenerationTask object
+
+• Contains the actual generation logic
+• Initialized with item, image, userId
+
+Step 5: Launch Task.detached (background task)
+
+• Executes task.execute() off main thread
+• Provides progress & completion callbacks
+• Saved to backgroundTasks[taskId] dictionary
+
+}

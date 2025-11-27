@@ -1,20 +1,21 @@
 import SwiftUI
 
 // MARK: - Image Generation Task
+
 /// Handles the complete workflow for image generation
 class ImageGenerationTask: MediaGenerationTask {
     let item: InfoPacket
     let image: UIImage
     let userId: String
-    
+
     init(item: InfoPacket, image: UIImage, userId: String) {
         self.item = item
         self.image = image
         self.userId = userId
     }
-    
+
     func execute(
-        notificationId: UUID,
+        notificationId _: UUID,
         onProgress: @escaping (TaskProgress) async -> Void,
         onComplete: @escaping (TaskResult) async -> Void
     ) async {
@@ -30,11 +31,12 @@ class ImageGenerationTask: MediaGenerationTask {
         Cost: $\(NSDecimalNumber(decimal: item.cost).stringValue)
         ------------------------------
         """)
-        
+
         do {
-            // Step 1: Send to API
+            // MARK: STEP 1: SEND TO API
+
             await onProgress(TaskProgress(progress: 0.1, message: "Sending image to AI..."))
-            
+
             let response = try await withTimeout(seconds: 360) {
                 try await sendImageToWaveSpeed(
                     image: self.image,
@@ -48,34 +50,37 @@ class ImageGenerationTask: MediaGenerationTask {
                     userId: self.userId
                 )
             }
-            
+
             await onProgress(TaskProgress(progress: 0.5, message: "Processing transformation..."))
             print("✅ Image sent. Response received.")
-            
-            // Step 2: Download result
+
+            // MARK: STEP 2: DOWNLOAD
+
             guard let urlString = response.data.outputs?.first,
-                  let url = URL(string: urlString) else {
+                  let url = URL(string: urlString)
+            else {
                 throw NSError(domain: "APIError", code: -1,
-                            userInfo: [NSLocalizedDescriptionKey: "No output URL returned from API"])
+                              userInfo: [NSLocalizedDescriptionKey: "No output URL returned from API"])
             }
-            
+
             await onProgress(TaskProgress(progress: 0.6, message: "Downloading result..."))
             print("[WaveSpeed] Fetching generated image…")
-            
+
             let (imageData, _) = try await withTimeout(seconds: 30) {
                 try await URLSession.shared.data(from: url)
             }
-            
+
             guard let downloadedImage = UIImage(data: imageData) else {
                 throw NSError(domain: "ImageError", code: -1,
-                            userInfo: [NSLocalizedDescriptionKey: "Failed to decode image"])
+                              userInfo: [NSLocalizedDescriptionKey: "Failed to decode image"])
             }
-            
+
             print("[WaveSpeed] Generated image loaded successfully.")
-            
-            // Step 3: Upload to Supabase Storage
+
+            // MARK: STEP 3: UP TO DB
+
             await onProgress(TaskProgress(progress: 0.75, message: "Uploading to storage..."))
-            
+
             let modelName = item.display.modelName
             let supabaseImageURL = try await SupabaseManager.shared.uploadImage(
                 image: downloadedImage,
@@ -83,30 +88,33 @@ class ImageGenerationTask: MediaGenerationTask {
                 modelName: modelName.isEmpty ? "unknown" : modelName
             )
             print("✅ Image uploaded to Supabase Storage: \(supabaseImageURL)")
-            
-            // Step 4: Save metadata to database
+
+            // MARK: 4: METADATA TO DB
+
             await onProgress(TaskProgress(progress: 0.9, message: "Saving to profile..."))
-            
+
             let metadata = ImageMetadata(
                 userId: userId,
                 imageUrl: supabaseImageURL,
                 model: modelName.isEmpty ? nil : modelName,
                 title: item.display.title.isEmpty ? nil : item.display.title,
-                cost: (item.cost > 0 ? Double(truncating: item.cost as NSNumber) : nil),
+                cost: item.cost > 0 ? Double(truncating: item.cost as NSNumber) : nil,
                 type: item.type?.isEmpty == false ? item.type : nil,
                 endpoint: item.apiConfig.endpoint.isEmpty ? nil : item.apiConfig.endpoint,
                 prompt: item.prompt.isEmpty ? nil : item.prompt,
                 aspectRatio: item.apiConfig.aspectRatio
             )
-            
+
             print("📝 Saving metadata: title=\(metadata.title ?? "none"), cost=\(metadata.cost ?? 0), type=\(metadata.type ?? "none")")
-            
-            // Save with retry logic
+
             try await saveMetadataWithRetry(metadata)
-            
-            // Success!
+
+            // MARK: STEP 6: SUCCESS!
+
             await onComplete(.imageSuccess(downloadedImage, url: supabaseImageURL))
-            
+
+            // MARK: CHECK ERRORS
+
         } catch let error as TimeoutError {
             print("❌ Timeout: \(error.localizedDescription)")
             await onComplete(.failure(NSError(
@@ -137,14 +145,15 @@ class ImageGenerationTask: MediaGenerationTask {
             await onComplete(.failure(error))
         }
     }
-    
-    // MARK: - Private Helpers
+
+    // MARK: func saveMetadata to DB
+
     private func saveMetadataWithRetry(_ metadata: ImageMetadata) async throws {
         var saveSuccessful = false
         var retryCount = 0
         let maxRetries = 3
-        
-        while !saveSuccessful && retryCount < maxRetries {
+
+        while !saveSuccessful, retryCount < maxRetries {
             do {
                 try await SupabaseManager.shared.client.database
                     .from("user_media")
@@ -155,7 +164,7 @@ class ImageGenerationTask: MediaGenerationTask {
             } catch {
                 retryCount += 1
                 print("⚠️ Save attempt \(retryCount) failed: \(error)")
-                
+
                 if retryCount < maxRetries {
                     try await Task.sleep(for: .seconds(pow(2.0, Double(retryCount))))
                 } else {
@@ -166,4 +175,3 @@ class ImageGenerationTask: MediaGenerationTask {
         }
     }
 }
-

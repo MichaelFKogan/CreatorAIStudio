@@ -6,7 +6,7 @@ let imageModelData = [
     // ---------------------------------------------------------
     InfoPacket(
         display: DisplayInfo(
-            title: "Google Gemini Flash 2.5",
+            title: "Google Gemini Flash 2.5 (Nano Banana)",
 //            title: "Google Gemini Flash 2.5 (Nano Banana)",
             imageName: "geminiflashimage25",
             imageNameOriginal: "yourphoto",

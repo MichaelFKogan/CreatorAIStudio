@@ -9,7 +9,7 @@ import Combine
 import PhotosUI
 import SwiftUI
 
-// MARK: - VideoModelsPage (entry)
+// MARK: MAIN CONTENT
 
 struct VideoModelsPage: View {
     @StateObject private var viewModel = VideoModelsViewModel(models: videoModelData)
@@ -41,7 +41,7 @@ struct VideoModelsPage: View {
     }
 }
 
-// MARK: - ViewModel
+// MARK: ViewModelsViewModel
 
 final class VideoModelsViewModel: ObservableObject {
     @Published var filterIndex: Int = 0 { didSet { updateModelsIfNeeded() } }
@@ -103,7 +103,7 @@ final class VideoModelsViewModel: ObservableObject {
     }
 }
 
-// MARK: - MainContent
+// MARK: MAIN CONTENT
 
 private struct MainContent: View {
     @ObservedObject var viewModel: VideoModelsViewModel
@@ -123,7 +123,7 @@ private struct MainContent: View {
     }
 }
 
-// MARK: - FilterSection
+// MARK: FILTER SECTION
 
 private struct FilterSection: View {
     @ObservedObject var viewModel: VideoModelsViewModel
@@ -162,7 +162,7 @@ private struct FilterSection: View {
     }
 }
 
-// MARK: - Sort & View Toggle
+// MARK: PRICE & VIEW TOGGLE
 
 private struct SortAndViewToggle: View {
     @ObservedObject var viewModel: VideoModelsViewModel
@@ -214,7 +214,7 @@ private struct SortAndViewToggle: View {
     }
 }
 
-// MARK: - ContentList
+// MARK: CONTENT LIST
 
 private struct ContentList: View {
     @ObservedObject var viewModel: VideoModelsViewModel
@@ -252,7 +252,7 @@ private struct ContentList: View {
     }
 }
 
-// MARK: - Grid Item
+// MARK: GRID VIEW
 
 private struct VideoModelGridItem: View {
     let item: InfoPacket
@@ -290,13 +290,13 @@ private struct VideoModelGridItem: View {
 
                 Text("$\(NSDecimalNumber(decimal: item.cost).stringValue)")
                     .font(.system(size: 12, weight: .semibold, design: .rounded))
-                    .foregroundColor(.white).opacity(0.9)
+                    .foregroundColor(.purple)
             }
         }
     }
 }
 
-// MARK: - List Item
+// MARK: LIST VIEW
 
 private struct VideoModelListItem: View {
     let item: InfoPacket
@@ -319,7 +319,7 @@ private struct VideoModelListItem: View {
             VStack(alignment: .trailing) {
                 Text("$\(NSDecimalNumber(decimal: item.cost).stringValue)")
                     .font(.system(size: 15, weight: .semibold, design: .rounded))
-                    .foregroundColor(.white).opacity(0.9)
+                    .foregroundColor(.purple)
                 Text("per video")
                     .font(.caption2)
                     .foregroundColor(.secondary)
@@ -339,7 +339,7 @@ private struct VideoModelListItem: View {
     }
 }
 
-// MARK: - Toolbar
+// MARK: TOOLBAR
 
 private struct CreditsToolbar: ToolbarContent {
     var body: some ToolbarContent {
@@ -377,7 +377,7 @@ private struct CreditsToolbar: ToolbarContent {
     }
 }
 
-// MARK: - Filter Pill
+// MARK: FILTER PILL
 
 private struct FilterPill: View {
     let title: String
@@ -391,19 +391,19 @@ private struct FilterPill: View {
                 .fontWeight(.semibold)
                 .padding(.vertical, 6)
                 .padding(.horizontal, 10)
-                .background(isSelected ? Color.purple.opacity(0.15) : Color.clear)
-                .foregroundColor(isSelected ? .white : .white.opacity(0.8))
+                .background(isSelected ? .purple : .purple.opacity(0.12))
+                .foregroundColor(isSelected ? .white : .purple)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 10)
-                        .stroke(isSelected ? Color.purple.opacity(0.6) : Color.gray.opacity(0.5), lineWidth: 1)
+                    Capsule()
+                        .stroke(isSelected ? Color.clear : .purple.opacity(0.6), lineWidth: 1)
                 )
-                .clipShape(RoundedRectangle(cornerRadius: 10))
+                .clipShape(Capsule())
         }
         .buttonStyle(.plain)
     }
 }
 
-// MARK: - Empty State
+// MARK: EMPTY STATE VIEW
 
 private struct EmptyStateView: View {
     let icon: String
