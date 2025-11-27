@@ -32,12 +32,15 @@ class SupabaseManager {
     // MARK: IMAGE UPLOAD
 
     /// Uploads an image to Supabase Storage and returns the public URL
+
     /// - Parameters:
     ///   - image: The UIImage to upload
     ///   - userId: The user's ID for organizing files
     ///   - modelName: The AI model name used for generation
     ///   - maxRetries: Maximum number of retry attempts for upload
+
     /// - Returns: The public URL of the uploaded image in Supabase Storage
+
     func uploadImage(image: UIImage, userId: String, modelName: String, maxRetries: Int = 3) async throws -> String {
         // Convert UIImage to JPEG data
         guard let imageData = image.jpegData(compressionQuality: 0.9) else {
@@ -105,42 +108,48 @@ class SupabaseManager {
         throw lastError ?? NSError(domain: "StorageError", code: -1, userInfo: [NSLocalizedDescriptionKey: "Upload failed"])
     }
 
-    // MARK: DOWN/UP-LOAD IMAGE
+    // // MARK: DOWN/UPLOAD IMAGE
 
-    /// Downloads an image from a URL and uploads it to Supabase Storage
-    /// - Parameters:
-    ///   - urlString: The URL of the image to download
-    ///   - userId: The user's ID
-    ///   - modelName: The AI model name
-    /// - Returns: The Supabase Storage public URL
-    func downloadAndUploadImage(from urlString: String, userId: String, modelName: String) async throws -> String {
-        guard let url = URL(string: urlString) else {
-            throw NSError(domain: "URLError", code: -1,
-                          userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])
-        }
+    // /// Downloads an image from an External URL and uploads it to Supabase Storage
 
-        // Download the image
-        let (data, _) = try await URLSession.shared.data(from: url)
+    // /// - Parameters:
+    // ///   - urlString: The URL of the image to download
+    // ///   - userId: The user's ID
+    // ///   - modelName: The AI model name
 
-        guard let image = UIImage(data: data) else {
-            throw NSError(domain: "ImageError", code: -1,
-                          userInfo: [NSLocalizedDescriptionKey: "Failed to decode image"])
-        }
+    // /// - Returns: The Supabase Storage public URL
 
-        // Upload to Supabase Storage
-        return try await uploadImage(image: image, userId: userId, modelName: modelName)
-    }
+    // func downloadAndUploadImage(from urlString: String, userId: String, modelName: String) async throws -> String {
+    //     guard let url = URL(string: urlString) else {
+    //         throw NSError(domain: "URLError", code: -1,
+    //                       userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])
+    //     }
+
+    //     // Download the image
+    //     let (data, _) = try await URLSession.shared.data(from: url)
+
+    //     guard let image = UIImage(data: data) else {
+    //         throw NSError(domain: "ImageError", code: -1,
+    //                       userInfo: [NSLocalizedDescriptionKey: "Failed to decode image"])
+    //     }
+
+    //     // Upload to Supabase Storage
+    //     return try await uploadImage(image: image, userId: userId, modelName: modelName)
+    // }
 
     // MARK: VIDEO UPLOAD
 
     /// Uploads a video to Supabase Storage and returns the public URL
+
     /// - Parameters:
     ///   - videoData: The video data to upload
     ///   - userId: The user's ID for organizing files
     ///   - modelName: The AI model name used for generation
     ///   - fileExtension: The video file extension (e.g., "mp4", "webm")
     ///   - maxRetries: Maximum number of retry attempts for upload
+
     /// - Returns: The public URL of the uploaded video in Supabase Storage
+
     func uploadVideo(videoData: Data, userId: String, modelName: String, fileExtension: String, maxRetries: Int = 3) async throws -> String {
         // Create unique filename: userId/timestamp_modelName.extension
         let timestamp = Int(Date().timeIntervalSince1970)
@@ -212,37 +221,42 @@ class SupabaseManager {
         throw lastError ?? NSError(domain: "StorageError", code: -1, userInfo: [NSLocalizedDescriptionKey: "Video upload failed"])
     }
 
-    // MARK: DOWN/UPLOAD VIDEO
+    // // MARK: DOWN/UPLOAD VIDEO
 
-    /// Downloads a video from a URL and uploads it to Supabase Storage
-    /// - Parameters:
-    ///   - urlString: The URL of the video to download
-    ///   - userId: The user's ID
-    ///   - modelName: The AI model name
-    ///   - fileExtension: The video file extension
-    /// - Returns: The Supabase Storage public URL
-    func downloadAndUploadVideo(from urlString: String, userId: String, modelName: String, fileExtension: String = "mp4") async throws -> String {
-        guard let url = URL(string: urlString) else {
-            throw NSError(domain: "URLError", code: -1,
-                          userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])
-        }
+    // /// Downloads a video from a URL and uploads it to Supabase Storage
 
-        print("[Storage] Downloading video from: \(urlString)")
+    // /// - Parameters:
+    // ///   - urlString: The URL of the video to download
+    // ///   - userId: The user's ID
+    // ///   - modelName: The AI model name
+    // ///   - fileExtension: The video file extension
 
-        // Download the video
-        let (data, _) = try await URLSession.shared.data(from: url)
+    // /// - Returns: The Supabase Storage public URL
 
-        print("[Storage] Video downloaded, size: \(data.count) bytes")
+    // func downloadAndUploadVideo(from urlString: String, userId: String, modelName: String, fileExtension: String = "mp4") async throws -> String {
+    //     guard let url = URL(string: urlString) else {
+    //         throw NSError(domain: "URLError", code: -1,
+    //                       userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])
+    //     }
 
-        // Upload to Supabase Storage
-        return try await uploadVideo(videoData: data, userId: userId, modelName: modelName, fileExtension: fileExtension)
-    }
+    //     print("[Storage] Downloading video from: \(urlString)")
+
+    //     // Download the video
+    //     let (data, _) = try await URLSession.shared.data(from: url)
+
+    //     print("[Storage] Video downloaded, size: \(data.count) bytes")
+
+    //     // Upload to Supabase Storage
+    //     return try await uploadVideo(videoData: data, userId: userId, modelName: modelName, fileExtension: fileExtension)
+    // }
 
     // MARK: VIDEO THUMBNAIL
 
     /// Generates a thumbnail from video data
+
     /// - Parameter videoData: The video data
     /// - Returns: UIImage thumbnail or nil if generation fails
+
     func generateVideoThumbnail(from videoData: Data) async -> UIImage? {
         let tempURL = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString + ".mp4")
