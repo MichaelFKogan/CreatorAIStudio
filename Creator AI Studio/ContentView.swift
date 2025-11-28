@@ -50,17 +50,17 @@ struct ContentView: View {
                                         edge: currentTransitionEdge == .leading
                                             ? .trailing : .leading))
                             ))
-                case 3:
-                    LazyView(VideoModelsPage())
-                        .transition(
-                            .asymmetric(
-                                insertion: .opacity.combined(
-                                    with: .move(edge: currentTransitionEdge)),
-                                removal: .opacity.combined(
-                                    with: .move(
-                                        edge: currentTransitionEdge == .leading
-                                            ? .trailing : .leading))
-                            ))
+               case 3:
+                   LazyView(VideoModelsPage())
+                       .transition(
+                           .asymmetric(
+                               insertion: .opacity.combined(
+                                   with: .move(edge: currentTransitionEdge)),
+                               removal: .opacity.combined(
+                                   with: .move(
+                                       edge: currentTransitionEdge == .leading
+                                           ? .trailing : .leading))
+                           ))
                 case 4:
                     LazyView(Profile().environmentObject(authViewModel))
                         .environmentObject(authViewModel)

@@ -39,9 +39,9 @@ class VideoGenerationTask: MediaGenerationTask {
                     image: self.image,
                     prompt: self.item.prompt,
                     aspectRatio: self.item.apiConfig.aspectRatio,
-                    outputFormat: self.item.apiConfig.outputFormat,
-                    enableSyncMode: self.item.apiConfig.enableSyncMode,
-                    enableBase64Output: self.item.apiConfig.enableBase64Output,
+                    outputFormat: self.item.apiConfig.outputFormat ?? "",
+                    enableSyncMode: self.item.apiConfig.enableSyncMode ?? false,
+                    enableBase64Output: self.item.apiConfig.enableBase64Output ?? false,
                     endpoint: self.item.apiConfig.endpoint,
                     maxPollingAttempts: 120,
                     userId: self.userId
@@ -108,7 +108,7 @@ class VideoGenerationTask: MediaGenerationTask {
             // Step 4: Upload video to Supabase Storage
             await onProgress(TaskProgress(progress: 0.75, message: "Uploading video to storage..."))
             
-            let modelName = item.display.modelName
+            let modelName = item.display.modelName ?? ""
             let supabaseVideoURL = try await SupabaseManager.shared.uploadVideo(
                 videoData: videoData,
                 userId: userId,

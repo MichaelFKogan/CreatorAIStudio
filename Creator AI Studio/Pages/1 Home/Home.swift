@@ -28,7 +28,7 @@ struct Home: View {
                         )
                         .foregroundStyle(
                             LinearGradient(
-                                colors: [.blue, .cyan],
+                                colors: [.blue, .purple],
                                 startPoint: .leading,
                                 endPoint: .trailing
                             )

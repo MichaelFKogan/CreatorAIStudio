@@ -17,6 +17,7 @@ let imageModelData = [
             exampleImages: []
         ),
         apiConfig: APIConfiguration(
+            provider: .wavespeed,
             endpoint: "https://api.wavespeed.ai/api/v3/google/nano-banana/edit",
             outputFormat: "jpeg",
             enableSyncMode: false,
@@ -45,6 +46,7 @@ let imageModelData = [
             exampleImages: []
         ),
         apiConfig: APIConfiguration(
+            provider: .wavespeed,
             endpoint: "https://api.wavespeed.ai/api/v3/openai/gpt-image-1",
             outputFormat: "jpeg",
             enableSyncMode: false,
@@ -73,6 +75,7 @@ let imageModelData = [
             exampleImages: []
         ),
         apiConfig: APIConfiguration(
+            provider: .wavespeed,
             endpoint: "https://api.wavespeed.ai/api/v3/bytedance/seedream-v4/edit",
             outputFormat: "jpeg",
             enableSyncMode: false,
@@ -101,6 +104,7 @@ let imageModelData = [
             exampleImages: []
         ),
         apiConfig: APIConfiguration(
+            provider: .wavespeed,
             endpoint: "https://api.wavespeed.ai/api/v3/wavespeed-ai/flux-kontext-dev",
             outputFormat: "jpeg",
             enableSyncMode: false,
@@ -129,6 +133,7 @@ let imageModelData = [
             exampleImages: []
         ),
         apiConfig: APIConfiguration(
+            provider: .wavespeed,
             endpoint: "https://api.wavespeed.ai/api/v3/wavespeed-ai/flux-kontext-pro",
             outputFormat: "jpeg",
             enableSyncMode: false,
@@ -157,6 +162,7 @@ let imageModelData = [
             exampleImages: []
         ),
         apiConfig: APIConfiguration(
+            provider: .wavespeed,
             endpoint: "https://api.wavespeed.ai/api/v3/wavespeed-ai/flux-kontext-max",
             outputFormat: "jpeg",
             enableSyncMode: false,

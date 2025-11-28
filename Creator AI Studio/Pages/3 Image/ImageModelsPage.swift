@@ -5,7 +5,8 @@ import SwiftUI
 // MARK: MAIN CONTENT
 
 struct ImageModelsPage: View {
-    @StateObject private var viewModel = ImageModelsViewModel(models: imageModelData)
+    // @StateObject private var viewModel = ImageModelsViewModel(models: imageModelData)
+    @StateObject private var viewModel = ImageModelsViewModel()
     @AppStorage("imageModelsIsGridView") private var isGridView = true
 
     var body: some View {
@@ -34,36 +35,47 @@ struct ImageModelsPage: View {
     }
 }
 
-// MARK: ImageModelsViewModel
+// MARK: VIEW MODEL
 
 final class ImageModelsViewModel: ObservableObject {
-    // Input controls (changing these triggers updateModels)
     @Published var imageFilterIndex: Int = 0 { didSet { updateModelsIfNeeded() } }
-    @Published var sortOrder: Int = 0 { didSet { updateModelsIfNeeded() } } // 0 = default, 1 = low->high, 2 = high->low
-
-    // Output: cached filtered & sorted models
+    @Published var sortOrder: Int = 0 { didSet { updateModelsIfNeeded() } }
     @Published private(set) var filteredAndSortedImageModels: [InfoPacket] = []
 
-    // Internal
-    private var allModels: [InfoPacket]
+    private var allModels: [InfoPacket] = []
     private var lastComputedInputs: (filter: Int, sort: Int)?
     private var cancellables = Set<AnyCancellable>()
 
-    init(models: [InfoPacket]) {
-        allModels = models
-        // compute initial list
+    // ✅ New init: load JSON
+    init() {
+        allModels = ImageModelsViewModel.loadImageModels()
         updateModels()
     }
 
-    // Public helpers
+    // MARK: - JSON LOADER
+
+    static func loadImageModels() -> [InfoPacket] {
+        guard let url = Bundle.main.url(forResource: "ImageModelData", withExtension: "json") else {
+            print("JSON file not found")
+            return []
+        }
+
+        do {
+            let data = try Data(contentsOf: url)
+            let decoder = JSONDecoder()
+            return try decoder.decode([InfoPacket].self, from: data)
+        } catch {
+            print("Failed to decode JSON:", error)
+            return []
+        }
+    }
+
     var hasActiveFilters: Bool { imageFilterIndex != 0 }
 
     func clearFilters() {
         imageFilterIndex = 0
         sortOrder = 0
     }
-
-    // MARK: - Private: compute & cache
 
     private func updateModelsIfNeeded() {
         let inputs = (filter: imageFilterIndex, sort: sortOrder)
@@ -75,29 +87,87 @@ final class ImageModelsViewModel: ObservableObject {
     private func updateModels() {
         var models = allModels
 
-        // Apply filter
         switch imageFilterIndex {
         case 1:
             models = models.filter { $0.capabilities.contains("Text to Image") }
         case 2:
             models = models.filter { $0.capabilities.contains("Image to Image") }
-        default:
-            break
+        default: break
         }
 
-        // Apply sort
         switch sortOrder {
         case 1: models.sort { $0.cost < $1.cost }
         case 2: models.sort { $0.cost > $1.cost }
         default: break
         }
 
-        // Publish once
         filteredAndSortedImageModels = models
         lastComputedInputs = (imageFilterIndex, sortOrder)
-
     }
 }
+
+// final class ImageModelsViewModel: ObservableObject {
+//     // Input controls (changing these triggers updateModels)
+//     @Published var imageFilterIndex: Int = 0 { didSet { updateModelsIfNeeded() } }
+//     @Published var sortOrder: Int = 0 { didSet { updateModelsIfNeeded() } } // 0 = default, 1 = low->high, 2 = high->low
+
+//     // Output: cached filtered & sorted models
+//     @Published private(set) var filteredAndSortedImageModels: [InfoPacket] = []
+
+//     // Internal
+//     private var allModels: [InfoPacket]
+//     private var lastComputedInputs: (filter: Int, sort: Int)?
+//     private var cancellables = Set<AnyCancellable>()
+
+//     init(models: [InfoPacket]) {
+//         allModels = models
+//         // compute initial list
+//         updateModels()
+//     }
+
+//     // Public helpers
+//     var hasActiveFilters: Bool { imageFilterIndex != 0 }
+
+//     func clearFilters() {
+//         imageFilterIndex = 0
+//         sortOrder = 0
+//     }
+
+//     // MARK: - Private: compute & cache
+
+//     private func updateModelsIfNeeded() {
+//         let inputs = (filter: imageFilterIndex, sort: sortOrder)
+//         if lastComputedInputs == nil || lastComputedInputs! != inputs {
+//             updateModels()
+//         }
+//     }
+
+//     private func updateModels() {
+//         var models = allModels
+
+//         // Apply filter
+//         switch imageFilterIndex {
+//         case 1:
+//             models = models.filter { $0.capabilities.contains("Text to Image") }
+//         case 2:
+//             models = models.filter { $0.capabilities.contains("Image to Image") }
+//         default:
+//             break
+//         }
+
+//         // Apply sort
+//         switch sortOrder {
+//         case 1: models.sort { $0.cost < $1.cost }
+//         case 2: models.sort { $0.cost > $1.cost }
+//         default: break
+//         }
+
+//         // Publish once
+//         filteredAndSortedImageModels = models
+//         lastComputedInputs = (imageFilterIndex, sortOrder)
+
+//     }
+// }
 
 // MARK: - MainContent (small body)
 
@@ -339,6 +409,7 @@ private struct ImageModelListItem: View {
 }
 
 // MARK: TOOLBAR
+
 private struct CreditsToolbar: ToolbarContent {
     var body: some ToolbarContent {
         ToolbarItem(placement: .navigationBarTrailing) {
@@ -374,7 +445,6 @@ private struct CreditsToolbar: ToolbarContent {
         }
     }
 }
-
 
 // MARK: FILTER PILL
 

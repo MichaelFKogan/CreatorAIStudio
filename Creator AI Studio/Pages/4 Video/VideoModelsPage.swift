@@ -1,10 +1,3 @@
-//
-//  VideoModelsPageFast.swift
-//  Creator AI Studio
-//
-//  Created by Mike K on 11/25/25.
-//
-
 import Combine
 import PhotosUI
 import SwiftUI
@@ -12,7 +5,8 @@ import SwiftUI
 // MARK: MAIN CONTENT
 
 struct VideoModelsPage: View {
-    @StateObject private var viewModel = VideoModelsViewModel(models: videoModelData)
+    //    @StateObject private var viewModel = VideoModelsViewModel(models: videoModelData)
+    @StateObject private var viewModel = VideoModelsViewModel()
     @AppStorage("videoModelsIsGridView") private var isGridView = true
 
     var body: some View {
@@ -29,8 +23,8 @@ struct VideoModelsPage: View {
                         .font(.system(size: 28, weight: .bold, design: .rounded))
                         .foregroundStyle(
                             LinearGradient(colors: [.purple, .pink],
-                                           startPoint: .leading,
-                                           endPoint: .trailing)
+                                startPoint: .leading,
+                                endPoint: .trailing)
                         )
                 }
 
@@ -41,34 +35,50 @@ struct VideoModelsPage: View {
     }
 }
 
-// MARK: ViewModelsViewModel
+// MARK: VIEW MODEL
 
 final class VideoModelsViewModel: ObservableObject {
-    @Published var filterIndex: Int = 0 { didSet { updateModelsIfNeeded() } }
+    @Published var videoFilterIndex: Int = 0 { didSet { updateModelsIfNeeded() } }
     @Published var sortOrder: Int = 0 { didSet { updateModelsIfNeeded() } }
-
     @Published private(set) var filteredAndSortedVideoModels: [InfoPacket] = []
 
-    private var allModels: [InfoPacket]
+    private var allModels: [InfoPacket] = []
     private var lastComputedInputs: (filter: Int, sort: Int)?
     private var cancellables = Set<AnyCancellable>()
 
-    init(models: [InfoPacket]) {
-        allModels = models
+    // ✅ New init: load JSON
+    init() {
+        allModels = VideoModelsViewModel.loadVideoModels()
         updateModels()
     }
 
-    var hasActiveFilters: Bool { filterIndex != 0 }
+        // MARK: - JSON LOADER
 
-    func clearFilters() {
-        withAnimation(.easeInOut(duration: 0.25)) {
-            filterIndex = 0
-            sortOrder = 0
+    static func loadVideoModels() -> [InfoPacket] {
+        guard let url = Bundle.main.url(forResource: "VideoModelData", withExtension: "json") else {
+            print("JSON file not found")
+            return []
+        }
+
+        do {
+            let data = try Data(contentsOf: url)
+            let decoder = JSONDecoder()
+            return try decoder.decode([InfoPacket].self, from: data)
+        } catch {
+            print("Failed to decode JSON:", error)
+            return []
         }
     }
 
+    var hasActiveFilters: Bool { videoFilterIndex != 0 }
+
+    func clearFilters() {
+        videoFilterIndex = 0
+        sortOrder = 0
+    }
+
     private func updateModelsIfNeeded() {
-        let inputs = (filter: filterIndex, sort: sortOrder)
+        let inputs = (filter: videoFilterIndex, sort: sortOrder)
         if lastComputedInputs == nil || lastComputedInputs! != inputs {
             updateModels()
         }
@@ -77,16 +87,15 @@ final class VideoModelsViewModel: ObservableObject {
     private func updateModels() {
         var models = allModels
 
-        // Filter
-        switch filterIndex {
+        switch videoFilterIndex {
         case 1:
             models = models.filter { $0.capabilities.contains("Text to Video") }
         case 2:
-            models = models.filter { $0.capabilities.contains("Video to Video") }
-        case 3:
-            models = models.filter { $0.capabilities.contains("Audio") }
-        default:
-            break
+            models = models.filter {
+                $0.capabilities.contains("Video to Video")
+            }
+        case 3: models = models.filter { $0.capabilities.contains("Audio") }
+        default: break
         }
 
         // Sort
@@ -95,13 +104,70 @@ final class VideoModelsViewModel: ObservableObject {
         case 2: models.sort { $0.cost > $1.cost }
         default: break
         }
-
-        withAnimation(.easeInOut(duration: 0.25)) {
             filteredAndSortedVideoModels = models
-            lastComputedInputs = (filterIndex, sortOrder)
-        }
+            lastComputedInputs = (videoFilterIndex, sortOrder)
     }
 }
+
+// final class VideoModelsViewModel: ObservableObject {
+//    @Published var filterIndex: Int = 0 { didSet { updateModelsIfNeeded() } }
+//    @Published var sortOrder: Int = 0 { didSet { updateModelsIfNeeded() } }
+
+//    @Published private(set) var filteredAndSortedVideoModels: [InfoPacket] = []
+
+//    private var allModels: [InfoPacket]
+//    private var lastComputedInputs: (filter: Int, sort: Int)?
+//    private var cancellables = Set<AnyCancellable>()
+
+//    init(models: [InfoPacket]) {
+//        allModels = models
+//        updateModels()
+//    }
+
+//    var hasActiveFilters: Bool { filterIndex != 0 }
+
+//    func clearFilters() {
+//        withAnimation(.easeInOut(duration: 0.25)) {
+//            filterIndex = 0
+//            sortOrder = 0
+//        }
+//    }
+
+//    private func updateModelsIfNeeded() {
+//        let inputs = (filter: filterIndex, sort: sortOrder)
+//        if lastComputedInputs == nil || lastComputedInputs! != inputs {
+//            updateModels()
+//        }
+//    }
+
+//    private func updateModels() {
+//        var models = allModels
+
+//        // Filter
+//        switch filterIndex {
+//        case 1:
+//            models = models.filter { $0.capabilities.contains("Text to Video") }
+//        case 2:
+//            models = models.filter { $0.capabilities.contains("Video to Video") }
+//        case 3:
+//            models = models.filter { $0.capabilities.contains("Audio") }
+//        default:
+//            break
+//        }
+
+//        // Sort
+//        switch sortOrder {
+//        case 1: models.sort { $0.cost < $1.cost }
+//        case 2: models.sort { $0.cost > $1.cost }
+//        default: break
+//        }
+
+//        withAnimation(.easeInOut(duration: 0.25)) {
+//            filteredAndSortedVideoModels = models
+//            lastComputedInputs = (filterIndex, sortOrder)
+//        }
+//    }
+// }
 
 // MARK: MAIN CONTENT
 
@@ -137,14 +203,18 @@ private struct FilterSection: View {
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 6) {
-                    FilterPill(title: "All", isSelected: viewModel.filterIndex == 0) {
-                        withAnimation { viewModel.filterIndex = 0 }
+                    FilterPill(title: "All", isSelected: viewModel.videoFilterIndex == 0) {
+                        viewModel.videoFilterIndex = 0
                     }
-                    FilterPill(title: "Text to Video", isSelected: viewModel.filterIndex == 1) {
-                        withAnimation { viewModel.filterIndex = 1 }
+                    FilterPill(title: "Text to Video", isSelected: viewModel.videoFilterIndex == 1) {
+                        viewModel.videoFilterIndex = 1
                     }
-                    FilterPill(title: "Video to Video", isSelected: viewModel.filterIndex == 2) {
-                        withAnimation { viewModel.filterIndex = 2 }
+                    FilterPill(title: "Video to Video", isSelected: viewModel.videoFilterIndex == 2) {
+                        viewModel.videoFilterIndex = 2
+                    }
+                    FilterPill(title: "Audio", isSelected: viewModel.videoFilterIndex == 3)
+                        {
+                        viewModel.videoFilterIndex = 3
                     }
                 }
                 .padding(.vertical, 2)
@@ -176,9 +246,12 @@ private struct SortAndViewToggle: View {
                 isGridView.toggle()
             } label: {
                 HStack {
-                    Image(systemName: isGridView ? "square.grid.2x2" : "line.3.horizontal")
-                        .font(.system(size: 14))
-                        .fontWeight(.semibold)
+                    Image(
+                        systemName: isGridView
+                            ? "square.grid.2x2" : "line.3.horizontal"
+                    )
+                    .font(.system(size: 14))
+                    .fontWeight(.semibold)
                     Text(isGridView ? "Grid View" : "List View")
                         .font(.system(size: 14))
                         .fontWeight(.semibold)
@@ -205,7 +278,8 @@ private struct SortAndViewToggle: View {
                     } else if viewModel.sortOrder == 2 {
                         Image(systemName: "arrow.up").font(.system(size: 10))
                     } else {
-                        Image(systemName: "arrow.up.arrow.down").font(.system(size: 10))
+                        Image(systemName: "arrow.up.arrow.down").font(
+                            .system(size: 10))
                     }
                 }
                 .foregroundColor(.white).opacity(0.9)
@@ -225,11 +299,13 @@ private struct ContentList: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             if viewModel.filteredAndSortedVideoModels.isEmpty {
-                EmptyStateView(icon: "video.slash", message: "No video models found")
+                EmptyStateView(
+                    icon: "video.slash", message: "No video models found")
             } else {
                 if isGridView {
                     LazyVGrid(columns: gridColumns, spacing: 16) {
-                        ForEach(viewModel.filteredAndSortedVideoModels) { item in
+                        ForEach(viewModel.filteredAndSortedVideoModels) {
+                            item in
                             NavigationLink(destination: EmptyView()) {
                                 VideoModelGridItem(item: item)
                             }
@@ -238,7 +314,8 @@ private struct ContentList: View {
                     .padding(.horizontal)
                 } else {
                     VStack(spacing: 12) {
-                        ForEach(viewModel.filteredAndSortedVideoModels) { item in
+                        ForEach(viewModel.filteredAndSortedVideoModels) {
+                            item in
                             NavigationLink(destination: EmptyView()) {
                                 VideoModelListItem(item: item)
                             }
@@ -282,14 +359,18 @@ private struct VideoModelGridItem: View {
 
             HStack(alignment: .top) {
                 Text(item.display.title)
-                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .font(
+                        .system(size: 13, weight: .semibold, design: .rounded)
+                    )
                     .foregroundColor(.primary)
                     .lineLimit(2)
 
                 Spacer()
 
                 Text("$\(NSDecimalNumber(decimal: item.cost).stringValue)")
-                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+                    .font(
+                        .system(size: 12, weight: .semibold, design: .rounded)
+                    )
                     .foregroundColor(.purple)
             }
         }
@@ -318,7 +399,9 @@ private struct VideoModelListItem: View {
 
             VStack(alignment: .trailing) {
                 Text("$\(NSDecimalNumber(decimal: item.cost).stringValue)")
-                    .font(.system(size: 15, weight: .semibold, design: .rounded))
+                    .font(
+                        .system(size: 15, weight: .semibold, design: .rounded)
+                    )
                     .foregroundColor(.purple)
                 Text("per video")
                     .font(.caption2)
@@ -356,7 +439,9 @@ private struct CreditsToolbar: ToolbarContent {
                     )
 
                 Text("$5.00")
-                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                    .font(
+                        .system(size: 14, weight: .semibold, design: .rounded)
+                    )
                     .foregroundColor(.white)
 
                 Text("credits left")
@@ -395,7 +480,9 @@ private struct FilterPill: View {
                 .foregroundColor(isSelected ? .white : .purple)
                 .overlay(
                     Capsule()
-                        .stroke(isSelected ? Color.clear : .purple.opacity(0.6), lineWidth: 1)
+                        .stroke(
+                            isSelected ? Color.clear : .purple.opacity(0.6),
+                            lineWidth: 1)
                 )
                 .clipShape(Capsule())
         }

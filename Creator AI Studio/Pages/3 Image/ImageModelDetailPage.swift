@@ -210,7 +210,7 @@ struct BannerSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(alignment: .top, spacing: 16) {
-                Image(item.display.modelImageName)
+                Image(item.display.modelImageName ?? "")
                     .resizable()
                     .aspectRatio(contentMode: .fill)
                     .frame(width: 120, height: 120)
