@@ -26,28 +26,6 @@
   },
   {
     "display": {
-      "title": "GPT Image 1",
-      "imageName": "gptimage1",
-      "imageNameOriginal": "yourphoto",
-      "modelName": "GPT Image 1",
-      "modelDescription": "A creative-focused model that excels at stylized visuals, artistic reimagining, and expressive compositions. Great for fantasy, concept art, and cinematic stills.",
-      "modelImageName": "gptimage1",
-      "exampleImages": []
-    },
-    "apiConfig": {
-      "provider": "runware",
-      "endpoint": "https://api.wavespeed.ai/api/v3/openai/gpt-image-1",
-      "outputFormat": "jpeg",
-      "enableSyncMode": false,
-      "enableBase64Output": false
-    },
-    "prompt": "",
-    "cost": 0.04,
-    "type": "Image Model",
-    "capabilities": ["Text to Image", "Image to Image"]
-  },
-  {
-    "display": {
       "title": "Seedream 4.0",
       "imageName": "seedream40",
       "imageNameOriginal": "yourphoto",
@@ -58,13 +36,14 @@
     },
     "apiConfig": {
       "provider": "runware",
-      "endpoint": "https://api.wavespeed.ai/api/v3/bytedance/seedream-v4/edit",
+      "endpoint": "https://api.runware.ai/v1",
+      "runwareModel": "bytedance:5@0",
       "outputFormat": "jpeg",
       "enableSyncMode": false,
       "enableBase64Output": false
     },
     "prompt": "",
-    "cost": 0.027,
+    "cost": 0.03,
     "type": "Image Model",
     "capabilities": ["Text to Image", "Image to Image"]
   },
@@ -80,7 +59,7 @@
     },
     "apiConfig": {
       "provider": "runware",
-      "endpoint": "https://api.wavespeed.ai/api/v3/wavespeed-ai/flux-kontext-dev",
+      "endpoint": "https://api.runware.ai/v1",
       "outputFormat": "jpeg",
       "enableSyncMode": false,
       "enableBase64Output": false
@@ -102,7 +81,7 @@
     },
     "apiConfig": {
       "provider": "runware",
-      "endpoint": "https://api.wavespeed.ai/api/v3/wavespeed-ai/flux-kontext-pro",
+      "endpoint": "https://api.runware.ai/v1",
       "outputFormat": "jpeg",
       "enableSyncMode": false,
       "enableBase64Output": false
@@ -124,7 +103,7 @@
     },
     "apiConfig": {
       "provider": "runware",
-      "endpoint": "https://api.wavespeed.ai/api/v3/wavespeed-ai/flux-kontext-max",
+      "endpoint": "https://api.runware.ai/v1",
       "outputFormat": "jpeg",
       "enableSyncMode": false,
       "enableBase64Output": false

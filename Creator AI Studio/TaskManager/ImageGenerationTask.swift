@@ -91,7 +91,7 @@ class ImageGenerationTask: MediaGenerationTask {
                 
             case .runware:
                 // Get model name from display info or extract from endpoint
-                let modelName = item.display.modelName ?? extractModelFromEndpoint(item.apiConfig.endpoint) ?? "flux-1.1-pro"
+                let modelName = item.display.modelName ?? extractModelFromEndpoint(item.apiConfig.endpoint) ?? ""
                 
                 // Wrap API request in a 360-second timeout to protect against infinite waits.
                 let response = try await withTimeout(seconds: 360) {

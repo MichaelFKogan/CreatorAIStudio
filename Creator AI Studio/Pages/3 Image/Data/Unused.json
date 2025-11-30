@@ -1,0 +1,24 @@
+[
+{
+  "display": {
+    "title": "GPT Image 1",
+    "imageName": "gptimage1",
+    "imageNameOriginal": "yourphoto",
+    "modelName": "GPT Image 1",
+    "modelDescription": "A creative-focused model that excels at stylized visuals, artistic reimagining, and expressive compositions. Great for fantasy, concept art, and cinematic stills.",
+    "modelImageName": "gptimage1",
+    "exampleImages": []
+  },
+  "apiConfig": {
+    "provider": "runware",
+    "endpoint": "https://api.wavespeed.ai/api/v3/openai/gpt-image-1",
+    "outputFormat": "jpeg",
+    "enableSyncMode": false,
+    "enableBase64Output": false
+  },
+  "prompt": "",
+  "cost": 0.04,
+  "type": "Image Model",
+  "capabilities": ["Text to Image", "Image to Image"]
+}
+]

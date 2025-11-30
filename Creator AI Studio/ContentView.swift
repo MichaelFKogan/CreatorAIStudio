@@ -10,7 +10,7 @@ struct ContentView: View {
     @State private var previousTab = 0
     @State private var currentTransitionEdge: Edge = .trailing
     @State private var homeResetTrigger = UUID()
-    
+
     struct LazyView<Content: View>: View {
         let build: () -> Content
         init(_ build: @autoclosure @escaping () -> Content) { self.build = build }
@@ -42,6 +42,17 @@ struct ContentView: View {
                                             ? .trailing : .leading))
                             ))
                 case 2:
+                    LazyView(Post())
+                        .transition(
+                            .asymmetric(
+                                insertion: .opacity.combined(
+                                    with: .move(edge: currentTransitionEdge)),
+                                removal: .opacity.combined(
+                                    with: .move(
+                                        edge: currentTransitionEdge == .leading
+                                            ? .trailing : .leading))
+                            ))
+                case 3:
                     LazyView(ImageModelsPage())
                         .transition(
                             .asymmetric(
@@ -52,17 +63,17 @@ struct ContentView: View {
                                         edge: currentTransitionEdge == .leading
                                             ? .trailing : .leading))
                             ))
-               case 3:
-                   LazyView(VideoModelsPage())
-                       .transition(
-                           .asymmetric(
-                               insertion: .opacity.combined(
-                                   with: .move(edge: currentTransitionEdge)),
-                               removal: .opacity.combined(
-                                   with: .move(
-                                       edge: currentTransitionEdge == .leading
-                                           ? .trailing : .leading))
-                           ))
+                //    case 3:
+                //        LazyView(VideoModelsPage())
+                //            .transition(
+                //                .asymmetric(
+                //                    insertion: .opacity.combined(
+                //                        with: .move(edge: currentTransitionEdge)),
+                //                    removal: .opacity.combined(
+                //                        with: .move(
+                //                            edge: currentTransitionEdge == .leading
+                //                                ? .trailing : .leading))
+                //                ))
                 case 4:
                     LazyView(Profile().environmentObject(authViewModel))
                         .environmentObject(authViewModel)
@@ -95,8 +106,10 @@ struct ContentView: View {
                 HStack(spacing: 0) {
                     tabButton(icon: "house.fill", title: "Home", index: 0)
                     tabButton(icon: "camera.filters", title: "Photo Filters", index: 1)
-                    tabButton(icon: "photo.on.rectangle.angled", title: "Image", index: 2)
-                    tabButton(icon: "video.fill", title: "Video", index: 3)
+                    tabButton(icon: "camera.fill", title: "Capture", index: 2)
+
+                    tabButton(icon: "photo.on.rectangle.angled", title: "Image Models", index: 3)
+                    // tabButton(icon: "video.fill", title: "Video", index: 3)
                     tabButton(icon: "person.circle.fill", title: "Profile", index: 4)
                 }
                 .padding(.horizontal)
@@ -113,18 +126,17 @@ struct ContentView: View {
                             endPoint: .trailing
                         )
                     }
-                        .ignoresSafeArea(edges: .bottom)
+                    .ignoresSafeArea(edges: .bottom)
                 )
-
             }
         }
         .ignoresSafeArea(.keyboard)
     }
-    
+
     private var tabBarGradient: [Color] {
         colorScheme == .dark
-        ? [Color.black.opacity(0.7), Color.black.opacity(0.7)]
-        : [Color.white.opacity(0.7), Color.white.opacity(0.7)]
+            ? [Color.black.opacity(0.7), Color.black.opacity(0.7)]
+            : [Color.white.opacity(0.7), Color.white.opacity(0.7)]
     }
 
     // Tab button helper

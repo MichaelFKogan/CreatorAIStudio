@@ -10,10 +10,10 @@ struct PhotoFiltersGrid: View {
             let spacing: CGFloat = 8
             let totalSpacing = spacing * 3
             let availableWidth = max(0, proxy.size.width - totalSpacing - 32)
-            let itemSize = max(44, availableWidth / 4)
+            let itemSize = max(44, availableWidth / 3)
 
             LazyVGrid(
-                columns: Array(repeating: GridItem(.flexible(), spacing: spacing), count: 4),
+                columns: Array(repeating: GridItem(.flexible(), spacing: spacing), count: 3),
                 spacing: spacing
             ) {
                 ForEach(filters) { filter in

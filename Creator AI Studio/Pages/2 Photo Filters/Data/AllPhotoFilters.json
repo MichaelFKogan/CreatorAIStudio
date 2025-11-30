@@ -32,6 +32,68 @@
   },
   {
     "display": {
+      "title": "Watercolor",
+      "imageName": "watercolor",
+      "imageNameOriginal": "watercolor",
+      "description": "",
+      "modelName": "",
+      "modelDescription": "",
+      "modelImageName": "",
+      "exampleImages": [
+        "anime2",
+        "anime3",
+        "anime4",
+        "anime5",
+        "anime6",
+        "anime7"
+      ],
+      "moreStyles": []
+    },
+    "apiConfig": {
+      "provider": "wavespeed",
+      "endpoint": "https://api.wavespeed.ai/api/v3/wavespeed-ai/ghibli",
+      "outputFormat": "jpeg",
+      "enableSyncMode": true,
+      "enableBase64Output": false,
+      "aspectRatio": ""
+    },
+    "prompt": "",
+    "cost": 0.05,
+    "type": "Photo Filter"
+  },
+  {
+    "display": {
+      "title": "Van Gogh",
+      "imageName": "vangogh",
+      "imageNameOriginal": "vangogh",
+      "description": "",
+      "modelName": "",
+      "modelDescription": "",
+      "modelImageName": "",
+      "exampleImages": [
+        "anime2",
+        "anime3",
+        "anime4",
+        "anime5",
+        "anime6",
+        "anime7"
+      ],
+      "moreStyles": []
+    },
+    "apiConfig": {
+      "provider": "wavespeed",
+      "endpoint": "https://api.wavespeed.ai/api/v3/wavespeed-ai/ghibli",
+      "outputFormat": "jpeg",
+      "enableSyncMode": true,
+      "enableBase64Output": false,
+      "aspectRatio": ""
+    },
+    "prompt": "",
+    "cost": 0.05,
+    "type": "Photo Filter"
+  },
+  {
+    "display": {
       "title": "Blocky Aesthetic",
       "imageName": "minecraft1",
       "imageNameOriginal": "minecraft",
