@@ -87,6 +87,17 @@ struct ImageModelDetailPage: View {
                     VStack(spacing: 24) {
                         LazyView(BannerSection(item: item, costString: costString))
 
+                        LazyView(TabSwitcher(selectedMode: $selectedGenerationMode))
+
+                        // Show ReferenceImagesSection only when "Image to Image" tab is selected
+                        if selectedGenerationMode == 1 {
+                            LazyView(ReferenceImagesSection(
+                                referenceImages: $referenceImages,
+                                selectedPhotoItems: $selectedPhotoItems,
+                                color: .blue
+                            ))
+                        }
+
                         LazyView(PromptSection(
                             prompt: $prompt,
                             isFocused: $isPromptFocused,
@@ -102,17 +113,6 @@ struct ImageModelDetailPage: View {
                             action: generate
                         ))
 
-                        LazyView(TabSwitcher(selectedMode: $selectedGenerationMode))
-
-                        // Show ReferenceImagesSection only when "Image to Image" tab is selected
-                        if selectedGenerationMode == 1 {
-                            LazyView(ReferenceImagesSection(
-                                referenceImages: $referenceImages,
-                                selectedPhotoItems: $selectedPhotoItems,
-                                color: .blue
-                            ))
-                        }
-
                         LazyView(AspectRatioSection(
                             options: imageAspectOptions,
                             selectedIndex: $selectedAspectIndex
@@ -122,7 +122,6 @@ struct ImageModelDetailPage: View {
                     }
                 }
                 .scrollDismissesKeyboard(.interactively)
-
             }
         }
         .contentShape(Rectangle())
@@ -145,8 +144,8 @@ struct ImageModelDetailPage: View {
                     .font(.system(size: 28, weight: .bold, design: .rounded))
                     .foregroundStyle(
                         LinearGradient(colors: [.blue, .cyan],
-                                        startPoint: .leading,
-                                        endPoint: .trailing)
+                                       startPoint: .leading,
+                                       endPoint: .trailing)
                     )
             }
             ToolbarItemGroup(placement: .keyboard) {
@@ -347,20 +346,20 @@ struct PromptSection: View {
                 .animation(.easeInOut(duration: 0.2), value: isFocused)
                 .focused($isFocused)
 
-             Button(action: { isExamplePromptsPresented = true }) {
-                 HStack {
-                     Image(systemName: "lightbulb.fill").foregroundColor(.blue).font(.caption)
-                     Text("Example Prompts").font(.caption).fontWeight(.semibold).foregroundColor(.secondary)
-                     Spacer()
-                     Image(systemName: "chevron.right").font(.caption).foregroundColor(.secondary)
-                 }
-                 .padding(.horizontal, 10)
-                 .padding(.vertical, 8)
-                 .background(Color.gray.opacity(0.06))
-                 .clipShape(RoundedRectangle(cornerRadius: 8))
-                 .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.blue.opacity(0.3), lineWidth: 1))
-             }
-             .buttonStyle(PlainButtonStyle())
+            Button(action: { isExamplePromptsPresented = true }) {
+                HStack {
+                    Image(systemName: "lightbulb.fill").foregroundColor(.blue).font(.caption)
+                    Text("Example Prompts").font(.caption).fontWeight(.semibold).foregroundColor(.secondary)
+                    Spacer()
+                    Image(systemName: "chevron.right").font(.caption).foregroundColor(.secondary)
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 8)
+                .background(Color.gray.opacity(0.06))
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.blue.opacity(0.3), lineWidth: 1))
+            }
+            .buttonStyle(PlainButtonStyle())
         }
         .padding(.horizontal)
     }
@@ -372,11 +371,11 @@ struct AspectRatioSection: View {
     let options: [AspectRatioOption]
     @Binding var selectedIndex: Int
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 6) {
-                Image(systemName: "slider.horizontal.3").foregroundColor(.blue)
-                Text("Size: ").font(.subheadline).fontWeight(.semibold).foregroundColor(.secondary)
-            }
+        VStack(alignment: .leading, spacing: 6) {
+//            HStack(spacing: 6) {
+//                Image(systemName: "slider.horizontal.3").foregroundColor(.blue)
+            Text("Size").font(.caption).foregroundColor(.secondary)
+//            }
             AspectRatioSelector(options: options, selectedIndex: $selectedIndex, color: .blue)
         }
         .padding(.horizontal)

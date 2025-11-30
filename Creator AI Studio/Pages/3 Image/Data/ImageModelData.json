@@ -36,8 +36,8 @@
     },
     "apiConfig": {
       "provider": "runware",
-      "endpoint": "https://api.runware.ai/v1",
       "runwareModel": "bytedance:5@0",
+      "endpoint": "https://api.runware.ai/v1",
       "outputFormat": "jpeg",
       "enableSyncMode": false,
       "enableBase64Output": false
@@ -59,6 +59,7 @@
     },
     "apiConfig": {
       "provider": "runware",
+      "runwareModel": "runware:106@1",
       "endpoint": "https://api.runware.ai/v1",
       "outputFormat": "jpeg",
       "enableSyncMode": false,
@@ -81,6 +82,7 @@
     },
     "apiConfig": {
       "provider": "runware",
+      "runwareModel": "bfl:3@1",
       "endpoint": "https://api.runware.ai/v1",
       "outputFormat": "jpeg",
       "enableSyncMode": false,
@@ -103,6 +105,7 @@
     },
     "apiConfig": {
       "provider": "runware",
+      "runwareModel": "bfl:4@1",
       "endpoint": "https://api.runware.ai/v1",
       "outputFormat": "jpeg",
       "enableSyncMode": false,

@@ -8,76 +8,166 @@ struct AspectRatioOption: Identifiable {
     let platforms: [String]
 }
 
-// MARK: ASPECT RATIO STRUCT
+// MARK: ASPECT RATIO SELECTOR BUTTON
 
 struct AspectRatioSelector: View {
     let options: [AspectRatioOption]
     @Binding var selectedIndex: Int
-    let color: Color // Add color parameter
-
-    private let columns: [GridItem] = Array(repeating: GridItem(.flexible(), spacing: 8), count: 4)
+    let color: Color
+    
+    @State private var isSheetPresented: Bool = false
+    
+    private var selectedOption: AspectRatioOption {
+        options[selectedIndex]
+    }
 
     var body: some View {
-        LazyVGrid(columns: columns, spacing: 8) {
-            ForEach(options.indices, id: \.self) { idx in
-                let option = options[idx]
-                let isSelected = idx == selectedIndex
-                Button {
-                    selectedIndex = idx
-                } label: {
-                    VStack(alignment: .leading, spacing: 6) {
-                        ZStack {
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(Color.gray.opacity(0.08))
-                            // Preview shape maintaining aspect ratio
-                            RoundedRectangle(cornerRadius: 6)
-                                .stroke(isSelected ? color : Color.gray.opacity(0.5), lineWidth: isSelected ? 2 : 1) // Use color parameter
-                                .aspectRatio(option.width / option.height, contentMode: .fit)
-                                .frame(height: 36)
-                                .padding(8)
-                        }
-                        .frame(height: 60)
-
-                        VStack(alignment: .leading, spacing: 4) {
-                            HStack(spacing: 6) {
-                                Text(option.label)
-                                    .font(.caption)
-                                    .fontWeight(.semibold)
-                                    .foregroundColor(.primary)
-                                if isSelected {
-                                    Image(systemName: "checkmark.circle.fill")
-                                        .font(.caption2)
-                                        .foregroundColor(color) // Use color parameter
-                                }
+        Button(action: { isSheetPresented = true }) {
+            HStack(spacing: 12) {
+                // Rectangular preview
+                ZStack {
+                    RoundedRectangle(cornerRadius: 6)
+                        .fill(Color.gray.opacity(0.08))
+                    RoundedRectangle(cornerRadius: 3)
+                        .stroke(color, lineWidth: 2)
+                        .aspectRatio(selectedOption.width / selectedOption.height, contentMode: .fit)
+                        .padding(4)
+                }
+                .frame(width: 40, height: 40)
+                
+                // Label and platform
+                HStack(spacing: 6) {
+                    Text(selectedOption.label)
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.primary)
+                    
+                    if !selectedOption.platforms.isEmpty {
+                        HStack(spacing: 4) {
+                            ForEach(selectedOption.platforms, id: \.self) { platform in
+                                Text(platform)
+                                    .font(.caption2)
+                                    .foregroundColor(color)
+                                    .padding(.horizontal, 5)
+                                    .padding(.vertical, 2)
+                                    .background(color.opacity(0.12))
+                                    .clipShape(Capsule())
                             }
-                            .padding(.horizontal, 5)
+                        }
+                    }
+                }
+                
+                Spacer()
+                
+                Image(systemName: "chevron.right")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+            }
+            .padding(.vertical, 8)
+            .padding(.horizontal, 12)
+            .background(Color.gray.opacity(0.06))
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .overlay(RoundedRectangle(cornerRadius: 12).stroke(color.opacity(0.3), lineWidth: 1))
+        }
+        .buttonStyle(.plain)
+        .sheet(isPresented: $isSheetPresented) {
+            AspectRatioSelectorSheet(
+                options: options,
+                selectedIndex: $selectedIndex,
+                color: color,
+                isPresented: $isSheetPresented
+            )
+        }
+    }
+}
 
-                            // Platform recommendations (first 1 shown)
-                            if !option.platforms.isEmpty {
-                                HStack(spacing: 4) {
-                                    ForEach(option.platforms.prefix(1), id: \.self) { platform in
-                                        Text(platform)
-                                            .font(.caption2)
-                                            .foregroundColor(color) // Use color parameter
-                                            .padding(.horizontal, 5)
-                                            .padding(.vertical, 2)
-                                            .background(color.opacity(0.12)) // Use color parameter
-                                            .clipShape(Capsule())
+// MARK: ASPECT RATIO SELECTOR SHEET
+
+struct AspectRatioSelectorSheet: View {
+    let options: [AspectRatioOption]
+    @Binding var selectedIndex: Int
+    let color: Color
+    @Binding var isPresented: Bool
+    
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 12) {
+                    ForEach(options.indices, id: \.self) { idx in
+                        let option = options[idx]
+                        let isSelected = idx == selectedIndex
+                        
+                        Button {
+                            selectedIndex = idx
+                            isPresented = false
+                        } label: {
+                            HStack(spacing: 12) {
+                                // Rectangular preview
+                                ZStack {
+                                    RoundedRectangle(cornerRadius: 6)
+                                        .fill(Color.gray.opacity(0.08))
+                                    RoundedRectangle(cornerRadius: 3)
+                                        .stroke(isSelected ? color : Color.gray.opacity(0.5), lineWidth: isSelected ? 2 : 1)
+                                        .aspectRatio(option.width / option.height, contentMode: .fit)
+                                        .padding(4)
+                                }
+                                .frame(width: 40, height: 40)
+                                
+                                // Label and platform info
+                                HStack(spacing: 6) {
+                                    Text(option.label)
+                                        .font(.subheadline)
+                                        .fontWeight(.semibold)
+                                        .foregroundColor(.primary)
+                                    
+                                    if isSelected {
+                                        Image(systemName: "checkmark.circle.fill")
+                                            .font(.caption)
+                                            .foregroundColor(color)
+                                    }
+                                    
+                                    if !option.platforms.isEmpty {
+                                        HStack(spacing: 4) {
+                                            ForEach(option.platforms, id: \.self) { platform in
+                                                Text(platform)
+                                                    .font(.caption2)
+                                                    .foregroundColor(color)
+                                                    .padding(.horizontal, 5)
+                                                    .padding(.vertical, 2)
+                                                    .background(color.opacity(0.12))
+                                                    .clipShape(Capsule())
+                                            }
+                                        }
                                     }
                                 }
+                                
+                                Spacer()
                             }
+                            .contentShape(Rectangle())
+                            .padding(.vertical, 8)
+                            .padding(.horizontal, 12)
+                            .frame(maxWidth: .infinity)
+                            .background(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(isSelected ? color : Color.gray.opacity(0.2), lineWidth: isSelected ? 2 : 1)
+                            )
                         }
-                        .padding(.horizontal, 4)
-                        .padding(.bottom, 6)
+                        .buttonStyle(.plain)
                     }
-                    .frame(maxWidth: .infinity)
-                    .background(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(isSelected ? color : Color.gray.opacity(0.2), lineWidth: isSelected ? 2 : 1) // Use color parameter
-                    )
+                    .padding(.horizontal)
                 }
-                .buttonStyle(.plain)
+                .padding(.vertical)
+            }
+            .navigationTitle("Select Size")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        isPresented = false
+                    }
+                }
             }
         }
+        .presentationDetents([.medium, .large])
     }
 }
