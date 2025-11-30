@@ -41,13 +41,14 @@ class ImageGenerationTask: MediaGenerationTask {
         print("""
         --- Request Info ---
         ------------------------------
+        Provider: \(item.apiConfig.provider)
         Endpoint: \(item.apiConfig.endpoint)
-        Prompt: \(item.prompt.isEmpty ? "(no prompt)" : "\(item.prompt)")
+        Prompt: \(((item.prompt?.isEmpty) != nil) ? "(no prompt)" : "\(item.prompt)")
         Aspect Ratio: \(item.apiConfig.aspectRatio ?? "default")
         Output Format: \(item.apiConfig.outputFormat)
         Enable Sync Mode: \(item.apiConfig.enableSyncMode)
         Enable Base64 Output: \(item.apiConfig.enableBase64Output)
-        Cost: $\(NSDecimalNumber(decimal: item.cost).stringValue)
+        Cost: $\(NSDecimalNumber(decimal: item.cost ?? 0).stringValue)
         ------------------------------
         """)
 
@@ -56,42 +57,62 @@ class ImageGenerationTask: MediaGenerationTask {
 
             await onProgress(TaskProgress(progress: 0.1, message: "Sending image to AI..."))
 
-//            let response: APIResponse
-//
-//            switch item.apiConfig.provider {
-//            case .wavespeed:
-//                // Wrap API request in a 360-second timeout to protect against infinite waits.
-//                response = try await withTimeout(seconds: 360) {
-//                    try await sendImageToWaveSpeed(
-//                        image: self.image,
-//                        prompt: self.item.prompt,
-//                        aspectRatio: self.item.apiConfig.aspectRatio,
-//                        outputFormat: self.item.apiConfig.outputFormat,
-//                        enableSyncMode: self.item.apiConfig.enableSyncMode,
-//                        enableBase64Output: self.item.apiConfig.enableBase64Output,
-//                        endpoint: self.item.apiConfig.endpoint,
-//                        maxPollingAttempts: 60,
-//                        userId: self.userId
-//                    )
-//                }
-//
-//            case .runware:
-//                response = try await sendToRunware()
-//            }
+            // Determine if this is image-to-image mode (check if image is not a placeholder)
+            let isImageToImage = image.size.width > 1 && image.size.height > 1
             
-            // Wrap API request in a 360-second timeout to protect against infinite waits.
-            let response = try await withTimeout(seconds: 360) {
-                try await sendImageToWaveSpeed(
-                    image: self.image,
-                    prompt: self.item.prompt,
-                    aspectRatio: self.item.apiConfig.aspectRatio,
-                    outputFormat: self.item.apiConfig.outputFormat ?? "",
-                    enableSyncMode: self.item.apiConfig.enableSyncMode ?? false,
-                    enableBase64Output: self.item.apiConfig.enableBase64Output ?? false,
-                    endpoint: self.item.apiConfig.endpoint,
-                    maxPollingAttempts: 60,
-                    userId: self.userId
-                )
+            // Determine output URL based on provider
+            let urlString: String
+            
+            switch item.apiConfig.provider {
+            case .wavespeed:
+                // Wrap API request in a 360-second timeout to protect against infinite waits.
+                let response = try await withTimeout(seconds: 360) {
+                    try await sendImageToWaveSpeed(
+                        image: self.image,
+                        prompt: self.item.prompt ?? "",
+                        aspectRatio: self.item.apiConfig.aspectRatio,
+                        outputFormat: self.item.apiConfig.outputFormat ?? "",
+                        enableSyncMode: self.item.apiConfig.enableSyncMode ?? false,
+                        enableBase64Output: self.item.apiConfig.enableBase64Output ?? false,
+                        endpoint: self.item.apiConfig.endpoint,
+                        maxPollingAttempts: 60,
+                        userId: self.userId
+                    )
+                }
+                
+                guard let outputURL = response.data.outputs?.first else {
+                    throw NSError(
+                        domain: "APIError",
+                        code: -1,
+                        userInfo: [NSLocalizedDescriptionKey: "No output URL returned from WaveSpeed API"]
+                    )
+                }
+                urlString = outputURL
+                
+            case .runware:
+                // Get model name from display info or extract from endpoint
+                let modelName = item.display.modelName ?? extractModelFromEndpoint(item.apiConfig.endpoint) ?? "flux-1.1-pro"
+                
+                // Wrap API request in a 360-second timeout to protect against infinite waits.
+                let response = try await withTimeout(seconds: 360) {
+                    try await sendImageToRunware(
+                        image: isImageToImage ? self.image : nil,
+                        prompt: self.item.prompt ?? "",
+                        model: self.item.apiConfig.runwareModel ?? "",
+                        aspectRatio: self.item.apiConfig.aspectRatio,
+                        isImageToImage: isImageToImage,
+                        strength: 0.7
+                    )
+                }
+                
+                guard let outputURL = response.data.first?.imageURL else {
+                    throw NSError(
+                        domain: "APIError",
+                        code: -1,
+                        userInfo: [NSLocalizedDescriptionKey: "No output URL returned from Runware API"]
+                    )
+                }
+                urlString = outputURL
             }
 
             await onProgress(TaskProgress(progress: 0.5, message: "Processing transformation..."))
@@ -99,19 +120,17 @@ class ImageGenerationTask: MediaGenerationTask {
 
             // MARK: STEP 2 — DOWNLOAD GENERATED IMAGE
 
-            // API should return an output URL; validate it.
-            guard let urlString = response.data.outputs?.first,
-                  let url = URL(string: urlString)
-            else {
+            // Validate and create URL from the output string
+            guard let url = URL(string: urlString) else {
                 throw NSError(
                     domain: "APIError",
                     code: -1,
-                    userInfo: [NSLocalizedDescriptionKey: "No output URL returned from API"]
+                    userInfo: [NSLocalizedDescriptionKey: "Invalid output URL returned from API"]
                 )
             }
 
             await onProgress(TaskProgress(progress: 0.6, message: "Downloading result..."))
-            print("[WaveSpeed] Fetching generated image…")
+            print("[\(item.apiConfig.provider == .runware ? "Runware" : "WaveSpeed")] Fetching generated image…")
 
             // Download final image with a 30-second timeout window.
             let (imageData, _) = try await withTimeout(seconds: 30) {
@@ -127,7 +146,7 @@ class ImageGenerationTask: MediaGenerationTask {
                 )
             }
 
-            print("[WaveSpeed] Generated image loaded successfully.")
+            print("[\(item.apiConfig.provider == .runware ? "Runware" : "WaveSpeed")] Generated image loaded successfully.")
 
             // MARK: STEP 3 — UPLOAD RESULT TO STORAGE (SUPABASE)
 
@@ -151,10 +170,10 @@ class ImageGenerationTask: MediaGenerationTask {
                 imageUrl: supabaseImageURL,
                 model: modelName.isEmpty ? nil : modelName,
                 title: item.display.title.isEmpty ? nil : item.display.title,
-                cost: item.cost > 0 ? Double(truncating: item.cost as NSNumber) : nil,
+                cost: (item.cost != nil && item.cost! > 0 ? NSDecimalNumber(decimal: item.cost!).doubleValue : nil),
                 type: item.type?.isEmpty == false ? item.type : nil,
                 endpoint: item.apiConfig.endpoint.isEmpty ? nil : item.apiConfig.endpoint,
-                prompt: item.prompt.isEmpty ? nil : item.prompt,
+                prompt: (item.prompt?.isEmpty == false ? item.prompt : nil),
                 aspectRatio: item.apiConfig.aspectRatio
             )
 
@@ -204,7 +223,7 @@ class ImageGenerationTask: MediaGenerationTask {
 
         } catch {
             // Catches everything else — JSON errors, decode errors, unexpected exceptions.
-            print("❌ WaveSpeed error: \(error)")
+            print("❌ \(item.apiConfig.provider == .runware ? "Runware" : "WaveSpeed") error: \(error)")
             await onComplete(.failure(error))
         }
     }
@@ -241,5 +260,19 @@ class ImageGenerationTask: MediaGenerationTask {
                 }
             }
         }
+    }
+    
+    // MARK: - Helper: Extract Model from Endpoint
+    
+    /// Attempts to extract model name from endpoint URL
+    /// Falls back to a default model if extraction fails
+    private func extractModelFromEndpoint(_ endpoint: String) -> String? {
+        // Try to extract model name from common endpoint patterns
+        // Example: "https://api.wavespeed.ai/api/v3/openai/gpt-image-1" -> "gpt-image-1"
+        let components = endpoint.split(separator: "/")
+        if let lastComponent = components.last {
+            return String(lastComponent)
+        }
+        return nil
     }
 }

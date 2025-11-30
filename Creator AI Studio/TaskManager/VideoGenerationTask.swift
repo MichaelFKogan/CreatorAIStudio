@@ -22,11 +22,11 @@ class VideoGenerationTask: MediaGenerationTask {
         --- WaveSpeed Video Request Info ---
         ------------------------------------
         Endpoint: \(item.apiConfig.endpoint)
-        Prompt: \(item.prompt.isEmpty ? "(no prompt)" : "\(item.prompt)")
+        Prompt: \(((item.prompt?.isEmpty) != nil) ? "(no prompt)" : "\(item.prompt)")
         Aspect Ratio: \(item.apiConfig.aspectRatio ?? "default")
         Output Format: \(item.apiConfig.outputFormat)
         Enable Sync Mode: \(item.apiConfig.enableSyncMode)
-        Cost: $\(NSDecimalNumber(decimal: item.cost).stringValue)
+        Cost: $\(NSDecimalNumber(decimal: item.cost ?? 0).stringValue)
         ------------------------------------
         """)
         
@@ -37,7 +37,7 @@ class VideoGenerationTask: MediaGenerationTask {
             let response = try await withTimeout(seconds: 650) {
                 try await sendImageToWaveSpeed(
                     image: self.image,
-                    prompt: self.item.prompt,
+                    prompt: self.item.prompt ?? "",
                     aspectRatio: self.item.apiConfig.aspectRatio,
                     outputFormat: self.item.apiConfig.outputFormat ?? "",
                     enableSyncMode: self.item.apiConfig.enableSyncMode ?? false,
@@ -126,11 +126,11 @@ class VideoGenerationTask: MediaGenerationTask {
                 thumbnailUrl: thumbnailUrl,
                 model: modelName.isEmpty ? nil : modelName,
                 title: item.display.title.isEmpty ? nil : item.display.title,
-                cost: (item.cost > 0 ? Double(truncating: item.cost as NSNumber) : nil),
+                cost: (item.cost != nil && item.cost! > 0 ? NSDecimalNumber(decimal: item.cost!).doubleValue : nil),
                 type: item.type?.isEmpty == false ? item.type : nil,
                 endpoint: item.apiConfig.endpoint.isEmpty ? nil : item.apiConfig.endpoint,
                 fileExtension: fileExtension,
-                prompt: item.prompt.isEmpty ? nil : item.prompt,
+                prompt: (item.prompt?.isEmpty == false ? item.prompt : nil),
                 aspectRatio: item.apiConfig.aspectRatio
             )
             

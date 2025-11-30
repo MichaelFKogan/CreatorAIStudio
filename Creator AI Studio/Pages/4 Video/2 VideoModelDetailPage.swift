@@ -346,7 +346,7 @@
 //                .padding(.vertical, 6)
 //                .background(
 //                    RoundedRectangle(cornerRadius: 20)
-//                        .fill(Color.black.opacity(0.4))
+//                            .fill(Color.secondary.opacity(0.1))
 //                        .shadow(color: Color.black.opacity(0.2), radius: 4, x: 0, y: 2)
 //                )
 //                .overlay(

@@ -3,6 +3,8 @@ import SwiftUI
 struct ContentView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
     @StateObject private var notificationManager = NotificationManager.shared
+    @Environment(\.colorScheme) var colorScheme
+
     @State private var sortOrder = 0
     @State private var selectedTab = 0
     @State private var previousTab = 0
@@ -103,24 +105,26 @@ struct ContentView: View {
                 //                .background(.ultraThinMaterial)
                 .background(
                     ZStack {
-                        // Built-in blur effect
                         Color.clear.background(.ultraThinMaterial)
 
-                        // Add a gentle dark gradient for contrast
                         LinearGradient(
-                            gradient: Gradient(colors: [
-                                Color.black,
-                                Color.black,
-                            ]),
+                            colors: tabBarGradient,
                             startPoint: .leading,
                             endPoint: .trailing
                         )
                     }
-                    .ignoresSafeArea(edges: .bottom)
+                        .ignoresSafeArea(edges: .bottom)
                 )
+
             }
         }
         .ignoresSafeArea(.keyboard)
+    }
+    
+    private var tabBarGradient: [Color] {
+        colorScheme == .dark
+        ? [Color.black.opacity(0.7), Color.black.opacity(0.7)]
+        : [Color.white.opacity(0.7), Color.white.opacity(0.7)]
     }
 
     // Tab button helper

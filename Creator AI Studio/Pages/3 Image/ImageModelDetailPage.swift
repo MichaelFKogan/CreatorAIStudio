@@ -43,6 +43,7 @@ struct ImageModelDetailPage: View {
     ]
 
     private let examplePrompts: [String] = [
+        "Transform the existing photo into a high-quality, professional LinkedIn headshot. Be sure to highlight the subject’s natural features (eyes, hair, skin tone, etc) with complimentary true-to-life colors and smooth, even lighting. Dress the subject in modern attire that's polished but approachable (avoid suits, ties, and collared shirts). Use a clean, neutral, quiet city scape background with soft depth of field to keep the focus on the subject while adding a subtle, contemporary look. Frame the image tightly on the head and upper shoulders. Ensure the final image is sharp, well-lit, and conveys confidence, professionalism, and approachability, while retaining the subject's natural features and look.",
         "A serene landscape with mountains at sunset, photorealistic, 8k quality",
         "A futuristic cityscape with flying cars and neon lights at night",
         "A cute fluffy kitten playing with yarn, studio lighting, professional photography",
@@ -75,7 +76,7 @@ struct ImageModelDetailPage: View {
         "A Victorian mansion in foggy weather, gothic atmosphere, haunting beauty",
     ]
 
-    private var costString: String { NSDecimalNumber(decimal: item.cost).stringValue }
+    private var costString: String { NSDecimalNumber(decimal: item.cost ?? 0).stringValue }
 
     // MARK: BODY
 
@@ -85,6 +86,22 @@ struct ImageModelDetailPage: View {
                 ScrollView {
                     VStack(spacing: 24) {
                         LazyView(BannerSection(item: item, costString: costString))
+
+                        LazyView(PromptSection(
+                            prompt: $prompt,
+                            isFocused: $isPromptFocused,
+                            isExamplePromptsPresented: $isExamplePromptsPresented,
+                            examplePrompts: examplePrompts
+                        ))
+
+                        LazyView(GenerateButton(
+                            prompt: prompt,
+                            isGenerating: $isGenerating,
+                            keyboardHeight: $keyboardHeight,
+                            costString: costString,
+                            action: generate
+                        ))
+
                         LazyView(TabSwitcher(selectedMode: $selectedGenerationMode))
 
                         // Show ReferenceImagesSection only when "Image to Image" tab is selected
@@ -96,12 +113,6 @@ struct ImageModelDetailPage: View {
                             ))
                         }
 
-                        LazyView(PromptSection(
-                            prompt: $prompt,
-                            isFocused: $isPromptFocused,
-                            isExamplePromptsPresented: $isExamplePromptsPresented,
-                            examplePrompts: examplePrompts
-                        ))
                         LazyView(AspectRatioSection(
                             options: imageAspectOptions,
                             selectedIndex: $selectedAspectIndex
@@ -112,13 +123,6 @@ struct ImageModelDetailPage: View {
                 }
                 .scrollDismissesKeyboard(.interactively)
 
-                LazyView(GenerateButton(
-                    prompt: prompt,
-                    isGenerating: $isGenerating,
-                    keyboardHeight: $keyboardHeight,
-                    costString: costString,
-                    action: generate
-                ))
             }
         }
         .contentShape(Rectangle())
@@ -132,9 +136,19 @@ struct ImageModelDetailPage: View {
         }
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(Color.black, for: .navigationBar)
+        .toolbarBackground(Color(UIColor.systemBackground), for: .navigationBar)
         .toolbarBackground(.visible, for: .navigationBar)
         .toolbar {
+            // Leading title
+            ToolbarItem(placement: .navigationBarLeading) {
+                Text("Image Models")
+                    .font(.system(size: 28, weight: .bold, design: .rounded))
+                    .foregroundStyle(
+                        LinearGradient(colors: [.blue, .cyan],
+                                        startPoint: .leading,
+                                        endPoint: .trailing)
+                    )
+            }
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()
                 Button("Done") { isPromptFocused = false }
@@ -276,7 +290,7 @@ struct TabSwitcher: View {
             }
             .tabButtonStyle(isSelected: selectedMode == 1)
         }
-        .background(Color.black)
+        .background(Color(UIColor.secondarySystemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 8))
         .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.gray.opacity(0.3), lineWidth: 1))
         .padding(.horizontal)
@@ -333,20 +347,20 @@ struct PromptSection: View {
                 .animation(.easeInOut(duration: 0.2), value: isFocused)
                 .focused($isFocused)
 
-            Button(action: { isExamplePromptsPresented = true }) {
-                HStack {
-                    Image(systemName: "lightbulb.fill").foregroundColor(.blue).font(.caption)
-                    Text("Example Prompts").font(.caption).fontWeight(.semibold).foregroundColor(.secondary)
-                    Spacer()
-                    Image(systemName: "chevron.right").font(.caption).foregroundColor(.secondary)
-                }
-                .padding(.horizontal, 10)
-                .padding(.vertical, 8)
-                .background(Color.gray.opacity(0.06))
-                .clipShape(RoundedRectangle(cornerRadius: 8))
-                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.blue.opacity(0.3), lineWidth: 1))
-            }
-            .buttonStyle(PlainButtonStyle())
+             Button(action: { isExamplePromptsPresented = true }) {
+                 HStack {
+                     Image(systemName: "lightbulb.fill").foregroundColor(.blue).font(.caption)
+                     Text("Example Prompts").font(.caption).fontWeight(.semibold).foregroundColor(.secondary)
+                     Spacer()
+                     Image(systemName: "chevron.right").font(.caption).foregroundColor(.secondary)
+                 }
+                 .padding(.horizontal, 10)
+                 .padding(.vertical, 8)
+                 .background(Color.gray.opacity(0.06))
+                 .clipShape(RoundedRectangle(cornerRadius: 8))
+                 .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.blue.opacity(0.3), lineWidth: 1))
+             }
+             .buttonStyle(PlainButtonStyle())
         }
         .padding(.horizontal)
     }
@@ -361,7 +375,7 @@ struct AspectRatioSection: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 6) {
                 Image(systemName: "slider.horizontal.3").foregroundColor(.blue)
-                Text("Aspect Ratio").font(.subheadline).fontWeight(.semibold).foregroundColor(.secondary)
+                Text("Size: ").font(.subheadline).fontWeight(.semibold).foregroundColor(.secondary)
             }
             AspectRatioSelector(options: options, selectedIndex: $selectedIndex, color: .blue)
         }
@@ -405,9 +419,9 @@ struct GenerateButton: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            LinearGradient(colors: [Color(UIColor.systemBackground).opacity(0), Color(UIColor.systemBackground)],
-                           startPoint: .top, endPoint: .bottom)
-                .frame(height: 20)
+            // LinearGradient(colors: [Color(UIColor.systemBackground).opacity(0), Color(UIColor.systemBackground)],
+            //                startPoint: .top, endPoint: .bottom)
+            //     .frame(height: 20)
 
             Button(action: action) {
                 HStack {
@@ -433,7 +447,7 @@ struct GenerateButton: View {
             .animation(.easeInOut(duration: 0.2), value: isGenerating)
             .disabled(isGenerating)
             .padding(.horizontal)
-            .padding(.bottom, keyboardHeight > 0 ? 24 : 80)
+            // .padding(.bottom, keyboardHeight > 0 ? 24 : 80)
             .background(Color(UIColor.systemBackground))
         }
         .animation(.easeOut(duration: 0.25), value: keyboardHeight)
@@ -446,14 +460,14 @@ struct CreditsView: View {
     var body: some View {
         HStack(spacing: 6) {
             Image(systemName: "diamond.fill")
-                .foregroundStyle(LinearGradient(colors: [.blue, .blue], startPoint: .topLeading, endPoint: .bottomTrailing))
+                .foregroundStyle(LinearGradient(colors: [.blue, .cyan], startPoint: .topLeading, endPoint: .bottomTrailing))
                 .font(.system(size: 8))
-            Text("$5.00").font(.system(size: 14, weight: .semibold, design: .rounded)).foregroundColor(.white)
-            Text("credits left").font(.caption2).foregroundColor(.white.opacity(0.9))
+            Text("$5.00").font(.system(size: 14, weight: .semibold, design: .rounded)).foregroundColor(.primary)
+            Text("credits left").font(.caption2).foregroundColor(.secondary)
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 6)
-        .background(RoundedRectangle(cornerRadius: 20).fill(Color.black.opacity(0.4)).shadow(color: Color.black.opacity(0.2), radius: 4, x: 0, y: 2))
-        .overlay(RoundedRectangle(cornerRadius: 20).strokeBorder(LinearGradient(colors: [.blue, .blue], startPoint: .leading, endPoint: .trailing), lineWidth: 1.5))
+        .background(RoundedRectangle(cornerRadius: 20).fill(Color.blue.opacity(0.1)).shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2))
+        .overlay(RoundedRectangle(cornerRadius: 20).strokeBorder(LinearGradient(colors: [.blue, .cyan], startPoint: .leading, endPoint: .trailing), lineWidth: 1.5))
     }
 }

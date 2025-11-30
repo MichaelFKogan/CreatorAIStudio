@@ -89,20 +89,21 @@ final class VideoModelsViewModel: ObservableObject {
 
         switch videoFilterIndex {
         case 1:
-            models = models.filter { $0.capabilities.contains("Text to Video") }
+            models = models.filter { $0.capabilities?.contains("Text to Video") == true }
         case 2:
-            models = models.filter {
-                $0.capabilities.contains("Video to Video")
-            }
-        case 3: models = models.filter { $0.capabilities.contains("Audio") }
-        default: break
+            models = models.filter { $0.capabilities?.contains("Video to Video") == true }
+        case 3:
+            models = models.filter { $0.capabilities?.contains("Audio") == true }
+        default:
+            break
         }
 
         // Sort
         switch sortOrder {
-        case 1: models.sort { $0.cost < $1.cost }
-        case 2: models.sort { $0.cost > $1.cost }
-        default: break
+        case 1: models.sort { ($0.cost ?? 0) < ($1.cost ?? 0) }
+        case 2: models.sort { ($0.cost ?? 0) > ($1.cost ?? 0) }
+        default:
+            break
         }
             filteredAndSortedVideoModels = models
             lastComputedInputs = (videoFilterIndex, sortOrder)
@@ -363,11 +364,11 @@ private struct VideoModelGridItem: View {
                         .system(size: 13, weight: .semibold, design: .rounded)
                     )
                     .foregroundColor(.primary)
-                    .lineLimit(2)
+                    .lineLimit(1)
 
                 Spacer()
 
-                Text("$\(NSDecimalNumber(decimal: item.cost).stringValue)")
+                Text("$\(NSDecimalNumber(decimal: item.cost ?? 0).stringValue)")
                     .font(
                         .system(size: 12, weight: .semibold, design: .rounded)
                     )
@@ -398,7 +399,7 @@ private struct VideoModelListItem: View {
             Spacer()
 
             VStack(alignment: .trailing) {
-                Text("$\(NSDecimalNumber(decimal: item.cost).stringValue)")
+                Text("$\(NSDecimalNumber(decimal: item.cost ?? 0).stringValue)")
                     .font(
                         .system(size: 15, weight: .semibold, design: .rounded)
                     )
@@ -452,7 +453,7 @@ private struct CreditsToolbar: ToolbarContent {
             .padding(.vertical, 6)
             .background(
                 RoundedRectangle(cornerRadius: 20)
-                    .fill(Color.black.opacity(0.4))
+                    .fill(Color.secondary.opacity(0.1))
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 20)

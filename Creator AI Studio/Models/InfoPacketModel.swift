@@ -1,13 +1,27 @@
+// Required: 
+    // Title 
+    // ImageName
+    // Provider
+    // Endpoint
+
+
 import SwiftUI
 
 struct InfoPacket: Codable, Identifiable {
     var id: UUID = UUID()
     var display: DisplayInfo
     var apiConfig: APIConfiguration
-    var prompt: String
-    var cost: Decimal
+    var prompt: String?
+    var cost: Decimal?
     var type: String?
-    var capabilities: [String]
+    var capabilities: [String]?
+
+    
+    // Tell the decoder to ignore 'id'
+    enum CodingKeys: String, CodingKey {
+        case display, apiConfig, prompt, cost, type, capabilities
+        // Notice: 'id' is NOT listed here
+    }
 }
 
 struct DisplayInfo: Codable {
@@ -24,6 +38,8 @@ struct DisplayInfo: Codable {
 struct APIConfiguration: Codable {
     var provider: APIProvider
     var endpoint: String
+    var runwareModel: String?
+    
     var outputFormat: String?
     var enableSyncMode: Bool?
     var enableBase64Output: Bool?
@@ -34,3 +50,4 @@ enum APIProvider: String, Codable {
     case wavespeed
     case runware
 }
+

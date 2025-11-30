@@ -19,6 +19,7 @@
       "moreStyles": []
     },
     "apiConfig": {
+      "provider": "wavespeed",
       "endpoint": "https://api.wavespeed.ai/api/v3/wavespeed-ai/ghibli",
       "outputFormat": "jpeg",
       "enableSyncMode": true,
@@ -44,6 +45,7 @@
       ]
     },
     "apiConfig": {
+      "provider": "wavespeed",
       "endpoint": "https://api.wavespeed.ai/api/v3/image-effects/my-world"
     },
     "cost": 0.05,
@@ -64,6 +66,7 @@
       ]
     },
     "apiConfig": {
+      "provider": "wavespeed",
       "endpoint": "https://api.wavespeed.ai/api/v3/image-effects/micro-landscape-mini-world"
     },
     "cost": 0.05,
@@ -84,6 +87,7 @@
       ]
     },
     "apiConfig": {
+      "provider": "wavespeed",
       "endpoint": "https://api.wavespeed.ai/api/v3/image-effects/plastic-bubble-figure"
     },
     "cost": 0.05,
@@ -101,6 +105,7 @@
       "exampleImages": []
     },
     "apiConfig": {
+      "provider": "wavespeed",
       "endpoint": "https://api.wavespeed.ai/api/v3/google/nano-banana/edit",
       "outputFormat": "jpeg",
       "enableSyncMode": false,
@@ -126,6 +131,7 @@
       ]
     },
     "apiConfig": {
+      "provider": "wavespeed",
       "endpoint": "https://api.wavespeed.ai/api/v3/image-effects/felt-3d-polaroid"
     },
     "cost": 0.05,
@@ -146,6 +152,7 @@
       ]
     },
     "apiConfig": {
+      "provider": "wavespeed",
       "endpoint": "https://api.wavespeed.ai/api/v3/image-effects/glass-ball"
     },
     "cost": 0.05,
@@ -166,6 +173,7 @@
       ]
     },
     "apiConfig": {
+      "provider": "wavespeed",
       "endpoint": "https://api.wavespeed.ai/api/v3/image-effects/futuristic-american-comics"
     },
     "cost": 0.05,
@@ -186,6 +194,7 @@
       ]
     },
     "apiConfig": {
+      "provider": "wavespeed",
       "endpoint": "https://api.wavespeed.ai/api/v3/image-effects/cyberpunk"
     },
     "cost": 0.05,
@@ -206,6 +215,7 @@
       ]
     },
     "apiConfig": {
+      "provider": "wavespeed",
       "endpoint": "https://api.wavespeed.ai/api/v3/image-effects/advanced-photography"
     },
     "cost": 0.05,

@@ -89,16 +89,17 @@ final class ImageModelsViewModel: ObservableObject {
 
         switch imageFilterIndex {
         case 1:
-            models = models.filter { $0.capabilities.contains("Text to Image") }
+            models = models.filter { $0.capabilities?.contains("Text to Image") == true }
         case 2:
-            models = models.filter { $0.capabilities.contains("Image to Image") }
+            models = models.filter { $0.capabilities?.contains("Image to Image") == true }
         default: break
         }
 
         switch sortOrder {
-        case 1: models.sort { $0.cost < $1.cost }
-        case 2: models.sort { $0.cost > $1.cost }
-        default: break
+        case 1: models.sort { ($0.cost ?? 0) < ($1.cost ?? 0) }
+        case 2: models.sort { ($0.cost ?? 0) > ($1.cost ?? 0) }
+        default:
+            break
         }
 
         filteredAndSortedImageModels = models
@@ -353,11 +354,11 @@ private struct ImageModelGridItem: View {
                 Text(item.display.title)
                     .font(.system(size: 13, weight: .semibold, design: .rounded))
                     .foregroundColor(.primary)
-                    .lineLimit(2)
+                    .lineLimit(1)
 
                 Spacer()
 
-                Text("$\(NSDecimalNumber(decimal: item.cost).stringValue)")
+                Text("$\(NSDecimalNumber(decimal: item.cost ?? 0).stringValue)")
                     .font(.system(size: 12, weight: .semibold, design: .rounded))
                     .foregroundColor(.blue)
             }
@@ -386,7 +387,7 @@ private struct ImageModelListItem: View {
             Spacer()
 
             VStack(alignment: .trailing) {
-                Text("$\(NSDecimalNumber(decimal: item.cost).stringValue)")
+                Text("$\(NSDecimalNumber(decimal: item.cost ?? 0).stringValue)")
                     .font(.system(size: 15, weight: .semibold, design: .rounded))
                     .foregroundColor(.blue).opacity(0.9)
                 Text("per image")

@@ -18,7 +18,7 @@ struct ExamplePromptsSheet: View {
                             HStack(spacing: 12) {
                                 // Prompt text
                                 Text(examplePrompt)
-                                    .font(.system(size: 13))
+                                    .font(.system(size: 14))
                                     .foregroundColor(.primary)
                                     .multilineTextAlignment(.leading)
                                     .lineLimit(3)
