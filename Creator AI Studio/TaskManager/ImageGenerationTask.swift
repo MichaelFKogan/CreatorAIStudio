@@ -45,9 +45,9 @@ class ImageGenerationTask: MediaGenerationTask {
         Endpoint: \(item.apiConfig.endpoint)
         Prompt: \(((item.prompt?.isEmpty) != nil) ? "(no prompt)" : "\(item.prompt)")
         Aspect Ratio: \(item.apiConfig.aspectRatio ?? "default")
-        Output Format: \(item.apiConfig.outputFormat)
-        Enable Sync Mode: \(item.apiConfig.enableSyncMode)
-        Enable Base64 Output: \(item.apiConfig.enableBase64Output)
+        Output Format: \(item.apiConfig.wavespeedConfig?.outputFormat)
+        Enable Sync Mode: \(item.apiConfig.wavespeedConfig?.enableSyncMode)
+        Enable Base64 Output: \(item.apiConfig.wavespeedConfig?.enableBase64Output)
         Cost: $\(NSDecimalNumber(decimal: item.cost ?? 0).stringValue)
         ------------------------------
         """)
@@ -59,10 +59,11 @@ class ImageGenerationTask: MediaGenerationTask {
 
             // Determine if this is image-to-image mode (check if image is not a placeholder)
             let isImageToImage = image.size.width > 1 && image.size.height > 1
-            
+
             // Determine output URL based on provider
             let urlString: String
-            
+
+//            MARK: SEND TO WAVESPEED
             switch item.apiConfig.provider {
             case .wavespeed:
                 // Wrap API request in a 360-second timeout to protect against infinite waits.
@@ -70,16 +71,19 @@ class ImageGenerationTask: MediaGenerationTask {
                     try await sendImageToWaveSpeed(
                         image: self.image,
                         prompt: self.item.prompt ?? "",
-                        aspectRatio: self.item.apiConfig.aspectRatio,
-                        outputFormat: self.item.apiConfig.outputFormat ?? "",
-                        enableSyncMode: self.item.apiConfig.enableSyncMode ?? false,
-                        enableBase64Output: self.item.apiConfig.enableBase64Output ?? false,
                         endpoint: self.item.apiConfig.endpoint,
+                        
+                        aspectRatio: self.item.apiConfig.aspectRatio,
+                        
+                        outputFormat: self.item.apiConfig.wavespeedConfig?.outputFormat ?? "",
+                        enableSyncMode: self.item.apiConfig.wavespeedConfig?.enableSyncMode ?? false,
+                        enableBase64Output: self.item.apiConfig.wavespeedConfig?.enableBase64Output ?? false,
+                        
                         maxPollingAttempts: 60,
                         userId: self.userId
                     )
                 }
-                
+
                 guard let outputURL = response.data.outputs?.first else {
                     throw NSError(
                         domain: "APIError",
@@ -88,11 +92,13 @@ class ImageGenerationTask: MediaGenerationTask {
                     )
                 }
                 urlString = outputURL
+
+//            MARK: SEND TO RUNWARE
                 
             case .runware:
                 // Get model name from display info or extract from endpoint
                 let modelName = item.display.modelName ?? extractModelFromEndpoint(item.apiConfig.endpoint) ?? ""
-                
+
                 // Wrap API request in a 360-second timeout to protect against infinite waits.
                 let response = try await withTimeout(seconds: 360) {
                     try await sendImageToRunware(
@@ -101,10 +107,10 @@ class ImageGenerationTask: MediaGenerationTask {
                         model: self.item.apiConfig.runwareModel ?? "",
                         aspectRatio: self.item.apiConfig.aspectRatio,
                         isImageToImage: isImageToImage,
-                        strength: 0.7
+                        runwareConfig: self.item.apiConfig.runwareConfig
                     )
                 }
-                
+
                 guard let outputURL = response.data.first?.imageURL else {
                     throw NSError(
                         domain: "APIError",
@@ -261,9 +267,9 @@ class ImageGenerationTask: MediaGenerationTask {
             }
         }
     }
-    
+
     // MARK: - Helper: Extract Model from Endpoint
-    
+
     /// Attempts to extract model name from endpoint URL
     /// Falls back to a default model if extraction fails
     private func extractModelFromEndpoint(_ endpoint: String) -> String? {

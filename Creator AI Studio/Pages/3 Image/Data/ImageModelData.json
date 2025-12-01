@@ -14,10 +14,11 @@
       "runwareModel": "google:4@1",
       "endpoint": "https://api.runware.ai/v1",
       "aspectRatio": "3:4, 9:16, 1:1, 4:3, 16:9",
-
-      "outputFormat": "jpeg",
-      "enableSyncMode": false,
-      "enableBase64Output": false
+      "runwareConfig": {
+        "imageToImageMethod": "referenceImages",
+        "requiresDimensions": true,
+        "imageCompressionQuality": 0.9
+      }
     },
     "prompt": "",
     "cost": 0.039,
@@ -38,9 +39,11 @@
       "provider": "runware",
       "runwareModel": "bytedance:5@0",
       "endpoint": "https://api.runware.ai/v1",
-      "outputFormat": "jpeg",
-      "enableSyncMode": false,
-      "enableBase64Output": false
+      "runwareConfig": {
+        "imageToImageMethod": "referenceImages",
+        "requiresDimensions": true,
+        "imageCompressionQuality": 0.9
+      }
     },
     "prompt": "",
     "cost": 0.03,
@@ -61,9 +64,17 @@
       "provider": "runware",
       "runwareModel": "runware:106@1",
       "endpoint": "https://api.runware.ai/v1",
-      "outputFormat": "jpeg",
-      "enableSyncMode": false,
-      "enableBase64Output": false
+      "runwareConfig": {
+        "imageToImageMethod": "seedImage",
+
+        "strength": 0.7,
+        "requiresDimensions": true,
+        "imageCompressionQuality": 0.85,
+
+        "outputFormat": "JPG",
+        "outputType": "URL",
+        "outputQuality": 85
+      }
     },
     "prompt": "",
     "cost": 0.025,
@@ -84,9 +95,16 @@
       "provider": "runware",
       "runwareModel": "bfl:3@1",
       "endpoint": "https://api.runware.ai/v1",
-      "outputFormat": "jpeg",
-      "enableSyncMode": false,
-      "enableBase64Output": false
+      "runwareConfig": {
+        "imageToImageMethod": "referenceImages",
+
+        "requiresDimensions": true,
+        "imageCompressionQuality": 0.85,
+
+        "outputFormat": "JPG",
+        "outputType": "URL",
+        "outputQuality": 85
+      }
     },
     "prompt": "",
     "cost": 0.04,
@@ -107,9 +125,12 @@
       "provider": "runware",
       "runwareModel": "bfl:4@1",
       "endpoint": "https://api.runware.ai/v1",
-      "outputFormat": "jpeg",
-      "enableSyncMode": false,
-      "enableBase64Output": false
+      "runwareConfig": {
+        "imageToImageMethod": "referenceImages",
+        "strength": 0.7,
+        "requiresDimensions": true,
+        "imageCompressionQuality": 0.85
+      }
     },
     "prompt": "",
     "cost": 0.08,

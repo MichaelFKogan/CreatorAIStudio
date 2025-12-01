@@ -75,7 +75,7 @@ struct AspectRatioCard: View {
         case "3:4": return "Portrait"
         case "9:16": return "TikTok • Reels"
         case "1:1": return "Instagram"
-        case "4:3": return "Photo Prints"
+        case "4:3": return "Landscape"
         case "16:9": return "YouTube"
         default: return ""
         }

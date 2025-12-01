@@ -1,21 +1,5 @@
 import SwiftUI
 
-// MARK: - Allowed Runware Sizes (must be exact)
-
-private let allowedSizes: [String: (Int, Int)] = [
-    "1:1": (1024, 1024),
-    "3:2": (1248, 832),
-    "2:3": (832, 1248),
-    "4:3": (1184, 864),
-    "3:4": (864, 1184),
-    "4:5": (896, 1152),
-    "5:4": (1152, 896),
-    "9:16": (768, 1344),
-    "16:9": (1344, 768),
-    "21:9": (1536, 672),
-    "auto": (0, 0),
-]
-
 // MARK: - Runware API Response Structure
 
 struct RunwareResponse: Decodable {
@@ -54,14 +38,20 @@ func sendImageToRunware(
     model: String,
     aspectRatio: String? = nil,
     isImageToImage: Bool = false,
-    strength _: Double = 0.7
+    runwareConfig: RunwareConfig? = nil
 ) async throws -> RunwareResponse {
     print("[Runware] Preparing request…")
     print("[Runware] Model: \(model)")
     print("[Runware] Prompt: \(prompt)")
     print("[Runware] Mode: \(isImageToImage ? "Image-to-Image" : "Text-to-Image")")
+    if let config = runwareConfig {
+        print("[Runware] Runware Config: \(config)")
+    }
 
     // MARK: - Determine width/height
+
+    // Get model-specific allowed sizes
+    let allowedSizes = getAllowedSizes(for: model)
 
     var width = 1024
     var height = 1024
@@ -86,9 +76,12 @@ func sendImageToRunware(
         "includeCost": true,
     ]
 
-    // Always include width/height (even for Google models - they seem to use them)
-    task["width"] = width
-    task["height"] = height
+    // Add dimensions if required (default: true)
+    let requiresDimensions = runwareConfig?.requiresDimensions ?? true
+    if requiresDimensions {
+        task["width"] = width
+        task["height"] = height
+    }
 
     // MARK: - Image-to-image: add Base64 reference image
 
@@ -96,7 +89,10 @@ func sendImageToRunware(
         // Fix orientation before converting to base64
         let orientedImage = seedImage.fixedOrientation()
 
-        guard let jpegData = orientedImage.jpegData(compressionQuality: 0.9) else {
+        // Use compression quality from config (default: 0.9)
+        let compressionQuality = runwareConfig?.imageCompressionQuality ?? 0.9
+
+        guard let jpegData = orientedImage.jpegData(compressionQuality: compressionQuality) else {
             throw NSError(
                 domain: "RunwareAPI", code: -1,
                 userInfo: [
@@ -107,16 +103,54 @@ func sendImageToRunware(
         let base64 = jpegData.base64EncodedString()
         let dataURI = "data:image/jpeg;base64,\(base64)"
 
-        // For Google models, use referenceImages array instead of seedImage
-        // if model.hasPrefix("google:") {
-        task["referenceImages"] = [dataURI] // Array of images
-        print("[Runware] Image-to-image enabled with referenceImages (Base64 preview): \(String(dataURI.prefix(100)))…")
-        // } else {
-        //     // For other models like FLUX, use seedImage
-        //     task["seedImage"] = dataURI
-        //     task["strength"] = strength
-        //     print("[Runware] Image-to-image enabled with seedImage (Base64 preview): \(String(dataURI.prefix(100)))…")
-        // }
+        // Determine method from config (default: "referenceImages")
+        let method = runwareConfig?.imageToImageMethod ?? "referenceImages"
+
+        switch method {
+        case "referenceImages":
+            task["referenceImages"] = [dataURI]
+            print("[Runware] Image-to-image enabled with referenceImages (Base64 preview): \(String(dataURI.prefix(100)))…")
+
+        case "seedImage":
+            task["seedImage"] = dataURI
+            if let strength = runwareConfig?.strength {
+                task["strength"] = strength
+            }
+            print("[Runware] Image-to-image enabled with seedImage, strength: \(runwareConfig?.strength ?? 0.7) (Base64 preview): \(String(dataURI.prefix(100)))…")
+
+        default:
+            // Fallback to referenceImages for unknown methods
+            task["referenceImages"] = [dataURI]
+            print("[Runware] Unknown method '\(method)', defaulting to referenceImages (Base64 preview): \(String(dataURI.prefix(100)))…")
+        }
+    }
+
+    // MARK: - Add output format parameters
+
+    // Add output format if specified
+    if let outputFormat = runwareConfig?.outputFormat {
+        task["outputFormat"] = outputFormat
+        print("[Runware] Output format: \(outputFormat)")
+    }
+
+    // Add output type(s) if specified
+    if let outputType = runwareConfig?.outputType {
+        task["outputType"] = outputType
+        print("[Runware] Output type: \(outputType)")
+    }
+
+    // Add output quality if specified (for JPEG)
+    if let outputQuality = runwareConfig?.outputQuality {
+        task["outputQuality"] = outputQuality
+        print("[Runware] Output quality: \(outputQuality)")
+    }
+
+    // Add any additional model-specific parameters
+    if let additionalParams = runwareConfig?.additionalTaskParams {
+        for (key, value) in additionalParams {
+            task[key] = value
+        }
+        print("[Runware] Added \(additionalParams.count) additional task parameters")
     }
 
     // MARK: - Wrap task in authentication array (required!)

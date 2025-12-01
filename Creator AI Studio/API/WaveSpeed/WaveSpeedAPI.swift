@@ -25,11 +25,13 @@ let apiKey = "5fb599c5eca75157f34d7da3efc734a3422a4b5ae0e6bbf753a09b82e6caebdf"
 func sendImageToWaveSpeed(
     image: UIImage,
     prompt: String,
+    endpoint: String,
+    
     aspectRatio: String? = nil, // optional, e.g., "1:1", "16:9"
     outputFormat: String = "jpeg", // "jpeg" or "png"
     enableSyncMode: Bool = true,
     enableBase64Output: Bool = false,
-    endpoint: String,
+
     maxPollingAttempts: Int = 15, // Default 15 for images (30s), use higher for videos
     userId: String? = nil // Required for endpoints that need URL format (like nano-banana)
 
