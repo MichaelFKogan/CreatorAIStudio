@@ -1,24 +1,55 @@
 [
-{
-  "display": {
-    "title": "GPT Image 1",
-    "imageName": "gptimage1",
-    "imageNameOriginal": "yourphoto",
-    "modelName": "GPT Image 1",
-    "modelDescription": "A creative-focused model that excels at stylized visuals, artistic reimagining, and expressive compositions. Great for fantasy, concept art, and cinematic stills.",
-    "modelImageName": "gptimage1",
-    "exampleImages": []
+  {
+    "display": {
+      "title": "GPT Image 1",
+      "imageName": "gptimage1",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "GPT Image 1",
+      "modelDescription": "A creative-focused model that excels at stylized visuals, artistic reimagining, and expressive compositions. Great for fantasy, concept art, and cinematic stills.",
+      "modelImageName": "gptimage1",
+      "exampleImages": []
+    },
+    "apiConfig": {
+      "provider": "runware",
+      "endpoint": "https://api.wavespeed.ai/api/v3/openai/gpt-image-1",
+      "outputFormat": "jpeg",
+      "enableSyncMode": false,
+      "enableBase64Output": false
+    },
+    "prompt": "",
+    "cost": 0.04,
+    "type": "Image Model",
+    "capabilities": ["Text to Image", "Image to Image"]
   },
-  "apiConfig": {
-    "provider": "runware",
-    "endpoint": "https://api.wavespeed.ai/api/v3/openai/gpt-image-1",
-    "outputFormat": "jpeg",
-    "enableSyncMode": false,
-    "enableBase64Output": false
-  },
-  "prompt": "",
-  "cost": 0.04,
-  "type": "Image Model",
-  "capabilities": ["Text to Image", "Image to Image"]
-}
+  {
+    "display": {
+      "title": "FLUX.1 Kontext [dev]",
+      "imageName": "fluxkontextdev",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "FLUX.1 Kontext [dev]",
+      "modelDescription": "An experimental model focused on structure, clarity, and accurate scene composition. Best for previews, drafts, and rapid creative exploration.",
+      "modelImageName": "fluxkontextdev",
+      "exampleImages": []
+    },
+    "apiConfig": {
+      "provider": "runware",
+      "runwareModel": "runware:106@1",
+      "endpoint": "https://api.runware.ai/v1",
+      "runwareConfig": {
+        "imageToImageMethod": "seedImage",
+
+        "strength": 0.7,
+        "requiresDimensions": true,
+        "imageCompressionQuality": 0.85,
+
+        "outputFormat": "JPG",
+        "outputType": "URL",
+        "outputQuality": 85
+      }
+    },
+    "prompt": "",
+    "cost": 0.025,
+    "type": "Image Model",
+    "capabilities": ["Text to Image", "Image to Image"]
+  }
 ]

@@ -106,11 +106,11 @@ struct ContentView: View {
                 HStack(spacing: 0) {
                     tabButton(icon: "house.fill", title: "Home", index: 0)
                     tabButton(icon: "camera.filters", title: "Photo Filters", index: 1)
-                    tabButton(icon: "camera.fill", title: "Create", index: 2)
+                    tabButton(icon: "camera", title: "Create", index: 2)
 
-                    tabButton(icon: "photo.on.rectangle.angled", title: "Image Models", index: 3)
+                    tabButton(icon: "cpu", title: "Generator", index: 3)
                     // tabButton(icon: "video.fill", title: "Video", index: 3)
-                    tabButton(icon: "person.circle.fill", title: "Profile", index: 4)
+                    tabButton(icon: "photo.on.rectangle.angled", title: "Gallery", index: 4)
                 }
                 .padding(.horizontal)
                 .padding(.top, 8)
@@ -167,7 +167,7 @@ struct TabBarButton: View {
         Button(action: action) {
             VStack(spacing: 4) {
                 Image(systemName: icon)
-                    .font(.system(size: 24))
+                    .font(.system(size: 22))
                 Text(title)
                     .font(.caption)
             }

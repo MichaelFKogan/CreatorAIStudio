@@ -101,7 +101,7 @@ struct Post: View {
                     .background(Color.black)
                     
                     // Bottom spacing
-                    Color.clear.frame(height: 45)
+                    Color.clear.frame(height: 44)
                 }
             }
 

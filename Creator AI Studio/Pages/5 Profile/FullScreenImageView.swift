@@ -332,31 +332,8 @@ struct FullScreenImageView: View {
                                         .fontWeight(.semibold)
                                         .foregroundColor(.white)
                                 }
-                                .padding(.bottom, 8)
                             }
-
-                            // Grid layout for metadata
-                            LazyVGrid(columns: [
-                                GridItem(.flexible()),
-                                GridItem(.flexible()),
-                            ], spacing: 10) {
-                                if let type = userImage.type {
-                                    MetadataCard(icon: "tag.fill", label: "Type", value: type)
-                                }
-
-                                if let cost = userImage.cost {
-                                    MetadataCard(icon: "dollarsign.circle.fill", label: "Cost", value: String(format: "$%.2f", cost))
-                                }
-
-                                if let model = userImage.model, !model.isEmpty {
-                                    MetadataCard(icon: "cpu.fill", label: "Model", value: model)
-                                }
-
-                                if let aspectRatio = userImage.aspect_ratio, !aspectRatio.isEmpty {
-                                    AspectRatioCard(aspectRatio: aspectRatio)
-                                }
-                            }
-
+                            
                             // Prompt (if exists) - special prominent display
                             if let prompt = userImage.prompt, !prompt.isEmpty {
                                 VStack(alignment: .leading, spacing: 8) {
@@ -395,7 +372,28 @@ struct FullScreenImageView: View {
                                         .background(Color.white.opacity(0.05))
                                         .cornerRadius(8)
                                 }
-                                .padding(.top, 8)
+                            }
+
+                            // Grid layout for metadata
+                            LazyVGrid(columns: [
+                                GridItem(.flexible()),
+                                GridItem(.flexible()),
+                            ], spacing: 10) {
+                                if let type = userImage.type {
+                                    MetadataCard(icon: "tag.fill", label: "Type", value: type)
+                                }
+
+                                if let cost = userImage.cost {
+                                    MetadataCard(icon: "dollarsign.circle.fill", label: "Cost", value: String(format: "$%.2f", cost))
+                                }
+
+                                if let model = userImage.model, !model.isEmpty {
+                                    MetadataCard(icon: "cpu.fill", label: "Model", value: model)
+                                }
+
+                                if let aspectRatio = userImage.aspect_ratio, !aspectRatio.isEmpty {
+                                    AspectRatioCard(aspectRatio: aspectRatio)
+                                }
                             }
                         }
 

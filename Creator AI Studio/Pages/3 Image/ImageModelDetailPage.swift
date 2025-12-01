@@ -20,6 +20,7 @@ struct ImageModelDetailPage: View {
     @State private var prompt: String = ""
     @FocusState private var isPromptFocused: Bool
     @State private var isExamplePromptsPresented: Bool = false
+    @State private var isTransformPromptsPresented: Bool = false
     @State private var referenceImages: [UIImage] = []
     @State private var selectedPhotoItems: [PhotosPickerItem] = []
 
@@ -59,7 +60,6 @@ struct ImageModelDetailPage: View {
     ]
 
     private let examplePrompts: [String] = [
-        "Transform the existing photo into a high-quality, professional LinkedIn headshot. Be sure to highlight the subject’s natural features (eyes, hair, skin tone, etc) with complimentary true-to-life colors and smooth, even lighting. Dress the subject in modern attire that's polished but approachable (avoid suits, ties, and collared shirts). Use a clean, neutral, quiet city scape background with soft depth of field to keep the focus on the subject while adding a subtle, contemporary look. Frame the image tightly on the head and upper shoulders. Ensure the final image is sharp, well-lit, and conveys confidence, professionalism, and approachability, while retaining the subject's natural features and look.",
         "A serene landscape with mountains at sunset, photorealistic, 8k quality",
         "A futuristic cityscape with flying cars and neon lights at night",
         "A cute fluffy kitten playing with yarn, studio lighting, professional photography",
@@ -90,6 +90,34 @@ struct ImageModelDetailPage: View {
         "A cozy reading nook by a window on a rainy day, warm lighting",
         "A majestic phoenix rising from flames, mythical creature, vibrant colors",
         "A Victorian mansion in foggy weather, gothic atmosphere, haunting beauty",
+    ]
+
+    private let transformPrompts: [String] = [
+        "Transform to anime style",
+        "Transform to watercolor painting",
+        "Transform to oil painting",
+        "Transform to pencil sketch",
+        "Transform to cyberpunk style",
+        "Transform to vintage photograph",
+        "Transform to impressionist painting",
+        "Transform to pop art style",
+        "Transform to black and white",
+        "Transform to steampunk style",
+        "Transform to fantasy art style",
+        "Transform to minimalist design",
+        "Transform to 3D render",
+        "Transform to comic book style",
+        "Transform to surrealist art",
+        "Transform to abstract art",
+        "Transform to pixel art",
+        "Transform to neon art style",
+        "Transform to gothic style",
+        "Transform to kawaii style",
+        "Transform to retro 80s style",
+        "Transform to film noir style",
+        "Transform to Van Gogh painting style",
+        "Transform to Picasso cubist style",
+        "Transform to Monet impressionist style",
     ]
 
     private var costString: String {
@@ -139,6 +167,31 @@ struct ImageModelDetailPage: View {
                                  color: .blue
                              ))
                         // }
+                        
+                        // Example Image Prompts Button
+                        Button(action: { isTransformPromptsPresented = true }) {
+                            HStack {
+                                Image(systemName: "lightbulb.fill").foregroundColor(.blue)
+                                    .font(.caption)
+                                Text("Example Image Prompts").font(.caption).fontWeight(.semibold)
+                                    .foregroundColor(.secondary)
+                                Spacer()
+                                Image(systemName: "chevron.right").font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 8)
+                            .background(Color.gray.opacity(0.06))
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8).stroke(
+                                    Color.blue.opacity(0.3), lineWidth: 1
+                                ))
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                        .padding(.horizontal)
+                        .padding(.top, -12)
+                        .padding(.bottom, -12)
                         
                         Divider().padding(.horizontal)
 
@@ -226,7 +279,16 @@ struct ImageModelDetailPage: View {
             ExamplePromptsSheet(
                 examplePrompts: examplePrompts,
                 selectedPrompt: $prompt,
-                isPresented: $isExamplePromptsPresented
+                isPresented: $isExamplePromptsPresented,
+                title: "Example Text Prompts"
+            )
+        }
+        .sheet(isPresented: $isTransformPromptsPresented) {
+            ExamplePromptsSheet(
+                examplePrompts: transformPrompts,
+                selectedPrompt: $prompt,
+                isPresented: $isTransformPromptsPresented,
+                title: "Example Image Prompts"
             )
         }
         .navigationTitle("")
@@ -447,7 +509,7 @@ struct PromptSection: View {
                     .foregroundColor(.secondary)
             }
             TextEditor(text: $prompt)
-                .font(.system(size: 15, weight: .medium))
+                .font(.system(size: 15))
                 .opacity(0.9)
                 .frame(minHeight: 140)
                 .padding(8)
@@ -479,7 +541,7 @@ struct PromptSection: View {
                 HStack {
                     Image(systemName: "lightbulb.fill").foregroundColor(.blue)
                         .font(.caption)
-                    Text("Example Prompts").font(.caption).fontWeight(.semibold)
+                    Text("Example Text Prompts").font(.caption).fontWeight(.semibold)
                         .foregroundColor(.secondary)
                     Spacer()
                     Image(systemName: "chevron.right").font(.caption)

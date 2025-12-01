@@ -52,37 +52,6 @@
   },
   {
     "display": {
-      "title": "FLUX.1 Kontext [dev]",
-      "imageName": "fluxkontextdev",
-      "imageNameOriginal": "yourphoto",
-      "modelName": "FLUX.1 Kontext [dev]",
-      "modelDescription": "An experimental model focused on structure, clarity, and accurate scene composition. Best for previews, drafts, and rapid creative exploration.",
-      "modelImageName": "fluxkontextdev",
-      "exampleImages": []
-    },
-    "apiConfig": {
-      "provider": "runware",
-      "runwareModel": "runware:106@1",
-      "endpoint": "https://api.runware.ai/v1",
-      "runwareConfig": {
-        "imageToImageMethod": "seedImage",
-
-        "strength": 0.7,
-        "requiresDimensions": true,
-        "imageCompressionQuality": 0.85,
-
-        "outputFormat": "JPG",
-        "outputType": "URL",
-        "outputQuality": 85
-      }
-    },
-    "prompt": "",
-    "cost": 0.025,
-    "type": "Image Model",
-    "capabilities": ["Text to Image", "Image to Image"]
-  },
-  {
-    "display": {
       "title": "FLUX.1 Kontext [pro]",
       "imageName": "fluxkontextpro",
       "imageNameOriginal": "yourphoto",

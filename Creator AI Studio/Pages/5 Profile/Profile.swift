@@ -36,7 +36,7 @@ struct Profile: View {
             .navigationTitle("")
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Text("Profile")
+                    Text("Gallery")
                         .font(
                             .system(size: 28, weight: .bold, design: .rounded)
                         )
@@ -110,7 +110,7 @@ struct ProfileViewContent: View {
                 .toolbar {
                     ToolbarItem(placement: .navigationBarTrailing) {
                         NavigationLink(destination: Settings().environmentObject(authViewModel)) {
-                            Image(systemName: "gearshape.fill")
+                            Image(systemName: "gearshape")
                                 .font(.headline)
                                 .foregroundColor(.gray)
                         }

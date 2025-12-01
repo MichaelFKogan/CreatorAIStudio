@@ -5,6 +5,7 @@ struct ExamplePromptsSheet: View {
     let examplePrompts: [String]
     @Binding var selectedPrompt: String
     @Binding var isPresented: Bool
+    let title: String
 
     var body: some View {
         NavigationView {
@@ -44,7 +45,7 @@ struct ExamplePromptsSheet: View {
                 }
                 .padding()
             }
-            .navigationTitle("Example Prompts")
+            .navigationTitle(title)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
