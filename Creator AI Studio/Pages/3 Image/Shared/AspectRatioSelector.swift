@@ -27,7 +27,7 @@ struct AspectRatioSelector: View {
                 // Rectangular preview
                 ZStack {
                     RoundedRectangle(cornerRadius: 6)
-                        .fill(Color.gray.opacity(0.08))
+                        .fill(Color.gray.opacity(0.2))
                     RoundedRectangle(cornerRadius: 3)
                         .stroke(color, lineWidth: 2)
                         .aspectRatio(selectedOption.width / selectedOption.height, contentMode: .fit)
@@ -65,7 +65,7 @@ struct AspectRatioSelector: View {
             }
             .padding(.vertical, 8)
             .padding(.horizontal, 12)
-            .background(Color.gray.opacity(0.06))
+            .background(Color(UIColor.systemBackground))
             .clipShape(RoundedRectangle(cornerRadius: 12))
             .overlay(RoundedRectangle(cornerRadius: 12).stroke(color.opacity(0.3), lineWidth: 1))
         }

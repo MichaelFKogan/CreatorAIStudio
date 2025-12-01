@@ -22,6 +22,16 @@ private let fluxKontextSizes: [String: (Int, Int)] = [
     "auto": (0, 0),
 ]
 
+// Seedream 4.0
+private let seedream40Sizes: [String: (Int, Int)] = [
+    "1:1": (1024, 1024),
+    "4:3": (1184, 880),
+    "3:4": (880, 1184),
+    "9:16": (752, 1392),
+    "16:9": (1392, 752),
+    "auto": (0, 0),
+]
+
 // MARK: - Model to Size Set Mapping
 
 /// Returns the appropriate allowed sizes dictionary for a given model identifier.
@@ -46,6 +56,10 @@ func getAllowedSizes(for model: String) -> [String: (Int, Int)] {
         modelLower.contains("bfl:4@1")
     {
         return fluxKontextSizes
+    }
+
+    if modelLower.contains("bytedance:5@0") {
+        return seedream40Sizes
     }
 
     // Default fallback to Google Nano Banana sizes

@@ -26,6 +26,7 @@ struct ImageModelDetailPage: View {
     @State private var isGenerating: Bool = false
     @State private var keyboardHeight: CGFloat = 0
     @State private var showEmptyPromptAlert: Bool = false
+    @State private var showCameraSheet: Bool = false
 
     @State private var selectedAspectIndex: Int = 0
     @State private var selectedGenerationMode: Int = 0
@@ -35,11 +36,26 @@ struct ImageModelDetailPage: View {
     // MARK: Constants
 
     private let imageAspectOptions: [AspectRatioOption] = [
-        AspectRatioOption(id: "3:4", label: "3:4", width: 3, height: 4, platforms: ["Portrait"]),
-        AspectRatioOption(id: "9:16", label: "9:16", width: 9, height: 16, platforms: ["TikTok", "Reels"]),
-        AspectRatioOption(id: "1:1", label: "1:1", width: 1, height: 1, platforms: ["Instagram"]),
-        AspectRatioOption(id: "4:3", label: "4:3", width: 4, height: 3, platforms: ["Landscape"]),
-        AspectRatioOption(id: "16:9", label: "16:9", width: 16, height: 9, platforms: ["YouTube"]),
+        AspectRatioOption(
+            id: "3:4", label: "3:4", width: 3, height: 4,
+            platforms: ["Portrait"]
+        ),
+        AspectRatioOption(
+            id: "9:16", label: "9:16", width: 9, height: 16,
+            platforms: ["TikTok", "Reels"]
+        ),
+        AspectRatioOption(
+            id: "1:1", label: "1:1", width: 1, height: 1,
+            platforms: ["Instagram"]
+        ),
+        AspectRatioOption(
+            id: "4:3", label: "4:3", width: 4, height: 3,
+            platforms: ["Landscape"]
+        ),
+        AspectRatioOption(
+            id: "16:9", label: "16:9", width: 16, height: 9,
+            platforms: ["YouTube"]
+        ),
     ]
 
     private let examplePrompts: [String] = [
@@ -76,7 +92,9 @@ struct ImageModelDetailPage: View {
         "A Victorian mansion in foggy weather, gothic atmosphere, haunting beauty",
     ]
 
-    private var costString: String { NSDecimalNumber(decimal: item.cost ?? 0).stringValue }
+    private var costString: String {
+        NSDecimalNumber(decimal: item.cost ?? 0).stringValue
+    }
 
     // MARK: BODY
 
@@ -85,38 +103,116 @@ struct ImageModelDetailPage: View {
             ZStack(alignment: .bottom) {
                 ScrollView {
                     VStack(spacing: 24) {
-                        LazyView(BannerSection(item: item, costString: costString))
+                        LazyView(
+                            BannerSection(item: item, costString: costString))
 
-                        LazyView(TabSwitcher(selectedMode: $selectedGenerationMode))
+                        Divider().padding(.horizontal)
 
-                        // Show ReferenceImagesSection only when "Image to Image" tab is selected
-                        if selectedGenerationMode == 1 {
-                            LazyView(ReferenceImagesSection(
-                                referenceImages: $referenceImages,
-                                selectedPhotoItems: $selectedPhotoItems,
-                                color: .blue
+                        //                        LazyView(TabSwitcher(selectedMode: $selectedGenerationMode))
+
+                        LazyView(
+                            PromptSection(
+                                prompt: $prompt,
+                                isFocused: $isPromptFocused,
+                                isExamplePromptsPresented:
+                                $isExamplePromptsPresented,
+                                examplePrompts: examplePrompts
                             ))
-                        }
 
-                        LazyView(PromptSection(
-                            prompt: $prompt,
-                            isFocused: $isPromptFocused,
-                            isExamplePromptsPresented: $isExamplePromptsPresented,
-                            examplePrompts: examplePrompts
-                        ))
+                        LazyView(
+                            GenerateButton(
+                                prompt: prompt,
+                                isGenerating: $isGenerating,
+                                keyboardHeight: $keyboardHeight,
+                                costString: costString,
+                                action: generate
+                            ))
+                        
+                        Divider().padding(.horizontal)
+                        
+                        // // Show ReferenceImagesSection only when "Image to Image" tab is selected
+                        // if selectedGenerationMode == 1 {
+                             LazyView(ReferenceImagesSection(
+                                 referenceImages: $referenceImages,
+                                 selectedPhotoItems: $selectedPhotoItems,
+                                 showCameraSheet: $showCameraSheet,
+                                 color: .blue
+                             ))
+                        // }
+                        
+                        Divider().padding(.horizontal)
 
-                        LazyView(GenerateButton(
-                            prompt: prompt,
-                            isGenerating: $isGenerating,
-                            keyboardHeight: $keyboardHeight,
-                            costString: costString,
-                            action: generate
-                        ))
+//                        VStack {
+//                            Button {
+//                                //                            showActionSheet = true
+//                            } label: {
+//                                HStack(spacing: 8) {
+//                                    Image(systemName: "camera")
+//                                        .font(.system(size: 14))
+//                                        .foregroundColor(.blue)
+//                                    Text("Add Image")
+//                                        .font(.subheadline)
+//                                        .fontWeight(.semibold)
+//                                        .foregroundColor(.secondary)
+//                                    Text("(Optional)")
+//                                        .font(.caption)
+//                                        .foregroundColor(
+//                                            .secondary.opacity(0.7))
+//                                    Spacer()
+//                                    //                                Image(systemName: "chevron.right")
+//                                    //                                    .font(.system(size: 12))
+//                                    //                                    .foregroundColor(.secondary.opacity(0.6))
+//                                }
+//                                //                                .padding(.horizontal, 12)
+//                                //                                .padding(.vertical, 10)
+//                                .padding()
+//                                .background(Color.gray.opacity(0.06))
+//                                .clipShape(RoundedRectangle(cornerRadius: 8))
+//                                .overlay(
+//                                    RoundedRectangle(cornerRadius: 8)
+//                                        //                                         .stroke(Color.blue.opacity(0.3), lineWidth: 1)
+//                                        .strokeBorder(
+//                                            style: StrokeStyle(
+//                                                lineWidth: 3.5, dash: [6, 4]
+//                                            )
+//                                        )
+//                                        .foregroundColor(.gray.opacity(0.4))
+//                                )
+//                            }
+//                            .buttonStyle(PlainButtonStyle())
+//                            .padding(.horizontal)
+//                            //                        .confirmationDialog("Add Image", isPresented: $showActionSheet, titleVisibility: .visible) {
+//                            //                            Button {
+//                            //                                showCameraSheet = true
+//                            //                            } label: {
+//                            //                                Label("Take Photo", systemImage: "camera.fill")
+//                            //                            }
+//                            //
+//                            //                            Button {
+//                            //                                showPhotosPicker = true
+//                            //                            } label: {
+//                            //                                Label("Choose from Library", systemImage: "photo.on.rectangle")
+//                            //                            }
+//                            //
+//                            //                            Button("Cancel", role: .cancel) {}
+//                            //                        }
+//                            //                        .photosPicker(isPresented: $showPhotosPicker, selection: $selectedPhotoItems, maxSelectionCount: 10, matching: .images)
+//
+//                            // Text("Upload an image to transform it, or use as reference with your prompt")
+//                            //     .font(.caption)
+//                            //     .foregroundColor(.secondary.opacity(0.8))
+//                            //     .fixedSize(horizontal: false, vertical: true)
+//                            //     .padding(.bottom, 4)
+//                        }
 
-                        LazyView(AspectRatioSection(
-                            options: imageAspectOptions,
-                            selectedIndex: $selectedAspectIndex
-                        ))
+                        LazyView(
+                            AspectRatioSection(
+                                options: imageAspectOptions,
+                                selectedIndex: $selectedAspectIndex
+                            ))
+
+                        Divider().padding(.horizontal)
+
                         LazyView(CostCardSection(costString: costString))
                         Color.clear.frame(height: 130) // bottom padding for floating button
                     }
@@ -143,9 +239,11 @@ struct ImageModelDetailPage: View {
                 Text("Image Models")
                     .font(.system(size: 28, weight: .bold, design: .rounded))
                     .foregroundStyle(
-                        LinearGradient(colors: [.blue, .cyan],
-                                       startPoint: .leading,
-                                       endPoint: .trailing)
+                        LinearGradient(
+                            colors: [.blue, .cyan],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
                     )
             }
             ToolbarItemGroup(placement: .keyboard) {
@@ -156,18 +254,31 @@ struct ImageModelDetailPage: View {
                 CreditsView()
             }
         }
-        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { notification in
-            if let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect {
+        .onReceive(
+            NotificationCenter.default.publisher(
+                for: UIResponder.keyboardWillShowNotification)
+        ) { notification in
+            if let keyboardFrame = notification.userInfo?[
+                UIResponder.keyboardFrameEndUserInfoKey
+            ] as? CGRect {
                 keyboardHeight = keyboardFrame.height
             }
         }
-        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
+        .onReceive(
+            NotificationCenter.default.publisher(
+                for: UIResponder.keyboardWillHideNotification)
+        ) { _ in
             keyboardHeight = 0
         }
         .alert("Prompt Required", isPresented: $showEmptyPromptAlert) {
             Button("OK", role: .cancel) {}
         } message: {
             Text("Please enter a prompt to generate an image.")
+        }
+        .sheet(isPresented: $showCameraSheet) {
+            CameraSheetView { capturedImage in
+                referenceImages.append(capturedImage)
+            }
         }
     }
 
@@ -187,7 +298,9 @@ struct ImageModelDetailPage: View {
         modifiedItem.apiConfig.aspectRatio = selectedAspectOption.id
 
         let imageToUse = referenceImages.first ?? createPlaceholderImage()
-        guard let userId = authViewModel.user?.id.uuidString.lowercased(), !userId.isEmpty else {
+        guard let userId = authViewModel.user?.id.uuidString.lowercased(),
+              !userId.isEmpty
+        else {
             isGenerating = false
             return
         }
@@ -200,7 +313,9 @@ struct ImageModelDetailPage: View {
                 onImageGenerated: { _ in isGenerating = false },
                 onError: { error in
                     isGenerating = false
-                    print("Image generation failed: \(error.localizedDescription)")
+                    print(
+                        "Image generation failed: \(error.localizedDescription)"
+                    )
                 }
             )
         }
@@ -231,11 +346,14 @@ struct BannerSection: View {
 
                 VStack(alignment: .leading, spacing: 8) {
                     Text(item.display.title)
-                        .font(.title2).fontWeight(.bold).foregroundColor(.primary)
+                        .font(.title2).fontWeight(.bold).foregroundColor(
+                            .primary
+                        )
                         .fixedSize(horizontal: false, vertical: true)
 
                     HStack(spacing: 6) {
-                        Image(systemName: "photo.on.rectangle.angled").font(.caption)
+                        Image(systemName: "photo.on.rectangle.angled").font(
+                            .caption)
                         Text("Image Generation Model").font(.caption)
                     }
                     .foregroundColor(.white)
@@ -244,8 +362,10 @@ struct BannerSection: View {
                     .background(Capsule().fill(Color.blue.opacity(0.8)))
 
                     HStack(spacing: 4) {
-                        Text("$\(costString)").font(.title3).fontWeight(.bold).foregroundColor(.white)
-                        Text("per image").font(.caption).foregroundColor(.secondary)
+                        Text("$\(costString)").font(.title3).fontWeight(.bold)
+                            .foregroundColor(.white)
+                        Text("per image").font(.caption).foregroundColor(
+                            .secondary)
                     }
                     Spacer()
                 }
@@ -291,7 +411,11 @@ struct TabSwitcher: View {
         }
         .background(Color(UIColor.secondarySystemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 8))
-        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.gray.opacity(0.3), lineWidth: 1))
+        .overlay(
+            RoundedRectangle(cornerRadius: 8).stroke(
+                Color.gray.opacity(0.3), lineWidth: 1
+            )
+        )
         .padding(.horizontal)
     }
 }
@@ -319,7 +443,8 @@ struct PromptSection: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 6) {
                 Image(systemName: "text.alignleft").foregroundColor(.blue)
-                Text("Prompt").font(.subheadline).fontWeight(.semibold).foregroundColor(.secondary)
+                Text("Prompt").font(.subheadline).fontWeight(.semibold)
+                    .foregroundColor(.secondary)
             }
             TextEditor(text: $prompt)
                 .font(.system(size: 15, weight: .semibold))
@@ -330,8 +455,12 @@ struct PromptSection: View {
                 .clipShape(RoundedRectangle(cornerRadius: 12))
                 .overlay(
                     RoundedRectangle(cornerRadius: 12)
-                        .stroke(isFocused ? Color.blue.opacity(0.5) : Color.gray.opacity(0.3),
-                                lineWidth: isFocused ? 2 : 1)
+                        .stroke(
+                            isFocused
+                                ? Color.blue.opacity(0.5)
+                                : Color.gray.opacity(0.3),
+                            lineWidth: isFocused ? 2 : 1
+                        )
                 )
                 .overlay(alignment: .topLeading) {
                     if prompt.isEmpty {
@@ -348,16 +477,22 @@ struct PromptSection: View {
 
             Button(action: { isExamplePromptsPresented = true }) {
                 HStack {
-                    Image(systemName: "lightbulb.fill").foregroundColor(.blue).font(.caption)
-                    Text("Example Prompts").font(.caption).fontWeight(.semibold).foregroundColor(.secondary)
+                    Image(systemName: "lightbulb.fill").foregroundColor(.blue)
+                        .font(.caption)
+                    Text("Example Prompts").font(.caption).fontWeight(.semibold)
+                        .foregroundColor(.secondary)
                     Spacer()
-                    Image(systemName: "chevron.right").font(.caption).foregroundColor(.secondary)
+                    Image(systemName: "chevron.right").font(.caption)
+                        .foregroundColor(.secondary)
                 }
                 .padding(.horizontal, 10)
                 .padding(.vertical, 8)
                 .background(Color.gray.opacity(0.06))
                 .clipShape(RoundedRectangle(cornerRadius: 8))
-                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.blue.opacity(0.3), lineWidth: 1))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8).stroke(
+                        Color.blue.opacity(0.3), lineWidth: 1
+                    ))
             }
             .buttonStyle(PlainButtonStyle())
         }
@@ -372,11 +507,13 @@ struct AspectRatioSection: View {
     @Binding var selectedIndex: Int
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-//            HStack(spacing: 6) {
-//                Image(systemName: "slider.horizontal.3").foregroundColor(.blue)
+            //            HStack(spacing: 6) {
+            //                Image(systemName: "slider.horizontal.3").foregroundColor(.blue)
             Text("Size").font(.caption).foregroundColor(.secondary)
-//            }
-            AspectRatioSelector(options: options, selectedIndex: $selectedIndex, color: .blue)
+            //            }
+            AspectRatioSelector(
+                options: options, selectedIndex: $selectedIndex, color: .blue
+            )
         }
         .padding(.horizontal)
     }
@@ -389,20 +526,28 @@ struct CostCardSection: View {
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
-                Text("Generation Cost").font(.caption).foregroundColor(.secondary)
+                Text("Generation Cost").font(.caption).foregroundColor(
+                    .secondary)
                 HStack(spacing: 4) {
                     Text("1 image").font(.subheadline).foregroundColor(.primary)
                     Text("×").font(.caption).foregroundColor(.secondary)
-                    Text("$\(costString)").font(.subheadline).fontWeight(.semibold).foregroundColor(.blue)
+                    Text("$\(costString)").font(.subheadline).fontWeight(
+                        .semibold
+                    ).foregroundColor(.blue)
                 }
             }
             Spacer()
-            Text("$\(costString)").font(.title3).fontWeight(.bold).foregroundColor(.blue)
+            Text("$\(costString)").font(.title3).fontWeight(.bold)
+                .foregroundColor(.blue)
         }
         .padding()
         .background(Color.blue.opacity(0.08))
         .cornerRadius(12)
-        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.blue.opacity(0.2), lineWidth: 1))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12).stroke(
+                Color.blue.opacity(0.2), lineWidth: 1
+            )
+        )
         .padding(.horizontal)
     }
 }
@@ -425,22 +570,37 @@ struct GenerateButton: View {
             Button(action: action) {
                 HStack {
                     if isGenerating {
-                        ProgressView().progressViewStyle(CircularProgressViewStyle(tint: .white)).scaleEffect(0.8)
+                        ProgressView().progressViewStyle(
+                            CircularProgressViewStyle(tint: .white)
+                        ).scaleEffect(0.8)
                     } else {
                         Image(systemName: "photo.on.rectangle")
                     }
-                    Text(isGenerating ? "Generating..." : "Generate Image - $\(costString)").fontWeight(.semibold)
+                    Text(
+                        isGenerating
+                            ? "Generating..."
+                            : "Generate Image - $\(costString)"
+                    ).fontWeight(.semibold)
                 }
                 .frame(maxWidth: .infinity)
                 .padding()
                 .background(
                     isGenerating
-                        ? LinearGradient(colors: [Color.gray, Color.gray], startPoint: .leading, endPoint: .trailing)
-                        : LinearGradient(colors: [Color.blue.opacity(0.8), Color.blue], startPoint: .leading, endPoint: .trailing)
+                        ? LinearGradient(
+                            colors: [Color.gray, Color.gray],
+                            startPoint: .leading, endPoint: .trailing
+                        )
+                        : LinearGradient(
+                            colors: [Color.blue.opacity(0.8), Color.blue],
+                            startPoint: .leading, endPoint: .trailing
+                        )
                 )
                 .foregroundColor(.white)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
-                .shadow(color: isGenerating ? Color.clear : Color.blue.opacity(0.4), radius: 8, x: 0, y: 4)
+                .shadow(
+                    color: isGenerating ? Color.clear : Color.blue.opacity(0.4),
+                    radius: 8, x: 0, y: 4
+                )
             }
             .scaleEffect(isGenerating ? 0.98 : 1.0)
             .animation(.easeInOut(duration: 0.2), value: isGenerating)
@@ -459,14 +619,30 @@ struct CreditsView: View {
     var body: some View {
         HStack(spacing: 6) {
             Image(systemName: "diamond.fill")
-                .foregroundStyle(LinearGradient(colors: [.blue, .cyan], startPoint: .topLeading, endPoint: .bottomTrailing))
+                .foregroundStyle(
+                    LinearGradient(
+                        colors: [.blue, .cyan], startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
                 .font(.system(size: 8))
-            Text("$5.00").font(.system(size: 14, weight: .semibold, design: .rounded)).foregroundColor(.primary)
+            Text("$5.00").font(
+                .system(size: 14, weight: .semibold, design: .rounded)
+            ).foregroundColor(.primary)
             Text("credits left").font(.caption2).foregroundColor(.secondary)
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 6)
-        .background(RoundedRectangle(cornerRadius: 20).fill(Color.blue.opacity(0.1)).shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2))
-        .overlay(RoundedRectangle(cornerRadius: 20).strokeBorder(LinearGradient(colors: [.blue, .cyan], startPoint: .leading, endPoint: .trailing), lineWidth: 1.5))
+        .background(
+            RoundedRectangle(cornerRadius: 20).fill(Color.blue.opacity(0.1))
+                .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 20).strokeBorder(
+                LinearGradient(
+                    colors: [.blue, .cyan], startPoint: .leading,
+                    endPoint: .trailing
+                ), lineWidth: 1.5
+            ))
     }
 }

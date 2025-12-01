@@ -106,7 +106,7 @@ struct ContentView: View {
                 HStack(spacing: 0) {
                     tabButton(icon: "house.fill", title: "Home", index: 0)
                     tabButton(icon: "camera.filters", title: "Photo Filters", index: 1)
-                    tabButton(icon: "camera.fill", title: "Capture", index: 2)
+                    tabButton(icon: "camera.fill", title: "Create", index: 2)
 
                     tabButton(icon: "photo.on.rectangle.angled", title: "Image Models", index: 3)
                     // tabButton(icon: "video.fill", title: "Video", index: 3)
