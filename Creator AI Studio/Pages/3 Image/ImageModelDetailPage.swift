@@ -363,7 +363,7 @@ struct BannerSection: View {
 
                     HStack(spacing: 4) {
                         Text("$\(costString)").font(.title3).fontWeight(.bold)
-                            .foregroundColor(.white)
+                            .foregroundColor(.blue)
                         Text("per image").font(.caption).foregroundColor(
                             .secondary)
                     }
@@ -447,7 +447,7 @@ struct PromptSection: View {
                     .foregroundColor(.secondary)
             }
             TextEditor(text: $prompt)
-                .font(.system(size: 15, weight: .semibold))
+                .font(.system(size: 15, weight: .medium))
                 .opacity(0.9)
                 .frame(minHeight: 140)
                 .padding(8)
@@ -509,7 +509,10 @@ struct AspectRatioSection: View {
         VStack(alignment: .leading, spacing: 6) {
             //            HStack(spacing: 6) {
             //                Image(systemName: "slider.horizontal.3").foregroundColor(.blue)
-            Text("Size").font(.caption).foregroundColor(.secondary)
+            Text("Size")
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .padding(.top, -6)
             //            }
             AspectRatioSelector(
                 options: options, selectedIndex: $selectedIndex, color: .blue

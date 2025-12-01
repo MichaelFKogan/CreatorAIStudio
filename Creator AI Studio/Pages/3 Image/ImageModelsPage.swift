@@ -389,7 +389,7 @@ private struct ImageModelListItem: View {
             VStack(alignment: .trailing) {
                 Text("$\(NSDecimalNumber(decimal: item.cost ?? 0).stringValue)")
                     .font(.system(size: 15, weight: .semibold, design: .rounded))
-                    .foregroundColor(.blue).opacity(0.9)
+                    .foregroundColor(.blue)
                 Text("per image")
                     .font(.caption2)
                     .foregroundColor(.secondary)

@@ -29,7 +29,7 @@ struct Home: View {
                             Image(systemName: "diamond.fill")
                                 .foregroundStyle(
                                     LinearGradient(
-                                        colors: [.blue, .blue],
+                                        colors: [.purple, .purple],
                                         startPoint: .topLeading,
                                         endPoint: .bottomTrailing
                                     )
@@ -57,7 +57,7 @@ struct Home: View {
                         .overlay(
                             RoundedRectangle(cornerRadius: 20)
                                 .strokeBorder(
-                                    LinearGradient(colors: [.blue, .blue],
+                                    LinearGradient(colors: [.purple, .purple],
                                                    startPoint: .leading,
                                                    endPoint: .trailing),
                                     lineWidth: 1.5
@@ -70,7 +70,7 @@ struct Home: View {
 
     private var titleGradient: [Color] {
         colorScheme == .dark
-        ? [.blue, .cyan]
-        : [.blue, .cyan]
+        ? [.pink, .purple]
+        : [.pink, .purple]
     }
 }

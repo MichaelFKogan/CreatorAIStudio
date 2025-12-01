@@ -20,34 +20,29 @@ struct ReferenceImagesSection: View {
             CGFloat(columns.count) * 100 + CGFloat(columns.count - 1) * 12
 
         VStack {
-            
-            VStack(spacing: 8){
+
+            VStack(spacing: 8) {
                 HStack(spacing: 6) {
                     Image(systemName: "photo.on.rectangle")
                         .foregroundColor(color)  // Use the color parameter
-                    Text("Image(s)")
+                    Text("Image(s) (Optional)")
                         .font(.subheadline)
                         .fontWeight(.semibold)
                         .foregroundColor(.secondary)
-                    
+
                     Spacer()
-                    
+
                     // Take Photo tile
                     Button {
                         showCameraSheet = true
                     } label: {
                         Image(systemName: "camera")
-                            .font(.system(size: 20)) // Slightly smaller looks better inside a bubble
+                            .font(.system(size: 22))
                             .foregroundColor(.blue)
-//                            .padding(8) // Controls the hit area inside the background
-//                            .background(
-//                                RoundedRectangle(cornerRadius: 8)
-//                                    .fill(Color(.gray).opacity(0.2))
-//                            )
                     }
                     .buttonStyle(.plain)
-                    .padding(.horizontal, 12)
-                    
+                    .padding(.horizontal, 6)
+
                 }
 
                 HStack {
@@ -56,55 +51,56 @@ struct ReferenceImagesSection: View {
                     )
                     .font(.caption)
                     .foregroundColor(.secondary.opacity(0.8))
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(.bottom, 4)
+                    .padding(.bottom, 8)
 
                     Spacer()
                 }
             }
             .padding(.horizontal)
+            .padding(.top, -4)
 
             VStack(alignment: .leading, spacing: 8) {
-                
-                HStack{
-                    
+
+                HStack {
+
                     LazyVGrid(columns: columns, spacing: 12) {
-                        
-                        //                    // Take Photo tile
-                        //                    Button {
-                        //                        showCameraSheet = true
-                        //                    } label: {
-                        //                        VStack(spacing: 12) {
-                        //                            Image(systemName: "camera.fill")
-                        //                                .font(.system(size: 28))
-                        //                                .foregroundColor(.gray.opacity(0.5))
-                        //                            VStack(spacing: 4) {
-                        //                                Text("Take Photo")
-                        //                                    .font(.caption)
-                        //                                    .fontWeight(.medium)
-                        //                                    .foregroundColor(.gray)
-                        //                                Text("Camera")
-                        //                                    .font(.caption2)
-                        //                                    .foregroundColor(.gray.opacity(0.7))
-                        //                            }
-                        //                        }
-                        //                        .frame(width: 100, height: 100)
-                        //                        .background(Color.gray.opacity(0.03))
-                        //                        .clipShape(RoundedRectangle(cornerRadius: 12))
-                        //                        .overlay(
-                        //                            RoundedRectangle(cornerRadius: 12)
-                        //                                .strokeBorder(
-                        //                                    style: StrokeStyle(
-                        //                                        lineWidth: 3.5, dash: [6, 4])
-                        //                                )
-                        //                                .foregroundColor(.gray.opacity(0.4))
-                        //                        )
-                        //                    }
-                        //                    .buttonStyle(PlainButtonStyle())
-                        
+
+                        // Take Photo tile
+                        Button {
+                            showCameraSheet = true
+                        } label: {
+                            VStack(spacing: 12) {
+                                Image(systemName: "camera.fill")
+                                    .font(.system(size: 28))
+                                    .foregroundColor(.gray.opacity(0.5))
+                                VStack(spacing: 4) {
+                                    Text("Take Photo")
+                                        .font(.caption)
+                                        .fontWeight(.medium)
+                                        .foregroundColor(.gray)
+                                    Text("Camera")
+                                        .font(.caption2)
+                                        .foregroundColor(.gray.opacity(0.7))
+                                }
+                            }
+                            .frame(width: 100, height: 100)
+                            .background(Color.gray.opacity(0.03))
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .strokeBorder(
+                                        style: StrokeStyle(
+                                            lineWidth: 3.5, dash: [6, 4])
+                                    )
+                                    .foregroundColor(.gray.opacity(0.4))
+                            )
+                        }
+                        .buttonStyle(PlainButtonStyle())
+
                         // Add images tile
                         PhotosPicker(
-                            selection: $selectedPhotoItems, maxSelectionCount: 10,
+                            selection: $selectedPhotoItems,
+                            maxSelectionCount: 10,
                             matching: .images
                         ) {
                             VStack(spacing: 12) {
@@ -137,9 +133,10 @@ struct ReferenceImagesSection: View {
                             Task {
                                 var newlyAdded: [UIImage] = []
                                 for item in newItems {
-                                    if let data = try? await item.loadTransferable(
-                                        type: Data.self),
-                                       let image = UIImage(data: data)
+                                    if let data =
+                                        try? await item.loadTransferable(
+                                            type: Data.self),
+                                        let image = UIImage(data: data)
                                     {
                                         newlyAdded.append(image)
                                     }
@@ -148,7 +145,7 @@ struct ReferenceImagesSection: View {
                                 selectedPhotoItems.removeAll()
                             }
                         }
-                        
+
                         // Existing selected reference images
                         ForEach(referenceImages.indices, id: \.self) { index in
                             ZStack(alignment: .topTrailing) {
@@ -156,15 +153,20 @@ struct ReferenceImagesSection: View {
                                     .resizable()
                                     .aspectRatio(contentMode: .fill)  // fills the square without warping
                                     .frame(width: 100, height: 100)  // fixed square size
-                                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                                    .clipShape(
+                                        RoundedRectangle(cornerRadius: 12)
+                                    )
                                     .clipped()  // crop overflow
                                     .overlay(
                                         RoundedRectangle(cornerRadius: 12)
                                             .stroke(
-                                                color.opacity(0.6), lineWidth: 1)
+                                                color.opacity(0.6), lineWidth: 1
+                                            )
                                     )
-                                
-                                Button(action: { referenceImages.remove(at: index) }
+
+                                Button(action: {
+                                    referenceImages.remove(at: index)
+                                }
                                 ) {
                                     Image(systemName: "xmark.circle.fill")
                                         .font(.title3)
@@ -176,7 +178,7 @@ struct ReferenceImagesSection: View {
                         }
                     }
                     .frame(width: gridWidth, alignment: .leading)
-                    
+
                     Spacer()
                 }
 

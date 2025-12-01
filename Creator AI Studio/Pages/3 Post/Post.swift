@@ -9,6 +9,9 @@ struct Post: View {
     @State private var selectedUIImage: UIImage?
     @State private var showLibraryPicker = false
     @State private var navigateToPhotoReview = false
+    
+    @StateObject private var filtersViewModel = PhotoFiltersViewModel()
+    @State private var selectedFilter: InfoPacket?
 
     var body: some View {
         NavigationView {
@@ -30,6 +33,7 @@ struct Post: View {
                 // Camera controls (your existing VStack with ❌ / ✅ or capture button)
                 VStack {
                     Spacer()
+                    
 //                    if cameraService.capturedImage == nil {
                     // Library + capture button
                     HStack(spacing: 24) {
@@ -75,8 +79,29 @@ struct Post: View {
                     .padding(.horizontal)
                     .padding(.bottom, 0)
                     
+                    VStack{
+                        HStack{
+                            Text("Filter")
+                                .font(.caption)
+                                .foregroundColor(.white)
+                            Spacer()
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.bottom, 4)
+                        
+                        // Horizontal scrollable filter row
+                        FilterScrollRow(
+                            filters: filtersViewModel.filters,
+                            selectedFilter: selectedFilter,
+                            onSelect: { selectedFilter = $0 }
+                        )
+                    }
+                    .padding(.top, 8)
+                    .padding(.bottom, 18)
+                    .background(Color.black)
+                    
                     // Bottom spacing
-                    Color.clear.frame(height: 60)
+                    Color.clear.frame(height: 45)
                 }
             }
 
@@ -119,72 +144,6 @@ struct Post: View {
                         // Reset the captured image when the review page is dismissed
                         cameraService.capturedImage = nil
                     }
-            }
-        }
-    }
-}
-
-// MARK: - StyleSelectionButton Component
-
-struct StyleSelectionButtonTwo: View {
-    let title: String
-    let icon: String
-    let description: String
-    let backgroundImage: String
-    let isSelected: Bool
-    let action: () -> Void
-
-    var body: some View {
-        VStack {
-            Button(action: action) {
-                ZStack(alignment: .topTrailing) {
-                    // Background image - no extra container
-                    Image(backgroundImage)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: 50, height: 50)
-                        .clipped()
-
-                    // Clean content layout
-                    VStack(alignment: .leading, spacing: 6) {
-                        // Checkmark in top left
-                        if isSelected {
-                            HStack {
-                                ZStack {
-                                    Image(systemName: "circle.fill")
-                                        .font(.system(size: 20))
-                                        .foregroundColor(.accentColor)
-                                    Image(systemName: "checkmark")
-                                        .font(.system(size: 10, weight: .bold))
-                                        .foregroundColor(.white)
-                                }
-                            }
-                            Spacer()
-                        }
-                    }
-                    .padding(2)
-                }
-                .clipShape(RoundedRectangle(cornerRadius: 12))
-                .padding(6)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 18)
-                        .stroke(
-                            isSelected ? Color.accentColor : Color.gray.opacity(0.3),
-                            lineWidth: isSelected ? 3 : 1
-                        )
-                )
-                .shadow(color: isSelected ? .accentColor.opacity(0.3) : .black.opacity(0.1), radius: isSelected ? 8 : 4, x: 0, y: 2)
-                .animation(.easeInOut(duration: 0.2), value: isSelected)
-            }
-            .padding(.vertical, 2)
-            .buttonStyle(PlainButtonStyle())
-
-            // Clean content layout
-            VStack(alignment: .leading) {
-                Text(description)
-                    .font(.caption)
-                    .foregroundColor(.primary.opacity(0.95))
-                    .lineLimit(2)
             }
         }
     }
