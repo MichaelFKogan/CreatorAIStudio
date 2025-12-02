@@ -43,7 +43,7 @@ struct FilterCategorySheet: View {
     var body: some View {
         NavigationView {
             ZStack {
-                Color.black.ignoresSafeArea()
+//                Color.black.ignoresSafeArea()
 
                 ScrollView {
                     VStack(spacing: 0) {
@@ -55,7 +55,6 @@ struct FilterCategorySheet: View {
                             selectedFilter: selectedFilter,
                             onSelect: { filter in
                                 onSelect(filter)
-                                isPresented = false
                             },
                             isExpanded: true,
                             isAlwaysExpanded: true
@@ -76,7 +75,6 @@ struct FilterCategorySheet: View {
                                     selectedFilter: selectedFilter,
                                     onSelect: { filter in
                                         onSelect(filter)
-                                        isPresented = false
                                     },
                                     isExpanded: expandedCategories.contains(category),
                                     isAlwaysExpanded: false,
@@ -100,7 +98,7 @@ struct FilterCategorySheet: View {
                     .padding(.bottom, 20)
                 }
             }
-            .navigationTitle("Filters")
+            .navigationTitle("Photo Filters")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {

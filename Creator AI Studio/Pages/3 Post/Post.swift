@@ -48,7 +48,7 @@ struct Post: View {
 
                 // Camera controls (your existing VStack with ❌ / ✅ or capture button)
                 VStack {
-                    // MARK: SWITCH CAMERA
+                    // MARK: SWITCH CAMERA BUTTON
 
                     HStack {
                         Spacer()
@@ -75,7 +75,7 @@ struct Post: View {
                     HStack {
                         Spacer()
 
-                        // MARK: PHOTO LIBRARY PICKER
+                        // MARK: PHOTO LIBRARY BUTTON
 
                         HStack(spacing: 8) {
                             Button {
@@ -103,7 +103,7 @@ struct Post: View {
                             .frame(width: 50, height: 50)
                         }
 
-                        // MARK: CAPTURE PHOTO (centered)
+                        // MARK: CAPTURE BUTTON
 
                         Button {
                             cameraService.capturePhoto()
@@ -115,6 +115,8 @@ struct Post: View {
                         .padding(.horizontal, 24)
 
                         // MARK: MODE SWITCHER
+
+                        // MARK: FILTER BUTTON
 
                         HStack(spacing: 8) {
                             Button {
@@ -151,13 +153,15 @@ struct Post: View {
                             }
                             .shadow(color: .black.opacity(0.6), radius: 4, x: 0, y: 0)
 
+                            // MARK: AI MODEL BUTTON
+
                             Button {
                                 selectedMode = .imageModel
                             } label: {
                                 VStack(spacing: 4) {
                                     Image(systemName: "cpu")
                                         .font(.system(size: 20))
-                                    Text("AI Model")
+                                    Text("AI")
                                         .font(
                                             .system(size: 10, weight: .medium))
                                 }
@@ -191,22 +195,16 @@ struct Post: View {
                     .padding(.trailing, 8)
                     .padding(.bottom, 12)
 
+                    // MARK: BOTTOM ROW
+
                     VStack {
                         // Conditional bottom section based on mode
                         if selectedMode == .photoFilter {
                             // MARK: PHOTO FILTER
 
-                            HStack {
-                                Text("Filter")
-                                    .font(.caption)
-                                    .foregroundColor(.white)
-                                Spacer()
-                            }
-                            .padding(.horizontal)
-
                             // Quick filters row with "See All" button
                             QuickFiltersRow(
-                                quickFilters: filtersViewModel.quickFilters,
+                                quickFilters: filtersViewModel.quickFilters(limit: nil), // nil = show all filters
                                 selectedFilter: selectedFilter,
                                 onSelect: { selectedFilter = $0 },
                                 onShowAll: { showFilterCategorySheet = true }
@@ -214,16 +212,7 @@ struct Post: View {
 
                         } else {
                             // MARK: IMAGE MODEL
-
                             // Image Model selection
-
-                            HStack {
-                                Text("Image Model")
-                                    .font(.caption)
-                                    .foregroundColor(.white)
-                                Spacer()
-                            }
-                            .padding(.horizontal)
 
                             Button {
                                 showImageModelSelectionSheet = true
@@ -300,10 +289,8 @@ struct Post: View {
                             }
                             .padding(.horizontal, 12)
                         }
-                        Spacer()
                     }
-                    .padding(.top, 12)
-                    .frame(height: 135)
+                    .frame(height: 115)
 //                    .background(Color.black).opacity(0.9)
                     .background(
                         ZStack {
@@ -324,7 +311,7 @@ struct Post: View {
                     )
 
                     // Bottom spacing
-                    Color.clear.frame(height: 44)
+                    Color.clear.frame(height: 45)
                 }
             }
 

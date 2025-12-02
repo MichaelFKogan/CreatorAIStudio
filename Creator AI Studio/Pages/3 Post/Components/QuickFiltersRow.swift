@@ -11,6 +11,11 @@ struct QuickFiltersRow: View {
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 12) {
+                
+//                Text("Filters")
+//                    .font(.caption)
+//                    .foregroundColor(.white)
+                
                 // "See All" button
                 Button {
                     onShowAll()

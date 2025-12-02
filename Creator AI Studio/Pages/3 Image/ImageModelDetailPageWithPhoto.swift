@@ -128,23 +128,25 @@ struct ImageModelDetailPageWithPhoto: View {
             ZStack(alignment: .bottom) {
                 ScrollView {
                     VStack(spacing: 24) {
-                        LazyView(BannerSection(item: item, costString: costString))
+                        LazyView(
+                            BannerSection(item: item, costString: costString))
 
                         Divider().padding(.horizontal)
 
-                        // Show captured image at top
-                        CapturedImageSection(image: capturedImage)
-                            .padding(.horizontal)
+                        //                        // Show captured image at top
+                        //                        CapturedImageSection(image: capturedImage)
+                        //                            .padding(.horizontal)
 
                         // ReferenceImagesSection with pre-populated image
-                        LazyView(ReferenceImagesSectionWithPhoto(
-                            image: capturedImage,
-                            referenceImages: $referenceImages,
-                            selectedPhotoItems: $selectedPhotoItems,
-                            showCameraSheet: $showCameraSheet,
-                            color: .blue,
-                            initialImage: capturedImage
-                        ))
+                        LazyView(
+                            ReferenceImagesSectionWithPhoto(
+                                image: capturedImage,
+                                referenceImages: $referenceImages,
+                                selectedPhotoItems: $selectedPhotoItems,
+                                showCameraSheet: $showCameraSheet,
+                                color: .blue,
+                                initialImage: capturedImage
+                            ))
 
                         LazyView(
                             PromptSection(
@@ -307,7 +309,7 @@ struct CapturedImageSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 6) {
-                Image(systemName: "camera.fill")
+                Image(systemName: "camera")
                     .foregroundColor(.blue)
                 Text("Your Photo")
                     .font(.subheadline)
@@ -317,10 +319,21 @@ struct CapturedImageSection: View {
             }
 
             HStack {
+                Text(
+                    "You can add more images or use as reference with your prompt"
+                )
+                .font(.caption)
+                .foregroundColor(.secondary.opacity(0.8))
+                .padding(.bottom, 8)
+
+                Spacer()
+            }
+
+            HStack {
                 Image(uiImage: image)
                     .resizable()
                     .aspectRatio(contentMode: .fill)
-                    .frame(maxWidth: 125)
+                    .frame(width: 115, height: 160)
                     .clipShape(RoundedRectangle(cornerRadius: 6))
                     .overlay(
                         RoundedRectangle(cornerRadius: 6)
@@ -342,22 +355,21 @@ struct ReferenceImagesSectionWithPhoto: View {
     let initialImage: UIImage
 
     @State private var showActionSheet: Bool = false
-    @State private var showPhotosPicker: Bool = false
 
     private let columns: [GridItem] = Array(
-        repeating: GridItem(.fixed(100), spacing: 12), count: 3
+        repeating: GridItem(.fixed(115), spacing: 12), count: 3
     )
 
     var body: some View {
         let gridWidth =
-            CGFloat(columns.count) * 100 + CGFloat(columns.count - 1) * 12
+            CGFloat(columns.count) * 115 + CGFloat(columns.count - 1) * 12
 
         VStack {
             VStack(spacing: 8) {
                 HStack(spacing: 6) {
                     Image(systemName: "photo.on.rectangle")
                         .foregroundColor(color)
-                    Text("Image(s) (Optional)")
+                    Text("Your Photo")
                         .font(.subheadline)
                         .fontWeight(.semibold)
                         .foregroundColor(.secondary)
@@ -367,7 +379,7 @@ struct ReferenceImagesSectionWithPhoto: View {
 
                 HStack {
                     Text(
-                        "Your captured photo is included. You can add more images or use as reference with your prompt"
+                        "Your captured photo is included. Add a prompt to transform your photo. You can also add more images to use as a reference with your prompt."
                     )
                     .font(.caption)
                     .foregroundColor(.secondary.opacity(0.8))
@@ -381,40 +393,29 @@ struct ReferenceImagesSectionWithPhoto: View {
 
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
-                    LazyVGrid(columns: columns, spacing: 12) {
-                        Image(uiImage: image)
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                            .frame(maxWidth: 125)
+                    if referenceImages.isEmpty {
+                        // Full-width button when no images
+                        Button {
+                            showActionSheet = true
+                        } label: {
+                            VStack(spacing: 8) {
+                                Image(systemName: "camera")
+                                    .font(.system(size: 26))
+                                    .foregroundColor(.gray.opacity(0.6))
+                                Text("Add Images")
+                                    .font(.subheadline)
+                                    .fontWeight(.medium)
+                                    .foregroundColor(.gray)
+                                Text("Camera or Gallery")
+                                    .font(.caption)
+                                    .foregroundColor(.gray.opacity(0.7))
+                            }
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 160)
+                            .background(Color.gray.opacity(0.03))
                             .clipShape(RoundedRectangle(cornerRadius: 6))
                             .overlay(
                                 RoundedRectangle(cornerRadius: 6)
-                                    .stroke(Color.blue.opacity(0.3), lineWidth: 3)
-                            )
-
-                        // Take Photo tile
-                        Button {
-                            showCameraSheet = true
-                        } label: {
-                            VStack(spacing: 12) {
-                                Image(systemName: "camera.fill")
-                                    .font(.system(size: 28))
-                                    .foregroundColor(.gray.opacity(0.5))
-                                VStack(spacing: 4) {
-                                    Text("Take Photo")
-                                        .font(.caption)
-                                        .fontWeight(.medium)
-                                        .foregroundColor(.gray)
-                                    Text("Camera")
-                                        .font(.caption2)
-                                        .foregroundColor(.gray.opacity(0.7))
-                                }
-                            }
-                            .frame(width: 100, height: 100)
-                            .background(Color.gray.opacity(0.03))
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 12)
                                     .strokeBorder(
                                         style: StrokeStyle(
                                             lineWidth: 3.5, dash: [6, 4]
@@ -424,94 +425,190 @@ struct ReferenceImagesSectionWithPhoto: View {
                             )
                         }
                         .buttonStyle(PlainButtonStyle())
+                    } else {
+                        // Grid layout when images exist
+                        LazyVGrid(columns: columns, spacing: 12) {
+                            // Existing selected reference images
+                            ForEach(referenceImages.indices, id: \.self) {
+                                index in
+                                ZStack(alignment: .topTrailing) {
+                                    Image(uiImage: referenceImages[index])
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fill)
+                                        .frame(width: 115, height: 160)
+                                        .clipShape(
+                                            RoundedRectangle(cornerRadius: 6)
+                                        )
+                                        .clipped()
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 6)
+                                                .stroke(
+                                                    color.opacity(0.6),
+                                                    lineWidth: 1
+                                                )
+                                        )
 
-                        // Add images tile
-                        PhotosPicker(
-                            selection: $selectedPhotoItems,
-                            maxSelectionCount: 10,
-                            matching: .images
-                        ) {
-                            VStack(spacing: 12) {
-                                Image(systemName: "photo.on.rectangle")
-                                    .font(.system(size: 28))
-                                    .foregroundColor(.gray.opacity(0.5))
-                                VStack(spacing: 4) {
+                                    Button(action: {
+                                        referenceImages.remove(at: index)
+                                    }) {
+                                        ZStack {
+                                            Circle()
+                                                .fill(Color.gray)
+                                                .frame(width: 20, height: 20)
+
+                                            Image(systemName: "xmark")
+                                                .font(.system(size: 10, weight: .bold))
+                                                .foregroundColor(.white)
+                                        }
+                                    }
+                                    .padding(4)
+                                    .shadow(color: Color.black.opacity(0.2), radius: 3, x: 0, y: 1)
+
+                                }
+                            }
+
+                            // Grid-sized add button
+                            Button {
+                                showActionSheet = true
+                            } label: {
+                                VStack(spacing: 8) {
+                                    Image(systemName: "camera")
+                                        .font(.system(size: 26))
+                                        .foregroundColor(.gray.opacity(0.6))
                                     Text("Add Images")
-                                        .font(.caption)
+                                        .font(.subheadline)
                                         .fontWeight(.medium)
                                         .foregroundColor(.gray)
-                                    Text("Up to 10")
-                                        .font(.caption2)
+                                    Text("Camera or Gallery")
+                                        .font(.caption)
                                         .foregroundColor(.gray.opacity(0.7))
                                 }
-                            }
-                            .frame(width: 100, height: 100)
-                            .background(Color.gray.opacity(0.03))
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .strokeBorder(
-                                        style: StrokeStyle(
-                                            lineWidth: 3.5, dash: [6, 4]
-                                        )
-                                    )
-                                    .foregroundColor(.gray.opacity(0.4))
-                            )
-                        }
-                        .onChange(of: selectedPhotoItems) { newItems in
-                            Task {
-                                var newlyAdded: [UIImage] = []
-                                for item in newItems {
-                                    if let data =
-                                        try? await item.loadTransferable(
-                                            type: Data.self),
-                                        let image = UIImage(data: data)
-                                    {
-                                        newlyAdded.append(image)
-                                    }
-                                }
-                                referenceImages.append(contentsOf: newlyAdded)
-                                selectedPhotoItems.removeAll()
-                            }
-                        }
-
-                        // Existing selected reference images
-                        ForEach(referenceImages.indices, id: \.self) { index in
-                            ZStack(alignment: .topTrailing) {
-                                Image(uiImage: referenceImages[index])
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fill)
-                                    .frame(width: 100, height: 100)
-                                    .clipShape(
-                                        RoundedRectangle(cornerRadius: 12)
-                                    )
-                                    .clipped()
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 12)
-                                            .stroke(
-                                                color.opacity(0.6), lineWidth: 1
+                                .frame(width: 115, height: 160)
+                                .background(Color.gray.opacity(0.03))
+                                .clipShape(RoundedRectangle(cornerRadius: 6))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 6)
+                                        .strokeBorder(
+                                            style: StrokeStyle(
+                                                lineWidth: 3.5, dash: [6, 4]
                                             )
-                                    )
-
-                                Button(action: {
-                                    referenceImages.remove(at: index)
-                                }
-                                ) {
-                                    Image(systemName: "xmark.circle.fill")
-                                        .font(.title3)
-                                        .foregroundColor(.white)
-                                        .background(Circle().fill(Color.red))
-                                }
-                                .padding(6)
+                                        )
+                                        .foregroundColor(.gray.opacity(0.4))
+                                )
                             }
+                            .buttonStyle(PlainButtonStyle())
                         }
+                        .frame(width: gridWidth, alignment: .leading)
                     }
-                    .frame(width: gridWidth, alignment: .leading)
 
                     Spacer()
                 }
             }
             .padding(.horizontal)
         }
+        .sheet(isPresented: $showActionSheet) {
+            ImageSourceSelectionSheet(
+                showCameraSheet: $showCameraSheet,
+                selectedPhotoItems: $selectedPhotoItems,
+                showActionSheet: $showActionSheet,
+                referenceImages: $referenceImages
+            )
+        }
+    }
+}
+
+// MARK: - Image Source Selection Sheet
+
+struct ImageSourceSelectionSheet: View {
+    @Binding var showCameraSheet: Bool
+    @Binding var selectedPhotoItems: [PhotosPickerItem]
+    @Binding var showActionSheet: Bool
+    @Binding var referenceImages: [UIImage]
+
+    var body: some View {
+        NavigationView {
+            VStack(spacing: 20) {
+                Button {
+                    showActionSheet = false
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                        showCameraSheet = true
+                    }
+                } label: {
+                    HStack(spacing: 16) {
+                        Image(systemName: "camera.fill")
+                            .font(.system(size: 24))
+                            .foregroundColor(.blue)
+                            .frame(width: 40)
+                        Text("Camera")
+                            .font(.headline)
+                            .foregroundColor(.primary)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding()
+                    .background(Color.gray.opacity(0.1))
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                }
+                .buttonStyle(PlainButtonStyle())
+
+                PhotosPicker(
+                    selection: $selectedPhotoItems,
+                    maxSelectionCount: 10,
+                    matching: .images
+                ) {
+                    HStack(spacing: 16) {
+                        Image(systemName: "photo.on.rectangle")
+                            .font(.system(size: 24))
+                            .foregroundColor(.blue)
+                            .frame(width: 40)
+                        Text("Gallery")
+                            .font(.headline)
+                            .foregroundColor(.primary)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding()
+                    .background(Color.gray.opacity(0.1))
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                }
+                .buttonStyle(PlainButtonStyle())
+                .onChange(of: selectedPhotoItems) { newItems in
+                    if !newItems.isEmpty {
+                        Task {
+                            var newlyAdded: [UIImage] = []
+                            for item in newItems {
+                                if let data =
+                                    try? await item.loadTransferable(
+                                        type: Data.self),
+                                    let image = UIImage(data: data)
+                                {
+                                    newlyAdded.append(image)
+                                }
+                            }
+                            referenceImages.append(contentsOf: newlyAdded)
+                            selectedPhotoItems.removeAll()
+                            showActionSheet = false
+                        }
+                    }
+                }
+
+                Spacer()
+            }
+            .padding()
+            .navigationTitle("Add Images")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Cancel") {
+                        showActionSheet = false
+                    }
+                }
+            }
+        }
+        .presentationDetents([.height(250)])
     }
 }
