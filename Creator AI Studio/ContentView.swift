@@ -175,11 +175,13 @@ struct TabBarButton: View {
                 if hasSpecialStyling {
                     ZStack {
                         Circle()
-                            .fill(Color.pink)
+                            // The stroke modifier draws the border around the shape.
+                            .stroke(Color.pink, lineWidth: 3) // Add the pink border
+                            .fill(Color.black)
                             .frame(width: 60, height: 60)
                         Image(systemName: icon)
                             .font(.system(size: 22))
-                            .foregroundColor(.black)
+                            .foregroundColor(.pink)
                     }
                     .offset(y: 5)
                 } else {
