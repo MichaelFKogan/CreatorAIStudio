@@ -157,7 +157,7 @@ struct Post: View {
                                 VStack(spacing: 4) {
                                     Image(systemName: "cpu")
                                         .font(.system(size: 20))
-                                    Text("Model")
+                                    Text("AI Model")
                                         .font(
                                             .system(size: 10, weight: .medium))
                                 }

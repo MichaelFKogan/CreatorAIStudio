@@ -151,6 +151,8 @@ struct FullScreenImageView: View {
     @Binding var isPresented: Bool
     @State private var zoom: CGFloat = 1.0
     @State private var lastZoom: CGFloat = 1.0
+    @State private var panOffset: CGSize = .zero
+    @State private var lastPanOffset: CGSize = .zero
     @State private var showDeleteAlert = false
     @State private var isDeleting = false
     @State private var isDownloading = false
@@ -161,6 +163,7 @@ struct FullScreenImageView: View {
     @State private var showCopySuccess = false
     @State private var showDownloadError = false
     @State private var downloadErrorMessage = ""
+    @State private var isImmersiveMode = false
 
     var mediaURL: URL? {
         URL(string: userImage.image_url)
@@ -197,15 +200,15 @@ struct FullScreenImageView: View {
         ZStack {
             Color.black.ignoresSafeArea()
 
-            ScrollView {
-                VStack(spacing: 0) {
-                    // Media section (image or video)
+            if isImmersiveMode {
+                // Immersive full-screen mode - only media
+                ZStack {
                     if isVideo {
                         // Video player
                         if let url = mediaURL {
                             VideoPlayer(player: player)
                                 .aspectRatio(contentMode: .fit)
-                                .frame(maxWidth: .infinity)
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
                                 .onAppear {
                                     player = AVPlayer(url: url)
                                     player?.play()
@@ -214,326 +217,464 @@ struct FullScreenImageView: View {
                                     player?.pause()
                                     player = nil
                                 }
+                                .onTapGesture {
+                                    // Tap to exit immersive mode
+                                    withAnimation {
+                                        isImmersiveMode = false
+                                    }
+                                }
                         }
                     } else {
                         // Image viewer
                         if let url = mediaURL {
                             KFImage(url)
                                 .resizable()
-                                .aspectRatio(contentMode: .fill)
-                                .frame(maxWidth: .infinity)
-                                .clipped()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
                                 .scaleEffect(zoom)
+                                .offset(panOffset)
                                 .gesture(
-                                    MagnificationGesture()
-                                        .onChanged { value in
-                                            zoom = lastZoom * value
-                                        }
-                                        .onEnded { _ in
-                                            lastZoom = zoom
-                                            // Limit zoom range
-                                            if lastZoom < 1.0 {
-                                                withAnimation {
-                                                    lastZoom = 1.0
-                                                    zoom = 1.0
+                                    SimultaneousGesture(
+                                        MagnificationGesture()
+                                            .onChanged { value in
+                                                zoom = lastZoom * value
+                                            }
+                                            .onEnded { _ in
+                                                lastZoom = zoom
+                                                // Limit zoom range
+                                                if lastZoom < 1.0 {
+                                                    withAnimation {
+                                                        lastZoom = 1.0
+                                                        zoom = 1.0
+                                                        panOffset = .zero
+                                                        lastPanOffset = .zero
+                                                    }
+                                                } else if lastZoom > 5.0 {
+                                                    withAnimation {
+                                                        lastZoom = 5.0
+                                                        zoom = 5.0
+                                                    }
                                                 }
-                                            } else if lastZoom > 5.0 {
-                                                withAnimation {
-                                                    lastZoom = 5.0
-                                                    zoom = 5.0
+                                            },
+                                        DragGesture()
+                                            .onChanged { value in
+                                                if zoom > 1.0 {
+                                                    panOffset = CGSize(
+                                                        width: lastPanOffset.width + value.translation.width,
+                                                        height: lastPanOffset.height + value.translation.height
+                                                    )
                                                 }
+                                            }
+                                            .onEnded { _ in
+                                                if zoom > 1.0 {
+                                                    lastPanOffset = panOffset
+                                                } else {
+                                                    panOffset = .zero
+                                                    lastPanOffset = .zero
+                                                }
+                                            }
+                                    )
+                                )
+                                .simultaneousGesture(
+                                    TapGesture(count: 2)
+                                        .onEnded {
+                                            // Double-tap to reset zoom
+                                            withAnimation(.spring()) {
+                                                zoom = 1.0
+                                                lastZoom = 1.0
+                                                panOffset = .zero
+                                                lastPanOffset = .zero
                                             }
                                         }
                                 )
-                                .onTapGesture(count: 2) {
-                                    // Double-tap to reset zoom
-                                    withAnimation(.spring()) {
-                                        zoom = 1.0
-                                        lastZoom = 1.0
+                                .onTapGesture {
+                                    // Single tap to exit immersive mode
+                                    withAnimation {
+                                        isImmersiveMode = false
                                     }
                                 }
                         }
                     }
 
-                    // Info section below image
-                    VStack(alignment: .leading, spacing: 16) {
-                        Divider()
-                            .background(Color.gray.opacity(0.3))
-
-                        // Display media type badge
+                    // Exit button in immersive mode
+                    VStack {
                         HStack {
-                            HStack(spacing: 4) {
-                                Image(systemName: isVideo ? "video.fill" : "photo.fill")
-                                    .font(.caption)
-                                Text(isVideo ? "Video" : "Image")
-                                    .font(.caption)
-                                    .fontWeight(.medium)
-                            }
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
-                            .background(
-                                Capsule()
-                                    .fill(isVideo ? Color.purple.opacity(0.3) : Color.blue.opacity(0.3))
-                            )
-
-                            if let ext = userImage.file_extension {
-                                Text(ext.uppercased())
-                                    .font(.caption2)
-                                    .foregroundColor(.gray)
-                            }
-
                             Spacer()
+                            Button(action: {
+                                withAnimation {
+                                    isImmersiveMode = false
+                                }
+                            }) {
+                                Image(systemName: "xmark.circle.fill")
+                                    .font(.system(size: 30))
+                                    .foregroundColor(.white.opacity(0.8))
+                                    .background(Color.black.opacity(0.3))
+                                    .clipShape(Circle())
+                            }
+                            .padding()
                         }
-                        .padding(.bottom, 4)
+                        Spacer()
+                    }
+                }
+            } else {
+                // Normal mode with metadata
+                ScrollView {
+                    VStack(spacing: 0) {
+                        // Media section (image or video)
+                        ZStack(alignment: .topTrailing) {
+                            if isVideo {
+                                // Video player
+                                if let url = mediaURL {
+                                    VideoPlayer(player: player)
+                                        .aspectRatio(contentMode: .fit)
+                                        .frame(maxWidth: .infinity)
+                                        .onAppear {
+                                            player = AVPlayer(url: url)
+                                            player?.play()
+                                        }
+                                        .onDisappear {
+                                            player?.pause()
+                                            player = nil
+                                        }
+                                }
+                            } else {
+                                // Image viewer
+                                if let url = mediaURL {
+                                    KFImage(url)
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fill)
+                                        .frame(maxWidth: .infinity)
+                                        .clipped()
+                                        .scaleEffect(zoom)
+                                        .gesture(
+                                            MagnificationGesture()
+                                                .onChanged { value in
+                                                    zoom = lastZoom * value
+                                                }
+                                                .onEnded { _ in
+                                                    lastZoom = zoom
+                                                    // Limit zoom range
+                                                    if lastZoom < 1.0 {
+                                                        withAnimation {
+                                                            lastZoom = 1.0
+                                                            zoom = 1.0
+                                                        }
+                                                    } else if lastZoom > 5.0 {
+                                                        withAnimation {
+                                                            lastZoom = 5.0
+                                                            zoom = 5.0
+                                                        }
+                                                    }
+                                                }
+                                        )
+                                        .onTapGesture(count: 2) {
+                                            // Double-tap to reset zoom
+                                            withAnimation(.spring()) {
+                                                zoom = 1.0
+                                                lastZoom = 1.0
+                                            }
+                                        }
+                                }
+                            }
 
-                        // Display Photo Filter or Video Filter information
-                        if isPhotoFilter || isVideoFilter {
-                            // Title - prominent display
-                            if let title = userImage.title, !title.isEmpty {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text("Filter Name")
+                            // Full-screen icon button
+                            Button(action: {
+                                withAnimation {
+                                    isImmersiveMode = true
+                                    panOffset = .zero
+                                    lastPanOffset = .zero
+                                }
+                            }) {
+                                Image(systemName: "arrow.up.left.and.arrow.down.right")
+                                    .font(.system(size: 18, weight: .medium))
+                                    .foregroundColor(.white)
+                                    .frame(width: 36, height: 36)
+                                    .background(Color.black.opacity(0.5))
+                                    .clipShape(Circle())
+                            }
+                            .padding(12)
+                        }
+
+                        // Info section below image
+                        VStack(alignment: .leading, spacing: 16) {
+                            Divider()
+                                .background(Color.gray.opacity(0.3))
+
+                            // Display media type badge
+                            HStack {
+                                HStack(spacing: 4) {
+                                    Image(systemName: isVideo ? "video.fill" : "photo.fill")
+                                        .font(.caption)
+                                    Text(isVideo ? "Video" : "Image")
+                                        .font(.caption)
+                                        .fontWeight(.medium)
+                                }
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .background(
+                                    Capsule()
+                                        .fill(isVideo ? Color.purple.opacity(0.3) : Color.blue.opacity(0.3))
+                                )
+
+                                if let ext = userImage.file_extension {
+                                    Text(ext.uppercased())
                                         .font(.caption2)
                                         .foregroundColor(.gray)
-                                    Text(title)
-                                        .font(.title3)
-                                        .fontWeight(.semibold)
-                                        .foregroundColor(.white)
                                 }
-                                .padding(.bottom, 8)
+
+                                Spacer()
                             }
+                            .padding(.bottom, 4)
 
-                            // Grid layout for metadata
-                            LazyVGrid(columns: [
-                                GridItem(.flexible()),
-                                GridItem(.flexible()),
-                            ], spacing: 10) {
-                                if let type = userImage.type {
-                                    MetadataCard(icon: "tag.fill", label: "Type", value: type)
-                                }
-
-                                if let cost = userImage.cost {
-                                    MetadataCard(icon: "dollarsign.circle.fill", label: "Cost", value: String(format: "$%.2f", cost))
-                                }
-
-                                if let aspectRatio = userImage.aspect_ratio, !aspectRatio.isEmpty {
-                                    AspectRatioCard(aspectRatio: aspectRatio)
-                                }
-                            }
-                        }
-
-                        else if isImageModel || isVideoModel {
-                            // Title - prominent display
-                            if let title = userImage.title, !title.isEmpty {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text("Filter Name")
-                                        .font(.caption2)
-                                        .foregroundColor(.gray)
-                                    Text(title)
-                                        .font(.title3)
-                                        .fontWeight(.semibold)
-                                        .foregroundColor(.white)
-                                }
-                            }
-
-                            // Prompt (if exists) - special prominent display
-                            if let prompt = userImage.prompt, !prompt.isEmpty {
-                                VStack(alignment: .leading, spacing: 8) {
-                                    HStack {
-                                        Image(systemName: "text.alignleft")
-                                            .font(.caption2)
-                                            .foregroundColor(.white.opacity(0.88))
-                                        Text("Prompt")
+                            // Display Photo Filter or Video Filter information
+                            if isPhotoFilter || isVideoFilter {
+                                // Title - prominent display
+                                if let title = userImage.title, !title.isEmpty {
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text("Filter Name")
                                             .font(.caption2)
                                             .foregroundColor(.gray)
+                                        Text(title)
+                                            .font(.title3)
+                                            .fontWeight(.semibold)
+                                            .foregroundColor(.white)
+                                    }
+                                    .padding(.bottom, 8)
+                                }
 
-                                        Spacer()
+                                // Grid layout for metadata
+                                LazyVGrid(columns: [
+                                    GridItem(.flexible()),
+                                    GridItem(.flexible()),
+                                ], spacing: 10) {
+                                    if let type = userImage.type {
+                                        MetadataCard(icon: "tag.fill", label: "Type", value: type)
+                                    }
 
-                                        Button(action: {
-                                            copyPromptToClipboard(prompt)
-                                        }) {
-                                            HStack(spacing: 4) {
-                                                Image(systemName: showCopySuccess ? "checkmark.circle.fill" : "doc.on.doc")
-                                                    .foregroundColor(showCopySuccess ? .green : .white.opacity(0.8))
-                                                    .font(.system(size: 14, weight: .regular))
-                                                if showCopySuccess {
-                                                    Text("Copied")
-                                                        .font(.caption2)
-                                                        .foregroundColor(.green)
+                                    if let cost = userImage.cost {
+                                        MetadataCard(icon: "dollarsign.circle.fill", label: "Cost", value: String(format: "$%.2f", cost))
+                                    }
+
+                                    if let aspectRatio = userImage.aspect_ratio, !aspectRatio.isEmpty {
+                                        AspectRatioCard(aspectRatio: aspectRatio)
+                                    }
+                                }
+                            }
+
+                            else if isImageModel || isVideoModel {
+                                // Title - prominent display
+                                if let title = userImage.title, !title.isEmpty {
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text("Filter Name")
+                                            .font(.caption2)
+                                            .foregroundColor(.gray)
+                                        Text(title)
+                                            .font(.title3)
+                                            .fontWeight(.semibold)
+                                            .foregroundColor(.white)
+                                    }
+                                }
+
+                                // Prompt (if exists) - special prominent display
+                                if let prompt = userImage.prompt, !prompt.isEmpty {
+                                    VStack(alignment: .leading, spacing: 8) {
+                                        HStack {
+                                            Image(systemName: "text.alignleft")
+                                                .font(.caption2)
+                                                .foregroundColor(.white.opacity(0.88))
+                                            Text("Prompt")
+                                                .font(.caption2)
+                                                .foregroundColor(.gray)
+
+                                            Spacer()
+
+                                            Button(action: {
+                                                copyPromptToClipboard(prompt)
+                                            }) {
+                                                HStack(spacing: 4) {
+                                                    Image(systemName: showCopySuccess ? "checkmark.circle.fill" : "doc.on.doc")
+                                                        .foregroundColor(showCopySuccess ? .green : .white.opacity(0.8))
+                                                        .font(.system(size: 14, weight: .regular))
+                                                    if showCopySuccess {
+                                                        Text("Copied")
+                                                            .font(.caption2)
+                                                            .foregroundColor(.green)
+                                                    }
                                                 }
                                             }
                                         }
-                                    }
 
-                                    Text(prompt)
-                                        .font(.system(size: 15, weight: .medium))
-                                        .foregroundColor(.white)
-                                        .fixedSize(horizontal: false, vertical: true)
-                                        .padding(12)
-                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                        .background(Color.white.opacity(0.05))
-                                        .cornerRadius(8)
-                                }
-                            }
-
-                            // Grid layout for metadata
-                            LazyVGrid(columns: [
-                                GridItem(.flexible()),
-                                GridItem(.flexible()),
-                            ], spacing: 10) {
-                                if let type = userImage.type {
-                                    MetadataCard(icon: "tag.fill", label: "Type", value: type)
-                                }
-
-                                if let cost = userImage.cost {
-                                    MetadataCard(icon: "dollarsign.circle.fill", label: "Cost", value: String(format: "$%.2f", cost))
-                                }
-
-                                if let model = userImage.model, !model.isEmpty {
-                                    MetadataCard(icon: "cpu.fill", label: "Model", value: model)
-                                }
-
-                                if let aspectRatio = userImage.aspect_ratio, !aspectRatio.isEmpty {
-                                    AspectRatioCard(aspectRatio: aspectRatio)
-                                }
-                            }
-                        }
-
-                        else {
-                            // For other types, show generic info
-                            VStack(alignment: .leading, spacing: 12) {
-                                HStack(spacing: 4) {
-                                    Image(systemName: "sparkles")
-                                        .foregroundColor(.white.opacity(0.6))
-                                    Text("AI Generated")
-                                        .font(.subheadline)
-                                        .foregroundColor(.gray)
-                                }
-
-                                if let model = userImage.model, !model.isEmpty {
-                                    MetadataCard(icon: "cpu.fill", label: "Model", value: model)
-                                }
-                            }
-                        }
-
-                        Spacer()
-
-                        VStack {
-                            //                        // Animate button
-                            //                        HStack(spacing: 4) {
-                            //                            Image(systemName: "video.fill")
-                            //                            Text("Animate This Image")
-                            //                                .fontWeight(.semibold)
-                            //                        }
-                            //                        .font(.subheadline)
-                            //                        .foregroundColor(.white)
-                            //                        .frame(maxWidth: .infinity)
-                            //                        .padding(.vertical, 12)
-                            //                        .background(Color.green.opacity(0.3))
-                            //                        .cornerRadius(10)
-                            //
-                            //
-                            //                        // Reuse Model Button (only for Photo Filters)
-                            //                        if isPhotoFilter {
-                            //                            Button(action: {
-                            //                                // TODO: Load this model/preset and navigate to generation view
-                            ////                                isPresented = false
-                            //                                // You'll need to pass the model parameters back to your generation view
-                            //                            }) {
-                            //                                HStack {
-                            //                                    Image(systemName: "arrow.clockwise")
-                            //                                    Text("Use This Filter")
-                            //                                        .fontWeight(.semibold)
-                            //                                }
-                            //                                .font(.subheadline)
-                            //                                .foregroundColor(.white)
-                            //                                .frame(maxWidth: .infinity)
-                            //                                .padding(.vertical, 12)
-                            //                                .background(
-                            //                                    LinearGradient(
-                            //                                        colors: [.blue, .purple],
-                            //                                        startPoint: .leading,
-                            //                                        endPoint: .trailing
-                            //                                    )
-                            //                                )
-                            //                                .cornerRadius(10)
-                            //                            }
-                            //                        }
-
-                            // Download button
-                            Button(action: {
-                                Task {
-                                    await downloadImage()
-                                }
-                            }) {
-                                HStack(spacing: 4) {
-                                    if isDownloading {
-                                        ProgressView()
-                                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                            .scaleEffect(0.8)
-                                    } else if showDownloadSuccess {
-                                        Image(systemName: "checkmark.circle.fill")
-                                            .foregroundColor(.green)
-                                        Text("Saved to your photos")
-                                            .fontWeight(.semibold)
-                                    } else {
-                                        Image(systemName: "arrow.down.circle")
-                                        Text("Download")
-                                            .fontWeight(.semibold)
+                                        Text(prompt)
+                                            .font(.system(size: 15, weight: .medium))
+                                            .foregroundColor(.white)
+                                            .fixedSize(horizontal: false, vertical: true)
+                                            .padding(12)
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                            .background(Color.white.opacity(0.05))
+                                            .cornerRadius(8)
                                     }
                                 }
-                                .font(.subheadline)
-                                .foregroundColor(showDownloadSuccess ? .green : .white)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 12)
-                                .background(showDownloadSuccess ? Color.green.opacity(0.15) : Color.blue.opacity(0.3))
-                                .cornerRadius(10)
-                            }
-                            .disabled(isDeleting || isDownloading || showDownloadSuccess)
 
-                            // Share button
-                            if let url = mediaURL {
-                                ShareLink(item: url) {
+                                // Grid layout for metadata
+                                LazyVGrid(columns: [
+                                    GridItem(.flexible()),
+                                    GridItem(.flexible()),
+                                ], spacing: 10) {
+                                    if let type = userImage.type {
+                                        MetadataCard(icon: "tag.fill", label: "Type", value: type)
+                                    }
+
+                                    if let cost = userImage.cost {
+                                        MetadataCard(icon: "dollarsign.circle.fill", label: "Cost", value: String(format: "$%.2f", cost))
+                                    }
+
+                                    if let model = userImage.model, !model.isEmpty {
+                                        MetadataCard(icon: "cpu.fill", label: "Model", value: model)
+                                    }
+
+                                    if let aspectRatio = userImage.aspect_ratio, !aspectRatio.isEmpty {
+                                        AspectRatioCard(aspectRatio: aspectRatio)
+                                    }
+                                }
+                            }
+
+                            else {
+                                // For other types, show generic info
+                                VStack(alignment: .leading, spacing: 12) {
                                     HStack(spacing: 4) {
-                                        Image(systemName: "square.and.arrow.up")
-                                        Text("Share")
+                                        Image(systemName: "sparkles")
+                                            .foregroundColor(.white.opacity(0.6))
+                                        Text("AI Generated")
+                                            .font(.subheadline)
+                                            .foregroundColor(.gray)
+                                    }
+
+                                    if let model = userImage.model, !model.isEmpty {
+                                        MetadataCard(icon: "cpu.fill", label: "Model", value: model)
+                                    }
+                                }
+                            }
+
+                            Spacer()
+
+                            VStack {
+                                //                        // Animate button
+                                //                        HStack(spacing: 4) {
+                                //                            Image(systemName: "video.fill")
+                                //                            Text("Animate This Image")
+                                //                                .fontWeight(.semibold)
+                                //                        }
+                                //                        .font(.subheadline)
+                                //                        .foregroundColor(.white)
+                                //                        .frame(maxWidth: .infinity)
+                                //                        .padding(.vertical, 12)
+                                //                        .background(Color.green.opacity(0.3))
+                                //                        .cornerRadius(10)
+                                //
+                                //
+                                //                        // Reuse Model Button (only for Photo Filters)
+                                //                        if isPhotoFilter {
+                                //                            Button(action: {
+                                //                                // TODO: Load this model/preset and navigate to generation view
+                                ////                                isPresented = false
+                                //                                // You'll need to pass the model parameters back to your generation view
+                                //                            }) {
+                                //                                HStack {
+                                //                                    Image(systemName: "arrow.clockwise")
+                                //                                    Text("Use This Filter")
+                                //                                        .fontWeight(.semibold)
+                                //                                }
+                                //                                .font(.subheadline)
+                                //                                .foregroundColor(.white)
+                                //                                .frame(maxWidth: .infinity)
+                                //                                .padding(.vertical, 12)
+                                //                                .background(
+                                //                                    LinearGradient(
+                                //                                        colors: [.blue, .purple],
+                                //                                        startPoint: .leading,
+                                //                                        endPoint: .trailing
+                                //                                    )
+                                //                                )
+                                //                                .cornerRadius(10)
+                                //                            }
+                                //                        }
+
+                                // Download button
+                                Button(action: {
+                                    Task {
+                                        await downloadImage()
+                                    }
+                                }) {
+                                    HStack(spacing: 4) {
+                                        if isDownloading {
+                                            ProgressView()
+                                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                                .scaleEffect(0.8)
+                                        } else if showDownloadSuccess {
+                                            Image(systemName: "checkmark.circle.fill")
+                                                .foregroundColor(.green)
+                                            Text("Saved to your photos")
+                                                .fontWeight(.semibold)
+                                        } else {
+                                            Image(systemName: "arrow.down.circle")
+                                            Text("Download")
+                                                .fontWeight(.semibold)
+                                        }
+                                    }
+                                    .font(.subheadline)
+                                    .foregroundColor(showDownloadSuccess ? .green : .white)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 12)
+                                    .background(showDownloadSuccess ? Color.green.opacity(0.15) : Color.blue.opacity(0.3))
+                                    .cornerRadius(10)
+                                }
+                                .disabled(isDeleting || isDownloading || showDownloadSuccess)
+
+                                // Share button
+                                if let url = mediaURL {
+                                    ShareLink(item: url) {
+                                        HStack(spacing: 4) {
+                                            Image(systemName: "square.and.arrow.up")
+                                            Text("Share")
+                                                .fontWeight(.semibold)
+                                        }
+                                        .font(.subheadline)
+                                        .foregroundColor(.white)
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 12)
+                                        .background(Color.purple.opacity(0.3))
+                                        .cornerRadius(10)
+                                    }
+                                    .disabled(isDeleting || isDownloading)
+                                }
+
+                                // Delete button
+                                Button(action: {
+                                    showDeleteAlert = true
+                                }) {
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "trash.fill")
+                                        Text("Delete")
                                             .fontWeight(.semibold)
                                     }
                                     .font(.subheadline)
                                     .foregroundColor(.white)
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 12)
-                                    .background(Color.purple.opacity(0.3))
+                                    .background(Color.red.opacity(0.3))
                                     .cornerRadius(10)
                                 }
-                                .disabled(isDeleting || isDownloading)
+                                .disabled(isDeleting)
                             }
-
-                            // Delete button
-                            Button(action: {
-                                showDeleteAlert = true
-                            }) {
-                                HStack(spacing: 4) {
-                                    Image(systemName: "trash.fill")
-                                    Text("Delete")
-                                        .fontWeight(.semibold)
-                                }
-                                .font(.subheadline)
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 12)
-                                .background(Color.red.opacity(0.3))
-                                .cornerRadius(10)
-                            }
-                            .disabled(isDeleting)
+                            .padding(.bottom, 40)
                         }
-                        .padding(.bottom, 40)
-                    }
-                    .padding()
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color.black.opacity(0.8))
+                        .padding()
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color.black.opacity(0.8))
 
-                    Spacer()
+                        Spacer()
+                    }
                 }
             }
         }
