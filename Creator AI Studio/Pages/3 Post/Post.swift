@@ -9,7 +9,7 @@ struct Post: View {
     @State private var selectedUIImage: UIImage?
     @State private var showLibraryPicker = false
     @State private var navigateToPhotoReview = false
-    
+
     @StateObject private var filtersViewModel = PhotoFiltersViewModel()
     @State private var selectedFilter: InfoPacket?
     @State private var showFilterCategorySheet = false
@@ -34,7 +34,7 @@ struct Post: View {
                 // Camera controls (your existing VStack with ❌ / ✅ or capture button)
                 VStack {
                     Spacer()
-                    
+
 //                    if cameraService.capturedImage == nil {
                     // Library + capture button
                     HStack(spacing: 24) {
@@ -79,17 +79,16 @@ struct Post: View {
                     }
                     .padding(.horizontal)
                     .padding(.bottom, 0)
-                    
-                    VStack{
-                        HStack{
+
+                    VStack {
+                        HStack {
                             Text("Filter")
                                 .font(.caption)
                                 .foregroundColor(.white)
                             Spacer()
                         }
-                        .padding(.horizontal, 20)
-                        .padding(.bottom, 4)
-                        
+                        .padding(.horizontal)
+
                         // Quick filters row with "See All" button
                         QuickFiltersRow(
                             quickFilters: filtersViewModel.quickFilters,
@@ -101,9 +100,9 @@ struct Post: View {
                     .padding(.top, 8)
                     .padding(.bottom, 18)
                     .background(Color.black)
-                    
+
                     // Bottom spacing
-                    Color.clear.frame(height: 44)
+                    Color.clear.frame(height: 70)
                 }
             }
 

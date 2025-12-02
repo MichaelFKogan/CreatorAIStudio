@@ -11,18 +11,6 @@ struct QuickFiltersRow: View {
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 12) {
-                // Quick filter thumbnails
-                ForEach(quickFilters) { filter in
-                    FilterThumbnailCompact(
-                        title: filter.display.title,
-                        imageName: filter.display.imageName,
-                        isSelected: selectedFilter?.id == filter.id
-                    )
-                    .onTapGesture {
-                        onSelect(filter)
-                    }
-                }
-                
                 // "See All" button
                 Button {
                     onShowAll()
@@ -37,8 +25,8 @@ struct QuickFiltersRow: View {
                                         endPoint: .bottomTrailing
                                     )
                                 )
-                                .frame(width: 80, height: 80)
-                            
+                                .frame(width: 60, height: 60)
+
                             Image(systemName: "square.grid.2x2")
                                 .font(.system(size: 28, weight: .medium))
                                 .foregroundColor(.white)
@@ -47,17 +35,28 @@ struct QuickFiltersRow: View {
                             RoundedRectangle(cornerRadius: 12)
                                 .stroke(Color.white.opacity(0.3), lineWidth: 1)
                         )
-                        
+
                         Text("See All")
                             .font(.caption2)
                             .foregroundColor(.white)
-                            .frame(width: 80)
+                            .frame(width: 60)
+                    }
+                }
+
+                // Quick filter thumbnails
+                ForEach(quickFilters) { filter in
+                    FilterThumbnailCompact(
+                        title: filter.display.title,
+                        imageName: filter.display.imageName,
+                        isSelected: selectedFilter?.id == filter.id
+                    )
+                    .onTapGesture {
+                        onSelect(filter)
                     }
                 }
             }
             .padding(.horizontal, 12)
         }
-        .frame(height: 100)
+        .frame(height: 80)
     }
 }
-

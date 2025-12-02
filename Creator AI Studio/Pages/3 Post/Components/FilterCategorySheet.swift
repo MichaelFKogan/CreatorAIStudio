@@ -6,11 +6,11 @@ struct CompactFiltersGrid: View {
     let filters: [InfoPacket]
     let selectedFilter: InfoPacket?
     let onSelect: (InfoPacket) -> Void
-    
+
     var body: some View {
         let spacing: CGFloat = 8
         let columns = Array(repeating: GridItem(.flexible(), spacing: spacing), count: 4)
-        
+
         LazyVGrid(
             columns: columns,
             spacing: spacing
@@ -37,19 +37,19 @@ struct FilterCategorySheet: View {
     let allFilters: [InfoPacket]
     @Binding var selectedFilter: InfoPacket?
     let onSelect: (InfoPacket) -> Void
-    
+
     @State private var expandedCategories: Set<FilterCategory> = []
-    
+
     var body: some View {
         NavigationView {
             ZStack {
                 Color.black.ignoresSafeArea()
-                
+
                 ScrollView {
                     VStack(spacing: 0) {
                         // All Filters section (always visible)
                         CategorySection(
-                            title: "All Filters",
+                            title: "Popular",
                             icon: "square.grid.2x2.fill",
                             filters: allFilters,
                             selectedFilter: selectedFilter,
@@ -61,11 +61,11 @@ struct FilterCategorySheet: View {
                             isAlwaysExpanded: true
                         )
                         .padding(.top, 8)
-                        
+
                         Divider()
                             .background(Color.white.opacity(0.2))
                             .padding(.vertical, 8)
-                        
+
                         // Category sections
                         ForEach(FilterCategory.allCases) { category in
                             if let filters = categorizedFilters[category], !filters.isEmpty {
@@ -88,7 +88,7 @@ struct FilterCategorySheet: View {
                                         }
                                     }
                                 )
-                                
+
                                 if category != FilterCategory.allCases.last {
                                     Divider()
                                         .background(Color.white.opacity(0.2))
@@ -112,6 +112,7 @@ struct FilterCategorySheet: View {
             }
             .preferredColorScheme(.dark)
         }
+        .presentationDetents([.medium, .large])
     }
 }
 
@@ -126,7 +127,7 @@ struct CategorySection: View {
     let isExpanded: Bool
     let isAlwaysExpanded: Bool
     var onToggle: (() -> Void)? = nil
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             // Category header
@@ -137,16 +138,16 @@ struct CategorySection: View {
             } label: {
                 HStack {
                     Image(systemName: icon)
-                        .font(.system(size: 18))
+                        .font(.system(size: 16))
                         .foregroundColor(.white)
                         .frame(width: 24)
-                    
+
                     Text(title)
-                        .font(.system(size: 18, weight: .semibold))
+                        .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(.white)
-                    
+
                     Spacer()
-                    
+
                     if !isAlwaysExpanded {
                         Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
                             .font(.system(size: 14, weight: .medium))
@@ -157,7 +158,7 @@ struct CategorySection: View {
                 .padding(.vertical, 12)
             }
             .buttonStyle(PlainButtonStyle())
-            
+
             // Filters grid (shown if expanded or always expanded)
             if isExpanded || isAlwaysExpanded {
                 CompactFiltersGrid(
@@ -170,4 +171,3 @@ struct CategorySection: View {
         }
     }
 }
-

@@ -40,7 +40,7 @@ struct FilterThumbnailCompact: View {
                 Image(imageName)
                     .resizable()
                     .scaledToFill()
-                    .frame(width: 80, height: 80)
+                    .frame(width: 60, height: 60)
                     .clipped()
                     .cornerRadius(12)
                     .padding(6)
@@ -84,7 +84,7 @@ struct FilterThumbnailCompact: View {
                 .font(.caption2)
                 .lineLimit(1)
                 .foregroundColor(.white)
-                .frame(width: 80)
+                .frame(width: 60)
         }
     }
 }
