@@ -106,7 +106,7 @@ struct ContentView: View {
                 HStack(spacing: 0) {
                     tabButton(icon: "house.fill", title: "Home", index: 0)
                     tabButton(icon: "camera.filters", title: "Photo Filters", index: 1)
-                    tabButton(icon: "camera", title: "", index: 2)
+                    tabButton(icon: "camera.fill", title: "Create", index: 2)
 
                     tabButton(icon: "cpu", title: "Generator", index: 3)
                     // tabButton(icon: "video.fill", title: "Video", index: 3)
@@ -145,7 +145,7 @@ struct ContentView: View {
             icon: icon,
             title: title,
             isSelected: selectedTab == index,
-            hasSpecialStyling: index == 2
+            hasSpecialStyling: index == 20
         ) {
             // If tapping Home tab while already on Home, reset navigation to root
             if index == 0 && selectedTab == 0 {
@@ -176,12 +176,12 @@ struct TabBarButton: View {
                     ZStack {
                         Circle()
                             // The stroke modifier draws the border around the shape.
-                            .stroke(Color.pink, lineWidth: 3) // Add the pink border
-                            .fill(Color.black)
+//                            .stroke(isSelected ? Color.pink : Color.clear, lineWidth: 2)
+                            .fill(isSelected ? Color.clear : Color.pink)
                             .frame(width: 60, height: 60)
                         Image(systemName: icon)
                             .font(.system(size: 22))
-                            .foregroundColor(.pink)
+                            .foregroundColor(isSelected ? .pink : .black)
                     }
                     .offset(y: 5)
                 } else {

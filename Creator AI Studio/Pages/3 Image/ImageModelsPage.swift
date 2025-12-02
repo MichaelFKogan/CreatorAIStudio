@@ -376,11 +376,11 @@ private struct ImageModelListItem: View {
             Image(item.display.imageName)
                 .resizable()
                 .aspectRatio(contentMode: .fill)
-                .frame(width: 70, height: 70)
+                .frame(width: 65, height: 65)
                 .clipShape(RoundedRectangle(cornerRadius: 8))
 
             Text(item.display.title)
-                .font(.system(size: 16, weight: .bold, design: .rounded))
+                .font(.system(size: 15, weight: .bold, design: .rounded))
                 .foregroundColor(.primary)
                 .lineLimit(2)
 

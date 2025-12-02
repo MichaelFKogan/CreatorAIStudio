@@ -25,11 +25,12 @@ struct QuickFiltersRow: View {
                                         endPoint: .bottomTrailing
                                     )
                                 )
-                                .frame(width: 60, height: 60)
+                                .frame(width: 70, height: 70)
 
                             Image(systemName: "square.grid.2x2")
                                 .font(.system(size: 28, weight: .medium))
                                 .foregroundColor(.white)
+                            
                         }
                         .overlay(
                             RoundedRectangle(cornerRadius: 12)
@@ -39,7 +40,7 @@ struct QuickFiltersRow: View {
                         Text("See All")
                             .font(.caption2)
                             .foregroundColor(.white)
-                            .frame(width: 60)
+                            .frame(width: 70)
                     }
                 }
 
@@ -57,6 +58,5 @@ struct QuickFiltersRow: View {
             }
             .padding(.horizontal, 12)
         }
-        .frame(height: 80)
     }
 }

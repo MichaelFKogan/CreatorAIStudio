@@ -40,18 +40,14 @@ struct FilterThumbnailCompact: View {
                 Image(imageName)
                     .resizable()
                     .scaledToFill()
-                    .frame(width: 60, height: 60)
+                    .frame(width: 70, height: 70)
                     .clipped()
                     .cornerRadius(12)
-                    .padding(6)
+                    .padding(0)
                     .overlay(
-                        RoundedRectangle(cornerRadius: 20)
-                            .stroke(
-                                isSelected
-                                    ? Color.pink : Color.gray.opacity(0.5),
-                                lineWidth: isSelected ? 3 : 1)
-                    )
-                    //                    .shadow(color: .white.opacity(0.3), radius: 4, x: 0, y: 2)
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(isSelected ? Color.pink : Color.white.opacity(0.3), lineWidth: isSelected ? 3 : 1))
+                            .shadow(color: .gray.opacity(0.6), radius: 4, x: 0, y: 2)
                     .overlay(
                         Group {
                             if isSelected {
@@ -84,7 +80,7 @@ struct FilterThumbnailCompact: View {
                 .font(.caption2)
                 .lineLimit(1)
                 .foregroundColor(.white)
-                .frame(width: 60)
+                .frame(width: 70)
         }
     }
 }

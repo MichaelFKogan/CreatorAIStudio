@@ -128,17 +128,14 @@ struct ImageModelDetailPageWithPhoto: View {
             ZStack(alignment: .bottom) {
                 ScrollView {
                     VStack(spacing: 24) {
+                        
+                        LazyView(BannerSection(item: item, costString: costString))
+                        
+                        Divider().padding(.horizontal)
+                        
                         // Show captured image at top
                         CapturedImageSection(image: capturedImage)
                             .padding(.horizontal)
-                            .padding(.top, 16)
-                        
-                        Divider().padding(.horizontal)
-                        
-                        LazyView(
-                            BannerSection(item: item, costString: costString))
-                        
-                        Divider().padding(.horizontal)
                         
                         LazyView(
                             PromptSection(
@@ -349,17 +346,20 @@ struct CapturedImageSection: View {
                     .font(.subheadline)
                     .fontWeight(.semibold)
                     .foregroundColor(.secondary)
+                Spacer()
             }
             
-            Image(uiImage: image)
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(maxHeight: 300)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(Color.blue.opacity(0.3), lineWidth: 2)
-                )
+            HStack{
+                Image(uiImage: image)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(maxWidth: 150)
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 6)
+                            .stroke(Color.blue.opacity(0.3), lineWidth: 3)
+                    )
+            }
         }
     }
 }

@@ -40,31 +40,72 @@ struct Post: View {
 
                 } else {
                     // Live camera preview
-                    CameraPreview(session: cameraService.session, position: cameraService.cameraPosition)
+                    CameraPreview(
+                        session: cameraService.session,
+                        position: cameraService.cameraPosition
+                    )
                 }
 
                 // Camera controls (your existing VStack with ❌ / ✅ or capture button)
                 VStack {
-                    Spacer()
 
-//                    if cameraService.capturedImage == nil {
-                    // Library + capture button
-                    HStack(spacing: 24) {
+                    // MARK: SWITCH CAMERA
+
+                    HStack{
                         Spacer()
-
-                        // Photo Library Picker
+                        // Switch camera button
                         Button {
-                            showLibraryPicker = true
+                            cameraService.switchCamera()
                         } label: {
-                            Image(systemName: "photo.on.rectangle.angled")
-                                .font(.system(size: 25))
+                            Image(systemName: "arrow.triangle.2.circlepath")
+                                .font(.system(size: 26))
                                 .padding(12)
-                                .foregroundColor(.white).opacity(0.8)
-                                .cornerRadius(8)
+                                .foregroundColor(.white)
+                                .opacity(0.7)
+                                .clipShape(Circle())
                                 .shadow(radius: 3)
                         }
+                        .accessibilityLabel("Switch camera")
+                    }
+                    .padding()
 
-                        // Capture Photo Button
+                    Spacer()
+
+                    //  if cameraService.capturedImage == nil {
+                    // Library + capture button
+                    HStack {
+                        Spacer()
+
+                        // MARK: PHOTO LIBRARY PICKER
+
+                        HStack(spacing: 8) {
+                            Button {
+                                showLibraryPicker = true
+                            } label: {
+                                Image(systemName: "photo.on.rectangle.angled")
+                                    .font(.system(size: 25))
+                                    .padding(12)
+                                    .foregroundColor(.white).opacity(0)
+                                    .cornerRadius(8)
+                                    .shadow(radius: 3)
+                            }
+                            .frame(width: 50, height: 50)
+
+                            Button {
+                                showLibraryPicker = true
+                            } label: {
+                                Image(systemName: "photo.on.rectangle.angled")
+                                    .font(.system(size: 25))
+                                    .padding(12)
+                                    .foregroundColor(.white).opacity(0.8)
+                                    .cornerRadius(8)
+                                    .shadow(radius: 3)
+                            }
+                            .frame(width: 50, height: 50)
+                        }
+
+                        // MARK: CAPTURE PHOTO (centered)
+
                         Button {
                             cameraService.capturePhoto()
                         } label: {
@@ -72,93 +113,89 @@ struct Post: View {
                                 .stroke(Color.white, lineWidth: 5)
                                 .frame(width: 80, height: 80)
                         }
+                        .padding(.horizontal, 24)
 
-                        // Switch camera button and vertical mode switcher
-                        HStack(spacing: 12) {
-                            // Switch camera button
+                        // MARK: MODE SWITCHER
+
+                        HStack(spacing: 8) {
+
                             Button {
-                                cameraService.switchCamera()
+                                selectedMode = .photoFilter
                             } label: {
-                                Image(systemName: "arrow.triangle.2.circlepath")
-                                    .font(.system(size: 26))
-                                    .padding(12)
-                                    .foregroundColor(.white)
-                                    .opacity(0.7)
-                                    .clipShape(Circle())
-                                    .shadow(radius: 3)
+                                VStack(spacing: 4) {
+                                    Image(systemName: "camera.filters")
+                                        .font(.system(size: 20))
+                                    Text("Filter")
+                                        .font(
+                                            .system(size: 10, weight: .medium))
+                                }
+                                .foregroundColor(
+                                    selectedMode == .photoFilter
+                                        ? .white : .white.opacity(0.6)
+                                )
+                                .frame(width: 50, height: 50)
+                                .background(
+                                    selectedMode == .photoFilter
+                                        ? Color.white.opacity(0.45)
+                                        : Color.white.opacity(0.1)
+                                )
+                                .clipShape(RoundedRectangle(cornerRadius: 10))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .stroke(
+                                            selectedMode == .photoFilter
+                                                ? Color.white.opacity(0.5)
+                                                : Color.white.opacity(0.2),
+                                            lineWidth: selectedMode
+                                                == .photoFilter ? 2 : 1
+                                        )
+                                )
                             }
-                            .accessibilityLabel("Switch camera")
 
-                            // Vertical mode switcher
-                            VStack(spacing: 8) {
-                                // Photo Filter button
-                                Button {
-                                    selectedMode = .photoFilter
-                                } label: {
-                                    VStack(spacing: 4) {
-                                        Image(systemName: "camera.filters")
-                                            .font(.system(size: 20))
-                                        Text("Filter")
-                                            .font(.system(size: 10, weight: .medium))
-                                    }
-                                    .foregroundColor(selectedMode == .photoFilter ? .white : .white.opacity(0.6))
-                                    .frame(width: 50, height: 50)
-                                    .background(
-                                        selectedMode == .photoFilter
-                                            ? Color.white.opacity(0.25)
-                                            : Color.white.opacity(0.1)
-                                    )
-                                    .clipShape(RoundedRectangle(cornerRadius: 10))
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 10)
-                                            .stroke(
-                                                selectedMode == .photoFilter
-                                                    ? Color.white.opacity(0.5)
-                                                    : Color.white.opacity(0.2),
-                                                lineWidth: selectedMode == .photoFilter ? 2 : 1
-                                            )
-                                    )
+                            Button {
+                                selectedMode = .imageModel
+                            } label: {
+                                VStack(spacing: 4) {
+                                    Image(systemName: "cpu")
+                                        .font(.system(size: 20))
+                                    Text("Model")
+                                        .font(
+                                            .system(size: 10, weight: .medium))
                                 }
-
-                                // Image Model button
-                                Button {
-                                    selectedMode = .imageModel
-                                } label: {
-                                    VStack(spacing: 4) {
-                                        Image(systemName: "cpu")
-                                            .font(.system(size: 20))
-                                        Text("Model")
-                                            .font(.system(size: 10, weight: .medium))
-                                    }
-                                    .foregroundColor(selectedMode == .imageModel ? .white : .white.opacity(0.6))
-                                    .frame(width: 50, height: 50)
-                                    .background(
-                                        selectedMode == .imageModel
-                                            ? Color.white.opacity(0.25)
-                                            : Color.white.opacity(0.1)
-                                    )
-                                    .clipShape(RoundedRectangle(cornerRadius: 10))
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 10)
-                                            .stroke(
-                                                selectedMode == .imageModel
-                                                    ? Color.white.opacity(0.5)
-                                                    : Color.white.opacity(0.2),
-                                                lineWidth: selectedMode == .imageModel ? 2 : 1
-                                            )
-                                    )
-                                }
+                                .foregroundColor(
+                                    selectedMode == .imageModel
+                                        ? .white : .white.opacity(0.6)
+                                )
+                                .frame(width: 50, height: 50)
+                                .background(
+                                    selectedMode == .imageModel
+                                        ? Color.white.opacity(0.45)
+                                        : Color.white.opacity(0.1)
+                                )
+                                .clipShape(RoundedRectangle(cornerRadius: 10))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .stroke(
+                                            selectedMode == .imageModel
+                                                ? Color.white.opacity(0.5)
+                                                : Color.white.opacity(0.2),
+                                            lineWidth: selectedMode
+                                                == .imageModel ? 2 : 1
+                                        )
+                                )
                             }
                         }
 
                         Spacer()
                     }
-                    .padding(.horizontal)
-                    .padding(.bottom, 0)
+                    .padding(.trailing, 8)
+                    .padding(.bottom, 12)
 
-                    // Conditional bottom section based on mode
-                    if selectedMode == .photoFilter {
-                        VStack {
+                    VStack {
+                        // Conditional bottom section based on mode
+                        if selectedMode == .photoFilter {
+                            // MARK: PHOTO FILTER
+
                             HStack {
                                 Text("Filter")
                                     .font(.caption)
@@ -174,13 +211,12 @@ struct Post: View {
                                 onSelect: { selectedFilter = $0 },
                                 onShowAll: { showFilterCategorySheet = true }
                             )
-                        }
-                        .padding(.top, 8)
-                        .padding(.bottom, 18)
-                        .background(Color.black)
-                    } else {
-                        // Image Model selection
-                        VStack {
+
+                        } else {
+                            // MARK: IMAGE MODEL
+
+                            // Image Model selection
+
                             HStack {
                                 Text("Image Model")
                                     .font(.caption)
@@ -198,19 +234,34 @@ struct Post: View {
                                             .resizable()
                                             .aspectRatio(contentMode: .fill)
                                             .frame(width: 50, height: 50)
-                                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                                            .clipShape(
+                                                RoundedRectangle(
+                                                    cornerRadius: 8))
 
                                         Text(selectedModel.display.title)
-                                            .font(.system(size: 14, weight: .medium))
+                                            .font(
+                                                .system(
+                                                    size: 14, weight: .medium)
+                                            )
                                             .foregroundColor(.white)
                                             .lineLimit(1)
+
                                     } else {
                                         Image(systemName: "square.grid.2x2")
-                                            .font(.system(size: 24, weight: .medium))
-                                            .foregroundColor(.white.opacity(0.8))
+                                            .font(
+                                                .system(
+                                                    size: 24, weight: .medium)
+                                            )
+                                            .foregroundColor(
+                                                .white.opacity(0.8)
+                                            )
+                                            .frame(width: 50, height: 50)
 
                                         Text("Select Model")
-                                            .font(.system(size: 14, weight: .medium))
+                                            .font(
+                                                .system(
+                                                    size: 14, weight: .medium)
+                                            )
                                             .foregroundColor(.white)
                                     }
 
@@ -226,18 +277,23 @@ struct Post: View {
                                 .clipShape(RoundedRectangle(cornerRadius: 12))
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 12)
-                                        .stroke(Color.white.opacity(0.3), lineWidth: 1)
+                                        .stroke(
+                                            Color.white.opacity(0.3),
+                                            lineWidth: 1
+                                        )
                                 )
                             }
                             .padding(.horizontal, 12)
+
                         }
-                        .padding(.top, 8)
-                        .padding(.bottom, 18)
-                        .background(Color.black)
+                        Spacer()
                     }
+                    .padding(.top, 12)
+                    .frame(height: 135)
+                    .background(Color.black).opacity(0.9)
 
                     // Bottom spacing
-                    Color.clear.frame(height: 70)
+                    Color.clear.frame(height: 44)
                 }
             }
 
@@ -253,7 +309,10 @@ struct Post: View {
                 }
             }
             .sheet(isPresented: $showLibraryPicker) {
-                PhotoLibraryPickerView(isPresented: $showLibraryPicker, selectedImage: $cameraService.capturedImage)
+                PhotoLibraryPickerView(
+                    isPresented: $showLibraryPicker,
+                    selectedImage: $cameraService.capturedImage
+                )
             }
             .sheet(isPresented: $showFilterCategorySheet) {
                 FilterCategorySheet(
