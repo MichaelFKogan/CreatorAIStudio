@@ -46,8 +46,9 @@ struct FilterThumbnailCompact: View {
                     .padding(0)
                     .overlay(
                         RoundedRectangle(cornerRadius: 12)
-                            .stroke(isSelected ? Color.pink : Color.white.opacity(0.3), lineWidth: isSelected ? 3 : 1))
-                            .shadow(color: .gray.opacity(0.6), radius: 4, x: 0, y: 2)
+                            .stroke(isSelected ? Color.pink : Color.black.opacity(0), lineWidth: isSelected ? 3 : 1)
+                    )
+                    .shadow(color: .black.opacity(0.6), radius: 4, x: 0, y: 0)
                     .overlay(
                         Group {
                             if isSelected {

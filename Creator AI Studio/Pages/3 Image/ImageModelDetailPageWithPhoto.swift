@@ -17,7 +17,7 @@ struct ImageModelDetailPageWithPhoto: View {
     @State private var prompt: String = ""
     @FocusState private var isPromptFocused: Bool
     @State private var isExamplePromptsPresented: Bool = false
-    @State private var isTransformPromptsPresented: Bool = false
+
     @State private var referenceImages: [UIImage] = []
     @State private var selectedPhotoItems: [PhotosPickerItem] = []
     
@@ -143,7 +143,8 @@ struct ImageModelDetailPageWithPhoto: View {
                                 isFocused: $isPromptFocused,
                                 isExamplePromptsPresented:
                                 $isExamplePromptsPresented,
-                                examplePrompts: examplePrompts
+                                examplePrompts: examplePrompts,
+                                examplePromptsTransform: transformPrompts
                             ))
                         
                         LazyView(
@@ -159,37 +160,13 @@ struct ImageModelDetailPageWithPhoto: View {
                         
                         // ReferenceImagesSection with pre-populated image
                         LazyView(ReferenceImagesSectionWithPhoto(
+                            image: capturedImage,
                             referenceImages: $referenceImages,
                             selectedPhotoItems: $selectedPhotoItems,
                             showCameraSheet: $showCameraSheet,
                             color: .blue,
                             initialImage: capturedImage
                         ))
-                        
-                        // Example Image Prompts Button
-                        Button(action: { isTransformPromptsPresented = true }) {
-                            HStack {
-                                Image(systemName: "lightbulb.fill").foregroundColor(.blue)
-                                    .font(.caption)
-                                Text("Example Image Prompts").font(.caption).fontWeight(.semibold)
-                                    .foregroundColor(.secondary)
-                                Spacer()
-                                Image(systemName: "chevron.right").font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 8)
-                            .background(Color.gray.opacity(0.06))
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 8).stroke(
-                                    Color.blue.opacity(0.3), lineWidth: 1
-                                ))
-                        }
-                        .buttonStyle(PlainButtonStyle())
-                        .padding(.horizontal)
-                        .padding(.top, -6)
-                        .padding(.bottom, -12)
                         
                         Divider().padding(.horizontal)
                         
@@ -219,17 +196,10 @@ struct ImageModelDetailPageWithPhoto: View {
         .sheet(isPresented: $isExamplePromptsPresented) {
             ExamplePromptsSheet(
                 examplePrompts: examplePrompts,
+                examplePromptsTransform: transformPrompts,
                 selectedPrompt: $prompt,
                 isPresented: $isExamplePromptsPresented,
-                title: "Example Text Prompts"
-            )
-        }
-        .sheet(isPresented: $isTransformPromptsPresented) {
-            ExamplePromptsSheet(
-                examplePrompts: transformPrompts,
-                selectedPrompt: $prompt,
-                isPresented: $isTransformPromptsPresented,
-                title: "Example Image Prompts"
+                title: "Example Prompts"
             )
         }
         .navigationTitle("")
@@ -332,7 +302,7 @@ struct ImageModelDetailPageWithPhoto: View {
     }
 }
 
-// MARK: - Captured Image Section
+// MARK: CAPTURED IMAGE SECTION
 
 struct CapturedImageSection: View {
     let image: UIImage
@@ -353,7 +323,7 @@ struct CapturedImageSection: View {
                 Image(uiImage: image)
                     .resizable()
                     .aspectRatio(contentMode: .fill)
-                    .frame(maxWidth: 150)
+                    .frame(maxWidth: 125)
                     .clipShape(RoundedRectangle(cornerRadius: 6))
                     .overlay(
                         RoundedRectangle(cornerRadius: 6)
@@ -367,6 +337,7 @@ struct CapturedImageSection: View {
 // MARK: - Reference Images Section With Photo
 
 struct ReferenceImagesSectionWithPhoto: View {
+    let image: UIImage
     @Binding var referenceImages: [UIImage]
     @Binding var selectedPhotoItems: [PhotosPickerItem]
     @Binding var showCameraSheet: Bool
@@ -424,6 +395,17 @@ struct ReferenceImagesSectionWithPhoto: View {
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
                     LazyVGrid(columns: columns, spacing: 12) {
+                        
+                        Image(uiImage: image)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(maxWidth: 125)
+                            .clipShape(RoundedRectangle(cornerRadius: 6))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 6)
+                                    .stroke(Color.blue.opacity(0.3), lineWidth: 3)
+                            )
+                        
                         // Take Photo tile
                         Button {
                             showCameraSheet = true

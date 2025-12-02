@@ -110,7 +110,7 @@ struct FilterCategorySheet: View {
                     .foregroundColor(.white)
                 }
             }
-            .preferredColorScheme(.dark)
+//            .preferredColorScheme(.dark)
         }
         .presentationDetents([.medium, .large])
     }

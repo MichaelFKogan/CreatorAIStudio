@@ -19,7 +19,7 @@ struct FilterThumbnail: View {
                     .cornerRadius(8)
                     .overlay(
                         RoundedRectangle(cornerRadius: 8)
-                            .stroke(isSelected ? Color.mint : Color.clear, lineWidth: 3)
+                            .stroke(isSelected ? Color.pink : Color.clear, lineWidth: 3)
                     )
                     .overlay(
                         Group {
@@ -31,7 +31,7 @@ struct FilterThumbnail: View {
                                         Circle()
                                             .fill(
                                                 LinearGradient(
-                                                    colors: [.green, .teal],
+                                                    colors: [.pink, .pink],
                                                     startPoint: .topLeading,
                                                     endPoint: .bottomTrailing
                                                 )

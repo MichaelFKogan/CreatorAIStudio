@@ -20,7 +20,7 @@ struct ImageModelDetailPage: View {
     @State private var prompt: String = ""
     @FocusState private var isPromptFocused: Bool
     @State private var isExamplePromptsPresented: Bool = false
-    @State private var isTransformPromptsPresented: Bool = false
+
     @State private var referenceImages: [UIImage] = []
     @State private var selectedPhotoItems: [PhotosPickerItem] = []
 
@@ -144,7 +144,8 @@ struct ImageModelDetailPage: View {
                                 isFocused: $isPromptFocused,
                                 isExamplePromptsPresented:
                                 $isExamplePromptsPresented,
-                                examplePrompts: examplePrompts
+                                examplePrompts: examplePrompts,
+                                examplePromptsTransform: transformPrompts
                             ))
 
                         LazyView(
@@ -167,31 +168,6 @@ struct ImageModelDetailPage: View {
                             color: .blue
                         ))
                         // }
-
-                        // Example Image Prompts Button
-                        Button(action: { isTransformPromptsPresented = true }) {
-                            HStack {
-                                Image(systemName: "lightbulb.fill").foregroundColor(.blue)
-                                    .font(.caption)
-                                Text("Example Image Prompts").font(.caption).fontWeight(.semibold)
-                                    .foregroundColor(.secondary)
-                                Spacer()
-                                Image(systemName: "chevron.right").font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 8)
-                            .background(Color.gray.opacity(0.06))
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 8).stroke(
-                                    Color.blue.opacity(0.3), lineWidth: 1
-                                ))
-                        }
-                        .buttonStyle(PlainButtonStyle())
-                        .padding(.horizontal)
-                        .padding(.top, -6)
-                        .padding(.bottom, -12)
 
                         Divider().padding(.horizontal)
 
@@ -278,17 +254,10 @@ struct ImageModelDetailPage: View {
         .sheet(isPresented: $isExamplePromptsPresented) {
             ExamplePromptsSheet(
                 examplePrompts: examplePrompts,
+                examplePromptsTransform: transformPrompts,
                 selectedPrompt: $prompt,
                 isPresented: $isExamplePromptsPresented,
-                title: "Example Text Prompts"
-            )
-        }
-        .sheet(isPresented: $isTransformPromptsPresented) {
-            ExamplePromptsSheet(
-                examplePrompts: transformPrompts,
-                selectedPrompt: $prompt,
-                isPresented: $isTransformPromptsPresented,
-                title: "Example Image Prompts"
+                title: "Example Prompts"
             )
         }
         .navigationTitle("")
@@ -440,58 +409,58 @@ struct BannerSection: View {
     }
 }
 
-// MARK: TAB SWITCHER
-
-struct TabSwitcher: View {
-    @Binding var selectedMode: Int
-
-    var body: some View {
-        HStack(spacing: 0) {
-            // Text to Image button with icon
-            Button(action: { selectedMode = 0 }) {
-                HStack(spacing: 6) {
-                    Image(systemName: "character.textbox")
-                        .font(.system(size: 10))
-                    Text("Text to Image")
-                        .fontWeight(.medium)
-                }
-                .frame(maxWidth: .infinity)
-            }
-            .tabButtonStyle(isSelected: selectedMode == 0)
-
-            // Image to Image button with icon
-            Button(action: { selectedMode = 1 }) {
-                HStack(spacing: 6) {
-                    Image(systemName: "photo.on.rectangle.angled")
-                        .font(.system(size: 10))
-                    Text("Image to Image")
-                        .fontWeight(.medium)
-                }
-                .frame(maxWidth: .infinity)
-            }
-            .tabButtonStyle(isSelected: selectedMode == 1)
-        }
-        .background(Color(UIColor.secondarySystemBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
-        .overlay(
-            RoundedRectangle(cornerRadius: 8).stroke(
-                Color.gray.opacity(0.3), lineWidth: 1
-            )
-        )
-        .padding(.horizontal)
-    }
-}
-
-extension View {
-    func tabButtonStyle(isSelected: Bool) -> some View {
-        font(.caption).fontWeight(.medium)
-            .foregroundColor(isSelected ? .white : .secondary)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 10)
-            .background(isSelected ? Color.gray.opacity(0.15) : Color.clear)
-            .clipShape(RoundedRectangle(cornerRadius: 8))
-    }
-}
+//// MARK: TAB SWITCHER
+//
+//struct TabSwitcher: View {
+//    @Binding var selectedMode: Int
+//
+//    var body: some View {
+//        HStack(spacing: 0) {
+//            // Text to Image button with icon
+//            Button(action: { selectedMode = 0 }) {
+//                HStack(spacing: 6) {
+//                    Image(systemName: "character.textbox")
+//                        .font(.system(size: 10))
+//                    Text("Text to Image")
+//                        .fontWeight(.medium)
+//                }
+//                .frame(maxWidth: .infinity)
+//            }
+//            .tabButtonStyle(isSelected: selectedMode == 0)
+//
+//            // Image to Image button with icon
+//            Button(action: { selectedMode = 1 }) {
+//                HStack(spacing: 6) {
+//                    Image(systemName: "photo.on.rectangle.angled")
+//                        .font(.system(size: 10))
+//                    Text("Image to Image")
+//                        .fontWeight(.medium)
+//                }
+//                .frame(maxWidth: .infinity)
+//            }
+//            .tabButtonStyle(isSelected: selectedMode == 1)
+//        }
+//        .background(Color(UIColor.secondarySystemBackground))
+//        .clipShape(RoundedRectangle(cornerRadius: 8))
+//        .overlay(
+//            RoundedRectangle(cornerRadius: 8).stroke(
+//                Color.gray.opacity(0.3), lineWidth: 1
+//            )
+//        )
+//        .padding(.horizontal)
+//    }
+//}
+//
+//extension View {
+//    func tabButtonStyle(isSelected: Bool) -> some View {
+//        font(.caption).fontWeight(.medium)
+//            .foregroundColor(isSelected ? .white : .secondary)
+//            .frame(maxWidth: .infinity)
+//            .padding(.vertical, 10)
+//            .background(isSelected ? Color.gray.opacity(0.15) : Color.clear)
+//            .clipShape(RoundedRectangle(cornerRadius: 8))
+//    }
+//}
 
 // MARK: PROMPT SECTION
 
@@ -500,6 +469,7 @@ struct PromptSection: View {
     @FocusState.Binding var isFocused: Bool
     @Binding var isExamplePromptsPresented: Bool
     let examplePrompts: [String]
+    let examplePromptsTransform: [String]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -541,7 +511,7 @@ struct PromptSection: View {
                 HStack {
                     Image(systemName: "lightbulb.fill").foregroundColor(.blue)
                         .font(.caption)
-                    Text("Example Text Prompts").font(.caption).fontWeight(.semibold)
+                    Text("Example Prompts").font(.caption).fontWeight(.semibold)
                         .foregroundColor(.secondary)
                     Spacer()
                     Image(systemName: "chevron.right").font(.caption)

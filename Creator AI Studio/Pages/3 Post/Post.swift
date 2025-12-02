@@ -48,10 +48,9 @@ struct Post: View {
 
                 // Camera controls (your existing VStack with ❌ / ✅ or capture button)
                 VStack {
-
                     // MARK: SWITCH CAMERA
 
-                    HStack{
+                    HStack {
                         Spacer()
                         // Switch camera button
                         Button {
@@ -118,7 +117,6 @@ struct Post: View {
                         // MARK: MODE SWITCHER
 
                         HStack(spacing: 8) {
-
                             Button {
                                 selectedMode = .photoFilter
                             } label: {
@@ -151,6 +149,7 @@ struct Post: View {
                                         )
                                 )
                             }
+                            .shadow(color: .black.opacity(0.6), radius: 4, x: 0, y: 0)
 
                             Button {
                                 selectedMode = .imageModel
@@ -184,6 +183,7 @@ struct Post: View {
                                         )
                                 )
                             }
+                            .shadow(color: .black.opacity(0.6), radius: 4, x: 0, y: 0)
                         }
 
                         Spacer()
@@ -237,11 +237,13 @@ struct Post: View {
                                             .clipShape(
                                                 RoundedRectangle(
                                                     cornerRadius: 8))
+                                            .shadow(color: .black.opacity(0.6), radius: 4, x: 0, y: 0)
 
                                         Text(selectedModel.display.title)
                                             .font(
                                                 .system(
-                                                    size: 14, weight: .medium)
+                                                    size: 14, weight: .medium
+                                                )
                                             )
                                             .foregroundColor(.white)
                                             .lineLimit(1)
@@ -250,7 +252,8 @@ struct Post: View {
                                         Image(systemName: "square.grid.2x2")
                                             .font(
                                                 .system(
-                                                    size: 24, weight: .medium)
+                                                    size: 24, weight: .medium
+                                                )
                                             )
                                             .foregroundColor(
                                                 .white.opacity(0.8)
@@ -260,12 +263,24 @@ struct Post: View {
                                         Text("Select Model")
                                             .font(
                                                 .system(
-                                                    size: 14, weight: .medium)
+                                                    size: 14, weight: .medium
+                                                )
                                             )
                                             .foregroundColor(.white)
                                     }
 
                                     Spacer()
+
+                                    if let selectedModel = selectedImageModel {
+                                        VStack(alignment: .trailing, spacing: 2) {
+                                            Text("$\(NSDecimalNumber(decimal: selectedModel.cost ?? 0).stringValue)")
+                                                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                                                .foregroundColor(.blue)
+                                            Text("per image")
+                                                .font(.caption2)
+                                                .foregroundColor(.white.opacity(0.7))
+                                        }
+                                    }
 
                                     Image(systemName: "chevron.right")
                                         .font(.system(size: 12))
@@ -284,13 +299,29 @@ struct Post: View {
                                 )
                             }
                             .padding(.horizontal, 12)
-
                         }
                         Spacer()
                     }
                     .padding(.top, 12)
                     .frame(height: 135)
-                    .background(Color.black).opacity(0.9)
+//                    .background(Color.black).opacity(0.9)
+                    .background(
+                        ZStack {
+                            // Blur
+                            Color.clear.background(.ultraThinMaterial)
+
+                            // Dark tint overlay
+                            LinearGradient(
+                                colors: [
+                                    Color.black.opacity(0.5),
+                                    Color.black.opacity(0.5),
+                                ],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        }
+                        .ignoresSafeArea(edges: .bottom)
+                    )
 
                     // Bottom spacing
                     Color.clear.frame(height: 44)

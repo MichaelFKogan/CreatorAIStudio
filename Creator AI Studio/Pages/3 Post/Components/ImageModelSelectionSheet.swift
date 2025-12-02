@@ -197,6 +197,7 @@ private struct ImageModelGridItem: View {
                     .frame(height: 180)
                     .clipped()
                     .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .shadow(color: .black.opacity(0.6), radius: 4, x: 0, y: 0)
                 
                 LinearGradient(
                     colors: [Color.black.opacity(0.6), Color.clear],
@@ -254,6 +255,7 @@ private struct ImageModelListItem: View {
                 .aspectRatio(contentMode: .fill)
                 .frame(width: 65, height: 65)
                 .clipShape(RoundedRectangle(cornerRadius: 8))
+                .shadow(color: .black.opacity(0.6), radius: 4, x: 0, y: 0)
             
             Text(item.display.title)
                 .font(.system(size: 14, weight: .bold, design: .rounded))
