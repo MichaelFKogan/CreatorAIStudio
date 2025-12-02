@@ -32,17 +32,6 @@ struct ReferenceImagesSection: View {
 
                     Spacer()
 
-                    // Take Photo tile
-                    Button {
-                        showCameraSheet = true
-                    } label: {
-                        Image(systemName: "camera")
-                            .font(.system(size: 22))
-                            .foregroundColor(.blue)
-                    }
-                    .buttonStyle(.plain)
-                    .padding(.horizontal, 6)
-
                 }
 
                 HStack {

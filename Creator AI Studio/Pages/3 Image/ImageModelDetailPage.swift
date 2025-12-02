@@ -409,59 +409,6 @@ struct BannerSection: View {
     }
 }
 
-//// MARK: TAB SWITCHER
-//
-//struct TabSwitcher: View {
-//    @Binding var selectedMode: Int
-//
-//    var body: some View {
-//        HStack(spacing: 0) {
-//            // Text to Image button with icon
-//            Button(action: { selectedMode = 0 }) {
-//                HStack(spacing: 6) {
-//                    Image(systemName: "character.textbox")
-//                        .font(.system(size: 10))
-//                    Text("Text to Image")
-//                        .fontWeight(.medium)
-//                }
-//                .frame(maxWidth: .infinity)
-//            }
-//            .tabButtonStyle(isSelected: selectedMode == 0)
-//
-//            // Image to Image button with icon
-//            Button(action: { selectedMode = 1 }) {
-//                HStack(spacing: 6) {
-//                    Image(systemName: "photo.on.rectangle.angled")
-//                        .font(.system(size: 10))
-//                    Text("Image to Image")
-//                        .fontWeight(.medium)
-//                }
-//                .frame(maxWidth: .infinity)
-//            }
-//            .tabButtonStyle(isSelected: selectedMode == 1)
-//        }
-//        .background(Color(UIColor.secondarySystemBackground))
-//        .clipShape(RoundedRectangle(cornerRadius: 8))
-//        .overlay(
-//            RoundedRectangle(cornerRadius: 8).stroke(
-//                Color.gray.opacity(0.3), lineWidth: 1
-//            )
-//        )
-//        .padding(.horizontal)
-//    }
-//}
-//
-//extension View {
-//    func tabButtonStyle(isSelected: Bool) -> some View {
-//        font(.caption).fontWeight(.medium)
-//            .foregroundColor(isSelected ? .white : .secondary)
-//            .frame(maxWidth: .infinity)
-//            .padding(.vertical, 10)
-//            .background(isSelected ? Color.gray.opacity(0.15) : Color.clear)
-//            .clipShape(RoundedRectangle(cornerRadius: 8))
-//    }
-//}
-
 // MARK: PROMPT SECTION
 
 struct PromptSection: View {
