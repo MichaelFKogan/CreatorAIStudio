@@ -13,26 +13,26 @@ import SwiftUI
 struct ImageModelDetailPageWithPhoto: View {
     @State var item: InfoPacket
     let capturedImage: UIImage
-    
+
     @State private var prompt: String = ""
     @FocusState private var isPromptFocused: Bool
     @State private var isExamplePromptsPresented: Bool = false
 
     @State private var referenceImages: [UIImage] = []
     @State private var selectedPhotoItems: [PhotosPickerItem] = []
-    
+
     @State private var isGenerating: Bool = false
     @State private var keyboardHeight: CGFloat = 0
     @State private var showEmptyPromptAlert: Bool = false
     @State private var showCameraSheet: Bool = false
-    
+
     @State private var selectedAspectIndex: Int = 0
     @State private var selectedGenerationMode: Int = 0
-    
+
     @EnvironmentObject var authViewModel: AuthViewModel
-    
+
     // MARK: Constants
-    
+
     private let imageAspectOptions: [AspectRatioOption] = [
         AspectRatioOption(
             id: "3:4", label: "3:4", width: 3, height: 4,
@@ -55,7 +55,7 @@ struct ImageModelDetailPageWithPhoto: View {
             platforms: ["YouTube"]
         ),
     ]
-    
+
     private let examplePrompts: [String] = [
         "A serene landscape with mountains at sunset, photorealistic, 8k quality",
         "A futuristic cityscape with flying cars and neon lights at night",
@@ -88,7 +88,7 @@ struct ImageModelDetailPageWithPhoto: View {
         "A majestic phoenix rising from flames, mythical creature, vibrant colors",
         "A Victorian mansion in foggy weather, gothic atmosphere, haunting beauty",
     ]
-    
+
     private let transformPrompts: [String] = [
         "Transform to anime style",
         "Transform to watercolor painting",
@@ -116,48 +116,26 @@ struct ImageModelDetailPageWithPhoto: View {
         "Transform to Picasso cubist style",
         "Transform to Monet impressionist style",
     ]
-    
+
     private var costString: String {
         NSDecimalNumber(decimal: item.cost ?? 0).stringValue
     }
-    
+
     // MARK: BODY
-    
+
     var body: some View {
         GeometryReader { _ in
             ZStack(alignment: .bottom) {
                 ScrollView {
                     VStack(spacing: 24) {
-                        
                         LazyView(BannerSection(item: item, costString: costString))
-                        
+
                         Divider().padding(.horizontal)
-                        
+
                         // Show captured image at top
                         CapturedImageSection(image: capturedImage)
                             .padding(.horizontal)
-                        
-                        LazyView(
-                            PromptSection(
-                                prompt: $prompt,
-                                isFocused: $isPromptFocused,
-                                isExamplePromptsPresented:
-                                $isExamplePromptsPresented,
-                                examplePrompts: examplePrompts,
-                                examplePromptsTransform: transformPrompts
-                            ))
-                        
-                        LazyView(
-                            GenerateButton(
-                                prompt: prompt,
-                                isGenerating: $isGenerating,
-                                keyboardHeight: $keyboardHeight,
-                                costString: costString,
-                                action: generate
-                            ))
-                        
-                        Divider().padding(.horizontal)
-                        
+
                         // ReferenceImagesSection with pre-populated image
                         LazyView(ReferenceImagesSectionWithPhoto(
                             image: capturedImage,
@@ -167,17 +145,36 @@ struct ImageModelDetailPageWithPhoto: View {
                             color: .blue,
                             initialImage: capturedImage
                         ))
-                        
+
+                        LazyView(
+                            PromptSection(
+                                prompt: $prompt,
+                                isFocused: $isPromptFocused,
+                                isExamplePromptsPresented:
+                                $isExamplePromptsPresented,
+                                examplePrompts: examplePrompts,
+                                examplePromptsTransform: transformPrompts
+                            ))
+
+                        LazyView(
+                            GenerateButton(
+                                prompt: prompt,
+                                isGenerating: $isGenerating,
+                                keyboardHeight: $keyboardHeight,
+                                costString: costString,
+                                action: generate
+                            ))
+
                         Divider().padding(.horizontal)
-                        
+
                         LazyView(
                             AspectRatioSection(
                                 options: imageAspectOptions,
                                 selectedIndex: $selectedAspectIndex
                             ))
-                        
+
                         Divider().padding(.horizontal)
-                        
+
                         LazyView(CostCardSection(costString: costString))
                         Color.clear.frame(height: 130) // bottom padding for floating button
                     }
@@ -254,22 +251,22 @@ struct ImageModelDetailPageWithPhoto: View {
             }
         }
     }
-    
+
     // MARK: FUNCTION GENERATE
-    
+
     private func generate() {
         guard !prompt.isEmpty else {
             showEmptyPromptAlert = true
             return
         }
         guard !isGenerating else { return }
-        
+
         isGenerating = true
         let selectedAspectOption = imageAspectOptions[selectedAspectIndex]
         var modifiedItem = item
         modifiedItem.prompt = prompt
         modifiedItem.apiConfig.aspectRatio = selectedAspectOption.id
-        
+
         let imageToUse = referenceImages.first ?? createPlaceholderImage()
         guard let userId = authViewModel.user?.id.uuidString.lowercased(),
               !userId.isEmpty
@@ -277,7 +274,7 @@ struct ImageModelDetailPageWithPhoto: View {
             isGenerating = false
             return
         }
-        
+
         Task { @MainActor in
             _ = ImageGenerationCoordinator.shared.startImageGeneration(
                 item: modifiedItem,
@@ -293,7 +290,7 @@ struct ImageModelDetailPageWithPhoto: View {
             )
         }
     }
-    
+
     private func createPlaceholderImage() -> UIImage {
         let size = CGSize(width: 1, height: 1)
         UIGraphicsBeginImageContextWithOptions(size, false, 1.0)
@@ -306,7 +303,7 @@ struct ImageModelDetailPageWithPhoto: View {
 
 struct CapturedImageSection: View {
     let image: UIImage
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 6) {
@@ -318,8 +315,8 @@ struct CapturedImageSection: View {
                     .foregroundColor(.secondary)
                 Spacer()
             }
-            
-            HStack{
+
+            HStack {
                 Image(uiImage: image)
                     .resizable()
                     .aspectRatio(contentMode: .fill)
@@ -343,17 +340,18 @@ struct ReferenceImagesSectionWithPhoto: View {
     @Binding var showCameraSheet: Bool
     let color: Color
     let initialImage: UIImage
-    
+
     @State private var showActionSheet: Bool = false
     @State private var showPhotosPicker: Bool = false
-    
+
     private let columns: [GridItem] = Array(
-        repeating: GridItem(.fixed(100), spacing: 12), count: 3)
-    
+        repeating: GridItem(.fixed(100), spacing: 12), count: 3
+    )
+
     var body: some View {
         let gridWidth =
             CGFloat(columns.count) * 100 + CGFloat(columns.count - 1) * 12
-        
+
         VStack {
             VStack(spacing: 8) {
                 HStack(spacing: 6) {
@@ -363,10 +361,10 @@ struct ReferenceImagesSectionWithPhoto: View {
                         .font(.subheadline)
                         .fontWeight(.semibold)
                         .foregroundColor(.secondary)
-                    
+
                     Spacer()
                 }
-                
+
                 HStack {
                     Text(
                         "Your captured photo is included. You can add more images or use as reference with your prompt"
@@ -374,17 +372,16 @@ struct ReferenceImagesSectionWithPhoto: View {
                     .font(.caption)
                     .foregroundColor(.secondary.opacity(0.8))
                     .padding(.bottom, 8)
-                    
+
                     Spacer()
                 }
             }
             .padding(.horizontal)
             .padding(.top, -4)
-            
+
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
                     LazyVGrid(columns: columns, spacing: 12) {
-                        
                         Image(uiImage: image)
                             .resizable()
                             .aspectRatio(contentMode: .fill)
@@ -394,7 +391,7 @@ struct ReferenceImagesSectionWithPhoto: View {
                                 RoundedRectangle(cornerRadius: 6)
                                     .stroke(Color.blue.opacity(0.3), lineWidth: 3)
                             )
-                        
+
                         // Take Photo tile
                         Button {
                             showCameraSheet = true
@@ -420,13 +417,14 @@ struct ReferenceImagesSectionWithPhoto: View {
                                 RoundedRectangle(cornerRadius: 12)
                                     .strokeBorder(
                                         style: StrokeStyle(
-                                            lineWidth: 3.5, dash: [6, 4])
+                                            lineWidth: 3.5, dash: [6, 4]
+                                        )
                                     )
                                     .foregroundColor(.gray.opacity(0.4))
                             )
                         }
                         .buttonStyle(PlainButtonStyle())
-                        
+
                         // Add images tile
                         PhotosPicker(
                             selection: $selectedPhotoItems,
@@ -454,7 +452,8 @@ struct ReferenceImagesSectionWithPhoto: View {
                                 RoundedRectangle(cornerRadius: 12)
                                     .strokeBorder(
                                         style: StrokeStyle(
-                                            lineWidth: 3.5, dash: [6, 4])
+                                            lineWidth: 3.5, dash: [6, 4]
+                                        )
                                     )
                                     .foregroundColor(.gray.opacity(0.4))
                             )
@@ -475,7 +474,7 @@ struct ReferenceImagesSectionWithPhoto: View {
                                 selectedPhotoItems.removeAll()
                             }
                         }
-                        
+
                         // Existing selected reference images
                         ForEach(referenceImages.indices, id: \.self) { index in
                             ZStack(alignment: .topTrailing) {
@@ -493,7 +492,7 @@ struct ReferenceImagesSectionWithPhoto: View {
                                                 color.opacity(0.6), lineWidth: 1
                                             )
                                     )
-                                
+
                                 Button(action: {
                                     referenceImages.remove(at: index)
                                 }
@@ -508,7 +507,7 @@ struct ReferenceImagesSectionWithPhoto: View {
                         }
                     }
                     .frame(width: gridWidth, alignment: .leading)
-                    
+
                     Spacer()
                 }
             }
@@ -516,4 +515,3 @@ struct ReferenceImagesSectionWithPhoto: View {
         }
     }
 }
-

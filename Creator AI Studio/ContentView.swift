@@ -108,7 +108,7 @@ struct ContentView: View {
                     tabButton(icon: "camera.filters", title: "Photo Filters", index: 1)
                     tabButton(icon: "camera.fill", title: "Create", index: 2)
 
-                    tabButton(icon: "cpu", title: "Generator", index: 3)
+                    tabButton(icon: "cpu", title: "AI Models", index: 3)
                     // tabButton(icon: "video.fill", title: "Video", index: 3)
                     tabButton(icon: "photo.on.rectangle.angled", title: "Gallery", index: 4)
                 }

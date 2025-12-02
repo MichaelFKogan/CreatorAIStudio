@@ -159,6 +159,8 @@ struct FullScreenImageView: View {
     @State private var deleteErrorMessage = ""
     @State private var player: AVPlayer?
     @State private var showCopySuccess = false
+    @State private var showDownloadError = false
+    @State private var downloadErrorMessage = ""
 
     var mediaURL: URL? {
         URL(string: userImage.image_url)
@@ -333,7 +335,7 @@ struct FullScreenImageView: View {
                                         .foregroundColor(.white)
                                 }
                             }
-                            
+
                             // Prompt (if exists) - special prominent display
                             if let prompt = userImage.prompt, !prompt.isEmpty {
                                 VStack(alignment: .leading, spacing: 8) {
@@ -555,17 +557,32 @@ struct FullScreenImageView: View {
         } message: {
             Text(deleteErrorMessage)
         }
+        .alert("Download Failed", isPresented: $showDownloadError) {
+            Button("OK", role: .cancel) {}
+            Button("Retry") {
+                Task {
+                    await downloadImage()
+                }
+            }
+        } message: {
+            Text(downloadErrorMessage)
+        }
     }
 
     // MARK: - Download Media (Image or Video)
 
     private func downloadImage() async {
         guard let url = mediaURL else {
+            await MainActor.run {
+                downloadErrorMessage = "Invalid media URL. Please try again."
+                showDownloadError = true
+            }
             return
         }
 
         await MainActor.run {
             isDownloading = true
+            showDownloadSuccess = false
         }
 
         do {
@@ -578,6 +595,8 @@ struct FullScreenImageView: View {
             guard status == .authorized || status == .limited else {
                 await MainActor.run {
                     isDownloading = false
+                    downloadErrorMessage = "Photo library access denied. Please enable photo library access in Settings."
+                    showDownloadError = true
                 }
                 return
             }
@@ -617,10 +636,12 @@ struct FullScreenImageView: View {
                 isDownloading = false
                 showDownloadSuccess = true
 
-                // Reset success state after 5 seconds
+                // Reset success state after 3 seconds
                 Task {
                     try? await Task.sleep(nanoseconds: 3_000_000_000)
-                    showDownloadSuccess = false
+                    await MainActor.run {
+                        showDownloadSuccess = false
+                    }
                 }
             }
 
@@ -628,6 +649,12 @@ struct FullScreenImageView: View {
             print("❌ Failed to download media: \(error)")
             await MainActor.run {
                 isDownloading = false
+                if let urlError = error as? URLError {
+                    downloadErrorMessage = "Network error: \(urlError.localizedDescription)"
+                } else {
+                    downloadErrorMessage = "Failed to download: \(error.localizedDescription)"
+                }
+                showDownloadError = true
             }
         }
     }

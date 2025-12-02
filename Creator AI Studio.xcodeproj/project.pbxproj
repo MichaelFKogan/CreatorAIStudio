@@ -430,7 +430,8 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSCameraUsageDescription = "This app needs access to your camera to take photos.";
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "his app needs access to your photo library so you can pick photos.";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "This app needs permission to save your generated images and videos to your photo library.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "This app needs access to your photo library so you can pick photos.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -461,7 +462,8 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSCameraUsageDescription = "This app needs access to your camera to take photos.";
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "his app needs access to your photo library so you can pick photos.";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "This app needs permission to save your generated images and videos to your photo library.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "This app needs access to your photo library so you can pick photos.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
