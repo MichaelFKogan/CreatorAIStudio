@@ -365,7 +365,7 @@ struct FullScreenImageView: View {
 
                                     Text(prompt)
                                         .font(.system(size: 15, weight: .medium))
-                                        .foregroundColor(.white.opacity(0.8))
+                                        .foregroundColor(.white)
                                         .fixedSize(horizontal: false, vertical: true)
                                         .padding(12)
                                         .frame(maxWidth: .infinity, alignment: .leading)

@@ -106,7 +106,7 @@ struct ContentView: View {
                 HStack(spacing: 0) {
                     tabButton(icon: "house.fill", title: "Home", index: 0)
                     tabButton(icon: "camera.filters", title: "Photo Filters", index: 1)
-                    tabButton(icon: "camera", title: "Create", index: 2)
+                    tabButton(icon: "camera", title: "", index: 2)
 
                     tabButton(icon: "cpu", title: "Generator", index: 3)
                     // tabButton(icon: "video.fill", title: "Video", index: 3)
@@ -114,7 +114,7 @@ struct ContentView: View {
                 }
                 .padding(.horizontal)
                 .padding(.top, 8)
-                .padding(.bottom, 0)
+//                .padding(.bottom, -10)
                 //                .background(.ultraThinMaterial)
                 .background(
                     ZStack {
@@ -141,7 +141,12 @@ struct ContentView: View {
 
     // Tab button helper
     private func tabButton(icon: String, title: String, index: Int) -> some View {
-        TabBarButton(icon: icon, title: title, isSelected: selectedTab == index) {
+        TabBarButton(
+            icon: icon,
+            title: title,
+            isSelected: selectedTab == index,
+            hasSpecialStyling: index == 2
+        ) {
             // If tapping Home tab while already on Home, reset navigation to root
             if index == 0 && selectedTab == 0 {
                 homeResetTrigger = UUID()
@@ -161,17 +166,31 @@ struct TabBarButton: View {
     let icon: String
     let title: String
     let isSelected: Bool
+    let hasSpecialStyling: Bool
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
             VStack(spacing: 4) {
-                Image(systemName: icon)
-                    .font(.system(size: 22))
+                if hasSpecialStyling {
+                    ZStack {
+                        Circle()
+                            .fill(Color.pink)
+                            .frame(width: 60, height: 60)
+                        Image(systemName: icon)
+                            .font(.system(size: 22))
+                            .foregroundColor(.black)
+                    }
+                    .offset(y: 5)
+                } else {
+                    Image(systemName: icon)
+                        .font(.system(size: 22))
+                }
                 Text(title)
                     .font(.caption)
+                    .foregroundColor(isSelected ? .pink : .gray)
             }
-            .foregroundColor(isSelected ? .pink : .gray)
+            .foregroundColor(hasSpecialStyling ? .clear : (isSelected ? .pink : .gray))
             .frame(maxWidth: .infinity)
         }
     }

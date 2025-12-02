@@ -1,9 +1,58 @@
 import PhotosUI
 import SwiftUI
 
+// MARK: - Filter Category
+
+enum FilterCategory: String, CaseIterable, Identifiable {
+    case artistic = "Artistic"
+    case gaming = "Gaming"
+    case creative = "Creative"
+    case photography = "Photography"
+    
+    var id: String { rawValue }
+    
+    var icon: String {
+        switch self {
+        case .artistic: return "paintbrush.fill"
+        case .gaming: return "gamecontroller.fill"
+        case .creative: return "sparkles"
+        case .photography: return "camera.fill"
+        }
+    }
+    
+    func matches(_ filter: InfoPacket) -> Bool {
+        let title = filter.display.title.lowercased()
+        switch self {
+        case .artistic:
+            return title.contains("anime") || title.contains("watercolor") || title.contains("vangogh") || title.contains("van gogh")
+        case .gaming:
+            return title.contains("blocky") || title.contains("cyberpunk") || title.contains("futuristic") || title.contains("minecraft")
+        case .creative:
+            return title.contains("snow globe") || title.contains("felt") || title.contains("polaroid") || title.contains("plastic") || title.contains("bubble") || title.contains("micro landscape") || title.contains("designer toy")
+        case .photography:
+            return title.contains("low-key") || title.contains("lighting") || title.contains("photography")
+        }
+    }
+}
+
 @MainActor
 class PhotoFiltersViewModel: ObservableObject {
     @Published var filters: [InfoPacket] = []
+    
+    // Quick filters (most popular/common ones)
+    var quickFilters: [InfoPacket] {
+        let quickFilterTitles = ["Anime", "Watercolor", "Blocky Aesthetic", "Cyberpunk"]
+        return filters.filter { quickFilterTitles.contains($0.display.title) }
+    }
+    
+    // Categorized filters
+    var categorizedFilters: [FilterCategory: [InfoPacket]] {
+        var result: [FilterCategory: [InfoPacket]] = [:]
+        for category in FilterCategory.allCases {
+            result[category] = filters.filter { category.matches($0) }
+        }
+        return result
+    }
 
     init() {
         loadFiltersJSON()

@@ -155,19 +155,19 @@ struct ImageModelDetailPage: View {
                                 costString: costString,
                                 action: generate
                             ))
-                        
+
                         Divider().padding(.horizontal)
-                        
+
                         // // Show ReferenceImagesSection only when "Image to Image" tab is selected
                         // if selectedGenerationMode == 1 {
-                             LazyView(ReferenceImagesSection(
-                                 referenceImages: $referenceImages,
-                                 selectedPhotoItems: $selectedPhotoItems,
-                                 showCameraSheet: $showCameraSheet,
-                                 color: .blue
-                             ))
+                        LazyView(ReferenceImagesSection(
+                            referenceImages: $referenceImages,
+                            selectedPhotoItems: $selectedPhotoItems,
+                            showCameraSheet: $showCameraSheet,
+                            color: .blue
+                        ))
                         // }
-                        
+
                         // Example Image Prompts Button
                         Button(action: { isTransformPromptsPresented = true }) {
                             HStack {
@@ -190,9 +190,9 @@ struct ImageModelDetailPage: View {
                         }
                         .buttonStyle(PlainButtonStyle())
                         .padding(.horizontal)
-                        .padding(.top, -12)
+                        .padding(.top, -6)
                         .padding(.bottom, -12)
-                        
+
                         Divider().padding(.horizontal)
 
 //                        VStack {

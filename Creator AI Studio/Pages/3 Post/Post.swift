@@ -12,6 +12,7 @@ struct Post: View {
     
     @StateObject private var filtersViewModel = PhotoFiltersViewModel()
     @State private var selectedFilter: InfoPacket?
+    @State private var showFilterCategorySheet = false
 
     var body: some View {
         NavigationView {
@@ -89,11 +90,12 @@ struct Post: View {
                         .padding(.horizontal, 20)
                         .padding(.bottom, 4)
                         
-                        // Horizontal scrollable filter row
-                        FilterScrollRow(
-                            filters: filtersViewModel.filters,
+                        // Quick filters row with "See All" button
+                        QuickFiltersRow(
+                            quickFilters: filtersViewModel.quickFilters,
                             selectedFilter: selectedFilter,
-                            onSelect: { selectedFilter = $0 }
+                            onSelect: { selectedFilter = $0 },
+                            onShowAll: { showFilterCategorySheet = true }
                         )
                     }
                     .padding(.top, 8)
@@ -118,6 +120,15 @@ struct Post: View {
             }
             .sheet(isPresented: $showLibraryPicker) {
                 PhotoLibraryPickerView(isPresented: $showLibraryPicker, selectedImage: $cameraService.capturedImage)
+            }
+            .sheet(isPresented: $showFilterCategorySheet) {
+                FilterCategorySheet(
+                    isPresented: $showFilterCategorySheet,
+                    categorizedFilters: filtersViewModel.categorizedFilters,
+                    allFilters: filtersViewModel.filters,
+                    selectedFilter: $selectedFilter,
+                    onSelect: { selectedFilter = $0 }
+                )
             }
             .background(
                 photoReviewNavigationLink
