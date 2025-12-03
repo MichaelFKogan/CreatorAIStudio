@@ -11,11 +11,10 @@ struct QuickFiltersRow: View {
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 12) {
-                
 //                Text("Filters")
 //                    .font(.caption)
 //                    .foregroundColor(.white)
-                
+
                 // "See All" button
                 Button {
                     onShowAll()
@@ -32,10 +31,9 @@ struct QuickFiltersRow: View {
                                 )
                                 .frame(width: 70, height: 70)
 
-                            Image(systemName: "square.grid.2x2")
-                                .font(.system(size: 28, weight: .medium))
+                            Image(systemName: "chevron.up")
+                                .font(.system(size: 20, weight: .medium))
                                 .foregroundColor(.white)
-                            
                         }
                         .overlay(
                             RoundedRectangle(cornerRadius: 12)

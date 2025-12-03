@@ -379,7 +379,7 @@ struct ReferenceImagesSectionWithPhoto: View {
 
                 HStack {
                     Text(
-                        "Your captured photo is included. Add a prompt to transform your photo. You can also add more images to use as a reference with your prompt."
+                        "Add a prompt to transform your photo."
                     )
                     .font(.caption)
                     .foregroundColor(.secondary.opacity(0.8))
@@ -463,7 +463,6 @@ struct ReferenceImagesSectionWithPhoto: View {
                                     }
                                     .padding(4)
                                     .shadow(color: Color.black.opacity(0.2), radius: 3, x: 0, y: 1)
-
                                 }
                             }
 
