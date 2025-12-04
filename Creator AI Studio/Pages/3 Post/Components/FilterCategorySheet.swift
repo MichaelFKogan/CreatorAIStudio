@@ -20,7 +20,8 @@ struct CompactFiltersGrid: View {
                     title: filter.display.title,
                     imageName: filter.display.imageName,
                     isSelected: selectedFilter?.id == filter.id,
-                    size: 80
+                    size: 80,
+                    cost: filter.cost
                 )
                 .onTapGesture { onSelect(filter) }
             }

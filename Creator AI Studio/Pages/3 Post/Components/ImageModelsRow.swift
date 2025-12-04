@@ -48,7 +48,8 @@ struct ImageModelsRow: View {
                     FilterThumbnailCompact(
                         title: model.display.title,
                         imageName: model.display.imageName,
-                        isSelected: selectedModel?.id == model.id
+                        isSelected: selectedModel?.id == model.id,
+                        cost: model.cost
                     )
                     .onTapGesture {
                         onSelect(model)

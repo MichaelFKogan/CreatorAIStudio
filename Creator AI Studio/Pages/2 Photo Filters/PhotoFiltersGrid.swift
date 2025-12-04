@@ -21,7 +21,8 @@ struct PhotoFiltersGrid: View {
                         title: filter.display.title,
                         imageName: filter.display.imageName,
                         isSelected: selectedFilter?.id == filter.id,
-                        size: itemSize
+                        size: itemSize,
+                        cost: filter.cost
                     )
                     .onTapGesture { onSelect(filter) }
                 }

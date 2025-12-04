@@ -60,7 +60,7 @@ struct Post: View {
                                         .fill(Color.white.opacity(0.2))
                                         .background(
                                             RoundedRectangle(cornerRadius: 12)
-                                                .fill(Color.black.opacity(0.6))
+                                                .fill(Color.black.opacity(0.8))
                                         )
                                 )
                         } else if let selectedModel = selectedImageModel {
@@ -74,7 +74,7 @@ struct Post: View {
                                         .fill(Color.white.opacity(0.2))
                                         .background(
                                             RoundedRectangle(cornerRadius: 12)
-                                                .fill(Color.black.opacity(0.6))
+                                                .fill(Color.black.opacity(0.8))
                                         )
                                 )
                         } else {
@@ -88,7 +88,7 @@ struct Post: View {
                                         .fill(Color.white.opacity(0.15))
                                         .background(
                                             RoundedRectangle(cornerRadius: 12)
-                                                .fill(Color.black.opacity(0.6))
+                                                .fill(Color.black.opacity(0.8))
                                         )
                                 )
                         }

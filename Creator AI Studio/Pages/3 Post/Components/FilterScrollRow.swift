@@ -14,7 +14,8 @@ struct FilterScrollRow: View {
                     FilterThumbnailCompact(
                         title: filter.display.title,
                         imageName: filter.display.imageName,
-                        isSelected: selectedFilter?.id == filter.id
+                        isSelected: selectedFilter?.id == filter.id,
+                        cost: filter.cost
                     )
                     .onTapGesture {
                         onSelect(filter)
@@ -33,6 +34,7 @@ struct FilterThumbnailCompact: View {
     let title: String
     let imageName: String
     let isSelected: Bool
+    let cost: Decimal?
 
     var body: some View {
         VStack(spacing: 6) {
@@ -50,7 +52,22 @@ struct FilterThumbnailCompact: View {
                     )
                     .shadow(color: .black.opacity(0.6), radius: 4, x: 0, y: 0)
                     .overlay(
-                        Group {
+                        VStack(alignment: .trailing, spacing: 3) {
+                            // Price badge (always visible if cost exists)
+                            if let cost = cost {
+                                Text("$\(NSDecimalNumber(decimal: cost).stringValue)")
+                                    .font(.system(size: 9, weight: .semibold))
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 5)
+                                    .padding(.vertical, 2)
+                                    .background(
+                                        Capsule()
+                                            .fill(Color.black.opacity(0.7))
+                                    )
+                                    .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 1)
+                            }
+                            
+                            // Checkmark (shown when selected, below price)
                             if isSelected {
                                 Image(systemName: "checkmark.circle.fill")
                                     .font(.system(size: 18))
@@ -66,12 +83,12 @@ struct FilterThumbnailCompact: View {
                                             )
                                             .frame(width: 22, height: 22)
                                     )
-                                    .padding(4)
                                     .transition(.scale.combined(with: .opacity))
                             }
                         },
                         alignment: .topTrailing
                     )
+                    .padding(4)
             }
             .padding(2)
             .animation(

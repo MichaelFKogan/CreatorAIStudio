@@ -7,6 +7,7 @@ struct FilterThumbnail: View {
     let imageName: String
     let isSelected: Bool
     let size: CGFloat
+    let cost: Decimal?
 
     var body: some View {
         VStack(spacing: 4) {
@@ -22,7 +23,22 @@ struct FilterThumbnail: View {
                             .stroke(isSelected ? Color.pink : Color.clear, lineWidth: 3)
                     )
                     .overlay(
-                        Group {
+                        VStack(alignment: .trailing, spacing: 4) {
+                            // Price badge (always visible if cost exists)
+                            if let cost = cost {
+                                Text("$\(NSDecimalNumber(decimal: cost).stringValue)")
+                                    .font(.system(size: 10, weight: .semibold))
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 3)
+                                    .background(
+                                        Capsule()
+                                            .fill(Color.black.opacity(0.7))
+                                    )
+                                    .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 1)
+                            }
+                            
+                            // Checkmark (shown when selected, below price)
                             if isSelected {
                                 Image(systemName: "checkmark.circle.fill")
                                     .font(.system(size: 20))
@@ -38,12 +54,12 @@ struct FilterThumbnail: View {
                                             )
                                             .frame(width: 24, height: 24)
                                     )
-                                    .padding(6)
                                     .transition(.scale.combined(with: .opacity))
                             }
                         },
                         alignment: .topTrailing
                     )
+                    .padding(6)
             }
             .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isSelected)
 

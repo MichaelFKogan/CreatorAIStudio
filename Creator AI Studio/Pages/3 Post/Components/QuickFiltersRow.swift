@@ -52,7 +52,8 @@ struct QuickFiltersRow: View {
                     FilterThumbnailCompact(
                         title: filter.display.title,
                         imageName: filter.display.imageName,
-                        isSelected: selectedFilter?.id == filter.id
+                        isSelected: selectedFilter?.id == filter.id,
+                        cost: filter.cost
                     )
                     .onTapGesture {
                         onSelect(filter)

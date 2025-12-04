@@ -393,10 +393,12 @@ struct BannerSection: View {
                     .background(Capsule().fill(Color.blue.opacity(0.8)))
 
                     HStack(spacing: 4) {
-                        Text("$\(costString)").font(.title3).fontWeight(.bold)
-                            .foregroundColor(.blue)
-                        Text("per image").font(.caption).foregroundColor(
-                            .secondary)
+                        VStack {
+                            Text("$\(costString)").font(.title3).fontWeight(.bold)
+                                .foregroundColor(.blue)
+                            Text("per image").font(.caption).foregroundColor(
+                                .secondary)
+                        }
                     }
                     Spacer()
                 }
