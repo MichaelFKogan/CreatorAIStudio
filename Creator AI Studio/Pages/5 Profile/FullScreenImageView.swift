@@ -374,6 +374,14 @@ struct FullScreenImageView: View {
                                                 lastZoom = 1.0
                                             }
                                         }
+                                        .onTapGesture {
+                                            // Single-tap to open immersive mode
+                                            withAnimation {
+                                                isImmersiveMode = true
+                                                panOffset = .zero
+                                                lastPanOffset = .zero
+                                            }
+                                        }
                                 }
                             }
 

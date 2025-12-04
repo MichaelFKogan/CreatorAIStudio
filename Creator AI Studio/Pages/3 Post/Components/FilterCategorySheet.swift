@@ -35,8 +35,11 @@ struct FilterCategorySheet: View {
     @Binding var isPresented: Bool
     let categorizedFilters: [FilterCategory: [InfoPacket]]
     let allFilters: [InfoPacket]
+    let imageModels: [InfoPacket]
     @Binding var selectedFilter: InfoPacket?
+    @Binding var selectedImageModel: InfoPacket?
     let onSelect: (InfoPacket) -> Void
+    let onSelectModel: (InfoPacket) -> Void
 
     @State private var expandedCategories: Set<FilterCategory> = []
 
@@ -47,6 +50,35 @@ struct FilterCategorySheet: View {
 
                 ScrollView {
                     VStack(spacing: 0) {
+                        // Description text
+                        Text("Choose either an AI Model or Photo Filter")
+                            .font(.system(size: 15))
+                            .foregroundColor(.white.opacity(0.8))
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 20)
+                        // .padding(.top, 16)
+                        // .padding(.bottom, 12)
+
+                        // AI Models section (first row, always visible)
+                        if !imageModels.isEmpty {
+                            CategorySection(
+                                title: "AI Models",
+                                icon: "cpu",
+                                filters: imageModels,
+                                selectedFilter: selectedImageModel,
+                                onSelect: { model in
+                                    onSelectModel(model)
+                                },
+                                isExpanded: true,
+                                isAlwaysExpanded: true
+                            )
+                            .padding(.top, 8)
+
+                            Divider()
+                                .background(Color.white.opacity(0.2))
+                                .padding(.vertical, 8)
+                        }
+
                         // All Filters section (always visible)
                         CategorySection(
                             title: "Popular",
@@ -59,7 +91,7 @@ struct FilterCategorySheet: View {
                             isExpanded: true,
                             isAlwaysExpanded: true
                         )
-                        .padding(.top, 8)
+                        .padding(.top, imageModels.isEmpty ? 8 : 0)
 
                         Divider()
                             .background(Color.white.opacity(0.2))
@@ -98,7 +130,7 @@ struct FilterCategorySheet: View {
                     .padding(.bottom, 20)
                 }
             }
-            .navigationTitle("Photo Filters")
+            .navigationTitle("Filters & Models")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {

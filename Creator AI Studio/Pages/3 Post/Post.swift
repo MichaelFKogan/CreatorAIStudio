@@ -2,13 +2,6 @@ import AVFoundation
 import SwiftUI
 import UIKit
 
-// MARK: - Processing Mode
-
-enum ProcessingMode {
-    case photoFilter
-    case imageModel
-}
-
 // MARK: - CameraButtonView
 
 struct Post: View {
@@ -22,9 +15,8 @@ struct Post: View {
     @State private var showFilterCategorySheet = false
 
     // Image Model mode state
-    @State private var selectedMode: ProcessingMode = .photoFilter
+    @StateObject private var imageModelsViewModel = ImageModelsViewModel()
     @State private var selectedImageModel: InfoPacket?
-    @State private var showImageModelSelectionSheet = false
 
     var body: some View {
         NavigationView {
@@ -46,49 +38,80 @@ struct Post: View {
                     )
                 }
 
-                // Camera controls (your existing VStack with ❌ / ✅ or capture button)
+                // Camera controls
                 VStack {
-                    // MARK: SWITCH CAMERA BUTTON
-
-                    HStack {
-                        Spacer()
-                        // Switch camera button
-                        Button {
-                            cameraService.switchCamera()
-                        } label: {
-                            Image(systemName: "arrow.triangle.2.circlepath")
-                                .font(.system(size: 26))
-                                .padding(12)
-                                .foregroundColor(.white)
-                                .opacity(0.7)
-                                .clipShape(Circle())
-                                .shadow(radius: 3)
-                        }
-                        .accessibilityLabel("Switch camera")
-                    }
-                    .padding()
-
                     Spacer()
 
-                    //  if cameraService.capturedImage == nil {
-                    // Library + capture button
+                    // Control buttons row
                     HStack {
-                        Spacer()
+                        // Left side: Filter button
+                        HStack {
+                            Spacer()
 
-                        // MARK: PHOTO LIBRARY BUTTON
+                            // MARK: FILTER/MODEL SELECTION BUTTON
 
-                        HStack(spacing: 8) {
                             Button {
-                                showLibraryPicker = true
+                                showFilterCategorySheet = true
                             } label: {
-                                Image(systemName: "photo.on.rectangle.angled")
-                                    .font(.system(size: 25))
-                                    .padding(12)
-                                    .foregroundColor(.white).opacity(0)
-                                    .cornerRadius(8)
-                                    .shadow(radius: 3)
+                                Group {
+                                    if let selectedFilter = selectedFilter {
+                                        // Show selected filter thumbnail
+                                        Image(selectedFilter.display.imageName)
+                                            .resizable()
+                                            .scaledToFill()
+                                            .frame(width: 65, height: 65)
+                                            .clipped()
+                                            .cornerRadius(10)
+                                            .shadow(color: .black.opacity(0.6), radius: 4, x: 0, y: 0)
+                                    } else if let selectedModel = selectedImageModel {
+                                        // Show selected model thumbnail
+                                        Image(selectedModel.display.imageName)
+                                            .resizable()
+                                            .scaledToFill()
+                                            .frame(width: 65, height: 65)
+                                            .clipped()
+                                            .cornerRadius(10)
+                                            .shadow(color: .black.opacity(0.6), radius: 4, x: 0, y: 0)
+                                    } else {
+                                        // Placeholder when nothing is selected
+                                        ZStack {
+                                            RoundedRectangle(cornerRadius: 10)
+                                                .fill(
+                                                    LinearGradient(
+                                                        colors: [Color.purple.opacity(0.3), Color.pink.opacity(0.3)],
+                                                        startPoint: .topLeading,
+                                                        endPoint: .bottomTrailing
+                                                    )
+                                                )
+                                                .frame(width: 55, height: 55)
+
+                                            Image(systemName: "square.grid.2x2")
+                                                .font(.system(size: 22, weight: .medium))
+                                                .foregroundColor(.white)
+                                        }
+                                        .shadow(color: .black.opacity(0.6), radius: 4, x: 0, y: 0)
+                                    }
+                                }
                             }
-                            .frame(width: 50, height: 50)
+                            .frame(width: 65, height: 65)
+                            .padding(.trailing, 24)
+                        }
+                        .frame(maxWidth: .infinity)
+
+                        // Center: Capture button
+                        // MARK: CAPTURE BUTTON
+
+                        Button {
+                            cameraService.capturePhoto()
+                        } label: {
+                            Circle()
+                                .stroke(Color.white, lineWidth: 5)
+                                .frame(width: 80, height: 80)
+                        }
+
+                        // Right side: Photo library and switch camera buttons
+                        HStack {
+                            // MARK: PHOTO LIBRARY BUTTON
 
                             Button {
                                 showLibraryPicker = true
@@ -101,220 +124,34 @@ struct Post: View {
                                     .shadow(radius: 3)
                             }
                             .frame(width: 50, height: 50)
-                        }
+                            .padding(.leading, 12)
 
-                        // MARK: CAPTURE BUTTON
-
-                        Button {
-                            cameraService.capturePhoto()
-                        } label: {
-                            Circle()
-                                .stroke(Color.white, lineWidth: 5)
-                                .frame(width: 80, height: 80)
-                        }
-                        .padding(.horizontal, 24)
-
-                        // MARK: MODE SWITCHER
-
-                        // MARK: FILTER BUTTON
-
-                        HStack(spacing: 8) {
-                            Button {
-                                selectedMode = .photoFilter
-                            } label: {
-                                VStack(spacing: 4) {
-                                    Image(systemName: "camera.filters")
-                                        .font(.system(size: 20))
-                                    Text("Filter")
-                                        .font(
-                                            .system(size: 10, weight: .medium))
-                                }
-                                .foregroundColor(
-                                    selectedMode == .photoFilter
-                                        ? .white : .white.opacity(0.6)
-                                )
-                                .frame(width: 50, height: 50)
-                                .background(
-                                    selectedMode == .photoFilter
-                                        ? Color.white.opacity(0.45)
-                                        : Color.white.opacity(0.1)
-                                )
-                                .clipShape(RoundedRectangle(cornerRadius: 10))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 10)
-                                        .stroke(
-                                            selectedMode == .photoFilter
-                                                ? Color.white.opacity(0.5)
-                                                : Color.white.opacity(0.2),
-                                            lineWidth: selectedMode
-                                                == .photoFilter ? 2 : 1
-                                        )
-                                )
-                            }
-                            .shadow(color: .black.opacity(0.6), radius: 4, x: 0, y: 0)
-
-                            // MARK: AI MODEL BUTTON
+                            // MARK: SWITCH CAMERA BUTTON
 
                             Button {
-                                selectedMode = .imageModel
+                                cameraService.switchCamera()
                             } label: {
-                                VStack(spacing: 4) {
-                                    Image(systemName: "cpu")
-                                        .font(.system(size: 20))
-                                    Text("AI Models")
-                                        .font(
-                                            .system(size: 10, weight: .medium))
-                                }
-                                .foregroundColor(
-                                    selectedMode == .imageModel
-                                        ? .white : .white.opacity(0.6)
-                                )
-                                .frame(width: 50, height: 50)
-                                .background(
-                                    selectedMode == .imageModel
-                                        ? Color.white.opacity(0.45)
-                                        : Color.white.opacity(0.1)
-                                )
-                                .clipShape(RoundedRectangle(cornerRadius: 10))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 10)
-                                        .stroke(
-                                            selectedMode == .imageModel
-                                                ? Color.white.opacity(0.5)
-                                                : Color.white.opacity(0.2),
-                                            lineWidth: selectedMode
-                                                == .imageModel ? 2 : 1
-                                        )
-                                )
+                                Image(systemName: "arrow.triangle.2.circlepath")
+                                    .font(.system(size: 25))
+                                    .padding(12)
+                                    .foregroundColor(.white).opacity(0.8)
+                                    .clipShape(Circle())
+                                    .shadow(radius: 3)
                             }
-                            .shadow(color: .black.opacity(0.6), radius: 4, x: 0, y: 0)
-                        }
+                            .accessibilityLabel("Switch camera")
+                            .frame(width: 50, height: 50)
 
-                        Spacer()
+                            Spacer()
+                        }
+                        .frame(maxWidth: .infinity)
                     }
                     .padding(.trailing, 8)
-                    .padding(.bottom, 12)
-
-                    // MARK: BOTTOM ROW
-
-                    VStack {
-                        // Conditional bottom section based on mode
-                        if selectedMode == .photoFilter {
-                            // MARK: PHOTO FILTER
-
-                            // Quick filters row with "See All" button
-                            QuickFiltersRow(
-                                quickFilters: filtersViewModel.quickFilters(limit: nil), // nil = show all filters
-                                selectedFilter: selectedFilter,
-                                onSelect: { selectedFilter = $0 },
-                                onShowAll: { showFilterCategorySheet = true }
-                            )
-
-                        } else {
-                            // MARK: IMAGE MODEL
-                            // Image Model selection
-
-                            Button {
-                                showImageModelSelectionSheet = true
-                            } label: {
-                                HStack(spacing: 12) {
-                                    if let selectedModel = selectedImageModel {
-                                        Image(selectedModel.display.imageName)
-                                            .resizable()
-                                            .aspectRatio(contentMode: .fill)
-                                            .frame(width: 50, height: 50)
-                                            .clipShape(
-                                                RoundedRectangle(
-                                                    cornerRadius: 8))
-                                            .shadow(color: .black.opacity(0.6), radius: 4, x: 0, y: 0)
-
-                                        Text(selectedModel.display.title)
-                                            .font(
-                                                .system(
-                                                    size: 14, weight: .medium
-                                                )
-                                            )
-                                            .foregroundColor(.white)
-                                            .lineLimit(1)
-
-                                    } else {
-                                        Image(systemName: "square.grid.2x2")
-                                            .font(
-                                                .system(
-                                                    size: 24, weight: .medium
-                                                )
-                                            )
-                                            .foregroundColor(
-                                                .white.opacity(0.8)
-                                            )
-                                            .frame(width: 50, height: 50)
-
-                                        Text("Select Model")
-                                            .font(
-                                                .system(
-                                                    size: 14, weight: .medium
-                                                )
-                                            )
-                                            .foregroundColor(.white)
-                                    }
-
-                                    Spacer()
-
-                                    if let selectedModel = selectedImageModel {
-                                        VStack(alignment: .trailing, spacing: 2) {
-                                            Text("$\(NSDecimalNumber(decimal: selectedModel.cost ?? 0).stringValue)")
-                                                .font(.system(size: 14, weight: .semibold, design: .rounded))
-                                                .foregroundColor(.blue)
-                                            Text("per image")
-                                                .font(.caption2)
-                                                .foregroundColor(.white.opacity(0.7))
-                                        }
-                                    }
-
-                                    Image(systemName: "chevron.right")
-                                        .font(.system(size: 12))
-                                        .foregroundColor(.white.opacity(0.7))
-                                }
-                                .padding(.horizontal, 16)
-                                .padding(.vertical, 12)
-                                .background(Color.white.opacity(0.15))
-                                .clipShape(RoundedRectangle(cornerRadius: 12))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .stroke(
-                                            Color.white.opacity(0.3),
-                                            lineWidth: 1
-                                        )
-                                )
-                            }
-                            .padding(.horizontal, 12)
-                        }
+                    .safeAreaInset(edge: .bottom) {
+                        Color.clear.frame(height: 57) // 12 + 45 for tab bar
                     }
-                    .frame(height: 115)
-//                    .background(Color.black).opacity(0.9)
-                    .background(
-                        ZStack {
-                            // Blur
-                            Color.clear.background(.ultraThinMaterial)
-
-                            // Dark tint overlay
-                            LinearGradient(
-                                colors: [
-                                    Color.black.opacity(0.5),
-                                    Color.black.opacity(0.5),
-                                ],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                        }
-                        .ignoresSafeArea(edges: .bottom)
-                    )
-
-                    // Bottom spacing
-                    Color.clear.frame(height: 45)
+                    .padding(.bottom, 12)
                 }
             }
-
             .onAppear {
                 cameraService.startSession()
             }
@@ -337,14 +174,17 @@ struct Post: View {
                     isPresented: $showFilterCategorySheet,
                     categorizedFilters: filtersViewModel.categorizedFilters,
                     allFilters: filtersViewModel.filters,
+                    imageModels: imageModelsViewModel.filteredAndSortedImageModels,
                     selectedFilter: $selectedFilter,
-                    onSelect: { selectedFilter = $0 }
-                )
-            }
-            .sheet(isPresented: $showImageModelSelectionSheet) {
-                ImageModelSelectionSheet(
-                    isPresented: $showImageModelSelectionSheet,
-                    selectedModel: $selectedImageModel
+                    selectedImageModel: $selectedImageModel,
+                    onSelect: { filter in
+                        selectedFilter = filter
+                        selectedImageModel = nil // Clear model when filter is selected
+                    },
+                    onSelectModel: { model in
+                        selectedImageModel = model
+                        selectedFilter = nil // Clear filter when model is selected
+                    }
                 )
             }
             .background(
@@ -367,7 +207,7 @@ struct Post: View {
     private var photoReviewDestination: some View {
         Group {
             if let capturedImage = cameraService.capturedImage {
-                if selectedMode == .photoFilter {
+                if let selectedFilter = selectedFilter {
                     PhotoReviewView(capturedImage: capturedImage)
                         .onDisappear {
                             // Reset the captured image when the review page is dismissed
@@ -383,14 +223,14 @@ struct Post: View {
                         cameraService.capturedImage = nil
                     }
                 } else {
-                    // If no model selected, show a message or go back
+                    // If no filter or model selected, show a message or go back
                     VStack {
-                        Text("Please select an Image Model first")
+                        Text("Please select a Filter or Image Model first")
                             .foregroundColor(.secondary)
                             .padding()
                     }
                     .onAppear {
-                        // Auto-dismiss after a moment if no model selected
+                        // Auto-dismiss after a moment if nothing selected
                         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                             navigateToPhotoReview = false
                             cameraService.capturedImage = nil

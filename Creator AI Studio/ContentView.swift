@@ -192,7 +192,7 @@ struct TabBarButton: View {
                     .font(.caption)
                     .foregroundColor(isSelected ? .pink : .gray)
             }
-            .frame(height: 45)
+            .frame(height: 45  )
             .foregroundColor(hasSpecialStyling ? .clear : (isSelected ? .pink : .gray))
             .frame(maxWidth: .infinity)
         }
