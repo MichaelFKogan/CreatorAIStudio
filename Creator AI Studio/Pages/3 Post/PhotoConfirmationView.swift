@@ -27,7 +27,7 @@ struct PhotoConfirmationView: View {
 
                 ZStack {
                     Text("Confirm Your Photo")
-                        .font(.custom("Nunito-Black", size: 28))
+                        .font(.system(size: 28, weight: .bold, design: .rounded))
                         .foregroundColor(.primary)
                         .overlay(
                             LinearGradient(
@@ -66,6 +66,7 @@ struct PhotoConfirmationView: View {
                         .opacity(sparklePulse ? 0.95 : 0.6)
                         .animation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true).delay(0.3), value: sparklePulse)
                 }
+                .padding(.top, 20)
                 .onAppear { sparklePulse = true }
 
                 // MARK: - Main Photo
@@ -173,21 +174,21 @@ struct PhotoConfirmationView: View {
                             ProgressView()
                         }
                         Text("Generate")
-                            .font(.custom("Nunito-ExtraBold", size: 22))
-                            .foregroundColor(.white)
+                            .font(.system(size: 18, weight: .bold, design: .rounded))
+                            .foregroundColor(.black)
                         Image(systemName: "photo.on.rectangle")
                             .font(.system(size: 18))
                             .fontWeight(.bold)
-                            .foregroundColor(.white)
+                            .foregroundColor(.black)
                             .rotationEffect(.degrees(rotation))
                             .drawingGroup()
                     }
                     .padding(.vertical, 16)
                     .frame(maxWidth: .infinity)
-//                    .background(.white)
-                    .background(
-                        LinearGradient(colors: [.blue, .purple], startPoint: .topLeading, endPoint: .bottomTrailing)
-                    )
+                    .background(.white)
+//                    .background(
+//                        LinearGradient(colors: [.blue, .purple], startPoint: .topLeading, endPoint: .bottomTrailing)
+//                    )
                     .cornerRadius(12)
                     .shadow(color: Color.purple.opacity(0.3), radius: 8, x: 0, y: 4)
                     .scaleEffect(generatePulse ? 1.05 : 1.0)
@@ -219,12 +220,37 @@ struct PhotoConfirmationView: View {
                             LinearGradient(colors: [.blue, .purple], startPoint: .topLeading, endPoint: .bottomTrailing)
                         )
                     Text("$\(NSDecimalNumber(decimal: item.cost ?? 0).stringValue)")
+                        .font(.system(size: 16, weight: .semibold, design: .rounded))
                         .foregroundColor(.primary)
                 }
                 .padding(.horizontal, 24)
-                .padding(.bottom, 40)
+                .padding(.top, 8)
+
+                // MARK: - Info Section
+
+                VStack(spacing: 12) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "sparkles")
+                            .foregroundStyle(
+                                LinearGradient(colors: [.blue, .purple], startPoint: .topLeading, endPoint: .bottomTrailing)
+                            )
+                            .font(.system(size: 16))
+                        Text("What to expect")
+                            .font(.system(size: 16, weight: .semibold, design: .rounded))
+                            .foregroundColor(.primary)
+                    }
+
+                    VStack(alignment: .leading, spacing: 10) {
+                        InfoRow(number: "1", text: "AI will transform your photo")
+                        InfoRow(number: "2", text: "Processing takes 30-60 seconds")
+                        InfoRow(number: "3", text: "You'll get a notification when ready")
+                    }
+                    .padding(.horizontal, 24)
+                }
+                .padding(.bottom, 60)
             }
             .frame(maxWidth: .infinity)
+            .padding(.bottom, 20)
         }
         .background(Color(.systemBackground))
         .toolbar {
@@ -266,6 +292,33 @@ struct PhotoConfirmationView: View {
                     )
                 }
             }
+        }
+    }
+}
+
+// MARK: - InfoRow Helper View
+
+struct InfoRow: View {
+    let number: String
+    let text: String
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 10) {
+            Text(number)
+                .font(.system(size: 14, weight: .bold, design: .rounded))
+                .foregroundColor(.white)
+                .frame(width: 24, height: 24)
+                .background(
+                    LinearGradient(colors: [.blue, .purple], startPoint: .topLeading, endPoint: .bottomTrailing)
+                )
+                .clipShape(Circle())
+
+            Text(text)
+                .font(.system(size: 14, design: .rounded))
+                .foregroundColor(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Spacer()
         }
     }
 }

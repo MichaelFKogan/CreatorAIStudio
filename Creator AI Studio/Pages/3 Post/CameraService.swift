@@ -21,10 +21,18 @@ final class CameraService: NSObject, ObservableObject {
         sessionQueue.async { [weak self] in
             guard let self = self else { return }
 
+            // If session is already running, don't reconfigure
+            if self.session.isRunning {
+                return
+            }
+
             self.session.beginConfiguration()
             self.session.sessionPreset = .photo
 
-            self.configureInputSynchronously(position: .back)
+            // Only configure input if we don't have one
+            if self.currentInput == nil {
+                self.configureInputSynchronously(position: .back)
+            }
 
             if self.session.canAddOutput(self.photoOutput) {
                 self.session.addOutput(self.photoOutput)

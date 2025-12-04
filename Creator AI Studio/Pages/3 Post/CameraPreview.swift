@@ -35,6 +35,11 @@ struct CameraPreview: UIViewRepresentable {
         DispatchQueue.main.async {
             previewLayer.frame = uiView.bounds
 
+            // Ensure the preview layer is connected to the session
+            if previewLayer.session != session {
+                previewLayer.session = session
+            }
+
             if let connection = previewLayer.connection {
                 // Keep orientation locked to portrait
                 connection.videoOrientation = .portrait

@@ -379,7 +379,7 @@ struct ReferenceImagesSectionWithPhoto: View {
 
                 HStack {
                     Text(
-                        "Add a prompt to transform your photo."
+                        "Add a prompt below to transform your photo."
                     )
                     .font(.caption)
                     .foregroundColor(.secondary.opacity(0.8))

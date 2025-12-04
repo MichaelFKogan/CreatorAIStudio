@@ -199,6 +199,8 @@ struct ImageGridView: View {
     let spacing: CGFloat = 2
     var onSelect: (UserImage) -> Void
 
+    @State private var favoritedImageIds: Set<String> = []
+
     private var gridColumns: [GridItem] {
         Array(repeating: GridItem(.flexible(), spacing: spacing), count: 3)
     }
@@ -226,71 +228,132 @@ struct ImageGridView: View {
                         ? userImage.thumbnail_url : userImage.image_url,
                         let url = URL(string: displayUrl)
                     {
-                        Button {
-                            onSelect(userImage)
-                        } label: {
-                            ZStack {
-                                KFImage(url)
-                                    .placeholder {
-                                        Rectangle()
-                                            .fill(Color.gray.opacity(0.2))
-                                            .overlay(ProgressView())
-                                    }
-                                    .resizable()
-                                    .scaledToFill()
-                                    .frame(width: itemWidth, height: itemHeight)
-                                    .clipped()
+                        ZStack {
+                            Button {
+                                onSelect(userImage)
+                            } label: {
+                                ZStack {
+                                    KFImage(url)
+                                        .placeholder {
+                                            Rectangle()
+                                                .fill(Color.gray.opacity(0.2))
+                                                .overlay(ProgressView())
+                                        }
+                                        .resizable()
+                                        .scaledToFill()
+                                        .frame(width: itemWidth, height: itemHeight)
+                                        .clipped()
 
-                                // Video play icon overlay
-                                if userImage.isVideo {
-                                    ZStack {
-                                        Circle()
-                                            .fill(Color.black.opacity(0.6))
-                                            .frame(width: 40, height: 40)
+                                    // Video play icon overlay
+                                    if userImage.isVideo {
+                                        ZStack {
+                                            Circle()
+                                                .fill(Color.black.opacity(0.6))
+                                                .frame(width: 40, height: 40)
 
-                                        Image(systemName: "play.fill")
-                                            .font(.system(size: 18))
-                                            .foregroundColor(.white)
+                                            Image(systemName: "play.fill")
+                                                .font(.system(size: 18))
+                                                .foregroundColor(.white)
+                                        }
                                     }
                                 }
                             }
+                            .buttonStyle(.plain)
+
+                            // Heart icon overlay
+                            VStack {
+                                HStack {
+                                    Spacer()
+                                    ZStack {
+                                        Color.clear
+                                            .frame(width: 32, height: 32)
+                                            .contentShape(Rectangle())
+                                            .onTapGesture {
+                                                let imageId = userImage.id
+                                                if favoritedImageIds.contains(imageId) {
+                                                    favoritedImageIds.remove(imageId)
+                                                } else {
+                                                    favoritedImageIds.insert(imageId)
+                                                }
+                                            }
+
+                                        // Heart icon (visible for debugging)
+                                        Image(systemName: favoritedImageIds.contains(userImage.id) ? "heart.fill" : "heart")
+                                            .font(.system(size: 16, weight: .semibold))
+                                            .foregroundColor(favoritedImageIds.contains(userImage.id) ? .red : .white)
+                                            .shadow(color: .black.opacity(0.5), radius: 2, x: 0, y: 1)
+                                            .allowsHitTesting(false)
+                                    }
+                                }
+                                Spacer()
+                            }
                         }
-                        .buttonStyle(.plain)
+
                     } else if let url = URL(string: userImage.image_url) {
                         // Fallback for videos without thumbnails
-                        Button {
-                            onSelect(userImage)
-                        } label: {
-                            ZStack {
-                                KFImage(url)
-                                    .placeholder {
-                                        Rectangle()
-                                            .fill(Color.gray.opacity(0.2))
-                                            .overlay(
-                                                Image(systemName: "video.fill")
-                                                    .font(.largeTitle)
-                                                    .foregroundColor(.gray)
-                                            )
-                                    }
-                                    .resizable()
-                                    .scaledToFill()
-                                    .frame(width: itemWidth, height: itemHeight)
-                                    .clipped()
+                        ZStack {
+                            Button {
+                                onSelect(userImage)
+                            } label: {
+                                ZStack {
+                                    KFImage(url)
+                                        .placeholder {
+                                            Rectangle()
+                                                .fill(Color.gray.opacity(0.2))
+                                                .overlay(
+                                                    Image(systemName: "video.fill")
+                                                        .font(.largeTitle)
+                                                        .foregroundColor(.gray)
+                                                )
+                                        }
+                                        .resizable()
+                                        .scaledToFill()
+                                        .frame(width: itemWidth, height: itemHeight)
+                                        .clipped()
 
-                                if userImage.isVideo {
-                                    ZStack {
-                                        Circle()
-                                            .fill(Color.black.opacity(0.6))
-                                            .frame(width: 40, height: 40)
+                                    if userImage.isVideo {
+                                        ZStack {
+                                            Circle()
+                                                .fill(Color.black.opacity(0.6))
+                                                .frame(width: 40, height: 40)
 
-                                        Image(systemName: "play.fill")
-                                            .font(.system(size: 18))
-                                            .foregroundColor(.white)
+                                            Image(systemName: "play.fill")
+                                                .font(.system(size: 18))
+                                                .foregroundColor(.white)
+                                        }
                                     }
                                 }
                             }
+                            .buttonStyle(.plain)
+
+                            // Heart icon overlay
+                            VStack {
+                                HStack {
+                                    Spacer()
+                                    ZStack {
+                                        Color.clear
+                                            .frame(width: 32, height: 32)
+                                            .contentShape(Rectangle())
+                                            .onTapGesture {
+                                                let imageId = userImage.id
+                                                if favoritedImageIds.contains(imageId) {
+                                                    favoritedImageIds.remove(imageId)
+                                                } else {
+                                                    favoritedImageIds.insert(imageId)
+                                                }
+                                            }
+
+                                        // Heart icon (visible for debugging)
+                                        Image(systemName: favoritedImageIds.contains(userImage.id) ? "heart.fill" : "heart")
+                                            .font(.system(size: 16, weight: .semibold))
+                                            .foregroundColor(favoritedImageIds.contains(userImage.id) ? .red : .white)
+                                            .shadow(color: .black.opacity(0.5), radius: 2, x: 0, y: 1)
+                                            .allowsHitTesting(false)
+                                    }
+                                }
+                                Spacer()
+                            }
                         }
-                        .buttonStyle(.plain)
                     }
                 }
             }
