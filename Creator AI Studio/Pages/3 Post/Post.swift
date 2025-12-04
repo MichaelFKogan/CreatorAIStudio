@@ -208,11 +208,14 @@ struct Post: View {
         Group {
             if let capturedImage = cameraService.capturedImage {
                 if let selectedFilter = selectedFilter {
-                    PhotoReviewView(capturedImage: capturedImage)
-                        .onDisappear {
-                            // Reset the captured image when the review page is dismissed
-                            cameraService.capturedImage = nil
-                        }
+                    PhotoConfirmationView(
+                        item: selectedFilter,
+                        image: capturedImage
+                    )
+                    .onDisappear {
+                        // Reset the captured image when the review page is dismissed
+                        cameraService.capturedImage = nil
+                    }
                 } else if let model = selectedImageModel {
                     ImageModelDetailPageWithPhoto(
                         item: model,

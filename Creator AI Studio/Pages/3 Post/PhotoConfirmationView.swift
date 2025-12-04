@@ -150,23 +150,23 @@ struct PhotoConfirmationView: View {
 
                     isLoading = true
 
-                    // Start background generation that persists across view changes
-                    // Note: The generation continues in background even if user leaves this view
-                    let taskId = notificationManager.startBackgroundGeneration(
-                        item: item,
-                        image: image,
-                        userId: authViewModel.user?.id.uuidString.lowercased() ?? "",
-                        onImageGenerated: { [weak notificationManager] downloadedImage in
-                            // Optional: Update local state only if still on this view
-                            // The image is already saved to database regardless
-                            DispatchQueue.main.async {
-                                generatedImage = downloadedImage
-                                isLoading = false
-                            }
-                        }
-                    )
+//                    // Start background generation that persists across view changes
+//                    // Note: The generation continues in background even if user leaves this view
+//                    let taskId = notificationManager.startBackgroundGeneration(
+//                        item: item,
+//                        image: image,
+//                        userId: authViewModel.user?.id.uuidString.lowercased() ?? "",
+//                        onImageGenerated: { [weak notificationManager] downloadedImage in
+//                            // Optional: Update local state only if still on this view
+//                            // The image is already saved to database regardless
+//                            DispatchQueue.main.async {
+//                                generatedImage = downloadedImage
+//                                isLoading = false
+//                            }
+//                        }
+//                    )
 
-                    currentTaskId = taskId
+//                    currentTaskId = taskId
                 }) {
                     HStack {
                         if isLoading {
@@ -218,8 +218,7 @@ struct PhotoConfirmationView: View {
                         .foregroundStyle(
                             LinearGradient(colors: [.blue, .purple], startPoint: .topLeading, endPoint: .bottomTrailing)
                         )
-                    Text("Cost: $\(String(format: "%.2f", item.cost))")
-                        .font(.headline)
+                    Text("$\(NSDecimalNumber(decimal: item.cost ?? 0).stringValue)")
                         .foregroundColor(.primary)
                 }
                 .padding(.horizontal, 24)
