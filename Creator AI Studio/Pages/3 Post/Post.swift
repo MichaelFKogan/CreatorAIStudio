@@ -138,14 +138,14 @@ struct Post: View {
                                             RoundedRectangle(cornerRadius: 10)
                                                 .fill(
                                                     LinearGradient(
-                                                        colors: [Color.purple.opacity(0.5), Color.pink.opacity(0.5)],
+                                                        colors: [Color.purple.opacity(0.6), Color.pink.opacity(0.6)],
                                                         startPoint: .topLeading,
                                                         endPoint: .bottomTrailing
                                                     )
                                                 )
                                                 .frame(width: 55, height: 55)
 
-                                            Image(systemName: "square.grid.2x2")
+                                            Image(systemName: "sparkles")
                                                 .font(.system(size: 22, weight: .medium))
                                                 .foregroundColor(.white).opacity(0.9)
                                         }
