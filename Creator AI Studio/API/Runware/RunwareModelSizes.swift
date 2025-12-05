@@ -12,8 +12,28 @@ private let googleNanoBananaSizes: [String: (Int, Int)] = [
     "auto": (0, 0),
 ]
 
-// FLUX.1 Kontext [Pro]
-private let fluxKontextSizes: [String: (Int, Int)] = [
+// Google Gemini 3 Pro (Nano Banana 2)
+private let googleNanoBanana2Sizes: [String: (Int, Int)] = [
+    "1:1": (2048, 2048),
+    "4:3": (2400, 1792),
+    "3:4": (1792, 2400),
+    "9:16": (1536, 2752),
+    "16:9": (2752, 1536),
+    "auto": (0, 0),
+]
+
+// Midjourney V7
+private let midjourneyV7Sizes: [String: (Int, Int)] = [
+    "1:1": (1024, 1024),
+    "4:3": (1232, 928),
+    "3:4": (928, 1232),
+    "9:16": (816, 1456),
+    "16:9": (1456, 816),
+    "auto": (0, 0),
+]
+
+// Seedream 4.0
+private let seedream40Sizes: [String: (Int, Int)] = [
     "1:1": (1024, 1024),
     "4:3": (1184, 880),
     "3:4": (880, 1184),
@@ -22,8 +42,18 @@ private let fluxKontextSizes: [String: (Int, Int)] = [
     "auto": (0, 0),
 ]
 
-// Seedream 4.0
-private let seedream40Sizes: [String: (Int, Int)] = [
+// Seedream 4.5
+private let seedream45Sizes: [String: (Int, Int)] = [
+    "1:1": (2048, 2048),
+    "4:3": (2304, 1728),
+    "3:4": (1728, 2304),
+    "9:16": (2560, 1440),
+    "16:9": (1440, 2560),
+    "auto": (0, 0),
+]
+
+// FLUX.1 Kontext [Pro]
+private let fluxKontextSizes: [String: (Int, Int)] = [
     "1:1": (1024, 1024),
     "4:3": (1184, 880),
     "3:4": (880, 1184),
@@ -56,29 +86,24 @@ func getAllowedSizes(for model: String) -> [String: (Int, Int)] {
     // Check by Runware model identifier
 
     // Google Gemini Flash 2.5 (Nano Banana)
-    if modelLower.contains("google:4@1") ||
-        modelLower.contains("google:4@2")
-    {
-        return googleNanoBananaSizes
-    }
+    if modelLower.contains("google:4@1") { return googleNanoBananaSizes }
+    // Google Gemini 3 Pro (Nano Banana 2)
+    if modelLower.contains("google:4@2") { return googleNanoBanana2Sizes }
 
-    // Check for FLUX.1 Kontext [Pro]
-    if modelLower.contains("runware:106@1") ||
-        modelLower.contains("bfl:3@1") ||
-        modelLower.contains("bfl:4@1")
-    {
-        return fluxKontextSizes
-    }
+    // Midjourney V7
+    if modelLower.contains("midjourney:3@1") { return midjourneyV7Sizes }
 
     // Seedream 4.0
-    if modelLower.contains("bytedance:5@0") {
-        return seedream40Sizes
-    }
+    if modelLower.contains("bytedance:5@0") { return seedream40Sizes }
+    // Seedream 4.5
+    if modelLower.contains("bytedance:seedream@4.5") { return seedream45Sizes }
+
+    // Check for FLUX.1 Kontext [Pro]
+    if modelLower.contains("runware:106@1") || modelLower.contains("bfl:3@1") || modelLower.contains("bfl:4@1")
+    { return fluxKontextSizes }
 
     // Z-Image-Turbo
-    if modelLower.contains("runware:z-image@turbo") {
-        return zimageturboSizes
-    }
+    if modelLower.contains("runware:z-image@turbo") { return zimageturboSizes }
 
     // Default fallback to Google Nano Banana sizes
     print("[Runware] Model '\(model)' not found in size mapping, using default (Google Nano Banana) sizes")

@@ -82,7 +82,7 @@ struct FilterCategorySheet: View {
 
                         // All Filters section (always visible)
                         CategorySection(
-                            title: "Popular",
+                            title: "Popular Filters",
                             icon: "square.grid.2x2.fill",
                             filters: allFilters,
                             selectedFilter: selectedFilter,

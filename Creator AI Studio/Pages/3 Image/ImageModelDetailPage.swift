@@ -148,15 +148,27 @@ struct ImageModelDetailPage: View {
                                 examplePromptsTransform: transformPrompts
                             ))
 
-                        // // Show ReferenceImagesSection only when "Image to Image" tab is selected
-                        // if selectedGenerationMode == 1 {
-                        LazyView(ReferenceImagesSection(
-                            referenceImages: $referenceImages,
-                            selectedPhotoItems: $selectedPhotoItems,
-                            showCameraSheet: $showCameraSheet,
-                            color: .blue
-                        ))
-                        // }
+                        if item.capabilities?.contains("Image to Image") == true {
+                            LazyView(ReferenceImagesSection(
+                                referenceImages: $referenceImages,
+                                selectedPhotoItems: $selectedPhotoItems,
+                                showCameraSheet: $showCameraSheet,
+                                color: .blue
+                            ))
+                        }
+
+                        if isMidjourney {
+                            HStack(spacing: 4) {
+                                Image(systemName: "info.circle")
+                                    .font(.caption)
+                                    .foregroundColor(.red)
+                                Text("Midjourney creates 4 images by default")
+                                    .font(.caption)
+                                    .foregroundColor(.red)
+                                Spacer()
+                            }
+                            .padding(.bottom, -16)
+                        }
 
                         LazyView(
                             GenerateButton(
@@ -240,7 +252,8 @@ struct ImageModelDetailPage: View {
 
                         Divider().padding(.horizontal)
 
-                        LazyView(CostCardSection(costString: costString))
+                        // LazyView(CostCardSection(costString: costString))
+
                         Color.clear.frame(height: 130) // bottom padding for floating button
                     }
                 }
@@ -391,17 +404,15 @@ struct BannerSection: View {
                     .background(Capsule().fill(Color.blue.opacity(0.8)))
 
                     HStack(spacing: 4) {
-                        VStack {
-                            Text("$\(costString)").font(.title3).fontWeight(.bold)
-                                .foregroundColor(.blue)
-                            Text("per image").font(.caption).foregroundColor(
-                                .secondary)
-                        }
+                        Text("$\(costString)").font(.title3).fontWeight(.bold)
+                            .foregroundColor(.blue)
+                        Text("per image").font(.caption).foregroundColor(
+                            .secondary)
                     }
 
                     if let capabilities = item.capabilities, !capabilities.isEmpty {
                         Text(capabilities.joined(separator: " • "))
-                            .font(.system(size: 11, weight: .regular, design: .rounded))
+                            .font(.system(size: 12, weight: .medium, design: .rounded))
                             .foregroundColor(.blue)
                     }
 

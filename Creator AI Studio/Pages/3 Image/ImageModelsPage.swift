@@ -14,6 +14,7 @@ struct ImageModelsPage: View {
             ScrollView {
                 MainContent(viewModel: viewModel, isGridView: $isGridView)
                     .padding(.bottom) // space for toolbar if needed
+                Color.clear.frame(height: 130) // bottom padding for floating button
             }
             .navigationTitle("")
             .toolbar {
@@ -337,13 +338,27 @@ private struct ImageModelGridItem: View {
                     .clipped()
                     .clipShape(RoundedRectangle(cornerRadius: 12))
 
-                LinearGradient(
-                    colors: [Color.black.opacity(0.6), Color.clear],
-                    startPoint: .bottom,
-                    endPoint: .center
-                )
-                .frame(height: 80)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+                if let capabilities = item.capabilities, !capabilities.isEmpty {
+                    VStack {
+                        Spacer()
+                        LinearGradient(
+                            colors: [Color.black.opacity(0.9), Color.black.opacity(0)],
+                            startPoint: .bottom,
+                            endPoint: .top
+                        )
+                        .frame(height: 30)
+                    }
+
+                    HStack {
+                        Text(capabilities.joined(separator: " • "))
+                            .font(.system(size: 11, weight: .medium, design: .rounded))
+                            .foregroundColor(.white)
+                            .lineLimit(1)
+                            .padding(.horizontal, 8)
+                            .padding(.bottom, 8)
+                        Spacer()
+                    }
+                }
             }
             .overlay(
                 RoundedRectangle(cornerRadius: 12)
@@ -387,7 +402,7 @@ private struct ImageModelListItem: View {
 
                 if let capabilities = item.capabilities, !capabilities.isEmpty {
                     Text(capabilities.joined(separator: " • "))
-                        .font(.system(size: 11, weight: .regular, design: .rounded))
+                        .font(.system(size: 12, weight: .medium, design: .rounded))
                         .foregroundColor(.blue)
                 }
             }

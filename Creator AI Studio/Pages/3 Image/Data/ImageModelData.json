@@ -27,6 +27,32 @@
   },
   {
     "display": {
+      "title": "Google Gemini 3 Pro (Nano Banana 2)",
+      "imageName": "geminiproimage3",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Google Gemini 3 Pro (Nano Banana 2)",
+      "modelDescription": "A fast, lightweight model built for clean enhancements, realistic textures, and quick image edits. Ideal for portraits, product shots, and everyday transformations.",
+      "modelImageName": "geminiproimage3",
+      "exampleImages": []
+    },
+    "apiConfig": {
+      "provider": "runware",
+      "runwareModel": "google:4@2",
+      "endpoint": "https://api.runware.ai/v1",
+      "aspectRatio": "3:4, 9:16, 1:1, 4:3, 16:9",
+      "runwareConfig": {
+        "imageToImageMethod": "referenceImages",
+        "requiresDimensions": true,
+        "imageCompressionQuality": 0.9
+      }
+    },
+    "prompt": "",
+    "cost": 0.134,
+    "type": "Image Model",
+    "capabilities": ["Text to Image", "Image to Image"]
+  },
+  {
+    "display": {
       "title": "Seedream 4.0",
       "imageName": "seedream40",
       "imageNameOriginal": "yourphoto",
@@ -49,6 +75,56 @@
     "cost": 0.03,
     "type": "Image Model",
     "capabilities": ["Text to Image", "Image to Image"]
+  },
+  {
+    "display": {
+      "title": "Seedream 4.5",
+      "imageName": "seedream45",
+
+      "modelName": "Seedream 4.5",
+      "modelDescription": "Known for soft lighting, vivid color gradients, and dreamy realism. Ideal for lifestyle images, outdoor scenes, illustrations, and aesthetic-focused designs.",
+      "modelImageName": "seedream45",
+      "exampleImages": []
+    },
+    "apiConfig": {
+      "provider": "runware",
+      "runwareModel": "bytedance:seedream@4.5",
+      "endpoint": "https://api.runware.ai/v1",
+      "runwareConfig": {
+        "imageToImageMethod": "referenceImages",
+        "requiresDimensions": true,
+        "imageCompressionQuality": 0.9
+      }
+    },
+    "prompt": "",
+    "cost": 0.04,
+    "type": "Image Model",
+    "capabilities": ["Text to Image", "Image to Image"]
+  },
+  {
+    "display": {
+      "title": "Midjourney V7",
+      "imageName": "midjourneyv7",
+
+      "modelName": "Midjourney V7",
+      "modelDescription": "",
+      "modelImageName": "midjourneyv7",
+      "exampleImages": []
+    },
+    "apiConfig": {
+      "provider": "runware",
+      "runwareModel": "midjourney:3@1",
+      "endpoint": "https://api.runware.ai/v1",
+      "runwareConfig": {
+        "imageToImageMethod": "referenceImages",
+        "requiresDimensions": true,
+        "imageCompressionQuality": 0.9
+      }
+    },
+    "prompt": "",
+    "cost": 0.025,
+    "type": "Image Model",
+    "capabilities": ["Text to Image"]
   },
   {
     "display": {

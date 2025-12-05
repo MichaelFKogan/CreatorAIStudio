@@ -138,15 +138,17 @@ struct ImageModelDetailPageWithPhoto: View {
                         //                            .padding(.horizontal)
 
                         // ReferenceImagesSection with pre-populated image
-                        LazyView(
-                            ReferenceImagesSectionWithPhoto(
-                                image: capturedImage,
-                                referenceImages: $referenceImages,
-                                selectedPhotoItems: $selectedPhotoItems,
-                                showCameraSheet: $showCameraSheet,
-                                color: .blue,
-                                initialImage: capturedImage
-                            ))
+                        if item.capabilities?.contains("Image to Image") == true {
+                            LazyView(
+                                ReferenceImagesSectionWithPhoto(
+                                    image: capturedImage,
+                                    referenceImages: $referenceImages,
+                                    selectedPhotoItems: $selectedPhotoItems,
+                                    showCameraSheet: $showCameraSheet,
+                                    color: .blue,
+                                    initialImage: capturedImage
+                                ))
+                        }
 
                         LazyView(
                             PromptSection(
@@ -177,7 +179,8 @@ struct ImageModelDetailPageWithPhoto: View {
 
                         Divider().padding(.horizontal)
 
-                        LazyView(CostCardSection(costString: costString))
+                        // LazyView(CostCardSection(costString: costString))
+
                         Color.clear.frame(height: 130) // bottom padding for floating button
                     }
                 }
