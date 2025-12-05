@@ -369,7 +369,7 @@ struct ReferenceImagesSectionWithPhoto: View {
                 HStack(spacing: 6) {
                     Image(systemName: "photo.on.rectangle")
                         .foregroundColor(color)
-                    Text("Your Photo")
+                    Text("Your Photo(s)")
                         .font(.subheadline)
                         .fontWeight(.semibold)
                         .foregroundColor(.secondary)
@@ -513,101 +513,5 @@ struct ReferenceImagesSectionWithPhoto: View {
                 referenceImages: $referenceImages
             )
         }
-    }
-}
-
-// MARK: - Image Source Selection Sheet
-
-struct ImageSourceSelectionSheet: View {
-    @Binding var showCameraSheet: Bool
-    @Binding var selectedPhotoItems: [PhotosPickerItem]
-    @Binding var showActionSheet: Bool
-    @Binding var referenceImages: [UIImage]
-
-    var body: some View {
-        NavigationView {
-            VStack(spacing: 20) {
-                Button {
-                    showActionSheet = false
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                        showCameraSheet = true
-                    }
-                } label: {
-                    HStack(spacing: 16) {
-                        Image(systemName: "camera.fill")
-                            .font(.system(size: 24))
-                            .foregroundColor(.blue)
-                            .frame(width: 40)
-                        Text("Camera")
-                            .font(.headline)
-                            .foregroundColor(.primary)
-                        Spacer()
-                        Image(systemName: "chevron.right")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                    .padding()
-                    .background(Color.gray.opacity(0.1))
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                }
-                .buttonStyle(PlainButtonStyle())
-
-                PhotosPicker(
-                    selection: $selectedPhotoItems,
-                    maxSelectionCount: 10,
-                    matching: .images
-                ) {
-                    HStack(spacing: 16) {
-                        Image(systemName: "photo.on.rectangle")
-                            .font(.system(size: 24))
-                            .foregroundColor(.blue)
-                            .frame(width: 40)
-                        Text("Gallery")
-                            .font(.headline)
-                            .foregroundColor(.primary)
-                        Spacer()
-                        Image(systemName: "chevron.right")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                    .padding()
-                    .background(Color.gray.opacity(0.1))
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                }
-                .buttonStyle(PlainButtonStyle())
-                .onChange(of: selectedPhotoItems) { newItems in
-                    if !newItems.isEmpty {
-                        Task {
-                            var newlyAdded: [UIImage] = []
-                            for item in newItems {
-                                if let data =
-                                    try? await item.loadTransferable(
-                                        type: Data.self),
-                                    let image = UIImage(data: data)
-                                {
-                                    newlyAdded.append(image)
-                                }
-                            }
-                            referenceImages.append(contentsOf: newlyAdded)
-                            selectedPhotoItems.removeAll()
-                            showActionSheet = false
-                        }
-                    }
-                }
-
-                Spacer()
-            }
-            .padding()
-            .navigationTitle("Add Images")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Cancel") {
-                        showActionSheet = false
-                    }
-                }
-            }
-        }
-        .presentationDetents([.height(250)])
     }
 }

@@ -148,17 +148,6 @@ struct ImageModelDetailPage: View {
                                 examplePromptsTransform: transformPrompts
                             ))
 
-                        LazyView(
-                            GenerateButton(
-                                prompt: prompt,
-                                isGenerating: $isGenerating,
-                                keyboardHeight: $keyboardHeight,
-                                costString: costString,
-                                action: generate
-                            ))
-
-                        Divider().padding(.horizontal)
-
                         // // Show ReferenceImagesSection only when "Image to Image" tab is selected
                         // if selectedGenerationMode == 1 {
                         LazyView(ReferenceImagesSection(
@@ -168,6 +157,15 @@ struct ImageModelDetailPage: View {
                             color: .blue
                         ))
                         // }
+
+                        LazyView(
+                            GenerateButton(
+                                prompt: prompt,
+                                isGenerating: $isGenerating,
+                                keyboardHeight: $keyboardHeight,
+                                costString: costString,
+                                action: generate
+                            ))
 
                         Divider().padding(.horizontal)
 
