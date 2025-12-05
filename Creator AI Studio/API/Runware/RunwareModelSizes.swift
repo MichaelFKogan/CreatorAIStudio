@@ -32,6 +32,16 @@ private let seedream40Sizes: [String: (Int, Int)] = [
     "auto": (0, 0),
 ]
 
+// Z-Image-Turbo
+private let zimageturboSizes: [String: (Int, Int)] = [
+    "1:1": (1024, 1024),
+    "4:3": (1152, 896),
+    "3:4": (896, 1152),
+    "9:16": (768, 1344),
+    "16:9": (1344, 768),
+    "auto": (0, 0),
+]
+
 // MARK: - Model to Size Set Mapping
 
 /// Returns the appropriate allowed sizes dictionary for a given model identifier.
@@ -44,6 +54,8 @@ func getAllowedSizes(for model: String) -> [String: (Int, Int)] {
     let modelLower = model.lowercased()
 
     // Check by Runware model identifier
+
+    // Google Gemini Flash 2.5 (Nano Banana)
     if modelLower.contains("google:4@1") ||
         modelLower.contains("google:4@2")
     {
@@ -58,8 +70,14 @@ func getAllowedSizes(for model: String) -> [String: (Int, Int)] {
         return fluxKontextSizes
     }
 
+    // Seedream 4.0
     if modelLower.contains("bytedance:5@0") {
         return seedream40Sizes
+    }
+
+    // Z-Image-Turbo
+    if modelLower.contains("runware:z-image@turbo") {
+        return zimageturboSizes
     }
 
     // Default fallback to Google Nano Banana sizes

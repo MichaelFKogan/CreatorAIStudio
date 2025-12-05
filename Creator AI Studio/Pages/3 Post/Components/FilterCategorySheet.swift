@@ -63,7 +63,7 @@ struct FilterCategorySheet: View {
                         // AI Models section (first row, always visible)
                         if !imageModels.isEmpty {
                             CategorySection(
-                                title: "AI Models",
+                                title: "AI Models - Image to Image",
                                 icon: "cpu",
                                 filters: imageModels,
                                 selectedFilter: selectedImageModel,

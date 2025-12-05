@@ -398,6 +398,13 @@ struct BannerSection: View {
                                 .secondary)
                         }
                     }
+
+                    if let capabilities = item.capabilities, !capabilities.isEmpty {
+                        Text(capabilities.joined(separator: " • "))
+                            .font(.system(size: 11, weight: .regular, design: .rounded))
+                            .foregroundColor(.blue)
+                    }
+
                     Spacer()
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)

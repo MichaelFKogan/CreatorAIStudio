@@ -379,10 +379,18 @@ private struct ImageModelListItem: View {
                 .frame(width: 65, height: 65)
                 .clipShape(RoundedRectangle(cornerRadius: 8))
 
-            Text(item.display.title)
-                .font(.system(size: 15, weight: .bold, design: .rounded))
-                .foregroundColor(.primary)
-                .lineLimit(2)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(item.display.title)
+                    .font(.system(size: 15, weight: .bold, design: .rounded))
+                    .foregroundColor(.primary)
+                    .lineLimit(2)
+
+                if let capabilities = item.capabilities, !capabilities.isEmpty {
+                    Text(capabilities.joined(separator: " • "))
+                        .font(.system(size: 11, weight: .regular, design: .rounded))
+                        .foregroundColor(.blue)
+                }
+            }
 
             Spacer()
 
