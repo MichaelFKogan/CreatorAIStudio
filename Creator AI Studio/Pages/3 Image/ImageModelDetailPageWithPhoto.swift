@@ -248,7 +248,7 @@ struct ImageModelDetailPageWithPhoto: View {
             Text("Please enter a prompt to generate an image.")
         }
         .sheet(isPresented: $showCameraSheet) {
-            CameraSheetView { capturedImage in
+            SimpleCameraPicker(isPresented: $showCameraSheet) { capturedImage in
                 referenceImages.append(capturedImage)
             }
         }
