@@ -205,11 +205,8 @@ private struct FilterSection: View {
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 6) {
-                    FilterPill(title: "All", isSelected: viewModel.imageFilterIndex == 0) {
+                    FilterPill(title: "Text to Image", isSelected: viewModel.imageFilterIndex == 0) {
                         viewModel.imageFilterIndex = 0
-                    }
-                    FilterPill(title: "Text to Image", isSelected: viewModel.imageFilterIndex == 1) {
-                        viewModel.imageFilterIndex = 1
                     }
                     FilterPill(title: "Image to Image", isSelected: viewModel.imageFilterIndex == 2) {
                         viewModel.imageFilterIndex = 2

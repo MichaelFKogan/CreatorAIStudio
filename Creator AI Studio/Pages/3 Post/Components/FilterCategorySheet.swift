@@ -44,6 +44,13 @@ struct FilterCategorySheet: View {
 
     @State private var expandedCategories: Set<FilterCategory> = []
 
+    // Filter image models to only show those with Image to Image capability
+    private var imageToImageModels: [InfoPacket] {
+        imageModels.filter { model in
+            model.capabilities?.contains("Image to Image") ?? false
+        }
+    }
+
     var body: some View {
         NavigationView {
             ZStack {
@@ -61,11 +68,11 @@ struct FilterCategorySheet: View {
                         // .padding(.bottom, 12)
 
                         // AI Models section (first row, always visible)
-                        if !imageModels.isEmpty {
+                        if !imageToImageModels.isEmpty {
                             CategorySection(
-                                title: "AI Models - Image to Image",
+                                title: "AI Models",
                                 icon: "cpu",
-                                filters: imageModels,
+                                filters: imageToImageModels,
                                 selectedFilter: selectedImageModel,
                                 onSelect: { model in
                                     onSelectModel(model)
@@ -92,7 +99,7 @@ struct FilterCategorySheet: View {
                             isExpanded: true,
                             isAlwaysExpanded: true
                         )
-                        .padding(.top, imageModels.isEmpty ? 8 : 0)
+                        .padding(.top, imageToImageModels.isEmpty ? 8 : 0)
 
                         Divider()
                             .background(Color.white.opacity(0.2))

@@ -124,6 +124,10 @@ struct ImageModelDetailPage: View {
         NSDecimalNumber(decimal: item.cost ?? 0).stringValue
     }
 
+    private var isMidjourney: Bool {
+        item.display.title.lowercased().contains("midjourney")
+    }
+
     // MARK: BODY
 
     var body: some View {
@@ -143,18 +147,20 @@ struct ImageModelDetailPage: View {
                                 prompt: $prompt,
                                 isFocused: $isPromptFocused,
                                 isExamplePromptsPresented:
-                                $isExamplePromptsPresented,
+                                    $isExamplePromptsPresented,
                                 examplePrompts: examplePrompts,
                                 examplePromptsTransform: transformPrompts
                             ))
 
-                        if item.capabilities?.contains("Image to Image") == true {
-                            LazyView(ReferenceImagesSection(
-                                referenceImages: $referenceImages,
-                                selectedPhotoItems: $selectedPhotoItems,
-                                showCameraSheet: $showCameraSheet,
-                                color: .blue
-                            ))
+                        if item.capabilities?.contains("Image to Image") == true
+                        {
+                            LazyView(
+                                ReferenceImagesSection(
+                                    referenceImages: $referenceImages,
+                                    selectedPhotoItems: $selectedPhotoItems,
+                                    showCameraSheet: $showCameraSheet,
+                                    color: .blue
+                                ))
                         }
 
                         if isMidjourney {
@@ -162,11 +168,14 @@ struct ImageModelDetailPage: View {
                                 Image(systemName: "info.circle")
                                     .font(.caption)
                                     .foregroundColor(.red)
-                                Text("Midjourney creates 4 images by default")
-                                    .font(.caption)
-                                    .foregroundColor(.red)
+                                Text(
+                                    "Midjourney creates 4 images by default: Total cost: $0.10"
+                                )
+                                .font(.caption)
+                                .foregroundColor(.red)
                                 Spacer()
                             }
+                            .padding(.horizontal)
                             .padding(.bottom, -16)
                         }
 
@@ -181,68 +190,68 @@ struct ImageModelDetailPage: View {
 
                         Divider().padding(.horizontal)
 
-//                        VStack {
-//                            Button {
-//                                //                            showActionSheet = true
-//                            } label: {
-//                                HStack(spacing: 8) {
-//                                    Image(systemName: "camera")
-//                                        .font(.system(size: 14))
-//                                        .foregroundColor(.blue)
-//                                    Text("Add Image")
-//                                        .font(.subheadline)
-//                                        .fontWeight(.semibold)
-//                                        .foregroundColor(.secondary)
-//                                    Text("(Optional)")
-//                                        .font(.caption)
-//                                        .foregroundColor(
-//                                            .secondary.opacity(0.7))
-//                                    Spacer()
-//                                    //                                Image(systemName: "chevron.right")
-//                                    //                                    .font(.system(size: 12))
-//                                    //                                    .foregroundColor(.secondary.opacity(0.6))
-//                                }
-//                                //                                .padding(.horizontal, 12)
-//                                //                                .padding(.vertical, 10)
-//                                .padding()
-//                                .background(Color.gray.opacity(0.06))
-//                                .clipShape(RoundedRectangle(cornerRadius: 8))
-//                                .overlay(
-//                                    RoundedRectangle(cornerRadius: 8)
-//                                        //                                         .stroke(Color.blue.opacity(0.3), lineWidth: 1)
-//                                        .strokeBorder(
-//                                            style: StrokeStyle(
-//                                                lineWidth: 3.5, dash: [6, 4]
-//                                            )
-//                                        )
-//                                        .foregroundColor(.gray.opacity(0.4))
-//                                )
-//                            }
-//                            .buttonStyle(PlainButtonStyle())
-//                            .padding(.horizontal)
-//                            //                        .confirmationDialog("Add Image", isPresented: $showActionSheet, titleVisibility: .visible) {
-//                            //                            Button {
-//                            //                                showCameraSheet = true
-//                            //                            } label: {
-//                            //                                Label("Take Photo", systemImage: "camera.fill")
-//                            //                            }
-//                            //
-//                            //                            Button {
-//                            //                                showPhotosPicker = true
-//                            //                            } label: {
-//                            //                                Label("Choose from Library", systemImage: "photo.on.rectangle")
-//                            //                            }
-//                            //
-//                            //                            Button("Cancel", role: .cancel) {}
-//                            //                        }
-//                            //                        .photosPicker(isPresented: $showPhotosPicker, selection: $selectedPhotoItems, maxSelectionCount: 10, matching: .images)
-//
-//                            // Text("Upload an image to transform it, or use as reference with your prompt")
-//                            //     .font(.caption)
-//                            //     .foregroundColor(.secondary.opacity(0.8))
-//                            //     .fixedSize(horizontal: false, vertical: true)
-//                            //     .padding(.bottom, 4)
-//                        }
+                        //                        VStack {
+                        //                            Button {
+                        //                                //                            showActionSheet = true
+                        //                            } label: {
+                        //                                HStack(spacing: 8) {
+                        //                                    Image(systemName: "camera")
+                        //                                        .font(.system(size: 14))
+                        //                                        .foregroundColor(.blue)
+                        //                                    Text("Add Image")
+                        //                                        .font(.subheadline)
+                        //                                        .fontWeight(.semibold)
+                        //                                        .foregroundColor(.secondary)
+                        //                                    Text("(Optional)")
+                        //                                        .font(.caption)
+                        //                                        .foregroundColor(
+                        //                                            .secondary.opacity(0.7))
+                        //                                    Spacer()
+                        //                                    //                                Image(systemName: "chevron.right")
+                        //                                    //                                    .font(.system(size: 12))
+                        //                                    //                                    .foregroundColor(.secondary.opacity(0.6))
+                        //                                }
+                        //                                //                                .padding(.horizontal, 12)
+                        //                                //                                .padding(.vertical, 10)
+                        //                                .padding()
+                        //                                .background(Color.gray.opacity(0.06))
+                        //                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                        //                                .overlay(
+                        //                                    RoundedRectangle(cornerRadius: 8)
+                        //                                        //                                         .stroke(Color.blue.opacity(0.3), lineWidth: 1)
+                        //                                        .strokeBorder(
+                        //                                            style: StrokeStyle(
+                        //                                                lineWidth: 3.5, dash: [6, 4]
+                        //                                            )
+                        //                                        )
+                        //                                        .foregroundColor(.gray.opacity(0.4))
+                        //                                )
+                        //                            }
+                        //                            .buttonStyle(PlainButtonStyle())
+                        //                            .padding(.horizontal)
+                        //                            //                        .confirmationDialog("Add Image", isPresented: $showActionSheet, titleVisibility: .visible) {
+                        //                            //                            Button {
+                        //                            //                                showCameraSheet = true
+                        //                            //                            } label: {
+                        //                            //                                Label("Take Photo", systemImage: "camera.fill")
+                        //                            //                            }
+                        //                            //
+                        //                            //                            Button {
+                        //                            //                                showPhotosPicker = true
+                        //                            //                            } label: {
+                        //                            //                                Label("Choose from Library", systemImage: "photo.on.rectangle")
+                        //                            //                            }
+                        //                            //
+                        //                            //                            Button("Cancel", role: .cancel) {}
+                        //                            //                        }
+                        //                            //                        .photosPicker(isPresented: $showPhotosPicker, selection: $selectedPhotoItems, maxSelectionCount: 10, matching: .images)
+                        //
+                        //                            // Text("Upload an image to transform it, or use as reference with your prompt")
+                        //                            //     .font(.caption)
+                        //                            //     .foregroundColor(.secondary.opacity(0.8))
+                        //                            //     .fixedSize(horizontal: false, vertical: true)
+                        //                            //     .padding(.bottom, 4)
+                        //                        }
 
                         LazyView(
                             AspectRatioSection(
@@ -254,7 +263,7 @@ struct ImageModelDetailPage: View {
 
                         // LazyView(CostCardSection(costString: costString))
 
-                        Color.clear.frame(height: 130) // bottom padding for floating button
+                        Color.clear.frame(height: 130)  // bottom padding for floating button
                     }
                 }
                 .scrollDismissesKeyboard(.interactively)
@@ -341,7 +350,7 @@ struct ImageModelDetailPage: View {
 
         let imageToUse = referenceImages.first ?? createPlaceholderImage()
         guard let userId = authViewModel.user?.id.uuidString.lowercased(),
-              !userId.isEmpty
+            !userId.isEmpty
         else {
             isGenerating = false
             return
@@ -410,9 +419,14 @@ struct BannerSection: View {
                             .secondary)
                     }
 
-                    if let capabilities = item.capabilities, !capabilities.isEmpty {
+                    if let capabilities = item.capabilities,
+                        !capabilities.isEmpty
+                    {
                         Text(capabilities.joined(separator: " • "))
-                            .font(.system(size: 12, weight: .medium, design: .rounded))
+                            .font(
+                                .system(
+                                    size: 12, weight: .medium, design: .rounded)
+                            )
                             .foregroundColor(.blue)
                     }
 
