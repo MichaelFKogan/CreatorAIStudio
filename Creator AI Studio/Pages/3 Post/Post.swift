@@ -49,50 +49,55 @@ struct Post: View {
                         Spacer()
                             .frame(height: 20)
 
-                        if let selectedFilter = selectedFilter {
-                            Text(selectedFilter.display.title)
-                                .font(.system(size: 13, weight: .medium, design: .rounded))
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 16)
-                                .padding(.vertical, 8)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .fill(Color.white.opacity(0.2))
+                        Button {
+                            showFilterCategorySheet = true
+                        } label: {
+                            Group {
+                                if let selectedFilter = selectedFilter {
+                                    Text(selectedFilter.display.title)
+                                        .font(.system(size: 13, weight: .medium, design: .rounded))
+                                        .foregroundColor(.white)
+                                        .padding(.horizontal, 16)
+                                        .padding(.vertical, 8)
                                         .background(
                                             RoundedRectangle(cornerRadius: 12)
-                                                .fill(Color.black.opacity(0.8))
+                                                .fill(Color.white.opacity(0.2))
+                                                .background(
+                                                    RoundedRectangle(cornerRadius: 12)
+                                                        .fill(Color.black.opacity(0.8))
+                                                )
                                         )
-                                )
-                        } else if let selectedModel = selectedImageModel {
-                            Text(selectedModel.display.title)
-                                .font(.system(size: 13, weight: .medium, design: .rounded))
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 16)
-                                .padding(.vertical, 8)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .fill(Color.white.opacity(0.2))
+                                } else if let selectedModel = selectedImageModel {
+                                    Text(selectedModel.display.title)
+                                        .font(.system(size: 13, weight: .medium, design: .rounded))
+                                        .foregroundColor(.white)
+                                        .padding(.horizontal, 16)
+                                        .padding(.vertical, 8)
                                         .background(
                                             RoundedRectangle(cornerRadius: 12)
-                                                .fill(Color.black.opacity(0.8))
+                                                .fill(Color.white.opacity(0.2))
+                                                .background(
+                                                    RoundedRectangle(cornerRadius: 12)
+                                                        .fill(Color.black.opacity(0.8))
+                                                )
                                         )
-                                )
-                        } else {
-                            Text("Select an AI Model or Photo Filter")
-                                .font(.system(size: 13, weight: .medium, design: .rounded))
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 16)
-                                .padding(.vertical, 8)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .fill(Color.white.opacity(0.15))
+                                } else {
+                                    Text("Select an AI Model or Photo Filter")
+                                        .font(.system(size: 13, weight: .medium, design: .rounded))
+                                        .foregroundColor(.white)
+                                        .padding(.horizontal, 16)
+                                        .padding(.vertical, 8)
                                         .background(
                                             RoundedRectangle(cornerRadius: 12)
-                                                .fill(Color.black.opacity(0.8))
+                                                .fill(Color.white.opacity(0.15))
+                                                .background(
+                                                    RoundedRectangle(cornerRadius: 12)
+                                                        .fill(Color.black.opacity(0.8))
+                                                )
                                         )
-                                )
+                                }
+                            }
                         }
-
                         Spacer()
                     }
                     .frame(maxWidth: .infinity, alignment: .top)
@@ -149,7 +154,7 @@ struct Post: View {
                                 }
                             }
                             .frame(width: 60, height: 60)
-                            .padding(.trailing, 36)
+                            Spacer()
                         }
                         .frame(maxWidth: .infinity)
 

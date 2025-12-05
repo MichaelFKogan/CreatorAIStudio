@@ -224,7 +224,6 @@ struct PhotoConfirmationView: View {
                         .foregroundColor(.primary)
                 }
                 .padding(.horizontal, 24)
-                .padding(.top, 8)
 
                 // MARK: - Info Section
 

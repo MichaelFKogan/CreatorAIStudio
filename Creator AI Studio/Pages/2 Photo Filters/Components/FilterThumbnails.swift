@@ -20,28 +20,16 @@ struct FilterThumbnail: View {
                     .cornerRadius(8)
                     .overlay(
                         RoundedRectangle(cornerRadius: 8)
-                            .stroke(isSelected ? Color.pink : Color.clear, lineWidth: 3)
+                            .stroke(
+                                isSelected ? Color.pink : Color.clear,
+                                lineWidth: 3)
                     )
                     .overlay(
                         VStack(alignment: .trailing, spacing: 4) {
-                            // Price badge (always visible if cost exists)
-                            if let cost = cost {
-                                Text("$\(NSDecimalNumber(decimal: cost).stringValue)")
-                                    .font(.system(size: 10, weight: .semibold))
-                                    .foregroundColor(.white)
-                                    .padding(.horizontal, 6)
-                                    .padding(.vertical, 3)
-                                    .background(
-                                        Capsule()
-                                            .fill(Color.black.opacity(0.7))
-                                    )
-                                    .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 1)
-                            }
-                            
                             // Checkmark (shown when selected, below price)
                             if isSelected {
                                 Image(systemName: "checkmark.circle.fill")
-                                    .font(.system(size: 20))
+                                    .font(.system(size: 16))
                                     .foregroundStyle(.white)
                                     .background(
                                         Circle()
@@ -52,16 +40,37 @@ struct FilterThumbnail: View {
                                                     endPoint: .bottomTrailing
                                                 )
                                             )
-                                            .frame(width: 24, height: 24)
+                                            .frame(width: 20, height: 20)
                                     )
                                     .transition(.scale.combined(with: .opacity))
                             }
-                        },
+
+                            Spacer()
+
+                            // Price badge (always visible if cost exists)
+                            if let cost = cost {
+                                Text(
+                                    "$\(NSDecimalNumber(decimal: cost).stringValue)"
+                                )
+                                .font(.system(size: 10, weight: .medium))
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 4)
+                                .padding(.vertical, 3)
+                                .background(
+                                    Capsule()
+                                        .fill(Color.black.opacity(0.5))
+                                )
+                                .shadow(
+                                    color: .black.opacity(0.3), radius: 2, x: 0,
+                                    y: 1)
+                            }
+                        }
+                        .padding(3),
                         alignment: .topTrailing
                     )
-                    .padding(6)
             }
-            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isSelected)
+            .animation(
+                .spring(response: 0.3, dampingFraction: 0.7), value: isSelected)
 
             Text(title)
                 .font(.caption2)
