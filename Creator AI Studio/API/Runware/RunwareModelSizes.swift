@@ -52,6 +52,16 @@ private let seedream45Sizes: [String: (Int, Int)] = [
     "auto": (0, 0),
 ]
 
+// FLUX.2 [dev]
+private let flux2DevSizes: [String: (Int, Int)] = [
+    "1:1": (1024, 1024),
+    "4:3": (1184, 880),
+    "3:4": (880, 1184),
+    "9:16": (752, 1392),
+    "16:9": (1392, 752),
+    "auto": (0, 0),
+]
+
 // FLUX.1 Kontext [Pro]
 private let fluxKontextSizes: [String: (Int, Int)] = [
     "1:1": (1024, 1024),
@@ -98,6 +108,8 @@ func getAllowedSizes(for model: String) -> [String: (Int, Int)] {
     // Seedream 4.5
     if modelLower.contains("bytedance:seedream@4.5") { return seedream45Sizes }
 
+    // FLUX.2 [dev]
+    if modelLower.contains("runware:400@1") { return flux2DevSizes }
     // Check for FLUX.1 Kontext [Pro]
     if modelLower.contains("runware:106@1") || modelLower.contains("bfl:3@1") || modelLower.contains("bfl:4@1")
     { return fluxKontextSizes }

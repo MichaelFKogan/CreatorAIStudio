@@ -149,6 +149,7 @@ struct AspectRatioCard: View {
 struct FullScreenImageView: View {
     let userImage: UserImage
     @Binding var isPresented: Bool
+    var viewModel: ProfileViewModel?
     @State private var zoom: CGFloat = 1.0
     @State private var lastZoom: CGFloat = 1.0
     @State private var panOffset: CGSize = .zero
@@ -202,6 +203,17 @@ struct FullScreenImageView: View {
         guard let title = userImage.title, !title.isEmpty else { return nil }
         let allModels = ImageModelsViewModel.loadImageModels()
         return allModels.first { $0.display.title == title }
+    }
+
+    // Helper function to format cost with full precision
+    private func formatCost(_ cost: Double) -> String {
+        // Use NumberFormatter to show all significant digits
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.currencySymbol = "$"
+        formatter.maximumFractionDigits = 10 // Allow up to 10 decimal places for precision
+        formatter.minimumFractionDigits = 0 // Don't force trailing zeros
+        return formatter.string(from: NSNumber(value: cost)) ?? "$\(cost)"
     }
 
     var body: some View {
@@ -418,6 +430,13 @@ struct FullScreenImageView: View {
                                 withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
                                     isFavorited.toggle()
                                 }
+
+                                // Update database if viewModel is available
+                                if let viewModel = viewModel {
+                                    Task {
+                                        await viewModel.toggleFavorite(imageId: userImage.id)
+                                    }
+                                }
                             }) {
                                 VStack(spacing: 6) {
                                     Image(systemName: isFavorited ? "heart.fill" : "heart")
@@ -562,7 +581,7 @@ struct FullScreenImageView: View {
                                     }
 
                                     if let cost = userImage.cost {
-                                        MetadataCard(icon: "dollarsign.circle.fill", label: "Cost", value: String(format: "$%.2f", cost))
+                                        MetadataCard(icon: "dollarsign.circle.fill", label: "Cost", value: formatCost(cost))
                                     }
 
                                     if let aspectRatio = userImage.aspect_ratio, !aspectRatio.isEmpty {
@@ -659,7 +678,7 @@ struct FullScreenImageView: View {
                                     }
 
                                     if let cost = userImage.cost {
-                                        MetadataCard(icon: "dollarsign.circle.fill", label: "Cost", value: String(format: "$%.2f", cost))
+                                        MetadataCard(icon: "dollarsign.circle.fill", label: "Cost", value: formatCost(cost))
                                     }
 
                                     if let model = userImage.model, !model.isEmpty {
@@ -729,6 +748,14 @@ struct FullScreenImageView: View {
             }
         } message: {
             Text(downloadErrorMessage)
+        }
+        .onAppear {
+            // Initialize favorite state from userImage
+            isFavorited = userImage.is_favorite ?? false
+        }
+        .onChange(of: userImage.is_favorite) { _, newValue in
+            // Update favorite state if userImage changes
+            isFavorited = newValue ?? false
         }
     }
 

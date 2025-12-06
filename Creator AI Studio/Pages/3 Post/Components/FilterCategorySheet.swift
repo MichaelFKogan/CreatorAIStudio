@@ -184,6 +184,13 @@ struct CategorySection: View {
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(.white)
 
+                    if title.contains("AI Models") {
+                        Text("Image to Image Models")
+                            .font(.system(size: 11, weight: .regular))
+                            .foregroundColor(.blue)
+                            .padding(.horizontal, 2)
+                    }
+
                     Spacer()
 
                     if !isAlwaysExpanded {

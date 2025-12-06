@@ -52,6 +52,7 @@ struct UserImage: Codable, Identifiable {
     let thumbnail_url: String? // Thumbnail for videos
     let prompt: String? // Prompt used for generation
     let aspect_ratio: String? // Aspect ratio used for generation
+    var is_favorite: Bool? // Whether the image is favorited
 
     // Computed property for convenience
     var isVideo: Bool {
@@ -77,6 +78,7 @@ struct UserImage: Codable, Identifiable {
         case thumbnail_url
         case prompt
         case aspect_ratio
+        case is_favorite
     }
 
     // Custom decoder to handle id as either Int or String
@@ -106,6 +108,7 @@ struct UserImage: Codable, Identifiable {
         thumbnail_url = try? container.decode(String.self, forKey: .thumbnail_url)
         prompt = try? container.decode(String.self, forKey: .prompt)
         aspect_ratio = try? container.decode(String.self, forKey: .aspect_ratio)
+        is_favorite = try? container.decode(Bool.self, forKey: .is_favorite) ?? false
     }
 }
 
@@ -179,5 +182,127 @@ class ProfileViewModel: ObservableObject {
         if shouldShowLoading {
             isLoading = false
         }
+    }
+
+    // MARK: - Fetch Images by Model
+
+    /// Fetches user images filtered by a specific model name
+    /// - Parameters:
+    ///   - modelName: The model name to filter by (from item.display.modelName)
+    ///   - limit: Maximum number of images to fetch (default: 50)
+    ///   - forceRefresh: Whether to force a refresh from database
+    /// - Returns: Array of UserImage filtered by model
+    func fetchModelImages(modelName: String, limit: Int = 50, forceRefresh: Bool = false) async -> [UserImage] {
+        guard let userId = userId else { return [] }
+
+        // First, try to filter from cached images if available and not forcing refresh
+        if !forceRefresh, !userImages.isEmpty {
+            let filtered = userImages.filter { $0.model == modelName }
+            if !filtered.isEmpty {
+                return Array(filtered.prefix(limit))
+            }
+        }
+
+        // If no cached results or force refresh, query database
+        do {
+            let response: PostgrestResponse<[UserImage]> = try await client.database
+                .from("user_media")
+                .select()
+                .eq("user_id", value: userId)
+                .eq("model", value: modelName)
+                .order("created_at", ascending: false)
+                .limit(limit)
+                .execute()
+
+            return response.value ?? []
+        } catch {
+            print("❌ Failed to fetch model images for \(modelName): \(error)")
+            return []
+        }
+    }
+
+    // MARK: - Favorites Management
+
+    /// Toggles the favorite status of an image
+    /// - Parameter imageId: The ID of the image to toggle
+    func toggleFavorite(imageId: String) async {
+        guard let userId = userId else { return }
+
+        // Find the image in local array
+        guard let index = userImages.firstIndex(where: { $0.id == imageId }) else { return }
+
+        // Toggle local state
+        let currentFavorite = userImages[index].is_favorite ?? false
+        let newFavorite = !currentFavorite
+
+        // Create updated image with new favorite status
+        var updatedImage = userImages[index]
+        updatedImage.is_favorite = newFavorite
+
+        // Update array to trigger @Published
+        userImages[index] = updatedImage
+
+        // Save to cache
+        saveCachedImages()
+
+        // Update database
+        do {
+            try await client.database
+                .from("user_media")
+                .update(["is_favorite": newFavorite])
+                .eq("id", value: imageId)
+                .eq("user_id", value: userId)
+                .execute()
+        } catch {
+            print("❌ Failed to update favorite status: \(error)")
+            // Revert local change on error
+            var revertedImage = userImages[index]
+            revertedImage.is_favorite = currentFavorite
+            userImages[index] = revertedImage
+            saveCachedImages()
+        }
+    }
+
+    /// Gets all favorited images
+    var favoriteImages: [UserImage] {
+        userImages.filter { $0.is_favorite == true }
+    }
+
+    /// Gets unique list of models from user images
+    var uniqueModels: [String] {
+        let models = userImages.compactMap { $0.model }
+        return Array(Set(models)).sorted()
+    }
+
+    /// Filters images by model name
+    /// - Parameter modelName: The model name to filter by (nil for all)
+    func filteredImages(by modelName: String?) -> [UserImage] {
+        guard let modelName = modelName else {
+            return userImages
+        }
+        return userImages.filter { $0.model == modelName }
+    }
+
+    /// Filters images by favorites
+    /// - Parameter favoritesOnly: If true, returns only favorited images
+    func filteredImages(favoritesOnly: Bool) -> [UserImage] {
+        if favoritesOnly {
+            return favoriteImages
+        }
+        return userImages
+    }
+
+    /// Filters images by both model and favorites
+    /// - Parameters:
+    ///   - modelName: The model name to filter by (nil for all)
+    ///   - favoritesOnly: If true, returns only favorited images
+    func filteredImages(by modelName: String?, favoritesOnly: Bool) -> [UserImage] {
+        var filtered = favoritesOnly ? favoriteImages : userImages
+
+        if let modelName = modelName {
+            filtered = filtered.filter { $0.model == modelName }
+        }
+
+        return filtered
     }
 }

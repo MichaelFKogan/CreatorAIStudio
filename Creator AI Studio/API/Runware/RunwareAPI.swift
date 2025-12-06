@@ -106,10 +106,21 @@ func sendImageToRunware(
         // Determine method from config (default: "referenceImages")
         let method = runwareConfig?.imageToImageMethod ?? "referenceImages"
 
+        // FLUX.2 [dev] requires referenceImages inside an inputs object
+        let isFlux2Dev = model.lowercased().contains("runware:400@1")
+
         switch method {
         case "referenceImages":
-            task["referenceImages"] = [dataURI]
-            print("[Runware] Image-to-image enabled with referenceImages (Base64 preview): \(String(dataURI.prefix(100)))…")
+            if isFlux2Dev {
+                // FLUX.2 [dev] requires referenceImages inside inputs object
+                var inputs: [String: Any] = [:]
+                inputs["referenceImages"] = [dataURI]
+                task["inputs"] = inputs
+                print("[Runware] Image-to-image enabled with referenceImages in inputs object (Base64 preview): \(String(dataURI.prefix(100)))…")
+            } else {
+                task["referenceImages"] = [dataURI]
+                print("[Runware] Image-to-image enabled with referenceImages (Base64 preview): \(String(dataURI.prefix(100)))…")
+            }
 
         case "seedImage":
             task["seedImage"] = dataURI
@@ -120,8 +131,15 @@ func sendImageToRunware(
 
         default:
             // Fallback to referenceImages for unknown methods
-            task["referenceImages"] = [dataURI]
-            print("[Runware] Unknown method '\(method)', defaulting to referenceImages (Base64 preview): \(String(dataURI.prefix(100)))…")
+            if isFlux2Dev {
+                var inputs: [String: Any] = [:]
+                inputs["referenceImages"] = [dataURI]
+                task["inputs"] = inputs
+                print("[Runware] Unknown method '\(method)', defaulting to referenceImages in inputs object (Base64 preview): \(String(dataURI.prefix(100)))…")
+            } else {
+                task["referenceImages"] = [dataURI]
+                print("[Runware] Unknown method '\(method)', defaulting to referenceImages (Base64 preview): \(String(dataURI.prefix(100)))…")
+            }
         }
     }
 
@@ -151,6 +169,21 @@ func sendImageToRunware(
             task[key] = value
         }
         print("[Runware] Added \(additionalParams.count) additional task parameters")
+    }
+
+    // MARK: - FLUX.2 [dev] specific parameters
+
+    // FLUX.2 [dev] requires steps and CFGScale parameters
+    if model.lowercased().contains("runware:400@1") {
+        // Only add if not already provided via additionalTaskParams
+        if task["steps"] == nil {
+            task["steps"] = 30 // Default steps for FLUX.2 [dev]
+            print("[Runware] Added default steps: 30 for FLUX.2 [dev]")
+        }
+        if task["CFGScale"] == nil {
+            task["CFGScale"] = 4.0 // Default CFGScale for FLUX.2 [dev]
+            print("[Runware] Added default CFGScale: 4.0 for FLUX.2 [dev]")
+        }
     }
 
     // MARK: - Wrap task in authentication array (required!)

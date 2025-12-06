@@ -55,7 +55,7 @@ struct ReferenceImagesSection: View {
                     }
 
                     HStack {
-                        Text("Add a prompt below transform your photo.")
+                        Text("Add a prompt to transform your photo.")
                             .font(.caption)
                             .foregroundColor(.secondary.opacity(0.8))
                             .padding(.bottom, 8)

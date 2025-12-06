@@ -51,5 +51,30 @@
     "cost": 0.025,
     "type": "Image Model",
     "capabilities": ["Text to Image", "Image to Image"]
+  },
+  {
+    "display": {
+      "title": "Midjourney V7",
+      "imageName": "midjourneyv7",
+
+      "modelName": "Midjourney V7",
+      "modelDescription": "",
+      "modelImageName": "midjourneyv7",
+      "exampleImages": []
+    },
+    "apiConfig": {
+      "provider": "runware",
+      "runwareModel": "midjourney:3@1",
+      "endpoint": "https://api.runware.ai/v1",
+      "runwareConfig": {
+        "imageToImageMethod": "referenceImages",
+        "requiresDimensions": true,
+        "imageCompressionQuality": 0.9
+      }
+    },
+    "prompt": "",
+    "cost": 0.025,
+    "type": "Image Model",
+    "capabilities": ["Text to Image"]
   }
 ]

@@ -25,6 +25,10 @@ struct ImageModelDetailPageWithPhoto: View {
     @State private var keyboardHeight: CGFloat = 0
     @State private var showEmptyPromptAlert: Bool = false
     @State private var showCameraSheet: Bool = false
+    @State private var showPromptCameraSheet: Bool = false
+    @State private var isProcessingOCR: Bool = false
+    @State private var showOCRAlert: Bool = false
+    @State private var ocrAlertMessage: String = ""
 
     @State private var selectedAspectIndex: Int = 0
     @State private var selectedGenerationMode: Int = 0
@@ -157,7 +161,11 @@ struct ImageModelDetailPageWithPhoto: View {
                                 isExamplePromptsPresented:
                                 $isExamplePromptsPresented,
                                 examplePrompts: examplePrompts,
-                                examplePromptsTransform: transformPrompts
+                                examplePromptsTransform: transformPrompts,
+                                onCameraTap: {
+                                    showPromptCameraSheet = true
+                                },
+                                isProcessingOCR: $isProcessingOCR
                             ))
 
                         LazyView(
@@ -302,6 +310,32 @@ struct ImageModelDetailPageWithPhoto: View {
         defer { UIGraphicsEndImageContext() }
         return UIGraphicsGetImageFromCurrentImageContext() ?? UIImage()
     }
+
+    // MARK: OCR PROCESSING
+
+    private func processOCR(from image: UIImage) {
+        isProcessingOCR = true
+
+        Task { @MainActor in
+            let recognizedText = await TextRecognitionService.recognizeText(from: image)
+
+            isProcessingOCR = false
+
+            if let text = recognizedText, !text.isEmpty {
+                // Add the recognized text to the prompt
+                // If prompt already has text, append with a space, otherwise replace
+                if prompt.isEmpty {
+                    prompt = text
+                } else {
+                    prompt = prompt + " " + text
+                }
+            } else {
+                // Show alert if no text was found
+                ocrAlertMessage = "No text was found in the image. Please try again with a clearer image."
+                showOCRAlert = true
+            }
+        }
+    }
 }
 
 // MARK: CAPTURED IMAGE SECTION
@@ -382,7 +416,7 @@ struct ReferenceImagesSectionWithPhoto: View {
 
                 HStack {
                     Text(
-                        "Add a prompt below to transform your photo."
+                        "Add a prompt to transform your photo."
                     )
                     .font(.caption)
                     .foregroundColor(.secondary.opacity(0.8))

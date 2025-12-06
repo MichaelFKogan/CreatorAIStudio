@@ -60,50 +60,49 @@ struct ProfileViewContent: View {
     @EnvironmentObject var authViewModel: AuthViewModel
     @StateObject private var notificationManager = NotificationManager.shared
     @State private var selectedUserImage: UserImage? = nil
+    @State private var selectedTab: GalleryTab = .all
+    @State private var selectedModel: String? = nil
+    @State private var showImageModelsPopover: Bool = false
+
+    // Load model data to get images
+    private let allImageModels: [InfoPacket] = ImageModelsViewModel.loadImageModels()
+
+    enum GalleryTab: String, CaseIterable {
+        case all = "All"
+        case favorites = "Favorites"
+        case imageModels = "Image Models"
+    }
+
+    // Get models with images and their metadata
+    private var modelsWithMetadata: [(model: String, count: Int, imageName: String)] {
+        var result: [(String, Int, String)] = []
+
+        for modelName in viewModel.uniqueModels {
+            let count = viewModel.filteredImages(by: modelName, favoritesOnly: false).count
+            guard count > 0 else { continue }
+
+            // Find the model image from ImageModelData
+            var imageName = "photo.on.rectangle.angled" // fallback
+            if let modelInfo = allImageModels.first(where: { $0.display.modelName == modelName }) {
+                imageName = modelInfo.display.modelImageName ?? imageName
+            } else if let modelInfo = allImageModels.first(where: { $0.display.title == modelName }) {
+                imageName = modelInfo.display.modelImageName ?? imageName
+            }
+
+            result.append((modelName, count, imageName))
+        }
+
+        // Sort by count descending
+        return result.sorted { $0.1 > $1.1 }
+    }
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 16) {
-                    // My Creations Section
-                    VStack(alignment: .leading, spacing: 12) {
-                        if viewModel.isLoading {
-                            ProgressView("Loading images…")
-                                .padding()
-                        } else if viewModel.images.isEmpty
-                            && notificationManager.activePlaceholders.isEmpty
-                        {
-                            LazyVGrid(
-                                columns: Array(
-                                    repeating: GridItem(
-                                        .flexible(), spacing: 4
-                                    ), count: 3
-                                ),
-                                spacing: 4
-                            ) {
-                                ForEach(0 ..< 9, id: \.self) { _ in
-                                    RoundedRectangle(cornerRadius: 6)
-                                        .fill(Color.gray.opacity(0.2))
-                                        .overlay(
-                                            Image(systemName: "photo")
-                                                .foregroundColor(.gray)
-                                                .font(.title3)
-                                        )
-                                        .aspectRatio(1 / 1.4, contentMode: .fit) // ✅ portrait ratio (≈0.714)
-                                }
-                            }
-                            .padding(.horizontal)
+                    filterSection
 
-                        } else {
-                            ImageGridView(
-                                userImages: viewModel.userImages,
-                                placeholders: notificationManager
-                                    .activePlaceholders
-                            ) { userImage in
-                                selectedUserImage = userImage
-                            }
-                        }
-                    }
+                    contentSection
                 }
                 .padding(.top, 10)
                 //                .navigationTitle("Profile")
@@ -135,7 +134,8 @@ struct ProfileViewContent: View {
                     isPresented: Binding(
                         get: { selectedUserImage != nil },
                         set: { if !$0 { selectedUserImage = nil } }
-                    )
+                    ),
+                    viewModel: viewModel
                 )
                 .presentationDetents([.large])
                 .presentationDragIndicator(.visible)
@@ -189,6 +189,126 @@ struct ProfileViewContent: View {
                 .foregroundColor(.secondary)
         }
     }
+
+    // MARK: - Filter Section
+
+    private var filterSection: some View {
+        VStack(spacing: 12) {
+            HStack(spacing: 8) {
+                // All pill
+                GalleryTabPill(
+                    title: "All",
+                    isSelected: selectedTab == .all && selectedModel == nil,
+                    count: viewModel.userImages.count
+                ) {
+                    selectedTab = .all
+                    selectedModel = nil
+                }
+
+                // Favorites pill
+                GalleryTabPill(
+                    title: "Favorites",
+                    isSelected: selectedTab == .favorites && selectedModel == nil,
+                    count: viewModel.favoriteImages.count
+                ) {
+                    selectedTab = .favorites
+                    selectedModel = nil
+                }
+
+                imageModelsButton
+
+                Spacer()
+            }
+            .padding(.horizontal)
+            .padding(.top, 8)
+        }
+    }
+
+    private var imageModelsButton: some View {
+        Button {
+            showImageModelsPopover = true
+        } label: {
+            imageModelsButtonLabel
+        }
+        .popover(isPresented: $showImageModelsPopover) {
+            ImageModelsPopover(
+                models: modelsWithMetadata,
+                selectedModel: $selectedModel,
+                selectedTab: $selectedTab,
+                isPresented: $showImageModelsPopover
+            )
+        }
+    }
+
+    private var imageModelsButtonLabel: some View {
+        let isSelected = selectedTab == .imageModels && selectedModel != nil
+        let title = isSelected && selectedModel != nil ? selectedModel! : "Image Models"
+
+        return HStack(spacing: 6) {
+            Text(title)
+                .font(.system(size: 14, weight: isSelected ? .semibold : .regular))
+                .lineLimit(1)
+            Image(systemName: "chevron.down")
+                .font(.system(size: 10, weight: .medium))
+        }
+        .foregroundColor(isSelected ? .white : .primary)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 8)
+        .background(isSelected ? Color.blue : Color.gray.opacity(0.15))
+        .clipShape(Capsule())
+    }
+
+    // MARK: - Content Section
+
+    private var contentSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            if viewModel.isLoading {
+                ProgressView("Loading images…")
+                    .padding()
+            } else {
+                filteredContent
+            }
+        }
+    }
+
+    private var filteredContent: some View {
+        let filteredImages = getFilteredImages()
+
+        return Group {
+            if filteredImages.isEmpty && notificationManager.activePlaceholders.isEmpty {
+                EmptyGalleryView(
+                    tab: selectedTab,
+                    model: selectedModel,
+                    isImageModelsTab: selectedTab == .imageModels
+                )
+            } else {
+                ImageGridView(
+                    userImages: filteredImages,
+                    placeholders: notificationManager.activePlaceholders,
+                    viewModel: viewModel
+                ) { userImage in
+                    selectedUserImage = userImage
+                }
+            }
+        }
+    }
+
+    private func getFilteredImages() -> [UserImage] {
+        switch selectedTab {
+        case .all:
+            return selectedModel == nil
+                ? viewModel.userImages
+                : viewModel.filteredImages(by: selectedModel, favoritesOnly: false)
+        case .favorites:
+            return selectedModel == nil
+                ? viewModel.favoriteImages
+                : viewModel.filteredImages(by: selectedModel, favoritesOnly: true)
+        case .imageModels:
+            return selectedModel != nil
+                ? viewModel.filteredImages(by: selectedModel, favoritesOnly: false)
+                : viewModel.userImages
+        }
+    }
 }
 
 // MARK: IMAGE GRID (3×3 PORTRAIT)
@@ -198,6 +318,7 @@ struct ImageGridView: View {
     let placeholders: [PlaceholderImage]
     let spacing: CGFloat = 2
     var onSelect: (UserImage) -> Void
+    var viewModel: ProfileViewModel?
 
     @State private var favoritedImageIds: Set<String> = []
 
@@ -269,18 +390,25 @@ struct ImageGridView: View {
                                             .frame(width: 32, height: 32)
                                             .contentShape(Rectangle())
                                             .onTapGesture {
-                                                let imageId = userImage.id
-                                                if favoritedImageIds.contains(imageId) {
-                                                    favoritedImageIds.remove(imageId)
+                                                if let viewModel = viewModel {
+                                                    Task {
+                                                        await viewModel.toggleFavorite(imageId: userImage.id)
+                                                    }
                                                 } else {
-                                                    favoritedImageIds.insert(imageId)
+                                                    // Fallback to local state if no viewModel
+                                                    let imageId = userImage.id
+                                                    if favoritedImageIds.contains(imageId) {
+                                                        favoritedImageIds.remove(imageId)
+                                                    } else {
+                                                        favoritedImageIds.insert(imageId)
+                                                    }
                                                 }
                                             }
 
-                                        // Heart icon (visible for debugging)
-                                        Image(systemName: favoritedImageIds.contains(userImage.id) ? "heart.fill" : "heart")
+                                        // Heart icon
+                                        Image(systemName: (userImage.is_favorite ?? false) ? "heart.fill" : "heart")
                                             .font(.system(size: 16, weight: .semibold))
-                                            .foregroundColor(favoritedImageIds.contains(userImage.id) ? .red : .white)
+                                            .foregroundColor((userImage.is_favorite ?? false) ? .red : .white)
                                             .shadow(color: .black.opacity(0.5), radius: 2, x: 0, y: 1)
                                             .allowsHitTesting(false)
                                     }
@@ -335,18 +463,25 @@ struct ImageGridView: View {
                                             .frame(width: 32, height: 32)
                                             .contentShape(Rectangle())
                                             .onTapGesture {
-                                                let imageId = userImage.id
-                                                if favoritedImageIds.contains(imageId) {
-                                                    favoritedImageIds.remove(imageId)
+                                                if let viewModel = viewModel {
+                                                    Task {
+                                                        await viewModel.toggleFavorite(imageId: userImage.id)
+                                                    }
                                                 } else {
-                                                    favoritedImageIds.insert(imageId)
+                                                    // Fallback to local state if no viewModel
+                                                    let imageId = userImage.id
+                                                    if favoritedImageIds.contains(imageId) {
+                                                        favoritedImageIds.remove(imageId)
+                                                    } else {
+                                                        favoritedImageIds.insert(imageId)
+                                                    }
                                                 }
                                             }
 
-                                        // Heart icon (visible for debugging)
-                                        Image(systemName: favoritedImageIds.contains(userImage.id) ? "heart.fill" : "heart")
+                                        // Heart icon
+                                        Image(systemName: (userImage.is_favorite ?? false) ? "heart.fill" : "heart")
                                             .font(.system(size: 16, weight: .semibold))
-                                            .foregroundColor(favoritedImageIds.contains(userImage.id) ? .red : .white)
+                                            .foregroundColor((userImage.is_favorite ?? false) ? .red : .white)
                                             .shadow(color: .black.opacity(0.5), radius: 2, x: 0, y: 1)
                                             .allowsHitTesting(false)
                                     }
@@ -547,6 +682,209 @@ struct PlaceholderImageCard: View {
         case .completed: return Color.green.opacity(0.4)
         default: return Color.gray.opacity(0.3)
         }
+    }
+}
+
+// MARK: - GALLERY TAB PILL
+
+struct GalleryTabPill: View {
+    let title: String
+    let isSelected: Bool
+    let count: Int
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 6) {
+                Text(title)
+                    .font(.system(size: 14, weight: isSelected ? .semibold : .regular))
+                    .foregroundColor(isSelected ? .white : .primary)
+
+                if count > 0 {
+                    Text("(\(count))")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(isSelected ? .white.opacity(0.9) : .secondary)
+                }
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
+            .background(
+                Capsule()
+                    .fill(isSelected ? Color.blue : Color.gray.opacity(0.15))
+            )
+            .overlay(
+                Capsule()
+                    .stroke(isSelected ? Color.blue : Color.clear, lineWidth: 0)
+            )
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+// MARK: - MODEL FILTER CHIP (kept for backward compatibility if needed)
+
+struct ModelFilterChip: View {
+    let title: String
+    let isSelected: Bool
+    let count: Int
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 6) {
+                Text(title)
+                    .font(.system(size: 14, weight: isSelected ? .semibold : .regular))
+                    .foregroundColor(isSelected ? .white : .primary)
+
+                if count > 0 {
+                    Text("(\(count))")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(isSelected ? .white.opacity(0.9) : .secondary)
+                }
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
+            .background(
+                Capsule()
+                    .fill(isSelected ? Color.blue : Color.gray.opacity(0.15))
+            )
+            .overlay(
+                Capsule()
+                    .stroke(isSelected ? Color.blue : Color.clear, lineWidth: 0)
+            )
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+// MARK: - EMPTY GALLERY VIEW
+
+struct EmptyGalleryView: View {
+    let tab: ProfileViewContent.GalleryTab
+    let model: String?
+    let isImageModelsTab: Bool
+
+    var body: some View {
+        VStack(spacing: 16) {
+            Image(systemName: iconName)
+                .font(.system(size: 48))
+                .foregroundColor(.gray.opacity(0.5))
+
+            VStack(spacing: 8) {
+                Text(emptyTitle)
+                    .font(.headline)
+                    .foregroundColor(.primary)
+
+                Text(emptyMessage)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 32)
+            }
+        }
+        .padding(.vertical, 60)
+    }
+
+    private var iconName: String {
+        if tab == .favorites {
+            return "heart.slash"
+        } else if isImageModelsTab && model != nil {
+            return "photo.on.rectangle"
+        } else {
+            return "photo.on.rectangle"
+        }
+    }
+
+    private var emptyTitle: String {
+        if tab == .favorites {
+            return "No Favorites Yet"
+        } else if isImageModelsTab && model != nil {
+            return "No Images for \(model!)"
+        } else if isImageModelsTab {
+            return "No Image Models Selected"
+        } else {
+            return "No Images Yet"
+        }
+    }
+
+    private var emptyMessage: String {
+        if tab == .favorites {
+            return "Tap the heart icon on any image to add it to your favorites"
+        } else if isImageModelsTab && model != nil {
+            return "You haven't created any images with this model yet"
+        } else if isImageModelsTab {
+            return "Select an image model from the dropdown to view your creations"
+        } else {
+            return "Start creating amazing images to see them here!"
+        }
+    }
+}
+
+// MARK: - IMAGE MODELS POPOVER
+
+struct ImageModelsPopover: View {
+    let models: [(model: String, count: Int, imageName: String)]
+    @Binding var selectedModel: String?
+    @Binding var selectedTab: ProfileViewContent.GalleryTab
+    @Binding var isPresented: Bool
+
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 0) {
+                ForEach(models, id: \.model) { modelData in
+                    Button {
+                        selectedTab = .imageModels
+                        selectedModel = modelData.model
+                        isPresented = false
+                    } label: {
+                        HStack(spacing: 12) {
+                            // Model image
+                            Image(modelData.imageName)
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(width: 50, height: 50)
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
+
+                            // Model name
+                            Text(modelData.model)
+                                .font(.system(size: 15, weight: .regular))
+                                .foregroundColor(.primary)
+                                .multilineTextAlignment(.leading)
+
+                            Spacer()
+
+                            // Count
+                            Text("(\(modelData.count))")
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(.secondary)
+
+                            // Checkmark if selected
+                            if selectedTab == .imageModels && selectedModel == modelData.model {
+                                Image(systemName: "checkmark")
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .foregroundColor(.blue)
+                            }
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 12)
+                        .background(
+                            selectedTab == .imageModels && selectedModel == modelData.model
+                                ? Color.blue.opacity(0.1)
+                                : Color.clear
+                        )
+                    }
+                    .buttonStyle(.plain)
+
+                    if modelData.model != models.last?.model {
+                        Divider()
+                            .padding(.leading, 78) // Align with text after image
+                    }
+                }
+            }
+            .padding(.vertical, 8)
+        }
+        .frame(width: 320)
+        .frame(maxHeight: 400)
     }
 }
 

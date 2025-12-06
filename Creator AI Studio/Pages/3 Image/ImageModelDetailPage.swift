@@ -5,6 +5,7 @@
 //  Created by Mike K on 11/25/25.
 //
 
+import Kingfisher
 import PhotosUI
 import SwiftUI
 
@@ -28,6 +29,10 @@ struct ImageModelDetailPage: View {
     @State private var keyboardHeight: CGFloat = 0
     @State private var showEmptyPromptAlert: Bool = false
     @State private var showCameraSheet: Bool = false
+    @State private var showPromptCameraSheet: Bool = false
+    @State private var isProcessingOCR: Bool = false
+    @State private var showOCRAlert: Bool = false
+    @State private var ocrAlertMessage: String = ""
 
     @State private var selectedAspectIndex: Int = 0
     @State private var selectedGenerationMode: Int = 0
@@ -147,13 +152,16 @@ struct ImageModelDetailPage: View {
                                 prompt: $prompt,
                                 isFocused: $isPromptFocused,
                                 isExamplePromptsPresented:
-                                    $isExamplePromptsPresented,
+                                $isExamplePromptsPresented,
                                 examplePrompts: examplePrompts,
-                                examplePromptsTransform: transformPrompts
+                                examplePromptsTransform: transformPrompts,
+                                onCameraTap: {
+                                    showPromptCameraSheet = true
+                                },
+                                isProcessingOCR: $isProcessingOCR
                             ))
 
-                        if item.capabilities?.contains("Image to Image") == true
-                        {
+                        if item.capabilities?.contains("Image to Image") == true {
                             LazyView(
                                 ReferenceImagesSection(
                                     referenceImages: $referenceImages,
@@ -263,7 +271,19 @@ struct ImageModelDetailPage: View {
 
                         // LazyView(CostCardSection(costString: costString))
 
-                        Color.clear.frame(height: 130)  // bottom padding for floating button
+                        // Example Gallery Section - Only show if model name exists
+                        if let modelName = item.display.modelName, !modelName.isEmpty {
+                            LazyView(
+                                ModelGallerySection(
+                                    modelName: modelName,
+                                    userId: authViewModel.user?.id.uuidString.lowercased()
+                                )
+                            )
+
+                            Divider().padding(.horizontal)
+                        }
+
+                        Color.clear.frame(height: 130) // bottom padding for floating button
                     }
                 }
                 .scrollDismissesKeyboard(.interactively)
@@ -331,6 +351,16 @@ struct ImageModelDetailPage: View {
                 referenceImages.append(capturedImage)
             }
         }
+        .sheet(isPresented: $showPromptCameraSheet) {
+            SimpleCameraPicker(isPresented: $showPromptCameraSheet) { capturedImage in
+                processOCR(from: capturedImage)
+            }
+        }
+        .alert("Text Recognition", isPresented: $showOCRAlert) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(ocrAlertMessage)
+        }
     }
 
     // MARK: FUNCTION GENERATE
@@ -350,7 +380,7 @@ struct ImageModelDetailPage: View {
 
         let imageToUse = referenceImages.first ?? createPlaceholderImage()
         guard let userId = authViewModel.user?.id.uuidString.lowercased(),
-            !userId.isEmpty
+              !userId.isEmpty
         else {
             isGenerating = false
             return
@@ -377,6 +407,32 @@ struct ImageModelDetailPage: View {
         UIGraphicsBeginImageContextWithOptions(size, false, 1.0)
         defer { UIGraphicsEndImageContext() }
         return UIGraphicsGetImageFromCurrentImageContext() ?? UIImage()
+    }
+
+    // MARK: OCR PROCESSING
+
+    private func processOCR(from image: UIImage) {
+        isProcessingOCR = true
+
+        Task { @MainActor in
+            let recognizedText = await TextRecognitionService.recognizeText(from: image)
+
+            isProcessingOCR = false
+
+            if let text = recognizedText, !text.isEmpty {
+                // Add the recognized text to the prompt
+                // If prompt already has text, append with a space, otherwise replace
+                if prompt.isEmpty {
+                    prompt = text
+                } else {
+                    prompt = prompt + " " + text
+                }
+            } else {
+                // Show alert if no text was found
+                ocrAlertMessage = "No text was found in the image. Please try again with a clearer image."
+                showOCRAlert = true
+            }
+        }
     }
 }
 
@@ -420,12 +476,13 @@ struct BannerSection: View {
                     }
 
                     if let capabilities = item.capabilities,
-                        !capabilities.isEmpty
+                       !capabilities.isEmpty
                     {
                         Text(capabilities.joined(separator: " • "))
                             .font(
                                 .system(
-                                    size: 12, weight: .medium, design: .rounded)
+                                    size: 12, weight: .medium, design: .rounded
+                                )
                             )
                             .foregroundColor(.blue)
                     }
@@ -449,6 +506,8 @@ struct PromptSection: View {
     @Binding var isExamplePromptsPresented: Bool
     let examplePrompts: [String]
     let examplePromptsTransform: [String]
+    let onCameraTap: () -> Void
+    @Binding var isProcessingOCR: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -456,7 +515,37 @@ struct PromptSection: View {
                 Image(systemName: "text.alignleft").foregroundColor(.blue)
                 Text("Prompt").font(.subheadline).fontWeight(.semibold)
                     .foregroundColor(.secondary)
+                Spacer()
+
+                HStack(spacing: 8) {
+                    VStack(alignment: .leading) {
+                        Text("Take a photo of a prompt")
+                            .font(.caption2)
+                            .foregroundColor(.secondary.opacity(0.7))
+                            .multilineTextAlignment(.trailing)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Text("to add it to the box below")
+                            .font(.caption2)
+                            .foregroundColor(.secondary.opacity(0.7))
+                            .multilineTextAlignment(.trailing)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+
+                    Button(action: onCameraTap) {
+                        Group {
+                            if isProcessingOCR {
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle(tint: .blue))
+                                    .scaleEffect(0.8)
+                            } else {
+                                Image(systemName: "camera").foregroundColor(.blue)
+                            }
+                        }
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                }
             }
+
             TextEditor(text: $prompt)
                 .font(.system(size: 15))
                 .opacity(0.9)
@@ -658,5 +747,217 @@ struct CreditsView: View {
                     endPoint: .trailing
                 ), lineWidth: 1.5
             ))
+    }
+}
+
+// MARK: MODEL GALLERY SECTION
+
+struct ModelGallerySection: View {
+    let modelName: String?
+    let userId: String?
+
+    @StateObject private var viewModel = ProfileViewModel()
+    @State private var modelImages: [UserImage] = []
+    @State private var isLoading = false
+    @State private var hasLoaded = false
+    @State private var selectedUserImage: UserImage? = nil
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 6) {
+                Image(systemName: "photo.on.rectangle.angled")
+                    .foregroundColor(.blue)
+                    .font(.subheadline)
+                Text("Your Creations")
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.secondary)
+            }
+            .padding(.horizontal)
+
+            if isLoading {
+                HStack {
+                    Spacer()
+                    ProgressView()
+                        .padding()
+                    Spacer()
+                }
+            } else if modelImages.isEmpty && hasLoaded {
+                HStack {
+                    Spacer()
+                    VStack(spacing: 8) {
+                        Image(systemName: "photo.on.rectangle")
+                            .font(.title2)
+                            .foregroundColor(.gray.opacity(0.5))
+                        Text("No images yet")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        Text("Create your first image with this model!")
+                            .font(.caption2)
+                            .foregroundColor(.secondary.opacity(0.7))
+                    }
+                    .padding(.vertical, 32)
+                    Spacer()
+                }
+            } else if !modelImages.isEmpty {
+                ModelGalleryGridView(
+                    userImages: modelImages,
+                    onSelect: { userImage in
+                        selectedUserImage = userImage
+                    }
+                )
+            }
+        }
+        .padding(.vertical, 8)
+        .onAppear {
+            loadModelImages()
+        }
+        .sheet(item: $selectedUserImage) { userImage in
+            FullScreenImageView(
+                userImage: userImage,
+                isPresented: Binding(
+                    get: { selectedUserImage != nil },
+                    set: { if !$0 { selectedUserImage = nil } }
+                )
+            )
+            .presentationDetents([.large])
+            .presentationDragIndicator(.visible)
+            .ignoresSafeArea()
+        }
+    }
+
+    private func loadModelImages() {
+        guard let modelName = modelName, !modelName.isEmpty,
+              let userId = userId, !userId.isEmpty,
+              !hasLoaded
+        else {
+            // If no model name or user ID, mark as loaded to prevent retries
+            hasLoaded = true
+            return
+        }
+
+        hasLoaded = true
+        viewModel.userId = userId
+        isLoading = true
+
+        Task {
+            let images = await viewModel.fetchModelImages(
+                modelName: modelName,
+                limit: 50,
+                forceRefresh: false
+            )
+
+            await MainActor.run {
+                modelImages = images
+                isLoading = false
+            }
+        }
+    }
+}
+
+// MARK: MODEL GALLERY GRID VIEW
+
+struct ModelGalleryGridView: View {
+    let userImages: [UserImage]
+    var onSelect: (UserImage) -> Void
+
+    private let spacing: CGFloat = 4
+    private let gridColumns: [GridItem] = Array(
+        repeating: GridItem(.flexible(), spacing: 4),
+        count: 3
+    )
+
+    var body: some View {
+        GeometryReader { proxy in
+            let totalSpacing = spacing * 2
+            let contentWidth = max(0, proxy.size.width - totalSpacing - 8)
+            let itemWidth = max(44, contentWidth / 3)
+            let itemHeight = itemWidth * 1.4
+
+            LazyVGrid(columns: gridColumns, spacing: spacing) {
+                ForEach(userImages) { userImage in
+                    if let displayUrl = userImage.isVideo
+                        ? userImage.thumbnail_url : userImage.image_url,
+                        let url = URL(string: displayUrl)
+                    {
+                        Button {
+                            onSelect(userImage)
+                        } label: {
+                            ZStack {
+                                KFImage(url)
+                                    .placeholder {
+                                        Rectangle()
+                                            .fill(Color.gray.opacity(0.2))
+                                            .overlay(ProgressView())
+                                    }
+                                    .resizable()
+                                    .scaledToFill()
+                                    .frame(width: itemWidth, height: itemHeight)
+                                    .clipped()
+                                    .cornerRadius(6)
+
+                                // Video play icon overlay
+                                if userImage.isVideo {
+                                    ZStack {
+                                        Circle()
+                                            .fill(Color.black.opacity(0.6))
+                                            .frame(width: 32, height: 32)
+
+                                        Image(systemName: "play.fill")
+                                            .font(.system(size: 14))
+                                            .foregroundColor(.white)
+                                    }
+                                }
+                            }
+                        }
+                        .buttonStyle(.plain)
+                    } else if let url = URL(string: userImage.image_url) {
+                        // Fallback for videos without thumbnails
+                        Button {
+                            onSelect(userImage)
+                        } label: {
+                            ZStack {
+                                KFImage(url)
+                                    .placeholder {
+                                        Rectangle()
+                                            .fill(Color.gray.opacity(0.2))
+                                            .overlay(
+                                                Image(systemName: "video.fill")
+                                                    .font(.title3)
+                                                    .foregroundColor(.gray)
+                                            )
+                                    }
+                                    .resizable()
+                                    .scaledToFill()
+                                    .frame(width: itemWidth, height: itemHeight)
+                                    .clipped()
+                                    .cornerRadius(6)
+
+                                if userImage.isVideo {
+                                    ZStack {
+                                        Circle()
+                                            .fill(Color.black.opacity(0.6))
+                                            .frame(width: 32, height: 32)
+
+                                        Image(systemName: "play.fill")
+                                            .font(.system(size: 14))
+                                            .foregroundColor(.white)
+                                    }
+                                }
+                            }
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+            .padding(.horizontal, 4)
+        }
+        .frame(height: calculateHeight(for: userImages.count))
+    }
+
+    private func calculateHeight(for count: Int) -> CGFloat {
+        let rows = ceil(Double(count) / 3.0)
+        let itemWidth = (UIScreen.main.bounds.width - 16) / 3
+        return CGFloat(rows) * (itemWidth * 1.4 + spacing)
     }
 }

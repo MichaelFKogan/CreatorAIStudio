@@ -90,7 +90,11 @@ final class ImageModelsViewModel: ObservableObject {
 
         switch imageFilterIndex {
         case 1:
-            models = models.filter { $0.capabilities?.contains("Text to Image") == true }
+            // Text to Image Only - models that have Text to Image but NOT Image to Image
+            models = models.filter {
+                let caps = $0.capabilities ?? []
+                return caps.contains("Text to Image") && !caps.contains("Image to Image")
+            }
         case 2:
             models = models.filter { $0.capabilities?.contains("Image to Image") == true }
         default: break
@@ -205,8 +209,11 @@ private struct FilterSection: View {
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 6) {
-                    FilterPill(title: "Text to Image", isSelected: viewModel.imageFilterIndex == 0) {
+                    FilterPill(title: "All", isSelected: viewModel.imageFilterIndex == 0) {
                         viewModel.imageFilterIndex = 0
+                    }
+                    FilterPill(title: "Text to Image", isSelected: viewModel.imageFilterIndex == 1) {
+                        viewModel.imageFilterIndex = 1
                     }
                     FilterPill(title: "Image to Image", isSelected: viewModel.imageFilterIndex == 2) {
                         viewModel.imageFilterIndex = 2
