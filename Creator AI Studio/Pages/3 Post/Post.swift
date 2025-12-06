@@ -2,8 +2,6 @@ import AVFoundation
 import SwiftUI
 import UIKit
 
-// MARK: - CameraButtonView
-
 struct Post: View {
     @StateObject private var cameraService = CameraService()
     @State private var selectedUIImage: UIImage?
@@ -28,7 +26,9 @@ struct Post: View {
 
                 // Only show captured photo when explicitly allowed
                 // This prevents the photo from appearing when returning from navigation
-                if shouldShowCapturedImage, let captured = cameraService.capturedImage {
+                if shouldShowCapturedImage,
+                    let captured = cameraService.capturedImage
+                {
                     // Show captured photo fullscreen
                     Image(uiImage: captured)
                         .resizable()
@@ -42,9 +42,9 @@ struct Post: View {
                     )
                 }
 
-                // Camera controls
+                // MARK: MAIN STACK
                 VStack {
-                    // Top text: Instructions or selected item name
+                    // MARK: TOP TEXT
                     VStack {
                         Spacer()
                             .frame(height: 20)
@@ -55,7 +55,11 @@ struct Post: View {
                             Group {
                                 if let selectedFilter = selectedFilter {
                                     Text(selectedFilter.display.title)
-                                        .font(.system(size: 13, weight: .medium, design: .rounded))
+                                        .font(
+                                            .system(
+                                                size: 13, weight: .medium,
+                                                design: .rounded)
+                                        )
                                         .foregroundColor(.white)
                                         .padding(.horizontal, 16)
                                         .padding(.vertical, 8)
@@ -63,13 +67,22 @@ struct Post: View {
                                             RoundedRectangle(cornerRadius: 12)
                                                 .fill(Color.white.opacity(0.2))
                                                 .background(
-                                                    RoundedRectangle(cornerRadius: 12)
-                                                        .fill(Color.black.opacity(0.8))
+                                                    RoundedRectangle(
+                                                        cornerRadius: 12
+                                                    )
+                                                    .fill(
+                                                        Color.black.opacity(0.8)
+                                                    )
                                                 )
                                         )
-                                } else if let selectedModel = selectedImageModel {
+                                } else if let selectedModel = selectedImageModel
+                                {
                                     Text(selectedModel.display.title)
-                                        .font(.system(size: 13, weight: .medium, design: .rounded))
+                                        .font(
+                                            .system(
+                                                size: 13, weight: .medium,
+                                                design: .rounded)
+                                        )
                                         .foregroundColor(.white)
                                         .padding(.horizontal, 16)
                                         .padding(.vertical, 8)
@@ -77,13 +90,21 @@ struct Post: View {
                                             RoundedRectangle(cornerRadius: 12)
                                                 .fill(Color.white.opacity(0.2))
                                                 .background(
-                                                    RoundedRectangle(cornerRadius: 12)
-                                                        .fill(Color.black.opacity(0.8))
+                                                    RoundedRectangle(
+                                                        cornerRadius: 12
+                                                    )
+                                                    .fill(
+                                                        Color.black.opacity(0.8)
+                                                    )
                                                 )
                                         )
                                 } else {
                                     Text("Select an AI Model or Photo Filter")
-                                        .font(.system(size: 13, weight: .medium, design: .rounded))
+                                        .font(
+                                            .system(
+                                                size: 13, weight: .medium,
+                                                design: .rounded)
+                                        )
                                         .foregroundColor(.white)
                                         .padding(.horizontal, 16)
                                         .padding(.vertical, 8)
@@ -91,8 +112,12 @@ struct Post: View {
                                             RoundedRectangle(cornerRadius: 12)
                                                 .fill(Color.white.opacity(0.15))
                                                 .background(
-                                                    RoundedRectangle(cornerRadius: 12)
-                                                        .fill(Color.black.opacity(0.8))
+                                                    RoundedRectangle(
+                                                        cornerRadius: 12
+                                                    )
+                                                    .fill(
+                                                        Color.black.opacity(0.8)
+                                                    )
                                                 )
                                         )
                                 }
@@ -102,115 +127,162 @@ struct Post: View {
                     }
                     .frame(maxWidth: .infinity, alignment: .top)
 
-                    // Control buttons row
-                    HStack {
-                        // Left side: Filter button
+                    // MARK: BOTTOM ROW
+                    VStack {
+
                         HStack {
                             Spacer()
+                            FilterScrollRow(filters: filtersViewModel.filters, selectedFilter: selectedFilter, onSelect: { filter in
+                                selectedFilter = filter
+                            })
+                            Spacer()
+                        }
+                        
+                        HStack {
+                            // Left side: Filter button
+                            HStack {
+                                Spacer()
 
-                            // MARK: FILTER/MODEL SELECTION BUTTON
+                                // MARK: MENU
 
-                            Button {
-                                showFilterCategorySheet = true
-                            } label: {
-                                Group {
-                                    if let selectedFilter = selectedFilter {
-                                        // Show selected filter thumbnail
-                                        Image(selectedFilter.display.imageName)
+                                Button {
+                                    showFilterCategorySheet = true
+                                } label: {
+                                    Group {
+                                        if let selectedFilter = selectedFilter {
+                                            // Show selected filter thumbnail
+                                            Image(
+                                                selectedFilter.display.imageName
+                                            )
                                             .resizable()
                                             .scaledToFill()
-                                            .frame(width: 60, height: 60)
+                                            .frame(width: 70, height: 70)
                                             .clipped()
                                             .cornerRadius(10)
-                                            .shadow(color: .black.opacity(0.8), radius: 4, x: 0, y: 0)
-                                    } else if let selectedModel = selectedImageModel {
-                                        // Show selected model thumbnail
-                                        Image(selectedModel.display.imageName)
+                                            .shadow(
+                                                color: .black.opacity(0.8),
+                                                radius: 4, x: 0, y: 0)
+                                        } else if let selectedModel =
+                                            selectedImageModel
+                                        {
+                                            // Show selected model thumbnail
+                                            Image(
+                                                selectedModel.display.imageName
+                                            )
                                             .resizable()
                                             .scaledToFill()
-                                            .frame(width: 60, height: 60)
+                                            .frame(width: 70, height: 70)
                                             .clipped()
                                             .cornerRadius(10)
-                                            .shadow(color: .black.opacity(0.8), radius: 4, x: 0, y: 0)
-                                    } else {
-                                        // Placeholder when nothing is selected
-                                        ZStack {
-                                            RoundedRectangle(cornerRadius: 10)
+                                            .shadow(
+                                                color: .black.opacity(0.8),
+                                                radius: 4, x: 0, y: 0)
+                                        } else {
+                                            // Placeholder when nothing is selected
+                                            ZStack {
+                                                RoundedRectangle(
+                                                    cornerRadius: 10
+                                                )
                                                 .fill(
                                                     LinearGradient(
-                                                        colors: [Color.purple.opacity(0.6), Color.pink.opacity(0.6)],
+                                                        colors: [
+                                                            Color.purple
+                                                                .opacity(0.6),
+                                                            Color.pink.opacity(
+                                                                0.6),
+                                                        ],
                                                         startPoint: .topLeading,
-                                                        endPoint: .bottomTrailing
+                                                        endPoint:
+                                                            .bottomTrailing
                                                     )
                                                 )
-                                                .frame(width: 55, height: 55)
+                                                .frame(width: 70, height: 70)
 
-                                            Image(systemName: "sparkles")
-                                                .font(.system(size: 22, weight: .medium))
-                                                .foregroundColor(.white).opacity(0.9)
+                                                Image(systemName: "sparkles")
+                                                    .font(
+                                                        .system(
+                                                            size: 22,
+                                                            weight: .medium)
+                                                    )
+                                                    .foregroundColor(.white)
+                                                    .opacity(0.9)
+                                            }
+                                            .shadow(
+                                                color: .black.opacity(0.8),
+                                                radius: 4, x: 0, y: 0)
                                         }
-                                        .shadow(color: .black.opacity(0.8), radius: 4, x: 0, y: 0)
                                     }
                                 }
+                                .frame(width: 70, height: 70)
+                                Spacer()
                             }
-                            .frame(width: 60, height: 60)
-                            Spacer()
-                        }
-                        .frame(maxWidth: .infinity)
+                            .frame(maxWidth: .infinity)
 
-                        // Center: Capture button
-                        // MARK: CAPTURE BUTTON
+                            // Center: Capture button
+                            // MARK: CAPTURE
 
-                        Button {
-                            cameraService.capturePhoto()
-                        } label: {
-                            Circle()
-                                .stroke(isFilterOrModelSelected ? Color.white : Color.gray.opacity(0.5), lineWidth: 5)
-                                .frame(width: 80, height: 80)
-                        }
-                        .disabled(!isFilterOrModelSelected)
-
-                        // Right side: Photo library and switch camera buttons
-                        HStack {
-                            // MARK: PHOTO LIBRARY BUTTON
-
-                            Spacer()
                             Button {
-                                showLibraryPicker = true
+                                cameraService.capturePhoto()
                             } label: {
-                                Image(systemName: "photo.on.rectangle.angled")
+                                Circle()
+                                    .stroke(
+                                        isFilterOrModelSelected
+                                            ? Color.white
+                                            : Color.gray.opacity(0.5),
+                                        lineWidth: 5
+                                    )
+                                    .frame(width: 80, height: 80)
+                            }
+                            .disabled(!isFilterOrModelSelected)
+
+                            // Right side: Photo library and switch camera buttons
+                            HStack {
+                                // MARK: LIBRARY
+
+                                Spacer()
+                                Button {
+                                    showLibraryPicker = true
+                                } label: {
+                                    Image(
+                                        systemName: "photo.on.rectangle.angled"
+                                    )
                                     .font(.system(size: 25))
                                     .foregroundColor(.white).opacity(0.8)
                                     .cornerRadius(8)
                                     .shadow(radius: 3)
-                            }
-                            .frame(width: 50, height: 50)
+                                }
+                                .frame(width: 50, height: 50)
 
-                            Spacer()
+                                Spacer()
 
-                            // MARK: SWITCH CAMERA BUTTON
+                                // MARK: SWITCH
 
-                            Button {
-                                cameraService.switchCamera()
-                            } label: {
-                                Image(systemName: "arrow.triangle.2.circlepath")
+                                Button {
+                                    cameraService.switchCamera()
+                                } label: {
+                                    Image(
+                                        systemName:
+                                            "arrow.triangle.2.circlepath"
+                                    )
                                     .font(.system(size: 25))
                                     .foregroundColor(.white).opacity(0.8)
                                     .clipShape(Circle())
                                     .shadow(radius: 3)
-                            }
-                            .accessibilityLabel("Switch camera")
-                            .frame(width: 50, height: 50)
+                                }
+                                .accessibilityLabel("Switch camera")
+                                .frame(width: 50, height: 50)
 
-                            Spacer()
+                                Spacer()
+                            }
+                            .frame(maxWidth: .infinity)
                         }
-                        .frame(maxWidth: .infinity)
                     }
                     .safeAreaInset(edge: .bottom) {
                         Color.clear.frame(height: 65)
                     }
                 }
             }
+            // MARK: TOOLBAR
             .onAppear {
                 isViewActive = true
                 // Immediately hide captured image when view appears
@@ -265,16 +337,17 @@ struct Post: View {
                     isPresented: $showFilterCategorySheet,
                     categorizedFilters: filtersViewModel.categorizedFilters,
                     allFilters: filtersViewModel.filters,
-                    imageModels: imageModelsViewModel.filteredAndSortedImageModels,
+                    imageModels: imageModelsViewModel
+                        .filteredAndSortedImageModels,
                     selectedFilter: $selectedFilter,
                     selectedImageModel: $selectedImageModel,
                     onSelect: { filter in
                         selectedFilter = filter
-                        selectedImageModel = nil // Clear model when filter is selected
+                        selectedImageModel = nil  // Clear model when filter is selected
                     },
                     onSelectModel: { model in
                         selectedImageModel = model
-                        selectedFilter = nil // Clear filter when model is selected
+                        selectedFilter = nil  // Clear filter when model is selected
                     }
                 )
             }
@@ -284,7 +357,7 @@ struct Post: View {
         }
     }
 
-    // MARK: - Computed Properties
+    // MARK: COMPUTED PROPERTIES
 
     private var isFilterOrModelSelected: Bool {
         selectedFilter != nil || selectedImageModel != nil

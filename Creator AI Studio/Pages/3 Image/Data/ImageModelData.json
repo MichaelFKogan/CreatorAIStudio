@@ -255,7 +255,7 @@
       }
     },
     "prompt": "",
-    "cost": 0.02945,
+    "cost": 0.035,
     "type": "Image Model",
     "capabilities": ["Text to Image", "Image to Image"]
   },
@@ -281,7 +281,7 @@
       }
     },
     "prompt": "",
-    "cost": 0.06358,
+    "cost": 0.075,
     "type": "Image Model",
     "capabilities": ["Text to Image", "Image to Image"]
   }

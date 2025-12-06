@@ -37,7 +37,7 @@ struct FilterThumbnailCompact: View {
     let cost: Decimal?
 
     var body: some View {
-        VStack(spacing: 6) {
+        VStack(spacing: 2) {
             ZStack(alignment: .topTrailing) {
                 Image(imageName)
                     .resizable()
