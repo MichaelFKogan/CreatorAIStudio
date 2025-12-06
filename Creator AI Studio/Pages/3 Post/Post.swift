@@ -13,6 +13,7 @@ struct Post: View {
     @StateObject private var filtersViewModel = PhotoFiltersViewModel()
     @State private var selectedFilter: InfoPacket?
     @State private var showFilterCategorySheet = false
+    @State private var centeredFilter: InfoPacket?
 
     // Image Model mode state
     @StateObject private var imageModelsViewModel = ImageModelsViewModel()
@@ -139,8 +140,9 @@ struct Post: View {
                                 showFilterCategorySheet = true
                             } label: {
                                 Group {
-                                    if let selectedFilter = selectedFilter {
-                                        Text(selectedFilter.display.title)
+                                    // Show centered filter while scrolling, otherwise show selected filter
+                                    if let displayFilter = centeredFilter ?? selectedFilter {
+                                        Text(displayFilter.display.title)
                                             .font(
                                                 .system(
                                                     size: 13,
@@ -240,6 +242,12 @@ struct Post: View {
                                 selectedFilter: selectedFilter,
                                 onSelect: { filter in
                                     selectedFilter = filter
+                                    // Clear centered filter when a selection is made
+                                    // This ensures the title shows the selected filter after snapping
+                                    centeredFilter = nil
+                                },
+                                onCenteredFilterChanged: { filter in
+                                    centeredFilter = filter
                                 })
                             Spacer()
                         }

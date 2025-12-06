@@ -6,6 +6,7 @@ struct FilterScrollRow: View {
     let filters: [InfoPacket]
     let selectedFilter: InfoPacket?
     let onSelect: (InfoPacket) -> Void
+    var onCenteredFilterChanged: ((InfoPacket?) -> Void)? = nil
     
     @State private var filterPositions: [UUID: CGFloat] = [:]
     @State private var isDragging = false
@@ -159,13 +160,20 @@ struct FilterScrollRow: View {
             }
         }
         
-        // Trigger haptic if a different filter is now centered
-        if let filter = closestFilter,
-           filter.id != currentCenteredFilterId,
-           minDistance < 50 { // Only if reasonably centered
-            currentCenteredFilterId = filter.id
-            hapticGenerator.impactOccurred(intensity: 0.6)
-            hapticGenerator.prepare() // Prepare for next haptic
+        // Check if a filter is reasonably centered (within 50 points)
+        if let filter = closestFilter, minDistance < 50 {
+            // Trigger haptic if a different filter is now centered
+            if filter.id != currentCenteredFilterId {
+                currentCenteredFilterId = filter.id
+                hapticGenerator.impactOccurred(intensity: 0.6)
+                hapticGenerator.prepare() // Prepare for next haptic
+            }
+            // Always notify parent of centered filter for real-time title updates
+            onCenteredFilterChanged?(filter)
+        } else if currentCenteredFilterId != nil {
+            // No filter is reasonably centered anymore
+            currentCenteredFilterId = nil
+            onCenteredFilterChanged?(nil)
         }
     }
     
