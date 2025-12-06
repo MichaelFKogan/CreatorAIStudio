@@ -81,12 +81,12 @@ struct ProfileViewContent: View {
             let count = viewModel.filteredImages(by: modelName, favoritesOnly: false).count
             guard count > 0 else { continue }
 
-            // Find the model image from ImageModelData
+            // Find the model image from ImageModelData using display.imageName
             var imageName = "photo.on.rectangle.angled" // fallback
             if let modelInfo = allImageModels.first(where: { $0.display.modelName == modelName }) {
-                imageName = modelInfo.display.modelImageName ?? imageName
+                imageName = modelInfo.display.imageName
             } else if let modelInfo = allImageModels.first(where: { $0.display.title == modelName }) {
-                imageName = modelInfo.display.modelImageName ?? imageName
+                imageName = modelInfo.display.imageName
             }
 
             result.append((modelName, count, imageName))
@@ -230,8 +230,8 @@ struct ProfileViewContent: View {
         } label: {
             imageModelsButtonLabel
         }
-        .popover(isPresented: $showImageModelsPopover) {
-            ImageModelsPopover(
+        .sheet(isPresented: $showImageModelsPopover) {
+            ImageModelsSheet(
                 models: modelsWithMetadata,
                 selectedModel: $selectedModel,
                 selectedTab: $selectedTab,
@@ -820,71 +820,88 @@ struct EmptyGalleryView: View {
     }
 }
 
-// MARK: - IMAGE MODELS POPOVER
+// MARK: - IMAGE MODELS SHEET
 
-struct ImageModelsPopover: View {
+struct ImageModelsSheet: View {
     let models: [(model: String, count: Int, imageName: String)]
     @Binding var selectedModel: String?
     @Binding var selectedTab: ProfileViewContent.GalleryTab
     @Binding var isPresented: Bool
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 0) {
-                ForEach(models, id: \.model) { modelData in
-                    Button {
-                        selectedTab = .imageModels
-                        selectedModel = modelData.model
-                        isPresented = false
-                    } label: {
-                        HStack(spacing: 12) {
-                            // Model image
-                            Image(modelData.imageName)
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                                .frame(width: 50, height: 50)
-                                .clipShape(RoundedRectangle(cornerRadius: 8))
+        NavigationStack {
+            ScrollView {
+                LazyVStack(spacing: 0) {
+                    ForEach(models, id: \.model) { modelData in
+                        Button {
+                            selectedTab = .imageModels
+                            selectedModel = modelData.model
+                            isPresented = false
+                        } label: {
+                            HStack(spacing: 12) {
+                                // Model image
+                                Image(modelData.imageName)
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                                    .frame(width: 65, height: 65)
+                                    .clipShape(RoundedRectangle(cornerRadius: 8))
 
-                            // Model name
-                            Text(modelData.model)
-                                .font(.system(size: 15, weight: .regular))
-                                .foregroundColor(.primary)
-                                .multilineTextAlignment(.leading)
+                                // Model name and count
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(modelData.model)
+                                        .font(.system(size: 15, weight: .bold, design: .rounded))
+                                        .foregroundColor(.primary)
+                                        .multilineTextAlignment(.leading)
+                                        .lineLimit(2)
 
-                            Spacer()
+                                    Text("\(modelData.count) image\(modelData.count == 1 ? "" : "s")")
+                                        .font(.system(size: 12, weight: .medium, design: .rounded))
+                                        .foregroundColor(.blue)
+                                }
 
-                            // Count
-                            Text("(\(modelData.count))")
-                                .font(.system(size: 14, weight: .medium))
-                                .foregroundColor(.secondary)
+                                Spacer()
 
-                            // Checkmark if selected
-                            if selectedTab == .imageModels && selectedModel == modelData.model {
-                                Image(systemName: "checkmark")
-                                    .font(.system(size: 14, weight: .semibold))
-                                    .foregroundColor(.blue)
+                                // Checkmark if selected
+                                if selectedTab == .imageModels && selectedModel == modelData.model {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .font(.system(size: 20))
+                                        .foregroundColor(.blue)
+                                }
                             }
+                            .padding(12)
+                            .background(
+                                selectedTab == .imageModels && selectedModel == modelData.model
+                                    ? Color.blue.opacity(0.08)
+                                    : Color.gray.opacity(0.06)
+                            )
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(
+                                        selectedTab == .imageModels && selectedModel == modelData.model
+                                            ? Color.blue.opacity(0.3)
+                                            : Color.gray.opacity(0.2),
+                                        lineWidth: 1
+                                    )
+                            )
                         }
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 12)
-                        .background(
-                            selectedTab == .imageModels && selectedModel == modelData.model
-                                ? Color.blue.opacity(0.1)
-                                : Color.clear
-                        )
+                        .buttonStyle(.plain)
+                        .padding(.horizontal)
+                        .padding(.vertical, 6)
                     }
-                    .buttonStyle(.plain)
-
-                    if modelData.model != models.last?.model {
-                        Divider()
-                            .padding(.leading, 78) // Align with text after image
+                }
+                .padding(.vertical)
+            }
+            .navigationTitle("Image Models")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        isPresented = false
                     }
                 }
             }
-            .padding(.vertical, 8)
         }
-        .frame(width: 320)
-        .frame(maxHeight: 400)
     }
 }
 
