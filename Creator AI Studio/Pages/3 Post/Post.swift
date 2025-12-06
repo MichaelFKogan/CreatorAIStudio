@@ -44,219 +44,35 @@ struct Post: View {
 
                 // MARK: MAIN STACK
                 VStack {
-                    // MARK: TOP TEXT
-                    VStack {
-                        Spacer()
-                            .frame(height: 20)
-
-                        Button {
-                            showFilterCategorySheet = true
-                        } label: {
-                            Group {
-                                if let selectedFilter = selectedFilter {
-                                    Text(selectedFilter.display.title)
-                                        .font(
-                                            .system(
-                                                size: 13, weight: .medium,
-                                                design: .rounded)
-                                        )
-                                        .foregroundColor(.white)
-                                        .padding(.horizontal, 16)
-                                        .padding(.vertical, 8)
-                                        .background(
-                                            RoundedRectangle(cornerRadius: 12)
-                                                .fill(Color.white.opacity(0.2))
-                                                .background(
-                                                    RoundedRectangle(
-                                                        cornerRadius: 12
-                                                    )
-                                                    .fill(
-                                                        Color.black.opacity(0.8)
-                                                    )
-                                                )
-                                        )
-                                } else if let selectedModel = selectedImageModel
-                                {
-                                    Text(selectedModel.display.title)
-                                        .font(
-                                            .system(
-                                                size: 13, weight: .medium,
-                                                design: .rounded)
-                                        )
-                                        .foregroundColor(.white)
-                                        .padding(.horizontal, 16)
-                                        .padding(.vertical, 8)
-                                        .background(
-                                            RoundedRectangle(cornerRadius: 12)
-                                                .fill(Color.white.opacity(0.2))
-                                                .background(
-                                                    RoundedRectangle(
-                                                        cornerRadius: 12
-                                                    )
-                                                    .fill(
-                                                        Color.black.opacity(0.8)
-                                                    )
-                                                )
-                                        )
-                                } else {
-                                    Text("Select an AI Model or Photo Filter")
-                                        .font(
-                                            .system(
-                                                size: 13, weight: .medium,
-                                                design: .rounded)
-                                        )
-                                        .foregroundColor(.white)
-                                        .padding(.horizontal, 16)
-                                        .padding(.vertical, 8)
-                                        .background(
-                                            RoundedRectangle(cornerRadius: 12)
-                                                .fill(Color.white.opacity(0.15))
-                                                .background(
-                                                    RoundedRectangle(
-                                                        cornerRadius: 12
-                                                    )
-                                                    .fill(
-                                                        Color.black.opacity(0.8)
-                                                    )
-                                                )
-                                        )
-                                }
-                            }
-                        }
-                        Spacer()
-                    }
-                    .frame(maxWidth: .infinity, alignment: .top)
+                    Spacer()
 
                     // MARK: BOTTOM ROW
-                    VStack {
-
+                    VStack(spacing: 12) {
+                        Spacer()
                         HStack {
                             Spacer()
-                            FilterScrollRow(filters: filtersViewModel.filters, selectedFilter: selectedFilter, onSelect: { filter in
-                                selectedFilter = filter
-                            })
-                            Spacer()
-                        }
-                        
-                        HStack {
-                            // Left side: Filter button
-                            HStack {
-                                Spacer()
 
-                                // MARK: MENU
+                            // // Center: Capture button
+                            // // MARK: CAPTURE
 
-                                Button {
-                                    showFilterCategorySheet = true
-                                } label: {
-                                    Group {
-                                        if let selectedFilter = selectedFilter {
-                                            // Show selected filter thumbnail
-                                            Image(
-                                                selectedFilter.display.imageName
-                                            )
-                                            .resizable()
-                                            .scaledToFill()
-                                            .frame(width: 70, height: 70)
-                                            .clipped()
-                                            .cornerRadius(10)
-                                            .shadow(
-                                                color: .black.opacity(0.8),
-                                                radius: 4, x: 0, y: 0)
-                                        } else if let selectedModel =
-                                            selectedImageModel
-                                        {
-                                            // Show selected model thumbnail
-                                            Image(
-                                                selectedModel.display.imageName
-                                            )
-                                            .resizable()
-                                            .scaledToFill()
-                                            .frame(width: 70, height: 70)
-                                            .clipped()
-                                            .cornerRadius(10)
-                                            .shadow(
-                                                color: .black.opacity(0.8),
-                                                radius: 4, x: 0, y: 0)
-                                        } else {
-                                            // Placeholder when nothing is selected
-                                            ZStack {
-                                                RoundedRectangle(
-                                                    cornerRadius: 10
-                                                )
-                                                .fill(
-                                                    LinearGradient(
-                                                        colors: [
-                                                            Color.purple
-                                                                .opacity(0.6),
-                                                            Color.pink.opacity(
-                                                                0.6),
-                                                        ],
-                                                        startPoint: .topLeading,
-                                                        endPoint:
-                                                            .bottomTrailing
-                                                    )
-                                                )
-                                                .frame(width: 70, height: 70)
-
-                                                Image(systemName: "sparkles")
-                                                    .font(
-                                                        .system(
-                                                            size: 22,
-                                                            weight: .medium)
-                                                    )
-                                                    .foregroundColor(.white)
-                                                    .opacity(0.9)
-                                            }
-                                            .shadow(
-                                                color: .black.opacity(0.8),
-                                                radius: 4, x: 0, y: 0)
-                                        }
-                                    }
-                                }
-                                .frame(width: 70, height: 70)
-                                Spacer()
-                            }
-                            .frame(maxWidth: .infinity)
-
-                            // Center: Capture button
-                            // MARK: CAPTURE
-
-                            Button {
-                                cameraService.capturePhoto()
-                            } label: {
-                                Circle()
-                                    .stroke(
-                                        isFilterOrModelSelected
-                                            ? Color.white
-                                            : Color.gray.opacity(0.5),
-                                        lineWidth: 5
-                                    )
-                                    .frame(width: 80, height: 80)
-                            }
-                            .disabled(!isFilterOrModelSelected)
+                            // Button {
+                            //     cameraService.capturePhoto()
+                            // } label: {
+                            //     Circle()
+                            //         .stroke(
+                            //             isFilterOrModelSelected
+                            //                 ? Color.white
+                            //                 : Color.gray.opacity(0.5),
+                            //             lineWidth: 5
+                            //         )
+                            //         .frame(width: 80, height: 80)
+                            // }
+                            // .disabled(!isFilterOrModelSelected)
 
                             // Right side: Photo library and switch camera buttons
-                            HStack {
-                                // MARK: LIBRARY
-
-                                Spacer()
-                                Button {
-                                    showLibraryPicker = true
-                                } label: {
-                                    Image(
-                                        systemName: "photo.on.rectangle.angled"
-                                    )
-                                    .font(.system(size: 25))
-                                    .foregroundColor(.white).opacity(0.8)
-                                    .cornerRadius(8)
-                                    .shadow(radius: 3)
-                                }
-                                .frame(width: 50, height: 50)
-
-                                Spacer()
+                            VStack(spacing: 24) {
 
                                 // MARK: SWITCH
-
                                 Button {
                                     cameraService.switchCamera()
                                 } label: {
@@ -270,11 +86,162 @@ struct Post: View {
                                     .shadow(radius: 3)
                                 }
                                 .accessibilityLabel("Switch camera")
-                                .frame(width: 50, height: 50)
 
-                                Spacer()
+                                // MARK: LIBRARY
+                                Button {
+                                    showLibraryPicker = true
+                                } label: {
+                                    Image(
+                                        systemName: "photo.on.rectangle.angled"
+                                    )
+                                    .font(.system(size: 25))
+                                    .foregroundColor(.white).opacity(0.8)
+                                    .cornerRadius(8)
+                                    .shadow(radius: 3)
+                                }
+
+                                // MARK: MENU
+                                VStack(spacing: 4){
+                                Button {
+                                    showFilterCategorySheet = true
+                                } label: {
+                                    Image(systemName: "square.grid.2x2.fill")
+                                        .font(
+                                            .system(
+                                                size: 22,
+                                                weight: .medium)
+                                        )
+                                        .foregroundColor(.white)
+                                        .opacity(0.9)
+                                }
+                                Text("Menu")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
                             }
-                            .frame(maxWidth: .infinity)
+
+                            }
+                            .padding(.vertical, 12)
+                            .padding(.horizontal, 6)
+                            .background(
+                                Capsule()
+                                    .fill(Color.black.opacity(0.3))
+                            )
+                            .padding(.horizontal)
+                        }
+
+                        HStack {
+
+                            Spacer()
+
+                            // MARK: FILTER TITLE
+
+                            Button {
+                                showFilterCategorySheet = true
+                            } label: {
+                                Group {
+                                    if let selectedFilter = selectedFilter {
+                                        Text(selectedFilter.display.title)
+                                            .font(
+                                                .system(
+                                                    size: 13,
+                                                    weight: .medium,
+                                                    design: .rounded)
+                                            )
+                                            .foregroundColor(.white)
+                                            .padding(.horizontal, 16)
+                                            .padding(.vertical, 8)
+                                            .background(
+                                                RoundedRectangle(
+                                                    cornerRadius: 12
+                                                )
+                                                .fill(
+                                                    Color.white.opacity(0.2)
+                                                )
+                                                .background(
+                                                    RoundedRectangle(
+                                                        cornerRadius: 12
+                                                    )
+                                                    .fill(
+                                                        Color.black.opacity(
+                                                            0.8)
+                                                    )
+                                                )
+                                            )
+                                    } else if let selectedModel =
+                                        selectedImageModel
+                                    {
+                                        Text(selectedModel.display.title)
+                                            .font(
+                                                .system(
+                                                    size: 13,
+                                                    weight: .medium,
+                                                    design: .rounded)
+                                            )
+                                            .foregroundColor(.white)
+                                            .padding(.horizontal, 16)
+                                            .padding(.vertical, 8)
+                                            .background(
+                                                RoundedRectangle(
+                                                    cornerRadius: 12
+                                                )
+                                                .fill(
+                                                    Color.white.opacity(0.2)
+                                                )
+                                                .background(
+                                                    RoundedRectangle(
+                                                        cornerRadius: 12
+                                                    )
+                                                    .fill(
+                                                        Color.black.opacity(
+                                                            0.8)
+                                                    )
+                                                )
+                                            )
+                                    } else {
+                                        Text(
+                                            "Select an AI Model or Photo Filter"
+                                        )
+                                        .font(
+                                            .system(
+                                                size: 13, weight: .medium,
+                                                design: .rounded)
+                                        )
+                                        .foregroundColor(.white)
+                                        .padding(.horizontal, 16)
+                                        .padding(.vertical, 8)
+                                        .background(
+                                            RoundedRectangle(
+                                                cornerRadius: 12
+                                            )
+                                            .fill(Color.white.opacity(0.15))
+                                            .background(
+                                                RoundedRectangle(
+                                                    cornerRadius: 12
+                                                )
+                                                .fill(
+                                                    Color.black.opacity(0.8)
+                                                )
+                                            )
+                                        )
+                                    }
+                                }
+                            }
+
+                            Spacer()
+
+                        }
+                        .padding(.horizontal)
+
+                        // MARK: FILTER ROW
+                        HStack {
+                            Spacer()
+                            FilterScrollRow(
+                                filters: filtersViewModel.filters,
+                                selectedFilter: selectedFilter,
+                                onSelect: { filter in
+                                    selectedFilter = filter
+                                })
+                            Spacer()
                         }
                     }
                     .safeAreaInset(edge: .bottom) {

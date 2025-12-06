@@ -12,6 +12,8 @@ struct FilterScrollRow: View {
     @State private var isScrolling = false
     @State private var lastPositionHash: Int = 0
     @State private var checkScrollStopTask: DispatchWorkItem?
+    @State private var currentCenteredFilterId: UUID?
+    @State private var hapticGenerator = UIImpactFeedbackGenerator(style: .light)
     
     // Frame dimensions
     private let frameWidth: CGFloat = 80
@@ -29,6 +31,7 @@ struct FilterScrollRow: View {
                             Color.clear
                                 .frame(width: (geometry.size.width - thumbnailWidth) / 2)
                             
+// MARK: FOR EACH                           
                             ForEach(filters) { filter in
                                 FilterThumbnailCompact(
                                     title: filter.display.title,
@@ -50,6 +53,10 @@ struct FilterScrollRow: View {
                                     // Cancel any pending snap when tapping
                                     checkScrollStopTask?.cancel()
                                     
+                                    // Haptic feedback on tap
+                                    let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+                                    impactFeedback.impactOccurred()
+                                    
                                     withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
                                         scrollProxy.scrollTo(filter.id, anchor: .center)
                                     }
@@ -66,6 +73,7 @@ struct FilterScrollRow: View {
                         }
                         .padding(.horizontal, -12)
                     }
+// MARK: TOOLBAR                    
                     .coordinateSpace(name: "scrollView")
                     .onPreferenceChange(FilterPositionPreferenceKey.self) { positions in
                         filterPositions = positions
@@ -73,6 +81,9 @@ struct FilterScrollRow: View {
                         // Calculate hash of positions to detect when scrolling stops
                         let positionHash = positions.values.map { Int($0 * 1000) }.reduce(0, +)
                         lastPositionHash = positionHash
+                        
+                        // Check which filter is currently centered and trigger haptic if changed
+                        checkCenteredFilter(centerX: geometry.size.width / 2)
                         
                         // Schedule check for scroll stop
                         if !isDragging && !isScrolling {
@@ -117,16 +128,45 @@ struct FilterScrollRow: View {
                     }
                 }
                 
-                // White frame overlay (centered, non-interactive)
+// MARK: WHITE FRAME
                 RoundedRectangle(cornerRadius: 14)
-                    .stroke(Color.white, lineWidth: 4)
+                    .stroke(Color.white, lineWidth: 5)
                     .frame(width: frameWidth, height: frameHeight)
                     .shadow(color: .black.opacity(0.5), radius: 8, x: 0, y: 0)
                     .allowsHitTesting(false)
             }
             .frame(width: geometry.size.width)
+            .onAppear {
+                // Prepare haptic generator for immediate response
+                hapticGenerator.prepare()
+            }
         }
         .frame(height: 100)
+    }
+    
+    private func checkCenteredFilter(centerX: CGFloat) {
+        // Find the filter closest to center
+        var closestFilter: InfoPacket?
+        var minDistance: CGFloat = .infinity
+        
+        for filter in filters {
+            if let position = filterPositions[filter.id] {
+                let distance = abs(position - centerX)
+                if distance < minDistance {
+                    minDistance = distance
+                    closestFilter = filter
+                }
+            }
+        }
+        
+        // Trigger haptic if a different filter is now centered
+        if let filter = closestFilter,
+           filter.id != currentCenteredFilterId,
+           minDistance < 50 { // Only if reasonably centered
+            currentCenteredFilterId = filter.id
+            hapticGenerator.impactOccurred(intensity: 0.6)
+            hapticGenerator.prepare() // Prepare for next haptic
+        }
     }
     
     private func scheduleScrollStopCheck(scrollProxy: ScrollViewProxy, centerX: CGFloat, currentHash: Int) {
@@ -171,6 +211,10 @@ struct FilterScrollRow: View {
         if let filter = closestFilter, filter.id != selectedFilter?.id {
             isScrolling = true
             
+            // Haptic feedback on snap (stronger than scroll haptic)
+            let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
+            impactFeedback.impactOccurred()
+            
             withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
                 scrollProxy.scrollTo(filter.id, anchor: .center)
             }
@@ -184,7 +228,6 @@ struct FilterScrollRow: View {
     }
 }
 
-// MARK: - Preference Key for Filter Positions
 
 struct FilterPositionPreferenceKey: PreferenceKey {
     static var defaultValue: [UUID: CGFloat] = [:]
@@ -194,7 +237,7 @@ struct FilterPositionPreferenceKey: PreferenceKey {
     }
 }
 
-// MARK: - Compact Filter Thumbnail for Horizontal Scroll
+// MARK: THUMBNAIL
 
 struct FilterThumbnailCompact: View {
     let title: String
@@ -233,24 +276,24 @@ struct FilterThumbnailCompact: View {
                                     .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 1)
                             }
                             
-                            // Checkmark (shown when selected, below price)
-                            if isSelected {
-                                Image(systemName: "checkmark.circle.fill")
-                                    .font(.system(size: 18))
-                                    .foregroundStyle(.white)
-                                    .background(
-                                        Circle()
-                                            .fill(
-                                                LinearGradient(
-                                                    colors: [.purple, .pink],
-                                                    startPoint: .topLeading,
-                                                    endPoint: .bottomTrailing
-                                                )
-                                            )
-                                            .frame(width: 22, height: 22)
-                                    )
-                                    .transition(.scale.combined(with: .opacity))
-                            }
+                            // // Checkmark (shown when selected, below price)
+                            // if isSelected {
+                            //     Image(systemName: "checkmark.circle.fill")
+                            //         .font(.system(size: 18))
+                            //         .foregroundStyle(.white)
+                            //         .background(
+                            //             Circle()
+                            //                 .fill(
+                            //                     LinearGradient(
+                            //                         colors: [.purple, .pink],
+                            //                         startPoint: .topLeading,
+                            //                         endPoint: .bottomTrailing
+                            //                     )
+                            //                 )
+                            //                 .frame(width: 22, height: 22)
+                            //         )
+                            //         .transition(.scale.combined(with: .opacity))
+                            // }
                         },
                         alignment: .topTrailing
                     )
@@ -268,7 +311,7 @@ struct FilterThumbnailCompact: View {
     }
 }
 
-// MARK: - StyleSelectionButton Component
+// MARK: STYLE SELECTION BUTTON TWO
 
 struct StyleSelectionButtonTwo: View {
     let title: String

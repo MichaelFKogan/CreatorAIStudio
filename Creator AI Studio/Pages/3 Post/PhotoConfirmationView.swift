@@ -242,7 +242,8 @@ struct PhotoConfirmationView: View {
                     VStack(alignment: .leading, spacing: 10) {
                         InfoRow(number: "1", text: "AI will transform your photo")
                         InfoRow(number: "2", text: "Processing takes 30-60 seconds")
-                        InfoRow(number: "3", text: "You'll get a notification when ready")
+                        InfoRow(number: "3", text: "Don't close the app until the image has finished generating")
+                        InfoRow(number: "4", text: "You'll get a notification when ready")
                     }
                     .padding(.horizontal, 24)
                 }

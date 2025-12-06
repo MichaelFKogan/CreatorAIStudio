@@ -65,7 +65,11 @@ struct FilterCategorySheet: View {
                             .multilineTextAlignment(.center)
                             .padding(.horizontal, 20)
                         // .padding(.top, 16)
-                        // .padding(.bottom, 12)
+                        .padding(.bottom, 12)
+
+                        Divider()
+                            .background(Color.white.opacity(0.2))
+                            .padding(.vertical, 8)
 
                         // AI Models section (first row, always visible)
                         if !imageToImageModels.isEmpty {
