@@ -6,25 +6,191 @@ struct FilterScrollRow: View {
     let filters: [InfoPacket]
     let selectedFilter: InfoPacket?
     let onSelect: (InfoPacket) -> Void
-
+    
+    @State private var filterPositions: [UUID: CGFloat] = [:]
+    @State private var isDragging = false
+    @State private var isScrolling = false
+    @State private var lastPositionHash: Int = 0
+    @State private var checkScrollStopTask: DispatchWorkItem?
+    
+    // Frame dimensions
+    private let frameWidth: CGFloat = 80
+    private let frameHeight: CGFloat = 80
+    private let thumbnailWidth: CGFloat = 70
+    
     var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 12) {
-                ForEach(filters) { filter in
-                    FilterThumbnailCompact(
-                        title: filter.display.title,
-                        imageName: filter.display.imageName,
-                        isSelected: selectedFilter?.id == filter.id,
-                        cost: filter.cost
+        GeometryReader { geometry in
+            ZStack {
+                // Scrollable content
+                ScrollViewReader { scrollProxy in
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 12) {
+                            // Leading spacer to center first item
+                            Color.clear
+                                .frame(width: (geometry.size.width - thumbnailWidth) / 2)
+                            
+                            ForEach(filters) { filter in
+                                FilterThumbnailCompact(
+                                    title: filter.display.title,
+                                    imageName: filter.display.imageName,
+                                    isSelected: selectedFilter?.id == filter.id,
+                                    cost: filter.cost
+                                )
+                                .id(filter.id)
+                                .background(
+                                    GeometryReader { itemGeometry in
+                                        Color.clear
+                                            .preference(
+                                                key: FilterPositionPreferenceKey.self,
+                                                value: [filter.id: itemGeometry.frame(in: .named("scrollView")).midX]
+                                            )
+                                    }
+                                )
+                                .onTapGesture {
+                                    // Cancel any pending snap when tapping
+                                    checkScrollStopTask?.cancel()
+                                    
+                                    withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                                        scrollProxy.scrollTo(filter.id, anchor: .center)
+                                    }
+                                    // Delay selection to allow scroll animation
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                        onSelect(filter)
+                                    }
+                                }
+                            }
+                            
+                            // Trailing spacer to center last item
+                            Color.clear
+                                .frame(width: (geometry.size.width - thumbnailWidth) / 2)
+                        }
+                        .padding(.horizontal, -12)
+                    }
+                    .coordinateSpace(name: "scrollView")
+                    .onPreferenceChange(FilterPositionPreferenceKey.self) { positions in
+                        filterPositions = positions
+                        
+                        // Calculate hash of positions to detect when scrolling stops
+                        let positionHash = positions.values.map { Int($0 * 1000) }.reduce(0, +)
+                        lastPositionHash = positionHash
+                        
+                        // Schedule check for scroll stop
+                        if !isDragging && !isScrolling {
+                            scheduleScrollStopCheck(
+                                scrollProxy: scrollProxy,
+                                centerX: geometry.size.width / 2,
+                                currentHash: positionHash
+                            )
+                        }
+                    }
+                    .simultaneousGesture(
+                        DragGesture(minimumDistance: 0)
+                            .onChanged { _ in
+                                isDragging = true
+                                checkScrollStopTask?.cancel()
+                            }
+                            .onEnded { _ in
+                                isDragging = false
+                                // Schedule a check after drag ends to catch momentum scroll
+                                let centerX = geometry.size.width / 2
+                                scheduleScrollStopCheck(
+                                    scrollProxy: scrollProxy,
+                                    centerX: centerX,
+                                    currentHash: lastPositionHash
+                                )
+                            }
                     )
-                    .onTapGesture {
-                        onSelect(filter)
+                    .onChange(of: selectedFilter?.id) { newFilterId in
+                        if let filterId = newFilterId {
+                            isScrolling = true
+                            checkScrollStopTask?.cancel()
+                            
+                            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                                scrollProxy.scrollTo(filterId, anchor: .center)
+                            }
+                            
+                            // Re-enable snapping after programmatic scroll
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                isScrolling = false
+                            }
+                        }
                     }
                 }
+                
+                // White frame overlay (centered, non-interactive)
+                RoundedRectangle(cornerRadius: 14)
+                    .stroke(Color.white, lineWidth: 4)
+                    .frame(width: frameWidth, height: frameHeight)
+                    .shadow(color: .black.opacity(0.5), radius: 8, x: 0, y: 0)
+                    .allowsHitTesting(false)
             }
-            .padding(.horizontal, 12)
+            .frame(width: geometry.size.width)
         }
         .frame(height: 100)
+    }
+    
+    private func scheduleScrollStopCheck(scrollProxy: ScrollViewProxy, centerX: CGFloat, currentHash: Int) {
+        // Cancel any existing task
+        checkScrollStopTask?.cancel()
+        
+        // Create new task
+        let task = DispatchWorkItem { [weak checkScrollStopTask] in
+            // Check if positions have stopped changing
+            if self.lastPositionHash == currentHash && !self.isDragging && !self.isScrolling {
+                self.snapToNearestFilter(scrollProxy: scrollProxy, centerX: centerX)
+            } else if !self.isDragging && !self.isScrolling {
+                // Positions still changing, schedule another check
+                self.scheduleScrollStopCheck(
+                    scrollProxy: scrollProxy,
+                    centerX: centerX,
+                    currentHash: self.lastPositionHash
+                )
+            }
+        }
+        
+        checkScrollStopTask = task
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1, execute: task)
+    }
+    
+    private func snapToNearestFilter(scrollProxy: ScrollViewProxy, centerX: CGFloat) {
+        // Find the filter closest to center
+        var closestFilter: InfoPacket?
+        var minDistance: CGFloat = .infinity
+        
+        for filter in filters {
+            if let position = filterPositions[filter.id] {
+                let distance = abs(position - centerX)
+                if distance < minDistance {
+                    minDistance = distance
+                    closestFilter = filter
+                }
+            }
+        }
+        
+        // Snap to closest filter if it's different from current selection
+        if let filter = closestFilter, filter.id != selectedFilter?.id {
+            isScrolling = true
+            
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                scrollProxy.scrollTo(filter.id, anchor: .center)
+            }
+            onSelect(filter)
+            
+            // Re-enable snapping after programmatic scroll
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                isScrolling = false
+            }
+        }
+    }
+}
+
+// MARK: - Preference Key for Filter Positions
+
+struct FilterPositionPreferenceKey: PreferenceKey {
+    static var defaultValue: [UUID: CGFloat] = [:]
+    
+    static func reduce(value: inout [UUID: CGFloat], nextValue: () -> [UUID: CGFloat]) {
+        value.merge(nextValue()) { _, new in new }
     }
 }
 
@@ -88,17 +254,16 @@ struct FilterThumbnailCompact: View {
                         },
                         alignment: .topTrailing
                     )
-                    .padding(4)
+
             }
-            .padding(2)
             .animation(
                 .spring(response: 0.3, dampingFraction: 0.7), value: isSelected)
 
-            Text(title)
-                .font(.caption2)
-                .lineLimit(1)
-                .foregroundColor(.white)
-                .frame(width: 70)
+            // Text(title)
+            //     .font(.caption2)
+            //     .lineLimit(1)
+            //     .foregroundColor(.white)
+            //     .frame(width: 70)
         }
     }
 }
