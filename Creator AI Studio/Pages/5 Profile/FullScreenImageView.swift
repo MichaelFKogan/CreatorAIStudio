@@ -625,6 +625,28 @@ struct FullScreenImageView: View {
                                     }
                                 }
 
+                                // Grid layout for metadata
+                                LazyVGrid(columns: [
+                                    GridItem(.flexible()),
+                                    GridItem(.flexible()),
+                                ], spacing: 10) {
+                                    if let type = userImage.type {
+                                        MetadataCard(icon: "tag.fill", label: "Type", value: type)
+                                    }
+
+                                    if let cost = userImage.cost {
+                                        MetadataCard(icon: "dollarsign.circle.fill", label: "Cost", value: formatCost(cost))
+                                    }
+
+                                    if let model = userImage.model, !model.isEmpty {
+                                        MetadataCard(icon: "cpu.fill", label: "Model", value: model)
+                                    }
+
+                                    if let aspectRatio = userImage.aspect_ratio, !aspectRatio.isEmpty {
+                                        AspectRatioCard(aspectRatio: aspectRatio)
+                                    }
+                                }
+
                                 // Prompt (if exists) - special prominent display
                                 if let prompt = userImage.prompt, !prompt.isEmpty {
                                     VStack(alignment: .leading, spacing: 8) {
@@ -654,39 +676,16 @@ struct FullScreenImageView: View {
                                             }
                                         }
 
-                                        ScrollView {
+                                        VStack(alignment: .leading, spacing: 4) {
                                             Text(prompt)
                                                 .font(.system(size: 15, weight: .medium))
                                                 .foregroundColor(.white)
                                                 .fixedSize(horizontal: false, vertical: true)
                                                 .frame(maxWidth: .infinity, alignment: .leading)
                                         }
-                                        .frame(maxHeight: 200)
                                         .padding(12)
                                         .background(Color.white.opacity(0.05))
                                         .cornerRadius(8)
-                                    }
-                                }
-
-                                // Grid layout for metadata
-                                LazyVGrid(columns: [
-                                    GridItem(.flexible()),
-                                    GridItem(.flexible()),
-                                ], spacing: 10) {
-                                    if let type = userImage.type {
-                                        MetadataCard(icon: "tag.fill", label: "Type", value: type)
-                                    }
-
-                                    if let cost = userImage.cost {
-                                        MetadataCard(icon: "dollarsign.circle.fill", label: "Cost", value: formatCost(cost))
-                                    }
-
-                                    if let model = userImage.model, !model.isEmpty {
-                                        MetadataCard(icon: "cpu.fill", label: "Model", value: model)
-                                    }
-
-                                    if let aspectRatio = userImage.aspect_ratio, !aspectRatio.isEmpty {
-                                        AspectRatioCard(aspectRatio: aspectRatio)
                                     }
                                 }
                             }

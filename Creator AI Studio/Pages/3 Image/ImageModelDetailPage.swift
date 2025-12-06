@@ -443,7 +443,7 @@ struct BannerSection: View {
     let costString: String
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .top, spacing: 16) {
                 Image(item.display.modelImageName ?? "")
                     .resizable()
@@ -492,6 +492,16 @@ struct BannerSection: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
             .frame(height: 120)
+
+            // Model Description
+            if let description = item.display.modelDescription, !description.isEmpty {
+                Text(description)
+                    .font(.system(size: 14))
+                    .foregroundColor(.secondary)
+                    .lineSpacing(4)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 4)
+            }
         }
         .padding(.horizontal)
         .padding(.top, 16)
@@ -538,7 +548,7 @@ struct PromptSection: View {
                                     .progressViewStyle(CircularProgressViewStyle(tint: .blue))
                                     .scaleEffect(0.8)
                             } else {
-                                Image(systemName: "camera").foregroundColor(.blue)
+                                Image(systemName: "viewfindera").foregroundColor(.blue)
                             }
                         }
                     }
