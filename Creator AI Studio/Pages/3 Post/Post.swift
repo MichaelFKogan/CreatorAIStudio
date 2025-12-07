@@ -53,7 +53,6 @@ struct Post: View {
                         HStack {
                             Spacer()
 
-                            // // Center: Capture button
                             // // MARK: CAPTURE
 
                             // Button {
@@ -102,11 +101,13 @@ struct Post: View {
                                 }
 
                                 // MARK: MENU
-                                VStack(spacing: 4){
                                 Button {
                                     showFilterCategorySheet = true
                                 } label: {
-                                    Image(systemName: "square.grid.2x2.fill")
+                                    VStack(spacing: 4) {
+                                        Image(
+                                            systemName: "square.grid.2x2.fill"
+                                        )
                                         .font(
                                             .system(
                                                 size: 22,
@@ -114,18 +115,18 @@ struct Post: View {
                                         )
                                         .foregroundColor(.white)
                                         .opacity(0.9)
+                                        Text("Menu")
+                                            .font(.caption2)
+                                            .foregroundColor(.secondary)
+                                    }
                                 }
-                                Text("Menu")
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
-                            }
 
                             }
                             .padding(.vertical, 12)
                             .padding(.horizontal, 6)
                             .background(
                                 Capsule()
-                                    .fill(Color.black.opacity(0.3))
+                                    .fill(Color.black.opacity(0.5))
                             )
                             .padding(.horizontal)
                         }
@@ -140,92 +141,51 @@ struct Post: View {
                                 showFilterCategorySheet = true
                             } label: {
                                 Group {
-                                    // Show centered filter while scrolling, otherwise show selected filter
-                                    if let displayFilter = centeredFilter ?? selectedFilter {
-                                        Text(displayFilter.display.title)
+                                    HStack {
+                                        // Show centered filter while scrolling, otherwise show selected filter
+                                        if let displayFilter = centeredFilter
+                                            ?? selectedFilter
+                                        {
+
+                                            Text(displayFilter.display.title)
+                                                .font(
+                                                    .system(
+                                                        size: 13,
+                                                        weight: .medium,
+                                                        design: .rounded)
+                                                )
+                                                .foregroundColor(.white)
+                                        } else if let selectedModel =
+                                            selectedImageModel
+                                        {
+                                            Text(selectedModel.display.title)
+                                                .font(
+                                                    .system(
+                                                        size: 13,
+                                                        weight: .medium,
+                                                        design: .rounded)
+                                                )
+                                                .foregroundColor(.white)
+                                        } else {
+                                            Text(
+                                                "Select an AI Model or Photo Filter"
+                                            )
                                             .font(
                                                 .system(
-                                                    size: 13,
-                                                    weight: .medium,
+                                                    size: 13, weight: .medium,
                                                     design: .rounded)
                                             )
                                             .foregroundColor(.white)
-                                            .padding(.horizontal, 16)
-                                            .padding(.vertical, 8)
-                                            .background(
-                                                RoundedRectangle(
-                                                    cornerRadius: 12
-                                                )
-                                                .fill(
-                                                    Color.white.opacity(0.2)
-                                                )
-                                                .background(
-                                                    RoundedRectangle(
-                                                        cornerRadius: 12
-                                                    )
-                                                    .fill(
-                                                        Color.black.opacity(
-                                                            0.8)
-                                                    )
-                                                )
-                                            )
-                                    } else if let selectedModel =
-                                        selectedImageModel
-                                    {
-                                        Text(selectedModel.display.title)
-                                            .font(
-                                                .system(
-                                                    size: 13,
-                                                    weight: .medium,
-                                                    design: .rounded)
-                                            )
-                                            .foregroundColor(.white)
-                                            .padding(.horizontal, 16)
-                                            .padding(.vertical, 8)
-                                            .background(
-                                                RoundedRectangle(
-                                                    cornerRadius: 12
-                                                )
-                                                .fill(
-                                                    Color.white.opacity(0.2)
-                                                )
-                                                .background(
-                                                    RoundedRectangle(
-                                                        cornerRadius: 12
-                                                    )
-                                                    .fill(
-                                                        Color.black.opacity(
-                                                            0.8)
-                                                    )
-                                                )
-                                            )
-                                    } else {
-                                        Text(
-                                            "Select an AI Model or Photo Filter"
-                                        )
-                                        .font(
-                                            .system(
-                                                size: 13, weight: .medium,
-                                                design: .rounded)
-                                        )
-                                        .foregroundColor(.white)
-                                        .padding(.horizontal, 16)
-                                        .padding(.vertical, 8)
-                                        .background(
-                                            RoundedRectangle(
-                                                cornerRadius: 12
-                                            )
-                                            .fill(Color.white.opacity(0.15))
-                                            .background(
-                                                RoundedRectangle(
-                                                    cornerRadius: 12
-                                                )
-                                                .fill(
-                                                    Color.black.opacity(0.8)
-                                                )
-                                            )
-                                        )
+                                        }
                                     }
+                                    .padding(.horizontal, 16)
+                                    .padding(.vertical, 8)
+                                    .background(
+                                        RoundedRectangle(
+                                            cornerRadius: 12
+                                        )
+                                        .fill(Color.black.opacity(0.5))
+                                    )
                                 }
                             }
 
