@@ -44,7 +44,7 @@ struct Post: View {
                     )
                 }
 
-                // MARK: CENTERED FILTER PREVIEW
+                // MARK: LARGE IMG
                 // Show larger preview image of the centered/selected filter or model
                 // Only visible while scrolling, fades out when scrolling stops
                 if let displayFilter = centeredFilter ?? selectedFilter ?? selectedImageModel {
@@ -185,10 +185,6 @@ struct Post: View {
                                         .opacity(0.8)
                                         .padding(.horizontal, 16)
                                         .padding(.vertical, 8)
-                                    // .background(
-                                    //     RoundedRectangle(cornerRadius: 12)
-                                    //         .fill(Color.black.opacity(0.5))
-                                    // )
                                 }
                                 .contentShape(Rectangle())  // 👈 expands tap region to the full background
 
@@ -204,7 +200,24 @@ struct Post: View {
                                                 ?? selectedFilter
                                                 ?? selectedImageModel
                                             {
-
+                                                Text(categoryTitle(for: displayFilter))
+                                                    .font(
+                                                        .system(
+                                                            size: 13,
+                                                            weight: .medium,
+                                                            design: .rounded)
+                                                    )
+                                                    .foregroundColor(.white)
+                                                    .padding(.horizontal, 16)
+                                                    .padding(.vertical, 8)
+                                                    .background(
+                                                        RoundedRectangle(
+                                                            cornerRadius: 12
+                                                        )
+                                                        .fill(
+                                                            Color.black.opacity(0.5)
+                                                        )
+                                                    )
                                             } else {
                                                 Text(
                                                     "Select an AI Model or Photo Filter"
@@ -353,6 +366,24 @@ struct Post: View {
 
     private var isFilterOrModelSelected: Bool {
         selectedFilter != nil || selectedImageModel != nil
+    }
+    
+    // Helper function to get category title for an item
+    private func categoryTitle(for item: InfoPacket) -> String {
+        // Check if it's an image model
+        if imageModelsViewModel.filteredAndSortedImageModels.contains(where: { $0.id == item.id }) {
+            return "AI Models"
+        }
+        
+        // Check which filter category it belongs to
+        for category in FilterCategory.allCases {
+            if category.matches(item) {
+                return category.rawValue
+            }
+        }
+        
+        // If it doesn't match any specific category, it's in "Popular"
+        return "Popular"
     }
 
     private var photoReviewNavigationLink: some View {
