@@ -45,18 +45,27 @@ struct Post: View {
                 }
 
                 // MARK: CENTERED FILTER PREVIEW
-                // Show larger preview image of the centered/selected filter
+                // Show larger preview image of the centered/selected filter or model
                 // Only visible while scrolling, fades out when scrolling stops
-                if let displayFilter = centeredFilter ?? selectedFilter {
+                if let displayFilter = centeredFilter ?? selectedFilter ?? selectedImageModel {
                     VStack(spacing: 12) {
                         // Filter title above the image
                         Text(displayFilter.display.title)
-                            .font(.system(size: 18, weight: .semibold, design: .rounded))
+                            .font(
+                                .system(
+                                    size: 18, weight: .semibold,
+                                    design: .rounded)
+                            )
                             .foregroundColor(.white)
                             .opacity(isScrollingActive ? 1.0 : 0)
-                            .animation(.easeOut(duration: 0.3), value: isScrollingActive)
-                            .shadow(color: .black.opacity(0.8), radius: 4, x: 0, y: 2)
-                        
+                            .animation(
+                                .easeOut(duration: 0.3),
+                                value: isScrollingActive
+                            )
+                            .shadow(
+                                color: .black.opacity(0.8), radius: 4, x: 0,
+                                y: 2)
+
                         // Preview image
                         Image(displayFilter.display.imageName)
                             .resizable()
@@ -64,7 +73,9 @@ struct Post: View {
                             .frame(width: 250, height: 300)
                             .clipShape(RoundedRectangle(cornerRadius: 16))
                             .opacity(isScrollingActive ? 0.6 : 0)
-                            .shadow(color: .black.opacity(0.5), radius: 20, x: 0, y: 0)
+                            .shadow(
+                                color: .black.opacity(0.5), radius: 20, x: 0,
+                                y: 0)
                     }
                     .allowsHitTesting(false)
                 }
@@ -161,7 +172,7 @@ struct Post: View {
 
                             Spacer()
 
-                            VStack(spacing: 0){
+                            VStack(spacing: 0) {
                                 // MARK: MENU
                                 Button {
                                     showFilterCategorySheet = true
@@ -174,10 +185,10 @@ struct Post: View {
                                         .opacity(0.8)
                                         .padding(.horizontal, 16)
                                         .padding(.vertical, 8)
-                                        // .background(
-                                        //     RoundedRectangle(cornerRadius: 12)
-                                        //         .fill(Color.black.opacity(0.5))
-                                        // )
+                                    // .background(
+                                    //     RoundedRectangle(cornerRadius: 12)
+                                    //         .fill(Color.black.opacity(0.5))
+                                    // )
                                 }
                                 .contentShape(Rectangle())  // 👈 expands tap region to the full background
 
@@ -187,35 +198,13 @@ struct Post: View {
                                 } label: {
                                     Group {
                                         HStack {
-                                            // Show centered filter while scrolling, otherwise show selected filter
+                                            // Show centered filter while scrolling, otherwise show selected filter or model
                                             if let displayFilter =
                                                 centeredFilter
                                                 ?? selectedFilter
+                                                ?? selectedImageModel
                                             {
 
-                                                Text(
-                                                    displayFilter.display.title
-                                                )
-                                                .font(
-                                                    .system(
-                                                        size: 13,
-                                                        weight: .medium,
-                                                        design: .rounded)
-                                                )
-                                                .foregroundColor(.white)
-                                            } else if let selectedModel =
-                                                selectedImageModel
-                                            {
-                                                Text(
-                                                    selectedModel.display.title
-                                                )
-                                                .font(
-                                                    .system(
-                                                        size: 13,
-                                                        weight: .medium,
-                                                        design: .rounded)
-                                                )
-                                                .foregroundColor(.white)
                                             } else {
                                                 Text(
                                                     "Select an AI Model or Photo Filter"
@@ -227,16 +216,18 @@ struct Post: View {
                                                         design: .rounded)
                                                 )
                                                 .foregroundColor(.white)
+                                                .padding(.horizontal, 16)
+                                                .padding(.vertical, 8)
+                                                .background(
+                                                    RoundedRectangle(
+                                                        cornerRadius: 12
+                                                    )
+                                                    .fill(
+                                                        Color.black.opacity(0.5)
+                                                    )
+                                                )
                                             }
                                         }
-                                        .padding(.horizontal, 16)
-                                        .padding(.vertical, 8)
-                                        .background(
-                                            RoundedRectangle(
-                                                cornerRadius: 12
-                                            )
-                                            .fill(Color.black.opacity(0.5))
-                                        )
                                     }
                                 }
                             }
@@ -250,10 +241,21 @@ struct Post: View {
                         HStack {
                             Spacer()
                             FilterScrollRow(
+                                imageModels: imageModelsViewModel.filteredAndSortedImageModels,
                                 filters: filtersViewModel.filters,
                                 selectedFilter: selectedFilter,
-                                onSelect: { filter in
-                                    selectedFilter = filter
+                                selectedImageModel: selectedImageModel,
+                                onSelect: { item in
+                                    // Check if the item is an image model or a filter
+                                    if imageModelsViewModel.filteredAndSortedImageModels.contains(where: { $0.id == item.id }) {
+                                        // It's an image model
+                                        selectedImageModel = item
+                                        selectedFilter = nil  // Clear filter when model is selected
+                                    } else {
+                                        // It's a filter
+                                        selectedFilter = item
+                                        selectedImageModel = nil  // Clear model when filter is selected
+                                    }
                                     // Clear centered filter when a selection is made
                                     // This ensures the title shows the selected filter after snapping
                                     centeredFilter = nil

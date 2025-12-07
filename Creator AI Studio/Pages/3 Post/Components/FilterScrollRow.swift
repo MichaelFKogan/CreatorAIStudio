@@ -3,11 +3,18 @@ import SwiftUI
 // MARK: - Filter Scroll Row
 
 struct FilterScrollRow: View {
+    let imageModels: [InfoPacket]
     let filters: [InfoPacket]
     let selectedFilter: InfoPacket?
+    let selectedImageModel: InfoPacket?
     let onSelect: (InfoPacket) -> Void
     var onCenteredFilterChanged: ((InfoPacket?) -> Void)? = nil
     var onScrollingStateChanged: ((Bool) -> Void)? = nil
+    
+    // Combined items: image models first, then filters
+    private var allItems: [InfoPacket] {
+        imageModels + filters
+    }
     
     @State private var filterPositions: [UUID: CGFloat] = [:]
     @State private var isDragging = false
@@ -38,20 +45,20 @@ struct FilterScrollRow: View {
                                 .frame(width: (geometry.size.width - thumbnailWidth) / 2)
                             
 // MARK: FOR EACH                           
-                            ForEach(filters) { filter in
+                            ForEach(allItems) { item in
                                 FilterThumbnailCompact(
-                                    title: filter.display.title,
-                                    imageName: filter.display.imageName,
-                                    isSelected: selectedFilter?.id == filter.id,
-                                    cost: filter.cost
+                                    title: item.display.title,
+                                    imageName: item.display.imageName,
+                                    isSelected: (selectedFilter?.id == item.id) || (selectedImageModel?.id == item.id),
+                                    cost: item.cost
                                 )
-                                .id(filter.id)
+                                .id(item.id)
                                 .background(
                                     GeometryReader { itemGeometry in
                                         Color.clear
                                             .preference(
                                                 key: FilterPositionPreferenceKey.self,
-                                                value: [filter.id: itemGeometry.frame(in: .named("scrollView")).midX]
+                                                value: [item.id: itemGeometry.frame(in: .named("scrollView")).midX]
                                             )
                                     }
                                 )
@@ -66,11 +73,11 @@ struct FilterScrollRow: View {
                                     impactFeedback.impactOccurred()
                                     
                                     withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
-                                        scrollProxy.scrollTo(filter.id, anchor: .center)
+                                        scrollProxy.scrollTo(item.id, anchor: .center)
                                     }
                                     // Delay selection to allow scroll animation
                                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                                        onSelect(filter)
+                                        onSelect(item)
                                     }
                                 }
                             }
@@ -167,6 +174,25 @@ struct FilterScrollRow: View {
                             }
                         }
                     }
+                    .onChange(of: selectedImageModel?.id) { newModelId in
+                        if let modelId = newModelId {
+                            // Mark that user has interacted (model selected from sheet)
+                            hasUserInteracted = true
+                            isScrolling = true
+                            checkScrollStopTask?.cancel()
+                            setScrollingActive(true)
+                            
+                            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                                scrollProxy.scrollTo(modelId, anchor: .center)
+                            }
+                            
+                            // Re-enable snapping after programmatic scroll
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                isScrolling = false
+                                scheduleScrollStopFade()
+                            }
+                        }
+                    }
                 }
                 
 // MARK: WHITE FRAME
@@ -186,32 +212,32 @@ struct FilterScrollRow: View {
     }
     
     private func checkCenteredFilter(centerX: CGFloat) {
-        // Find the filter closest to center
-        var closestFilter: InfoPacket?
+        // Find the item closest to center
+        var closestItem: InfoPacket?
         var minDistance: CGFloat = .infinity
         
-        for filter in filters {
-            if let position = filterPositions[filter.id] {
+        for item in allItems {
+            if let position = filterPositions[item.id] {
                 let distance = abs(position - centerX)
                 if distance < minDistance {
                     minDistance = distance
-                    closestFilter = filter
+                    closestItem = item
                 }
             }
         }
         
-        // Check if a filter is reasonably centered (within 50 points)
-        if let filter = closestFilter, minDistance < 50 {
-            // Trigger haptic if a different filter is now centered
-            if filter.id != currentCenteredFilterId {
-                currentCenteredFilterId = filter.id
+        // Check if an item is reasonably centered (within 50 points)
+        if let item = closestItem, minDistance < 50 {
+            // Trigger haptic if a different item is now centered
+            if item.id != currentCenteredFilterId {
+                currentCenteredFilterId = item.id
                 hapticGenerator.impactOccurred(intensity: 0.6)
                 hapticGenerator.prepare() // Prepare for next haptic
             }
-            // Always notify parent of centered filter for real-time title updates
-            onCenteredFilterChanged?(filter)
+            // Always notify parent of centered item for real-time title updates
+            onCenteredFilterChanged?(item)
         } else if currentCenteredFilterId != nil {
-            // No filter is reasonably centered anymore
+            // No item is reasonably centered anymore
             currentCenteredFilterId = nil
             onCenteredFilterChanged?(nil)
         }
@@ -241,22 +267,23 @@ struct FilterScrollRow: View {
     }
     
     private func snapToNearestFilter(scrollProxy: ScrollViewProxy, centerX: CGFloat) {
-        // Find the filter closest to center
-        var closestFilter: InfoPacket?
+        // Find the item closest to center
+        var closestItem: InfoPacket?
         var minDistance: CGFloat = .infinity
         
-        for filter in filters {
-            if let position = filterPositions[filter.id] {
+        for item in allItems {
+            if let position = filterPositions[item.id] {
                 let distance = abs(position - centerX)
                 if distance < minDistance {
                     minDistance = distance
-                    closestFilter = filter
+                    closestItem = item
                 }
             }
         }
         
-        // Snap to closest filter if it's different from current selection
-        if let filter = closestFilter, filter.id != selectedFilter?.id {
+        // Snap to closest item if it's different from current selection
+        let currentSelectionId = selectedFilter?.id ?? selectedImageModel?.id
+        if let item = closestItem, item.id != currentSelectionId {
             isScrolling = true
             setScrollingActive(true)
             
@@ -265,9 +292,9 @@ struct FilterScrollRow: View {
             impactFeedback.impactOccurred()
             
             withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
-                scrollProxy.scrollTo(filter.id, anchor: .center)
+                scrollProxy.scrollTo(item.id, anchor: .center)
             }
-            onSelect(filter)
+            onSelect(item)
             
             // Re-enable snapping after programmatic scroll
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
