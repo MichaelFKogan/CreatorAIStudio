@@ -135,57 +135,83 @@ struct Post: View {
 
                             Spacer()
 
-                            // MARK: FILTER TITLE
-
-                            Button {
-                                showFilterCategorySheet = true
-                            } label: {
-                                Group {
-                                    HStack {
-                                        // Show centered filter while scrolling, otherwise show selected filter
-                                        if let displayFilter = centeredFilter
-                                            ?? selectedFilter
-                                        {
-
-                                            Text(displayFilter.display.title)
-                                                .font(
-                                                    .system(
-                                                        size: 13,
-                                                        weight: .medium,
-                                                        design: .rounded)
-                                                )
-                                                .foregroundColor(.white)
-                                        } else if let selectedModel =
-                                            selectedImageModel
-                                        {
-                                            Text(selectedModel.display.title)
-                                                .font(
-                                                    .system(
-                                                        size: 13,
-                                                        weight: .medium,
-                                                        design: .rounded)
-                                                )
-                                                .foregroundColor(.white)
-                                        } else {
-                                            Text(
-                                                "Select an AI Model or Photo Filter"
-                                            )
-                                            .font(
-                                                .system(
-                                                    size: 13, weight: .medium,
-                                                    design: .rounded)
-                                            )
-                                            .foregroundColor(.white)
-                                        }
-                                    }
-                                    .padding(.horizontal, 16)
-                                    .padding(.vertical, 8)
-                                    .background(
-                                        RoundedRectangle(
-                                            cornerRadius: 12
+                            VStack(spacing: 0){
+                                // MARK: MENU
+                                Button {
+                                    showFilterCategorySheet = true
+                                } label: {
+                                    Image(systemName: "chevron.up")
+                                        .font(
+                                            .system(size: 18, weight: .medium)
                                         )
-                                        .fill(Color.black.opacity(0.5))
-                                    )
+                                        .foregroundColor(.secondary)
+                                        .opacity(0.8)
+                                        .padding(.horizontal, 16)
+                                        .padding(.vertical, 8)
+                                        // .background(
+                                        //     RoundedRectangle(cornerRadius: 12)
+                                        //         .fill(Color.black.opacity(0.5))
+                                        // )
+                                }
+                                .contentShape(Rectangle())  // 👈 expands tap region to the full background
+
+                                // MARK: FILTER TITLE
+                                Button {
+                                    showFilterCategorySheet = true
+                                } label: {
+                                    Group {
+                                        HStack {
+                                            // Show centered filter while scrolling, otherwise show selected filter
+                                            if let displayFilter =
+                                                centeredFilter
+                                                ?? selectedFilter
+                                            {
+
+                                                Text(
+                                                    displayFilter.display.title
+                                                )
+                                                .font(
+                                                    .system(
+                                                        size: 13,
+                                                        weight: .medium,
+                                                        design: .rounded)
+                                                )
+                                                .foregroundColor(.white)
+                                            } else if let selectedModel =
+                                                selectedImageModel
+                                            {
+                                                Text(
+                                                    selectedModel.display.title
+                                                )
+                                                .font(
+                                                    .system(
+                                                        size: 13,
+                                                        weight: .medium,
+                                                        design: .rounded)
+                                                )
+                                                .foregroundColor(.white)
+                                            } else {
+                                                Text(
+                                                    "Select an AI Model or Photo Filter"
+                                                )
+                                                .font(
+                                                    .system(
+                                                        size: 13,
+                                                        weight: .medium,
+                                                        design: .rounded)
+                                                )
+                                                .foregroundColor(.white)
+                                            }
+                                        }
+                                        .padding(.horizontal, 16)
+                                        .padding(.vertical, 8)
+                                        .background(
+                                            RoundedRectangle(
+                                                cornerRadius: 12
+                                            )
+                                            .fill(Color.black.opacity(0.5))
+                                        )
+                                    }
                                 }
                             }
 
