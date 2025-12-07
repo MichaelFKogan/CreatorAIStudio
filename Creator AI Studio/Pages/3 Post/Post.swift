@@ -59,7 +59,7 @@ struct Post: View {
                                 Spacer()
 
                                 VStack(spacing: 24) {
-                                    // MARK: SWITCH
+                                    // MARK: HIDDEN
                                     Button {
                                         // cameraService.switchCamera()
                                     } label: {
@@ -74,7 +74,7 @@ struct Post: View {
                                     }
                                     .accessibilityLabel("Switch camera")
 
-                                    // MARK: LIBRARY
+                                    // MARK: HIDDEN
                                     Button {
                                         // showLibraryPicker = true
                                     } label: {
@@ -88,7 +88,7 @@ struct Post: View {
                                         .shadow(radius: 3)
                                     }
 
-                                    // MARK: MENU
+                                    // MARK: HIDDEN
                                     Button {
                                         // showFilterCategorySheet = true
                                     } label: {
@@ -132,6 +132,39 @@ struct Post: View {
                                     ?? selectedImageModel
                                 {
                                     VStack(spacing: 12) {
+
+// Category title
+                                        if let displayFilter =
+                                            centeredFilter
+                                            ?? selectedFilter
+                                            ?? selectedImageModel
+                                        {
+                                            Text(
+                                                categoryTitle(
+                                                    for: displayFilter)
+                                            )
+                                            .font(
+                                                .system(
+                                                    size: 12, weight: .medium,
+                                                    design: .rounded)
+                                            )
+                                            .foregroundColor(.white.opacity(0.7))
+                                            .textCase(.uppercase)
+                                            .tracking(1.2)
+                                            .opacity(
+                                                isScrollingActive ? 1.0 : 0
+                                            )
+                                            .animation(
+                                                .easeOut(duration: 0.3),
+                                                value: isScrollingActive
+                                            )
+                                            .shadow(
+                                                color: .black.opacity(0.6),
+                                                radius: 2,
+                                                x: 0,
+                                                y: 1)
+                                        }
+
                                         // Filter title above the image
                                         Text(displayFilter.display.title)
                                             .font(
@@ -175,21 +208,6 @@ struct Post: View {
                                     .padding(.bottom, 24)
                                 }
 
-                                // // MARK: MENU
-                                // Button {
-                                //     showFilterCategorySheet = true
-                                // } label: {
-                                //     Image(systemName: "chevron.up")
-                                //         .font(
-                                //             .system(size: 18, weight: .medium)
-                                //         )
-                                //         .foregroundColor(.secondary)
-                                //         .opacity(0.8)
-                                //         .padding(.horizontal, 16)
-                                //         .padding(.vertical, 8)
-                                // }
-                                // .contentShape(Rectangle()) 
-
                                 // MARK: FILTER TITLE
                                 Button {
                                     showFilterCategorySheet = true
@@ -203,8 +221,7 @@ struct Post: View {
                                                 ?? selectedImageModel
                                             {
                                                 Text(
-                                                    categoryTitle(
-                                                        for: displayFilter)
+                                                    displayFilter.display.title
                                                 )
                                                 .font(
                                                     .system(

@@ -13,7 +13,9 @@ struct ContentView: View {
 
     struct LazyView<Content: View>: View {
         let build: () -> Content
-        init(_ build: @autoclosure @escaping () -> Content) { self.build = build }
+        init(_ build: @autoclosure @escaping () -> Content) {
+            self.build = build
+        }
         var body: some View { build() }
     }
 
@@ -97,7 +99,7 @@ struct ContentView: View {
             VStack {
                 Spacer()
                 NotificationBar(notificationManager: notificationManager)
-                    .padding(.bottom, 55) // add space above tab bar
+                    .padding(.bottom, 55)  // add space above tab bar
             }
 
             // Tab Bar
@@ -105,16 +107,20 @@ struct ContentView: View {
                 Spacer()
                 HStack(spacing: 0) {
                     tabButton(icon: "house.fill", title: "Home", index: 0)
-                    tabButton(icon: "camera.filters", title: "Photo Filters", index: 1)
-                    tabButton(icon: "camera.fill", title: "Create", index: 2)
+                    tabButton(
+                        icon: "camera.filters", title: "Photo Filters", index: 1
+                    )
+                    tabButton(icon: "camera.fill", title: "", index: 2)
 
                     tabButton(icon: "cpu", title: "AI Models", index: 3)
                     // tabButton(icon: "video.fill", title: "Video", index: 3)
-                    tabButton(icon: "photo.on.rectangle.angled", title: "Gallery", index: 4)
+                    tabButton(
+                        icon: "photo.on.rectangle.angled", title: "Gallery",
+                        index: 4)
                 }
                 .padding(.horizontal)
                 .padding(.top, 8)
-//                .padding(.bottom, -10)
+                //                .padding(.bottom, -10)
                 //                .background(.ultraThinMaterial)
                 .background(
                     ZStack {
@@ -140,12 +146,13 @@ struct ContentView: View {
     }
 
     // Tab button helper
-    private func tabButton(icon: String, title: String, index: Int) -> some View {
+    private func tabButton(icon: String, title: String, index: Int) -> some View
+    {
         TabBarButton(
             icon: icon,
             title: title,
             isSelected: selectedTab == index,
-            hasSpecialStyling: index == 20
+            hasSpecialStyling: index == 2
         ) {
             // If tapping Home tab while already on Home, reset navigation to root
             if index == 0 && selectedTab == 0 {
@@ -176,24 +183,31 @@ struct TabBarButton: View {
                     ZStack {
                         Circle()
                             // The stroke modifier draws the border around the shape.
-//                            .stroke(isSelected ? Color.pink : Color.clear, lineWidth: 2)
-                            .fill(isSelected ? Color.clear : Color.pink)
-                            .frame(width: 60, height: 60)
-                        Image(systemName: icon)
+                            // .stroke(isSelected ? Color.gray : Color.clear, lineWidth: 2)
+                            .fill(isSelected ? Color.clear : Color.pink.opacity(0.9))
+                        // .frame(width: 60, height: 60)
+                        Image(systemName: isSelected ? "camera" : icon)
                             .font(.system(size: 22))
-                            .foregroundColor(isSelected ? .pink : .black)
+                            .foregroundColor(isSelected ? .white.opacity(0.9) : .black)
                     }
+                    .frame(width: 60, height: 60)
                     .offset(y: 5)
+
                 } else {
                     Image(systemName: icon)
                         .font(.system(size: 22))
                 }
+
                 Text(title)
                     .font(.caption)
-                    .foregroundColor(isSelected ? .pink : .gray)
+                    .foregroundColor(isSelected ? .white.opacity(0.9) : .gray)
+
             }
-            .frame(height: 45  )
-            .foregroundColor(hasSpecialStyling ? .clear : (isSelected ? .pink : .gray))
+            .frame(height: 55)
+            .offset(y: 5)
+            .foregroundColor(
+                hasSpecialStyling ? .clear : (isSelected ? .white.opacity(0.9) : .gray)
+            )
             .frame(maxWidth: .infinity)
         }
     }

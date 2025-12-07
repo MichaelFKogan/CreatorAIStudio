@@ -231,30 +231,16 @@ struct FilterScrollRow: View {
                 }
 
                 // MARK: WHITE FRAME
-                Button {
-                    // if isCaptureEnabled {
-                    //     onCapture?()
-                    // }
-                } label: {
-
-                    RoundedRectangle(cornerRadius: 14)
-                        .strokeBorder(
-                            style: StrokeStyle(
-                                lineWidth: 3.5, dash: [6, 4]
-                            )
+                RoundedRectangle(cornerRadius: 14)
+                    .strokeBorder(
+                        style: StrokeStyle(
+                            lineWidth: 3.5, dash: [6, 4]
                         )
-                        .foregroundColor(.secondary.opacity(0.8))
-                        // .foregroundColor(
-                        //     isCaptureEnabled
-                        //         ? Color.gray.opacity(1)
-                        //         : Color.pink.opacity(1)
-                        //     )
-
-                        .frame(width: frameWidth, height: frameHeight)
-                        .shadow(
-                            color: .black.opacity(0.5), radius: 8, x: 0, y: 0)
-                }
-                .disabled(!isCaptureEnabled)
+                    )
+                    .foregroundColor(.secondary.opacity(0.8))
+                    .frame(width: frameWidth, height: frameHeight)
+                    .shadow(
+                        color: .black.opacity(0.5), radius: 8, x: 0, y: 0)
             }
             .frame(width: geometry.size.width)
             .onAppear {
