@@ -81,33 +81,43 @@ struct ProfileViewContent: View {
         case imageModels = "Image Models"
     }
 
-    // Get models with images and their metadata - cached to avoid recomputation
-    @State private var cachedModelsWithMetadata: [(model: String, count: Int, imageName: String)] = []
-    private var modelsWithMetadata: [(model: String, count: Int, imageName: String)] {
-        // Only recompute if uniqueModels changed
+    // Compute models with metadata - returns immediately without caching
+    private func computeModelsWithMetadata() -> [(model: String, count: Int, imageName: String)] {
         let currentUniqueModels = viewModel.uniqueModels
-        if cachedModelsWithMetadata.isEmpty || cachedModelsWithMetadata.count != currentUniqueModels.count {
-            var result: [(String, Int, String)] = []
+        print("🔍 DEBUG: Computing models - uniqueModels = \(currentUniqueModels)")
+        print("🔍 DEBUG: Computing models - Total userImages = \(viewModel.userImages.count)")
+        
+        // Debug: Print first few images and their model values
+        for (index, image) in viewModel.userImages.prefix(5).enumerated() {
+            print("🔍 DEBUG: Image \(index): model = '\(image.model ?? "nil")'")
+        }
+        
+        var result: [(String, Int, String)] = []
 
-            for modelName in currentUniqueModels {
-                let count = viewModel.filteredImages(by: modelName, favoritesOnly: false).count
-                guard count > 0 else { continue }
+        for modelName in currentUniqueModels {
+            let count = viewModel.filteredImages(by: modelName, favoritesOnly: false).count
+            print("🔍 DEBUG: Model '\(modelName)' has \(count) images")
+            guard count > 0 else { continue }
 
-                // Find the model image from ImageModelData using display.imageName
-                var imageName = "photo.on.rectangle.angled" // fallback
-                if let modelInfo = allImageModels.first(where: { $0.display.modelName == modelName }) {
-                    imageName = modelInfo.display.imageName
-                } else if let modelInfo = allImageModels.first(where: { $0.display.title == modelName }) {
-                    imageName = modelInfo.display.imageName
-                }
-
-                result.append((modelName, count, imageName))
+            // Find the model image from ImageModelData using display.imageName
+            var imageName = "photo.on.rectangle.angled" // fallback
+            if let modelInfo = allImageModels.first(where: { $0.display.modelName == modelName }) {
+                imageName = modelInfo.display.imageName
+                print("🔍 DEBUG: Found model info by modelName: \(modelName) -> \(imageName)")
+            } else if let modelInfo = allImageModels.first(where: { $0.display.title == modelName }) {
+                imageName = modelInfo.display.imageName
+                print("🔍 DEBUG: Found model info by title: \(modelName) -> \(imageName)")
+            } else {
+                print("⚠️ DEBUG: No model info found for: \(modelName), using fallback")
             }
 
-            // Sort by count descending
-            cachedModelsWithMetadata = result.sorted { $0.1 > $1.1 }
+            result.append((modelName, count, imageName))
         }
-        return cachedModelsWithMetadata
+
+        // Sort by count descending
+        let sorted = result.sorted { $0.1 > $1.1 }
+        print("🔍 DEBUG: Computed \(sorted.count) models")
+        return sorted
     }
 
     var body: some View {
@@ -141,10 +151,6 @@ struct ProfileViewContent: View {
                         await viewModel.fetchUserImages(forceRefresh: true)
                     }
                 }
-            }
-            .onChange(of: viewModel.uniqueModels) { _, _ in
-                // Clear cache when unique models change
-                cachedModelsWithMetadata = []
             }
             .sheet(item: $selectedUserImage) { userImage in
                 FullScreenImageView(
@@ -244,13 +250,16 @@ struct ProfileViewContent: View {
 
     private var imageModelsButton: some View {
         Button {
+            print("🔍 DEBUG: Image Models button tapped")
             showImageModelsPopover = true
         } label: {
             imageModelsButtonLabel
         }
         .sheet(isPresented: $showImageModelsPopover) {
-            ImageModelsSheet(
-                models: modelsWithMetadata,
+            let models = computeModelsWithMetadata()
+            print("🔍 DEBUG: Sheet builder - Passing \(models.count) models to sheet")
+            return ImageModelsSheet(
+                models: models,
                 selectedModel: $selectedModel,
                 selectedTab: $selectedTab,
                 isPresented: $showImageModelsPopover
@@ -850,6 +859,11 @@ struct ImageModelsSheet: View {
         NavigationStack {
             ScrollView {
                 LazyVStack(spacing: 0) {
+                    Text("🔍 Models in sheet: \(models.count)")
+                        .font(.caption)
+                        .foregroundColor(.red)
+                        .padding()
+                    
                     ForEach(models, id: \.model) { modelData in
                         Button {
                             selectedTab = .imageModels
@@ -857,12 +871,19 @@ struct ImageModelsSheet: View {
                             isPresented = false
                         } label: {
                             HStack(spacing: 12) {
-                                // Model image
-                                Image(modelData.imageName)
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fill)
-                                    .frame(width: 65, height: 65)
-                                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                                // Model image with fallback
+                                ZStack {
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .fill(Color.gray.opacity(0.2))
+                                        .frame(width: 65, height: 65)
+                                    
+                                    Image(modelData.imageName)
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fill)
+                                        .frame(width: 65, height: 65)
+                                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                                }
+                                .frame(width: 65, height: 65)
 
                                 // Model name and count
                                 VStack(alignment: .leading, spacing: 4) {
@@ -912,6 +933,12 @@ struct ImageModelsSheet: View {
             }
             .navigationTitle("Image Models")
             .navigationBarTitleDisplayMode(.inline)
+            .onAppear {
+                print("🔍 DEBUG: Sheet appeared with \(models.count) models")
+                for model in models {
+                    print("🔍 DEBUG: Sheet model: \(model.model) - \(model.count) images - image: \(model.imageName)")
+                }
+            }
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Done") {
