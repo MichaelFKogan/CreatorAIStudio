@@ -19,6 +19,7 @@ struct FilterScrollRow: View {
     @State private var isScrollingActive = false
     @State private var scrollStopTimer: DispatchWorkItem?
     @State private var hasInitializedPositions = false
+    @State private var hasUserInteracted = false
     
     // Frame dimensions
     private let frameWidth: CGFloat = 80
@@ -55,6 +56,8 @@ struct FilterScrollRow: View {
                                     }
                                 )
                                 .onTapGesture {
+                                    // Mark that user has interacted
+                                    hasUserInteracted = true
                                     // Cancel any pending snap when tapping
                                     checkScrollStopTask?.cancel()
                                     
@@ -86,25 +89,31 @@ struct FilterScrollRow: View {
                         // Calculate hash of positions to detect when scrolling stops
                         let positionHash = positions.values.map { Int($0 * 1000) }.reduce(0, +)
                         let positionsChanged = positionHash != lastPositionHash
-                        // lastPositionHash = positionHash
                         
                         // Initialize lastPositionHash on first render to prevent false positive
                         if !hasInitializedPositions {
                             lastPositionHash = positionHash
                             hasInitializedPositions = true
-                            // Check which filter is currently centered on initial load
-                            checkCenteredFilter(centerX: geometry.size.width / 2)
+                            // Don't check centered filter on initial load - wait for user interaction
+                            // This prevents the preview from showing immediately
                             return
                         }
                         
-                        // If positions are changing, scrolling is active
+                        // Only process scrolling state if user has interacted
+                        // This prevents the preview from showing on initial layout
+                        guard hasUserInteracted else { return }
+                        
+                        // Update lastPositionHash to track changes
+                        lastPositionHash = positionHash
+                        
+                        // If positions are changing, user is scrolling (either dragging or momentum)
                         if positionsChanged {
+                            // Set scrolling active and check centered filter during any scroll
                             setScrollingActive(true)
                             scheduleScrollStopFade()
+                            // Check centered filter during scrolling (including momentum)
+                            checkCenteredFilter(centerX: geometry.size.width / 2)
                         }
-                        
-                        // Check which filter is currently centered and trigger haptic if changed
-                        checkCenteredFilter(centerX: geometry.size.width / 2)
                         
                         // Schedule check for scroll stop
                         if !isDragging && !isScrolling {
@@ -118,9 +127,13 @@ struct FilterScrollRow: View {
                     .simultaneousGesture(
                         DragGesture(minimumDistance: 0)
                             .onChanged { _ in
+                                // Mark that user has interacted
+                                hasUserInteracted = true
                                 isDragging = true
                                 checkScrollStopTask?.cancel()
                                 setScrollingActive(true)
+                                // Check centered filter when user starts dragging
+                                checkCenteredFilter(centerX: geometry.size.width / 2)
                             }
                             .onEnded { _ in
                                 isDragging = false
@@ -137,6 +150,8 @@ struct FilterScrollRow: View {
                     )
                     .onChange(of: selectedFilter?.id) { newFilterId in
                         if let filterId = newFilterId {
+                            // Mark that user has interacted (filter selected from sheet)
+                            hasUserInteracted = true
                             isScrolling = true
                             checkScrollStopTask?.cancel()
                             setScrollingActive(true)
