@@ -871,17 +871,18 @@ struct ModelGalleryGridView: View {
     let userImages: [UserImage]
     var onSelect: (UserImage) -> Void
 
-    private let spacing: CGFloat = 4
+    private let spacing: CGFloat = 2
     private let gridColumns: [GridItem] = Array(
-        repeating: GridItem(.flexible(), spacing: 4),
+        repeating: GridItem(.flexible(), spacing: 2),
         count: 3
     )
 
     var body: some View {
         GeometryReader { proxy in
-            let totalSpacing = spacing * 2
-            let contentWidth = max(0, proxy.size.width - totalSpacing - 8)
-            let itemWidth = max(44, contentWidth / 3)
+            let horizontalPadding: CGFloat = 16
+            let totalHorizontalSpacing = spacing * 2  // 2 gaps between 3 columns
+            let availableWidth = proxy.size.width - (horizontalPadding * 2) - totalHorizontalSpacing
+            let itemWidth = max(44, availableWidth / 3)
             let itemHeight = itemWidth * 1.4
 
             LazyVGrid(columns: gridColumns, spacing: spacing) {
@@ -904,7 +905,7 @@ struct ModelGalleryGridView: View {
                                     .scaledToFill()
                                     .frame(width: itemWidth, height: itemHeight)
                                     .clipped()
-                                    .cornerRadius(6)
+                                    .cornerRadius(0)
 
                                 // Video play icon overlay
                                 if userImage.isVideo {
@@ -941,7 +942,7 @@ struct ModelGalleryGridView: View {
                                     .scaledToFill()
                                     .frame(width: itemWidth, height: itemHeight)
                                     .clipped()
-                                    .cornerRadius(6)
+                                    .cornerRadius(0)
 
                                 if userImage.isVideo {
                                     ZStack {
@@ -960,14 +961,17 @@ struct ModelGalleryGridView: View {
                     }
                 }
             }
-            .padding(.horizontal)
+            .padding(.horizontal, 16)
         }
         .frame(height: calculateHeight(for: userImages.count))
     }
 
     private func calculateHeight(for count: Int) -> CGFloat {
         let rows = ceil(Double(count) / 3.0)
-        let itemWidth = (UIScreen.main.bounds.width - 16) / 3
+        let horizontalPadding: CGFloat = 16
+        let totalHorizontalSpacing = spacing * 2
+        let availableWidth = UIScreen.main.bounds.width - (horizontalPadding * 2) - totalHorizontalSpacing
+        let itemWidth = availableWidth / 3
         return CGFloat(rows) * (itemWidth * 1.4 + spacing)
     }
 }

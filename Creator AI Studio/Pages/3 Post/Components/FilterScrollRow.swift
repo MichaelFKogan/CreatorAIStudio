@@ -412,7 +412,7 @@ struct FilterThumbnailCompact: View {
                             .stroke(
                                 isSelected
                                     ? Color.pink : Color.black.opacity(0),
-                                lineWidth: isSelected ? 3 : 1)
+                                lineWidth: isSelected ? 4 : 1)
                     )
                     .shadow(color: .black.opacity(0.6), radius: 4, x: 0, y: 0)
                     .overlay(
