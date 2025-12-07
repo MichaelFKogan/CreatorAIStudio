@@ -175,20 +175,20 @@ struct Post: View {
                                     .padding(.bottom, 24)
                                 }
 
-                                // MARK: MENU
-                                Button {
-                                    showFilterCategorySheet = true
-                                } label: {
-                                    Image(systemName: "chevron.up")
-                                        .font(
-                                            .system(size: 18, weight: .medium)
-                                        )
-                                        .foregroundColor(.secondary)
-                                        .opacity(0.8)
-                                        .padding(.horizontal, 16)
-                                        .padding(.vertical, 8)
-                                }
-                                .contentShape(Rectangle())  // 👈 expands tap region to the full background
+                                // // MARK: MENU
+                                // Button {
+                                //     showFilterCategorySheet = true
+                                // } label: {
+                                //     Image(systemName: "chevron.up")
+                                //         .font(
+                                //             .system(size: 18, weight: .medium)
+                                //         )
+                                //         .foregroundColor(.secondary)
+                                //         .opacity(0.8)
+                                //         .padding(.horizontal, 16)
+                                //         .padding(.vertical, 8)
+                                // }
+                                // .contentShape(Rectangle()) 
 
                                 // MARK: FILTER TITLE
                                 Button {

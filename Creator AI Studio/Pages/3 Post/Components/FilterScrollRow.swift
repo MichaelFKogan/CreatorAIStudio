@@ -12,29 +12,30 @@ struct FilterScrollRow: View {
     var onScrollingStateChanged: ((Bool) -> Void)? = nil
     var onCapture: (() -> Void)? = nil
     var isCaptureEnabled: Bool = false
-    
+
     // Combined items: image models first, then filters
     private var allItems: [InfoPacket] {
         imageModels + filters
     }
-    
+
     @State private var filterPositions: [UUID: CGFloat] = [:]
     @State private var isDragging = false
     @State private var isScrolling = false
     @State private var lastPositionHash: Int = 0
     @State private var checkScrollStopTask: DispatchWorkItem?
     @State private var currentCenteredFilterId: UUID?
-    @State private var hapticGenerator = UIImpactFeedbackGenerator(style: .light)
+    @State private var hapticGenerator = UIImpactFeedbackGenerator(
+        style: .light)
     @State private var isScrollingActive = false
     @State private var scrollStopTimer: DispatchWorkItem?
     @State private var hasInitializedPositions = false
     @State private var hasUserInteracted = false
-    
+
     // Frame dimensions
     private let frameWidth: CGFloat = 80
     private let frameHeight: CGFloat = 80
     private let thumbnailWidth: CGFloat = 70
-    
+
     var body: some View {
         GeometryReader { geometry in
             ZStack {
@@ -46,14 +47,17 @@ struct FilterScrollRow: View {
                             // White frame is centered at width/2, extends 40 points each side
                             // Position first item to start after the frame (width/2 + 40 + spacing)
                             Color.clear
-                                .frame(width: geometry.size.width / 2 + frameWidth / 2 + 12)
-                            
-// MARK: FOR EACH                           
+                                .frame(
+                                    width: geometry.size.width / 2 + frameWidth
+                                        / 2 + 12)
+
+                            // MARK: FOR EACH
                             ForEach(allItems) { item in
                                 FilterThumbnailCompact(
                                     title: item.display.title,
                                     imageName: item.display.imageName,
-                                    isSelected: (selectedFilter?.id == item.id) || (selectedImageModel?.id == item.id),
+                                    isSelected: (selectedFilter?.id == item.id)
+                                        || (selectedImageModel?.id == item.id),
                                     cost: item.cost
                                 )
                                 .id(item.id)
@@ -61,8 +65,13 @@ struct FilterScrollRow: View {
                                     GeometryReader { itemGeometry in
                                         Color.clear
                                             .preference(
-                                                key: FilterPositionPreferenceKey.self,
-                                                value: [item.id: itemGeometry.frame(in: .named("scrollView")).midX]
+                                                key: FilterPositionPreferenceKey
+                                                    .self,
+                                                value: [
+                                                    item.id: itemGeometry.frame(
+                                                        in: .named("scrollView")
+                                                    ).midX
+                                                ]
                                             )
                                     }
                                 )
@@ -71,36 +80,48 @@ struct FilterScrollRow: View {
                                     hasUserInteracted = true
                                     // Cancel any pending snap when tapping
                                     checkScrollStopTask?.cancel()
-                                    
+
                                     // Haptic feedback on tap
-                                    let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+                                    let impactFeedback =
+                                        UIImpactFeedbackGenerator(style: .light)
                                     impactFeedback.impactOccurred()
-                                    
-                                    withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
-                                        scrollProxy.scrollTo(item.id, anchor: .center)
+
+                                    withAnimation(
+                                        .spring(
+                                            response: 0.4, dampingFraction: 0.8)
+                                    ) {
+                                        scrollProxy.scrollTo(
+                                            item.id, anchor: .center)
                                     }
                                     // Delay selection to allow scroll animation
-                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                    DispatchQueue.main.asyncAfter(
+                                        deadline: .now() + 0.1
+                                    ) {
                                         onSelect(item)
                                     }
                                 }
                             }
-                            
+
                             // Trailing spacer to center last item
                             Color.clear
-                                .frame(width: (geometry.size.width - thumbnailWidth) / 2)
+                                .frame(
+                                    width: (geometry.size.width - thumbnailWidth)
+                                        / 2)
                         }
                         .padding(.horizontal, -12)
                     }
-// MARK: TOOLBAR                    
+                    // MARK: TOOLBAR
                     .coordinateSpace(name: "scrollView")
-                    .onPreferenceChange(FilterPositionPreferenceKey.self) { positions in
+                    .onPreferenceChange(FilterPositionPreferenceKey.self) {
+                        positions in
                         filterPositions = positions
-                        
+
                         // Calculate hash of positions to detect when scrolling stops
-                        let positionHash = positions.values.map { Int($0 * 1000) }.reduce(0, +)
+                        let positionHash = positions.values.map {
+                            Int($0 * 1000)
+                        }.reduce(0, +)
                         let positionsChanged = positionHash != lastPositionHash
-                        
+
                         // Initialize lastPositionHash on first render to prevent false positive
                         if !hasInitializedPositions {
                             lastPositionHash = positionHash
@@ -109,23 +130,24 @@ struct FilterScrollRow: View {
                             // This prevents the preview from showing immediately
                             return
                         }
-                        
+
                         // Only process scrolling state if user has interacted
                         // This prevents the preview from showing on initial layout
                         guard hasUserInteracted else { return }
-                        
+
                         // Update lastPositionHash to track changes
                         lastPositionHash = positionHash
-                        
+
                         // If positions are changing, user is scrolling (either dragging or momentum)
                         if positionsChanged {
                             // Set scrolling active and check centered filter during any scroll
                             setScrollingActive(true)
                             scheduleScrollStopFade()
                             // Check centered filter during scrolling (including momentum)
-                            checkCenteredFilter(centerX: geometry.size.width / 2)
+                            checkCenteredFilter(
+                                centerX: geometry.size.width / 2)
                         }
-                        
+
                         // Schedule check for scroll stop
                         if !isDragging && !isScrolling {
                             scheduleScrollStopCheck(
@@ -144,7 +166,8 @@ struct FilterScrollRow: View {
                                 checkScrollStopTask?.cancel()
                                 setScrollingActive(true)
                                 // Check centered filter when user starts dragging
-                                checkCenteredFilter(centerX: geometry.size.width / 2)
+                                checkCenteredFilter(
+                                    centerX: geometry.size.width / 2)
                             }
                             .onEnded { _ in
                                 isDragging = false
@@ -166,13 +189,17 @@ struct FilterScrollRow: View {
                             isScrolling = true
                             checkScrollStopTask?.cancel()
                             setScrollingActive(true)
-                            
-                            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+
+                            withAnimation(
+                                .spring(response: 0.4, dampingFraction: 0.8)
+                            ) {
                                 scrollProxy.scrollTo(filterId, anchor: .center)
                             }
-                            
+
                             // Re-enable snapping after programmatic scroll
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            DispatchQueue.main.asyncAfter(
+                                deadline: .now() + 0.5
+                            ) {
                                 isScrolling = false
                                 scheduleScrollStopFade()
                             }
@@ -185,35 +212,47 @@ struct FilterScrollRow: View {
                             isScrolling = true
                             checkScrollStopTask?.cancel()
                             setScrollingActive(true)
-                            
-                            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+
+                            withAnimation(
+                                .spring(response: 0.4, dampingFraction: 0.8)
+                            ) {
                                 scrollProxy.scrollTo(modelId, anchor: .center)
                             }
-                            
+
                             // Re-enable snapping after programmatic scroll
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            DispatchQueue.main.asyncAfter(
+                                deadline: .now() + 0.5
+                            ) {
                                 isScrolling = false
                                 scheduleScrollStopFade()
                             }
                         }
                     }
                 }
-                
-// MARK: WHITE FRAME
+
+                // MARK: WHITE FRAME
                 Button {
-                    if isCaptureEnabled {
-                        onCapture?()
-                    }
+                    // if isCaptureEnabled {
+                    //     onCapture?()
+                    // }
                 } label: {
+
                     RoundedRectangle(cornerRadius: 14)
-                        .stroke(
-                            isCaptureEnabled
-                                ? Color.gray.opacity(0.5)
-                                : Color.gray.opacity(0.5),
-                            lineWidth: 4
+                        .strokeBorder(
+                            style: StrokeStyle(
+                                lineWidth: 3.5, dash: [6, 4]
+                            )
                         )
+                        .foregroundColor(.secondary.opacity(0.8))
+                        // .foregroundColor(
+                        //     isCaptureEnabled
+                        //         ? Color.gray.opacity(1)
+                        //         : Color.pink.opacity(1)
+                        //     )
+
                         .frame(width: frameWidth, height: frameHeight)
-                        .shadow(color: .black.opacity(0.5), radius: 8, x: 0, y: 0)
+                        .shadow(
+                            color: .black.opacity(0.5), radius: 8, x: 0, y: 0)
                 }
                 .disabled(!isCaptureEnabled)
             }
@@ -225,12 +264,12 @@ struct FilterScrollRow: View {
         }
         .frame(height: 100)
     }
-    
+
     private func checkCenteredFilter(centerX: CGFloat) {
         // Find the item closest to center
         var closestItem: InfoPacket?
         var minDistance: CGFloat = .infinity
-        
+
         for item in allItems {
             if let position = filterPositions[item.id] {
                 let distance = abs(position - centerX)
@@ -240,14 +279,14 @@ struct FilterScrollRow: View {
                 }
             }
         }
-        
+
         // Check if an item is reasonably centered (within 50 points)
         if let item = closestItem, minDistance < 50 {
             // Trigger haptic if a different item is now centered
             if item.id != currentCenteredFilterId {
                 currentCenteredFilterId = item.id
                 hapticGenerator.impactOccurred(intensity: 0.6)
-                hapticGenerator.prepare() // Prepare for next haptic
+                hapticGenerator.prepare()  // Prepare for next haptic
             }
             // Always notify parent of centered item for real-time title updates
             onCenteredFilterChanged?(item)
@@ -257,16 +296,21 @@ struct FilterScrollRow: View {
             onCenteredFilterChanged?(nil)
         }
     }
-    
-    private func scheduleScrollStopCheck(scrollProxy: ScrollViewProxy, centerX: CGFloat, currentHash: Int) {
+
+    private func scheduleScrollStopCheck(
+        scrollProxy: ScrollViewProxy, centerX: CGFloat, currentHash: Int
+    ) {
         // Cancel any existing task
         checkScrollStopTask?.cancel()
-        
+
         // Create new task
         let task = DispatchWorkItem { [weak checkScrollStopTask] in
             // Check if positions have stopped changing
-            if self.lastPositionHash == currentHash && !self.isDragging && !self.isScrolling {
-                self.snapToNearestFilter(scrollProxy: scrollProxy, centerX: centerX)
+            if self.lastPositionHash == currentHash && !self.isDragging
+                && !self.isScrolling
+            {
+                self.snapToNearestFilter(
+                    scrollProxy: scrollProxy, centerX: centerX)
             } else if !self.isDragging && !self.isScrolling {
                 // Positions still changing, schedule another check
                 self.scheduleScrollStopCheck(
@@ -276,16 +320,18 @@ struct FilterScrollRow: View {
                 )
             }
         }
-        
+
         checkScrollStopTask = task
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1, execute: task)
     }
-    
-    private func snapToNearestFilter(scrollProxy: ScrollViewProxy, centerX: CGFloat) {
+
+    private func snapToNearestFilter(
+        scrollProxy: ScrollViewProxy, centerX: CGFloat
+    ) {
         // Find the item closest to center
         var closestItem: InfoPacket?
         var minDistance: CGFloat = .infinity
-        
+
         for item in allItems {
             if let position = filterPositions[item.id] {
                 let distance = abs(position - centerX)
@@ -295,22 +341,22 @@ struct FilterScrollRow: View {
                 }
             }
         }
-        
+
         // Snap to closest item if it's different from current selection
         let currentSelectionId = selectedFilter?.id ?? selectedImageModel?.id
         if let item = closestItem, item.id != currentSelectionId {
             isScrolling = true
             setScrollingActive(true)
-            
+
             // Haptic feedback on snap (stronger than scroll haptic)
             let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
             impactFeedback.impactOccurred()
-            
+
             withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
                 scrollProxy.scrollTo(item.id, anchor: .center)
             }
             onSelect(item)
-            
+
             // Re-enable snapping after programmatic scroll
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 isScrolling = false
@@ -321,18 +367,18 @@ struct FilterScrollRow: View {
             scheduleScrollStopFade()
         }
     }
-    
+
     private func setScrollingActive(_ active: Bool) {
         if isScrollingActive != active {
             isScrollingActive = active
             onScrollingStateChanged?(active)
         }
     }
-    
+
     private func scheduleScrollStopFade() {
         // Cancel any existing timer
         scrollStopTimer?.cancel()
-        
+
         // Create new timer to fade out after scroll stops
         let task = DispatchWorkItem {
             // Only fade out if we're not dragging or programmatically scrolling
@@ -340,18 +386,19 @@ struct FilterScrollRow: View {
                 self.setScrollingActive(false)
             }
         }
-        
+
         scrollStopTimer = task
         // Wait a bit after scrolling stops before fading out
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3, execute: task)
     }
 }
 
-
 struct FilterPositionPreferenceKey: PreferenceKey {
     static var defaultValue: [UUID: CGFloat] = [:]
-    
-    static func reduce(value: inout [UUID: CGFloat], nextValue: () -> [UUID: CGFloat]) {
+
+    static func reduce(
+        value: inout [UUID: CGFloat], nextValue: () -> [UUID: CGFloat]
+    ) {
         value.merge(nextValue()) { _, new in new }
     }
 }
@@ -376,25 +423,32 @@ struct FilterThumbnailCompact: View {
                     .padding(0)
                     .overlay(
                         RoundedRectangle(cornerRadius: 12)
-                            .stroke(isSelected ? Color.pink : Color.black.opacity(0), lineWidth: isSelected ? 3 : 1)
+                            .stroke(
+                                isSelected
+                                    ? Color.pink : Color.black.opacity(0),
+                                lineWidth: isSelected ? 3 : 1)
                     )
                     .shadow(color: .black.opacity(0.6), radius: 4, x: 0, y: 0)
                     .overlay(
                         VStack(alignment: .trailing, spacing: 3) {
                             // Price badge (always visible if cost exists)
                             if let cost = cost {
-                                Text("$\(NSDecimalNumber(decimal: cost).stringValue)")
-                                    .font(.system(size: 9, weight: .semibold))
-                                    .foregroundColor(.white)
-                                    .padding(.horizontal, 5)
-                                    .padding(.vertical, 2)
-                                    .background(
-                                        Capsule()
-                                            .fill(Color.black.opacity(0.7))
-                                    )
-                                    .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 1)
+                                Text(
+                                    "$\(NSDecimalNumber(decimal: cost).stringValue)"
+                                )
+                                .font(.system(size: 9, weight: .semibold))
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 5)
+                                .padding(.vertical, 2)
+                                .background(
+                                    Capsule()
+                                        .fill(Color.black.opacity(0.7))
+                                )
+                                .shadow(
+                                    color: .black.opacity(0.3), radius: 2, x: 0,
+                                    y: 1)
                             }
-                            
+
                             // // Checkmark (shown when selected, below price)
                             // if isSelected {
                             //     Image(systemName: "checkmark.circle.fill")
