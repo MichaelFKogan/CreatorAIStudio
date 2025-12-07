@@ -548,7 +548,7 @@ struct PromptSection: View {
                                     .progressViewStyle(CircularProgressViewStyle(tint: .blue))
                                     .scaleEffect(0.8)
                             } else {
-                                Image(systemName: "viewfindera").foregroundColor(.blue)
+                                Image(systemName: "viewfinder").foregroundColor(.blue)
                             }
                         }
                     }
@@ -960,7 +960,7 @@ struct ModelGalleryGridView: View {
                     }
                 }
             }
-            .padding(.horizontal, 4)
+            .padding(.horizontal)
         }
         .frame(height: calculateHeight(for: userImages.count))
     }

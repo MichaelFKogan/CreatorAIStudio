@@ -14,6 +14,7 @@ struct Post: View {
     @State private var selectedFilter: InfoPacket?
     @State private var showFilterCategorySheet = false
     @State private var centeredFilter: InfoPacket?
+    @State private var isScrollingActive = false
 
     // Image Model mode state
     @StateObject private var imageModelsViewModel = ImageModelsViewModel()
@@ -41,6 +42,31 @@ struct Post: View {
                         session: cameraService.session,
                         position: cameraService.cameraPosition
                     )
+                }
+
+                // MARK: CENTERED FILTER PREVIEW
+                // Show larger preview image of the centered/selected filter
+                // Only visible while scrolling, fades out when scrolling stops
+                if let displayFilter = centeredFilter ?? selectedFilter {
+                    VStack(spacing: 12) {
+                        // Filter title above the image
+                        Text(displayFilter.display.title)
+                            .font(.system(size: 18, weight: .semibold, design: .rounded))
+                            .foregroundColor(.white)
+                            .opacity(isScrollingActive ? 1.0 : 0)
+                            .animation(.easeOut(duration: 0.3), value: isScrollingActive)
+                            .shadow(color: .black.opacity(0.8), radius: 4, x: 0, y: 2)
+                        
+                        // Preview image
+                        Image(displayFilter.display.imageName)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 250, height: 300)
+                            .clipShape(RoundedRectangle(cornerRadius: 16))
+                            .opacity(isScrollingActive ? 0.6 : 0)
+                            .shadow(color: .black.opacity(0.5), radius: 20, x: 0, y: 0)
+                    }
+                    .allowsHitTesting(false)
                 }
 
                 // MARK: MAIN STACK
@@ -234,6 +260,9 @@ struct Post: View {
                                 },
                                 onCenteredFilterChanged: { filter in
                                     centeredFilter = filter
+                                },
+                                onScrollingStateChanged: { isScrolling in
+                                    isScrollingActive = isScrolling
                                 })
                             Spacer()
                         }

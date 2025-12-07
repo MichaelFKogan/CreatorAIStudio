@@ -7,6 +7,7 @@ struct FilterScrollRow: View {
     let selectedFilter: InfoPacket?
     let onSelect: (InfoPacket) -> Void
     var onCenteredFilterChanged: ((InfoPacket?) -> Void)? = nil
+    var onScrollingStateChanged: ((Bool) -> Void)? = nil
     
     @State private var filterPositions: [UUID: CGFloat] = [:]
     @State private var isDragging = false
@@ -15,6 +16,8 @@ struct FilterScrollRow: View {
     @State private var checkScrollStopTask: DispatchWorkItem?
     @State private var currentCenteredFilterId: UUID?
     @State private var hapticGenerator = UIImpactFeedbackGenerator(style: .light)
+    @State private var isScrollingActive = false
+    @State private var scrollStopTimer: DispatchWorkItem?
     
     // Frame dimensions
     private let frameWidth: CGFloat = 80
@@ -81,7 +84,14 @@ struct FilterScrollRow: View {
                         
                         // Calculate hash of positions to detect when scrolling stops
                         let positionHash = positions.values.map { Int($0 * 1000) }.reduce(0, +)
+                        let positionsChanged = positionHash != lastPositionHash
                         lastPositionHash = positionHash
+                        
+                        // If positions are changing, scrolling is active
+                        if positionsChanged {
+                            setScrollingActive(true)
+                            scheduleScrollStopFade()
+                        }
                         
                         // Check which filter is currently centered and trigger haptic if changed
                         checkCenteredFilter(centerX: geometry.size.width / 2)
@@ -100,6 +110,7 @@ struct FilterScrollRow: View {
                             .onChanged { _ in
                                 isDragging = true
                                 checkScrollStopTask?.cancel()
+                                setScrollingActive(true)
                             }
                             .onEnded { _ in
                                 isDragging = false
@@ -110,12 +121,15 @@ struct FilterScrollRow: View {
                                     centerX: centerX,
                                     currentHash: lastPositionHash
                                 )
+                                // Schedule fade out after scroll stops
+                                scheduleScrollStopFade()
                             }
                     )
                     .onChange(of: selectedFilter?.id) { newFilterId in
                         if let filterId = newFilterId {
                             isScrolling = true
                             checkScrollStopTask?.cancel()
+                            setScrollingActive(true)
                             
                             withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
                                 scrollProxy.scrollTo(filterId, anchor: .center)
@@ -124,6 +138,7 @@ struct FilterScrollRow: View {
                             // Re-enable snapping after programmatic scroll
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                                 isScrolling = false
+                                scheduleScrollStopFade()
                             }
                         }
                     }
@@ -218,6 +233,7 @@ struct FilterScrollRow: View {
         // Snap to closest filter if it's different from current selection
         if let filter = closestFilter, filter.id != selectedFilter?.id {
             isScrolling = true
+            setScrollingActive(true)
             
             // Haptic feedback on snap (stronger than scroll haptic)
             let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
@@ -231,8 +247,36 @@ struct FilterScrollRow: View {
             // Re-enable snapping after programmatic scroll
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 isScrolling = false
+                scheduleScrollStopFade()
+            }
+        } else {
+            // No snap needed, scrolling has stopped
+            scheduleScrollStopFade()
+        }
+    }
+    
+    private func setScrollingActive(_ active: Bool) {
+        if isScrollingActive != active {
+            isScrollingActive = active
+            onScrollingStateChanged?(active)
+        }
+    }
+    
+    private func scheduleScrollStopFade() {
+        // Cancel any existing timer
+        scrollStopTimer?.cancel()
+        
+        // Create new timer to fade out after scroll stops
+        let task = DispatchWorkItem {
+            // Only fade out if we're not dragging or programmatically scrolling
+            if !self.isDragging && !self.isScrolling {
+                self.setScrollingActive(false)
             }
         }
+        
+        scrollStopTimer = task
+        // Wait a bit after scrolling stops before fading out
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3, execute: task)
     }
 }
 
