@@ -18,6 +18,7 @@ struct FilterScrollRow: View {
     @State private var hapticGenerator = UIImpactFeedbackGenerator(style: .light)
     @State private var isScrollingActive = false
     @State private var scrollStopTimer: DispatchWorkItem?
+    @State private var hasInitializedPositions = false
     
     // Frame dimensions
     private let frameWidth: CGFloat = 80
@@ -85,7 +86,16 @@ struct FilterScrollRow: View {
                         // Calculate hash of positions to detect when scrolling stops
                         let positionHash = positions.values.map { Int($0 * 1000) }.reduce(0, +)
                         let positionsChanged = positionHash != lastPositionHash
-                        lastPositionHash = positionHash
+                        // lastPositionHash = positionHash
+                        
+                        // Initialize lastPositionHash on first render to prevent false positive
+                        if !hasInitializedPositions {
+                            lastPositionHash = positionHash
+                            hasInitializedPositions = true
+                            // Check which filter is currently centered on initial load
+                            checkCenteredFilter(centerX: geometry.size.width / 2)
+                            return
+                        }
                         
                         // If positions are changing, scrolling is active
                         if positionsChanged {
