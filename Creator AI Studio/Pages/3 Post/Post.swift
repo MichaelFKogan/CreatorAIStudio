@@ -47,7 +47,9 @@ struct Post: View {
                 // MARK: LARGE IMG
                 // Show larger preview image of the centered/selected filter or model
                 // Only visible while scrolling, fades out when scrolling stops
-                if let displayFilter = centeredFilter ?? selectedFilter ?? selectedImageModel {
+                if let displayFilter = centeredFilter ?? selectedFilter
+                    ?? selectedImageModel
+                {
                     VStack(spacing: 12) {
                         // Filter title above the image
                         Text(displayFilter.display.title)
@@ -72,7 +74,7 @@ struct Post: View {
                             .scaledToFill()
                             .frame(width: 250, height: 300)
                             .clipShape(RoundedRectangle(cornerRadius: 16))
-                            .opacity(isScrollingActive ? 0.6 : 0)
+                            .opacity(isScrollingActive ? 0.8 : 0)
                             .shadow(
                                 color: .black.opacity(0.5), radius: 20, x: 0,
                                 y: 0)
@@ -200,24 +202,27 @@ struct Post: View {
                                                 ?? selectedFilter
                                                 ?? selectedImageModel
                                             {
-                                                Text(categoryTitle(for: displayFilter))
-                                                    .font(
-                                                        .system(
-                                                            size: 13,
-                                                            weight: .medium,
-                                                            design: .rounded)
+                                                Text(
+                                                    categoryTitle(
+                                                        for: displayFilter)
+                                                )
+                                                .font(
+                                                    .system(
+                                                        size: 13,
+                                                        weight: .medium,
+                                                        design: .rounded)
+                                                )
+                                                .foregroundColor(.white)
+                                                .padding(.horizontal, 16)
+                                                .padding(.vertical, 8)
+                                                .background(
+                                                    RoundedRectangle(
+                                                        cornerRadius: 12
                                                     )
-                                                    .foregroundColor(.white)
-                                                    .padding(.horizontal, 16)
-                                                    .padding(.vertical, 8)
-                                                    .background(
-                                                        RoundedRectangle(
-                                                            cornerRadius: 12
-                                                        )
-                                                        .fill(
-                                                            Color.black.opacity(0.5)
-                                                        )
+                                                    .fill(
+                                                        Color.black.opacity(0.5)
                                                     )
+                                                )
                                             } else {
                                                 Text(
                                                     "Select an AI Model or Photo Filter"
@@ -254,13 +259,17 @@ struct Post: View {
                         HStack {
                             Spacer()
                             FilterScrollRow(
-                                imageModels: imageModelsViewModel.filteredAndSortedImageModels,
+                                imageModels: imageModelsViewModel
+                                    .filteredAndSortedImageModels,
                                 filters: filtersViewModel.filters,
                                 selectedFilter: selectedFilter,
                                 selectedImageModel: selectedImageModel,
                                 onSelect: { item in
                                     // Check if the item is an image model or a filter
-                                    if imageModelsViewModel.filteredAndSortedImageModels.contains(where: { $0.id == item.id }) {
+                                    if imageModelsViewModel
+                                        .filteredAndSortedImageModels.contains(
+                                            where: { $0.id == item.id })
+                                    {
                                         // It's an image model
                                         selectedImageModel = item
                                         selectedFilter = nil  // Clear filter when model is selected
@@ -371,21 +380,23 @@ struct Post: View {
     private var isFilterOrModelSelected: Bool {
         selectedFilter != nil || selectedImageModel != nil
     }
-    
+
     // Helper function to get category title for an item
     private func categoryTitle(for item: InfoPacket) -> String {
         // Check if it's an image model
-        if imageModelsViewModel.filteredAndSortedImageModels.contains(where: { $0.id == item.id }) {
+        if imageModelsViewModel.filteredAndSortedImageModels.contains(where: {
+            $0.id == item.id
+        }) {
             return "AI Models"
         }
-        
+
         // Check which filter category it belongs to
         for category in FilterCategory.allCases {
             if category.matches(item) {
                 return category.rawValue
             }
         }
-        
+
         // If it doesn't match any specific category, it's in "Popular"
         return "Popular"
     }

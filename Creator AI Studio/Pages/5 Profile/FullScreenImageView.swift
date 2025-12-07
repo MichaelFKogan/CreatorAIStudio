@@ -166,6 +166,7 @@ struct FullScreenImageView: View {
     @State private var downloadErrorMessage = ""
     @State private var isImmersiveMode = false
     @State private var isFavorited = false
+    @State private var showCreatePresetSheet = false
 
     var mediaURL: URL? {
         URL(string: userImage.image_url)
@@ -497,6 +498,23 @@ struct FullScreenImageView: View {
                             .buttonStyle(.plain)
                             .disabled(isDeleting || isDownloading || showDownloadSuccess)
 
+                            // Create Preset button
+                            Button(action: {
+                                showCreatePresetSheet = true
+                            }) {
+                                VStack(spacing: 6) {
+                                    Image(systemName: "bookmark")
+                                        .font(.system(size: 20, weight: .medium))
+                                        .foregroundColor(.white)
+                                        .opacity(0.8)
+                                    Text("Preset")
+                                        .font(.caption)
+                                        .foregroundColor(.gray)
+                                }
+                            }
+                            .buttonStyle(.plain)
+                            .disabled(isDeleting || isDownloading)
+
                             // Delete button
                             Button(action: {
                                 showDeleteAlert = true
@@ -756,6 +774,12 @@ struct FullScreenImageView: View {
             // Update favorite state if userImage changes
             isFavorited = newValue ?? false
         }
+        .sheet(isPresented: $showCreatePresetSheet) {
+            CreatePresetSheet(
+                isPresented: $showCreatePresetSheet,
+                userImage: userImage
+            )
+        }
     }
 
     // MARK: - Download Media (Image or Video)
@@ -1010,5 +1034,183 @@ struct FullScreenImageView: View {
         }
 
         throw lastError ?? NSError(domain: "RetryError", code: -1, userInfo: [NSLocalizedDescriptionKey: "Operation failed after \(maxAttempts) attempts"])
+    }
+}
+
+// MARK: - Create Preset Sheet
+
+struct CreatePresetSheet: View {
+    @Binding var isPresented: Bool
+    let userImage: UserImage
+    @State private var presetTitle: String = ""
+    @FocusState private var isTitleFocused: Bool
+    
+    // Find matching image model based on title
+    private var matchingImageModel: InfoPacket? {
+        guard let title = userImage.title, !title.isEmpty else { return nil }
+        let allModels = ImageModelsViewModel.loadImageModels()
+        return allModels.first { $0.display.title == title }
+    }
+    
+    var body: some View {
+        NavigationView {
+            ZStack {
+                Color.black.ignoresSafeArea()
+                
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 24) {
+                        // Information section
+                        VStack(alignment: .leading, spacing: 12) {
+                            HStack(spacing: 8) {
+                                Image(systemName: "info.circle.fill")
+                                    .font(.system(size: 20))
+                                    .foregroundColor(.blue)
+                                Text("What is a Preset?")
+                                    .font(.headline)
+                                    .foregroundColor(.white)
+                            }
+                            
+                            Text("A preset saves the current image, image model, and prompt settings. You can quickly reuse these settings later to generate similar images with the same style and configuration.")
+                                .font(.subheadline)
+                                .foregroundColor(.gray)
+                                .lineSpacing(4)
+                        }
+                        .padding()
+                        .background(Color.white.opacity(0.05))
+                        .cornerRadius(12)
+                        
+                        // Preset details preview
+                        VStack(alignment: .leading, spacing: 16) {
+                            Text("Preset Details")
+                                .font(.headline)
+                                .foregroundColor(.white)
+                            
+                            // AI Model section - matching FullScreenImageView style
+                            if let title = userImage.title, !title.isEmpty {
+                                VStack(alignment: .leading, spacing: 12) {
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "cpu")
+                                            .font(.caption2)
+                                            .foregroundColor(.white.opacity(0.8))
+                                        Text("AI Model")
+                                            .font(.caption2)
+                                            .foregroundColor(.gray)
+                                    }
+                                    
+                                    HStack(spacing: 12) {
+                                        // Display model image if available
+                                        if let model = matchingImageModel {
+                                            Image(model.display.imageName)
+                                                .resizable()
+                                                .aspectRatio(contentMode: .fill)
+                                                .frame(width: 60, height: 60)
+                                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                                                .overlay(
+                                                    RoundedRectangle(cornerRadius: 8)
+                                                        .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                                                )
+                                        }
+                                        
+                                        Text(title)
+                                            .font(.title3)
+                                            .fontWeight(.semibold)
+                                            .foregroundColor(.white)
+                                    }
+                                }
+                            }
+                            
+                            // Prompt section - matching FullScreenImageView style
+                            if let prompt = userImage.prompt, !prompt.isEmpty {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    HStack {
+                                        Image(systemName: "text.alignleft")
+                                            .font(.caption2)
+                                            .foregroundColor(.white.opacity(0.8))
+                                        Text("Prompt")
+                                            .font(.caption2)
+                                            .foregroundColor(.gray)
+                                        
+                                        Spacer()
+                                    }
+                                    
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text(prompt)
+                                            .font(.system(size: 15, weight: .medium))
+                                            .foregroundColor(.white)
+                                            .fixedSize(horizontal: false, vertical: true)
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                    }
+                                    .padding(12)
+                                    .background(Color.white.opacity(0.05))
+                                    .cornerRadius(8)
+                                }
+                            }
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.vertical, 16)
+                        .padding(.horizontal, 16)
+                        .background(Color.white.opacity(0.05))
+                        .cornerRadius(12)
+                        
+                        // Title input section
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Preset Title")
+                                .font(.headline)
+                                .foregroundColor(.white)
+                            
+                            TextField("Enter a name for this preset", text: $presetTitle)
+                                .textFieldStyle(.plain)
+                                .font(.body)
+                                .foregroundColor(.white)
+                                .padding(12)
+                                .background(Color.white.opacity(0.1))
+                                .cornerRadius(8)
+                                .focused($isTitleFocused)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .stroke(isTitleFocused ? Color.blue : Color.white.opacity(0.2), lineWidth: 1)
+                                )
+                            
+                            Text("Choose a memorable name to easily identify this preset later.")
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                        }
+                        .padding()
+                        .background(Color.white.opacity(0.05))
+                        .cornerRadius(12)
+                    }
+                    .padding(.horizontal)
+                }
+            }
+            .navigationTitle("Create Preset")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
+                        isPresented = false
+                    }
+                    .foregroundColor(.white)
+                }
+                
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Save") {
+                        // TODO: Implement preset saving functionality
+                        isPresented = false
+                    }
+                    .foregroundColor(presetTitle.isEmpty ? .gray : .blue)
+                    .fontWeight(.semibold)
+                    .disabled(presetTitle.isEmpty)
+                }
+                
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Done") {
+                        isTitleFocused = false
+                    }
+                }
+            }
+        }
+        .preferredColorScheme(.dark)
+        .presentationDetents([.medium, .large])
     }
 }
