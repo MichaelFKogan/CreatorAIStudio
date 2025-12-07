@@ -85,8 +85,8 @@ struct AspectRatioCard: View {
     private var aspectDimensions: (width: CGFloat, height: CGFloat) {
         let components = aspectRatio.split(separator: ":")
         guard components.count == 2,
-              let width = Double(components[0]),
-              let height = Double(components[1])
+            let width = Double(components[0]),
+            let height = Double(components[1])
         else {
             return (1, 1)
         }
@@ -132,7 +132,10 @@ struct AspectRatioCard: View {
 
                 RoundedRectangle(cornerRadius: 3)
                     .stroke(Color.white.opacity(0.6), lineWidth: 1.5)
-                    .aspectRatio(aspectDimensions.width / aspectDimensions.height, contentMode: .fit)
+                    .aspectRatio(
+                        aspectDimensions.width / aspectDimensions.height,
+                        contentMode: .fit
+                    )
                     .frame(height: 20)
                     .padding(4)
             }
@@ -168,6 +171,17 @@ struct FullScreenImageView: View {
     @State private var isFavorited = false
     @State private var showCreatePresetSheet = false
 
+    // Cache image models to avoid repeated JSON loading
+    static var cachedImageModels: [InfoPacket]?
+    private var allImageModels: [InfoPacket] {
+        if let cached = Self.cachedImageModels {
+            return cached
+        }
+        let models = ImageModelsViewModel.loadImageModels()
+        Self.cachedImageModels = models
+        return models
+    }
+
     var mediaURL: URL? {
         URL(string: userImage.image_url)
     }
@@ -199,11 +213,10 @@ struct FullScreenImageView: View {
         userImage.type == "Video Model"
     }
 
-    // Find matching image model based on title
+    // Find matching image model based on title - now uses cached models
     private var matchingImageModel: InfoPacket? {
         guard let title = userImage.title, !title.isEmpty else { return nil }
-        let allModels = ImageModelsViewModel.loadImageModels()
-        return allModels.first { $0.display.title == title }
+        return allImageModels.first { $0.display.title == title }
     }
 
     // Helper function to format cost with full precision
@@ -212,528 +225,587 @@ struct FullScreenImageView: View {
         let formatter = NumberFormatter()
         formatter.numberStyle = .currency
         formatter.currencySymbol = "$"
-        formatter.maximumFractionDigits = 10 // Allow up to 10 decimal places for precision
-        formatter.minimumFractionDigits = 0 // Don't force trailing zeros
+        formatter.maximumFractionDigits = 10  // Allow up to 10 decimal places for precision
+        formatter.minimumFractionDigits = 0  // Don't force trailing zeros
         return formatter.string(from: NSNumber(value: cost)) ?? "$\(cost)"
+    }
+
+    // MARK: - View Components
+
+    @ViewBuilder
+    private var immersiveModeView: some View {
+        ZStack {
+            if isVideo {
+                immersiveVideoPlayer
+            } else {
+                immersiveImageView
+            }
+            immersiveExitButton
+        }
+    }
+
+    @ViewBuilder
+    private var immersiveVideoPlayer: some View {
+        if let url = mediaURL {
+            VideoPlayer(player: player)
+                .aspectRatio(contentMode: .fit)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .onAppear {
+                    player = AVPlayer(url: url)
+                    player?.play()
+                }
+                .onDisappear {
+                    player?.pause()
+                    player = nil
+                }
+                .onTapGesture {
+                    withAnimation {
+                        isImmersiveMode = false
+                    }
+                }
+        }
+    }
+
+    @ViewBuilder
+    private var immersiveImageView: some View {
+        if let url = mediaURL {
+            KFImage(url)
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .scaleEffect(zoom)
+                .offset(panOffset)
+                .gesture(immersiveImageGesture)
+                .simultaneousGesture(doubleTapResetGesture)
+                .onTapGesture {
+                    withAnimation {
+                        isImmersiveMode = false
+                    }
+                }
+        }
+    }
+
+    private var immersiveImageGesture: some Gesture {
+        SimultaneousGesture(
+            MagnificationGesture()
+                .onChanged { value in
+                    zoom = lastZoom * value
+                }
+                .onEnded { _ in
+                    lastZoom = zoom
+                    if lastZoom < 1.0 {
+                        withAnimation {
+                            lastZoom = 1.0
+                            zoom = 1.0
+                            panOffset = .zero
+                            lastPanOffset = .zero
+                        }
+                    } else if lastZoom > 5.0 {
+                        withAnimation {
+                            lastZoom = 5.0
+                            zoom = 5.0
+                        }
+                    }
+                },
+            DragGesture()
+                .onChanged { value in
+                    if zoom > 1.0 {
+                        panOffset = CGSize(
+                            width: lastPanOffset.width
+                                + value.translation.width,
+                            height: lastPanOffset.height
+                                + value.translation.height
+                        )
+                    }
+                }
+                .onEnded { _ in
+                    if zoom > 1.0 {
+                        lastPanOffset = panOffset
+                    } else {
+                        panOffset = .zero
+                        lastPanOffset = .zero
+                    }
+                }
+        )
+    }
+
+    private var doubleTapResetGesture: some Gesture {
+        TapGesture(count: 2)
+            .onEnded {
+                withAnimation(.spring()) {
+                    zoom = 1.0
+                    lastZoom = 1.0
+                    panOffset = .zero
+                    lastPanOffset = .zero
+                }
+            }
+    }
+
+    private var immersiveExitButton: some View {
+        VStack {
+            HStack {
+                Spacer()
+                Button(action: {
+                    withAnimation {
+                        isImmersiveMode = false
+                    }
+                }) {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 30))
+                        .foregroundColor(.white.opacity(0.8))
+                        .background(Color.black.opacity(0.3))
+                        .clipShape(Circle())
+                }
+                .padding()
+            }
+            Spacer()
+        }
+    }
+
+    @ViewBuilder
+    private var normalModeView: some View {
+        ScrollView {
+            VStack(spacing: 0) {
+                mediaSection
+                actionButtons
+                Divider()
+                    .background(Color.gray.opacity(0.3))
+                    .padding(.top, 8)
+                metadataSection
+                Spacer()
+                Color.clear.frame(height: 80)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var mediaSection: some View {
+        ZStack(alignment: .topTrailing) {
+            if isVideo {
+                normalVideoPlayer
+            } else {
+                normalImageView
+            }
+            fullScreenButton
+        }
+    }
+
+    @ViewBuilder
+    private var normalVideoPlayer: some View {
+        if let url = mediaURL {
+            VideoPlayer(player: player)
+                .aspectRatio(contentMode: .fit)
+                .frame(maxWidth: .infinity)
+                .onAppear {
+                    player = AVPlayer(url: url)
+                    player?.play()
+                }
+                .onDisappear {
+                    player?.pause()
+                    player = nil
+                }
+        }
+    }
+
+    @ViewBuilder
+    private var normalImageView: some View {
+        if let url = mediaURL {
+            KFImage(url)
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+                .frame(maxWidth: .infinity)
+                .clipped()
+                .scaleEffect(zoom)
+                .gesture(normalImageMagnificationGesture)
+                .onTapGesture(count: 2) {
+                    withAnimation(.spring()) {
+                        zoom = 1.0
+                        lastZoom = 1.0
+                    }
+                }
+                .onTapGesture {
+                    withAnimation {
+                        isImmersiveMode = true
+                        panOffset = .zero
+                        lastPanOffset = .zero
+                    }
+                }
+        }
+    }
+
+    private var normalImageMagnificationGesture: some Gesture {
+        MagnificationGesture()
+            .onChanged { value in
+                zoom = lastZoom * value
+            }
+            .onEnded { _ in
+                lastZoom = zoom
+                if lastZoom < 1.0 {
+                    withAnimation {
+                        lastZoom = 1.0
+                        zoom = 1.0
+                    }
+                } else if lastZoom > 5.0 {
+                    withAnimation {
+                        lastZoom = 5.0
+                        zoom = 5.0
+                    }
+                }
+            }
+    }
+
+    private var fullScreenButton: some View {
+        Button(action: {
+            withAnimation {
+                isImmersiveMode = true
+                panOffset = .zero
+                lastPanOffset = .zero
+            }
+        }) {
+            Image(systemName: "arrow.up.left.and.arrow.down.right")
+                .font(.system(size: 18, weight: .medium))
+                .foregroundColor(.white)
+                .frame(width: 36, height: 36)
+                .background(Color.black.opacity(0.5))
+                .clipShape(Circle())
+        }
+        .padding(12)
+    }
+
+    @ViewBuilder
+    private var actionButtons: some View {
+        HStack(spacing: 36) {
+            likeButton
+            if mediaURL != nil {
+                shareButton
+            }
+            saveButton
+            presetButton
+            deleteButton
+        }
+        .padding(.top, 8)
+        .padding(.horizontal)
+    }
+
+    private var likeButton: some View {
+        Button(action: {
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                isFavorited.toggle()
+            }
+            if let viewModel = viewModel {
+                Task {
+                    await viewModel.toggleFavorite(imageId: userImage.id)
+                }
+            }
+        }) {
+            VStack(spacing: 6) {
+                Image(systemName: isFavorited ? "heart.fill" : "heart")
+                    .font(.system(size: 20, weight: .medium))
+                    .foregroundColor(isFavorited ? .red : .white)
+                    .opacity(0.8)
+                    .scaleEffect(isFavorited ? 1.2 : 1.0)
+                Text("Like")
+                    .font(.caption)
+                    .foregroundColor(.gray)
+            }
+        }
+        .buttonStyle(.plain)
+    }
+
+    @ViewBuilder
+    private var shareButton: some View {
+        if let url = mediaURL {
+            ShareLink(item: url) {
+                VStack(spacing: 6) {
+                    Image(systemName: "square.and.arrow.up")
+                        .font(.system(size: 20, weight: .medium))
+                        .foregroundColor(.white)
+                        .opacity(0.8)
+                    Text("Share")
+                        .font(.caption)
+                        .foregroundColor(.gray)
+                }
+            }
+            .buttonStyle(.plain)
+            .disabled(isDeleting || isDownloading)
+        }
+    }
+
+    private var saveButton: some View {
+        Button(action: {
+            Task {
+                await downloadImage()
+            }
+        }) {
+            VStack(spacing: 6) {
+                if isDownloading {
+                    ProgressView()
+                        .progressViewStyle(
+                            CircularProgressViewStyle(tint: .white)
+                        )
+                        .scaleEffect(0.8)
+                } else if showDownloadSuccess {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 20, weight: .medium))
+                        .foregroundColor(.green)
+                } else {
+                    Image(systemName: "arrow.down.circle")
+                        .font(.system(size: 20, weight: .medium))
+                        .foregroundColor(.white)
+                        .opacity(0.8)
+                }
+                Text(showDownloadSuccess ? "Saved" : "Save")
+                    .font(.caption)
+                    .foregroundColor(.gray)
+            }
+        }
+        .buttonStyle(.plain)
+        .disabled(isDeleting || isDownloading || showDownloadSuccess)
+    }
+
+    private var presetButton: some View {
+        Button(action: {
+            showCreatePresetSheet = true
+        }) {
+            VStack(spacing: 6) {
+                Image(systemName: "bookmark")
+                    .font(.system(size: 20, weight: .medium))
+                    .foregroundColor(.white)
+                    .opacity(0.8)
+                Text("Preset")
+                    .font(.caption)
+                    .foregroundColor(.gray)
+            }
+        }
+        .buttonStyle(.plain)
+        .disabled(isDeleting || isDownloading)
+    }
+
+    private var deleteButton: some View {
+        Button(action: {
+            showDeleteAlert = true
+        }) {
+            VStack(spacing: 6) {
+                Image(systemName: "trash.fill")
+                    .font(.system(size: 20, weight: .medium))
+                    .foregroundColor(.red)
+                    .opacity(0.8)
+                Text("Delete")
+                    .font(.caption)
+                    .foregroundColor(.gray)
+            }
+        }
+        .buttonStyle(.plain)
+        .disabled(isDeleting)
+    }
+
+    @ViewBuilder
+    private var metadataSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            mediaTypeBadge
+            if isPhotoFilter || isVideoFilter {
+                filterMetadata
+            } else if isImageModel || isVideoModel {
+                modelMetadata
+            } else {
+                genericMetadata
+            }
+        }
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.black.opacity(0.8))
+    }
+
+    private var mediaTypeBadge: some View {
+        HStack {
+            HStack(spacing: 4) {
+                Image(systemName: isVideo ? "video.fill" : "photo.fill")
+                    .font(.caption)
+                Text(isVideo ? "Video" : "Image")
+                    .font(.caption)
+                    .fontWeight(.medium)
+            }
+            .foregroundColor(.white)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(
+                Capsule()
+                    .fill(
+                        isVideo
+                            ? Color.purple.opacity(0.3)
+                            : Color.blue.opacity(0.3))
+            )
+            if let ext = userImage.file_extension {
+                Text(ext.uppercased())
+                    .font(.caption2)
+                    .foregroundColor(.gray)
+            }
+            Spacer()
+        }
+        .padding(.bottom, 4)
+    }
+
+    @ViewBuilder
+    private var filterMetadata: some View {
+        if let title = userImage.title, !title.isEmpty {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 4) {
+                    Image(systemName: "camera.filters")
+                        .font(.caption2)
+                        .foregroundColor(.white.opacity(0.8))
+                    Text("Filter Name")
+                        .font(.caption2)
+                        .foregroundColor(.gray)
+                }
+                Text(title)
+                    .font(.title3)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.white)
+            }
+            .padding(.bottom, 8)
+        }
+        let gridColumns: [GridItem] = [
+            GridItem(.flexible()),
+            GridItem(.flexible()),
+        ]
+        LazyVGrid(columns: gridColumns, spacing: 10) {
+            if let type = userImage.type {
+                MetadataCard(icon: "tag.fill", label: "Type", value: type)
+            }
+            if let cost = userImage.cost {
+                MetadataCard(
+                    icon: "dollarsign.circle.fill", label: "Cost",
+                    value: formatCost(cost))
+            }
+            if let aspectRatio = userImage.aspect_ratio, !aspectRatio.isEmpty {
+                AspectRatioCard(aspectRatio: aspectRatio)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var modelMetadata: some View {
+        if let title = userImage.title, !title.isEmpty {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 4) {
+                    Image(systemName: "cpu")
+                        .font(.caption2)
+                        .foregroundColor(.white.opacity(0.8))
+                    Text("AI Model")
+                        .font(.caption2)
+                        .foregroundColor(.gray)
+                }
+                HStack(spacing: 12) {
+                    if let model = matchingImageModel {
+                        Image(model.display.imageName)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: 60, height: 60)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(
+                                        Color.white.opacity(0.2), lineWidth: 1)
+                            )
+                    }
+                    Text(title)
+                        .font(.title3)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.white)
+                }
+            }
+        }
+        let gridColumns: [GridItem] = [
+            GridItem(.flexible()),
+            GridItem(.flexible()),
+        ]
+        LazyVGrid(columns: gridColumns, spacing: 10) {
+            if let type = userImage.type {
+                MetadataCard(icon: "tag.fill", label: "Type", value: type)
+            }
+            if let cost = userImage.cost {
+                MetadataCard(
+                    icon: "dollarsign.circle.fill", label: "Cost",
+                    value: formatCost(cost))
+            }
+            if let model = userImage.model, !model.isEmpty {
+                MetadataCard(icon: "cpu.fill", label: "Model", value: model)
+            }
+            if let aspectRatio = userImage.aspect_ratio, !aspectRatio.isEmpty {
+                AspectRatioCard(aspectRatio: aspectRatio)
+            }
+        }
+        if let prompt = userImage.prompt, !prompt.isEmpty {
+            promptSection(prompt)
+        }
+    }
+
+    private func promptSection(_ prompt: String) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Image(systemName: "text.alignleft")
+                    .font(.caption2)
+                    .foregroundColor(.white.opacity(0.8))
+                Text("Prompt")
+                    .font(.caption2)
+                    .foregroundColor(.gray)
+                Spacer()
+                Button(action: {
+                    copyPromptToClipboard(prompt)
+                }) {
+                    HStack(spacing: 4) {
+                        Image(
+                            systemName: showCopySuccess
+                                ? "checkmark.circle.fill" : "doc.on.doc"
+                        )
+                        .foregroundColor(
+                            showCopySuccess ? .green : .white.opacity(0.8)
+                        )
+                        .font(.system(size: 14, weight: .regular))
+                        if showCopySuccess {
+                            Text("Copied")
+                                .font(.caption2)
+                                .foregroundColor(.green)
+                        }
+                    }
+                }
+            }
+            VStack(alignment: .leading, spacing: 4) {
+                Text(prompt)
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundColor(.white)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .padding(12)
+            .background(Color.white.opacity(0.05))
+            .cornerRadius(8)
+        }
+    }
+
+    @ViewBuilder
+    private var genericMetadata: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 4) {
+                Image(systemName: "sparkles")
+                    .foregroundColor(.white.opacity(0.6))
+                Text("AI Generated")
+                    .font(.subheadline)
+                    .foregroundColor(.gray)
+            }
+            if let model = userImage.model, !model.isEmpty {
+                MetadataCard(icon: "cpu.fill", label: "Model", value: model)
+            }
+        }
     }
 
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
-
             if isImmersiveMode {
-                // Immersive full-screen mode - only media
-                ZStack {
-                    if isVideo {
-                        // Video player
-                        if let url = mediaURL {
-                            VideoPlayer(player: player)
-                                .aspectRatio(contentMode: .fit)
-                                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                                .onAppear {
-                                    player = AVPlayer(url: url)
-                                    player?.play()
-                                }
-                                .onDisappear {
-                                    player?.pause()
-                                    player = nil
-                                }
-                                .onTapGesture {
-                                    // Tap to exit immersive mode
-                                    withAnimation {
-                                        isImmersiveMode = false
-                                    }
-                                }
-                        }
-                    } else {
-                        // Image viewer
-                        if let url = mediaURL {
-                            KFImage(url)
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                                .scaleEffect(zoom)
-                                .offset(panOffset)
-                                .gesture(
-                                    SimultaneousGesture(
-                                        MagnificationGesture()
-                                            .onChanged { value in
-                                                zoom = lastZoom * value
-                                            }
-                                            .onEnded { _ in
-                                                lastZoom = zoom
-                                                // Limit zoom range
-                                                if lastZoom < 1.0 {
-                                                    withAnimation {
-                                                        lastZoom = 1.0
-                                                        zoom = 1.0
-                                                        panOffset = .zero
-                                                        lastPanOffset = .zero
-                                                    }
-                                                } else if lastZoom > 5.0 {
-                                                    withAnimation {
-                                                        lastZoom = 5.0
-                                                        zoom = 5.0
-                                                    }
-                                                }
-                                            },
-                                        DragGesture()
-                                            .onChanged { value in
-                                                if zoom > 1.0 {
-                                                    panOffset = CGSize(
-                                                        width: lastPanOffset.width + value.translation.width,
-                                                        height: lastPanOffset.height + value.translation.height
-                                                    )
-                                                }
-                                            }
-                                            .onEnded { _ in
-                                                if zoom > 1.0 {
-                                                    lastPanOffset = panOffset
-                                                } else {
-                                                    panOffset = .zero
-                                                    lastPanOffset = .zero
-                                                }
-                                            }
-                                    )
-                                )
-                                .simultaneousGesture(
-                                    TapGesture(count: 2)
-                                        .onEnded {
-                                            // Double-tap to reset zoom
-                                            withAnimation(.spring()) {
-                                                zoom = 1.0
-                                                lastZoom = 1.0
-                                                panOffset = .zero
-                                                lastPanOffset = .zero
-                                            }
-                                        }
-                                )
-                                .onTapGesture {
-                                    // Single tap to exit immersive mode
-                                    withAnimation {
-                                        isImmersiveMode = false
-                                    }
-                                }
-                        }
-                    }
-
-                    // Exit button in immersive mode
-                    VStack {
-                        HStack {
-                            Spacer()
-                            Button(action: {
-                                withAnimation {
-                                    isImmersiveMode = false
-                                }
-                            }) {
-                                Image(systemName: "xmark.circle.fill")
-                                    .font(.system(size: 30))
-                                    .foregroundColor(.white.opacity(0.8))
-                                    .background(Color.black.opacity(0.3))
-                                    .clipShape(Circle())
-                            }
-                            .padding()
-                        }
-                        Spacer()
-                    }
-                }
+                immersiveModeView
             } else {
-                // Normal mode with metadata
-                ScrollView {
-                    VStack(spacing: 0) {
-                        // Media section (image or video)
-                        ZStack(alignment: .topTrailing) {
-                            if isVideo {
-                                // Video player
-                                if let url = mediaURL {
-                                    VideoPlayer(player: player)
-                                        .aspectRatio(contentMode: .fit)
-                                        .frame(maxWidth: .infinity)
-                                        .onAppear {
-                                            player = AVPlayer(url: url)
-                                            player?.play()
-                                        }
-                                        .onDisappear {
-                                            player?.pause()
-                                            player = nil
-                                        }
-                                }
-                            } else {
-                                // Image viewer
-                                if let url = mediaURL {
-                                    KFImage(url)
-                                        .resizable()
-                                        .aspectRatio(contentMode: .fill)
-                                        .frame(maxWidth: .infinity)
-                                        .clipped()
-                                        .scaleEffect(zoom)
-                                        .gesture(
-                                            MagnificationGesture()
-                                                .onChanged { value in
-                                                    zoom = lastZoom * value
-                                                }
-                                                .onEnded { _ in
-                                                    lastZoom = zoom
-                                                    // Limit zoom range
-                                                    if lastZoom < 1.0 {
-                                                        withAnimation {
-                                                            lastZoom = 1.0
-                                                            zoom = 1.0
-                                                        }
-                                                    } else if lastZoom > 5.0 {
-                                                        withAnimation {
-                                                            lastZoom = 5.0
-                                                            zoom = 5.0
-                                                        }
-                                                    }
-                                                }
-                                        )
-                                        .onTapGesture(count: 2) {
-                                            // Double-tap to reset zoom
-                                            withAnimation(.spring()) {
-                                                zoom = 1.0
-                                                lastZoom = 1.0
-                                            }
-                                        }
-                                        .onTapGesture {
-                                            // Single-tap to open immersive mode
-                                            withAnimation {
-                                                isImmersiveMode = true
-                                                panOffset = .zero
-                                                lastPanOffset = .zero
-                                            }
-                                        }
-                                }
-                            }
-
-                            // Full-screen icon button
-                            Button(action: {
-                                withAnimation {
-                                    isImmersiveMode = true
-                                    panOffset = .zero
-                                    lastPanOffset = .zero
-                                }
-                            }) {
-                                Image(systemName: "arrow.up.left.and.arrow.down.right")
-                                    .font(.system(size: 18, weight: .medium))
-                                    .foregroundColor(.white)
-                                    .frame(width: 36, height: 36)
-                                    .background(Color.black.opacity(0.5))
-                                    .clipShape(Circle())
-                            }
-                            .padding(12)
-                        }
-
-                        // Action buttons (Like, Share, Save, Delete)
-                        HStack(spacing: 36) {
-                            // Like button
-                            Button(action: {
-                                withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
-                                    isFavorited.toggle()
-                                }
-
-                                // Update database if viewModel is available
-                                if let viewModel = viewModel {
-                                    Task {
-                                        await viewModel.toggleFavorite(imageId: userImage.id)
-                                    }
-                                }
-                            }) {
-                                VStack(spacing: 6) {
-                                    Image(systemName: isFavorited ? "heart.fill" : "heart")
-                                        .font(.system(size: 20, weight: .medium))
-                                        .foregroundColor(isFavorited ? .red : .white)
-                                        .opacity(0.8)
-                                        .scaleEffect(isFavorited ? 1.2 : 1.0)
-                                    Text("Like")
-                                        .font(.caption)
-                                        .foregroundColor(.gray)
-                                }
-                            }
-                            .buttonStyle(.plain)
-
-                            // Share button
-                            if let url = mediaURL {
-                                ShareLink(item: url) {
-                                    VStack(spacing: 6) {
-                                        Image(systemName: "square.and.arrow.up")
-                                            .font(.system(size: 20, weight: .medium))
-                                            .foregroundColor(.white)
-                                            .opacity(0.8)
-                                        Text("Share")
-                                            .font(.caption)
-                                            .foregroundColor(.gray)
-                                    }
-                                }
-                                .buttonStyle(.plain)
-                                .disabled(isDeleting || isDownloading)
-                            }
-
-                            // Save button
-                            Button(action: {
-                                Task {
-                                    await downloadImage()
-                                }
-                            }) {
-                                VStack(spacing: 6) {
-                                    if isDownloading {
-                                        ProgressView()
-                                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                            .scaleEffect(0.8)
-                                    } else if showDownloadSuccess {
-                                        Image(systemName: "checkmark.circle.fill")
-                                            .font(.system(size: 20, weight: .medium))
-                                            .foregroundColor(.green)
-                                    } else {
-                                        Image(systemName: "arrow.down.circle")
-                                            .font(.system(size: 20, weight: .medium))
-                                            .foregroundColor(.white)
-                                            .opacity(0.8)
-                                    }
-                                    Text(showDownloadSuccess ? "Saved" : "Save")
-                                        .font(.caption)
-                                        .foregroundColor(.gray)
-                                }
-                            }
-                            .buttonStyle(.plain)
-                            .disabled(isDeleting || isDownloading || showDownloadSuccess)
-
-                            // Create Preset button
-                            Button(action: {
-                                showCreatePresetSheet = true
-                            }) {
-                                VStack(spacing: 6) {
-                                    Image(systemName: "bookmark")
-                                        .font(.system(size: 20, weight: .medium))
-                                        .foregroundColor(.white)
-                                        .opacity(0.8)
-                                    Text("Preset")
-                                        .font(.caption)
-                                        .foregroundColor(.gray)
-                                }
-                            }
-                            .buttonStyle(.plain)
-                            .disabled(isDeleting || isDownloading)
-
-                            // Delete button
-                            Button(action: {
-                                showDeleteAlert = true
-                            }) {
-                                VStack(spacing: 6) {
-                                    Image(systemName: "trash.fill")
-                                        .font(.system(size: 20, weight: .medium))
-                                        .foregroundColor(.red)
-                                        .opacity(0.8)
-                                    Text("Delete")
-                                        .font(.caption)
-                                        .foregroundColor(.gray)
-                                }
-                            }
-                            .buttonStyle(.plain)
-                            .disabled(isDeleting)
-                        }
-                        .padding(.top, 8)
-                        .padding(.horizontal)
-
-                        Divider()
-                            .background(Color.gray.opacity(0.3))
-                            .padding(.top, 8)
-
-                        // Info section below image
-                        VStack(alignment: .leading, spacing: 16) {
-                            // Display media type badge
-                            HStack {
-                                HStack(spacing: 4) {
-                                    Image(systemName: isVideo ? "video.fill" : "photo.fill")
-                                        .font(.caption)
-                                    Text(isVideo ? "Video" : "Image")
-                                        .font(.caption)
-                                        .fontWeight(.medium)
-                                }
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
-                                .background(
-                                    Capsule()
-                                        .fill(isVideo ? Color.purple.opacity(0.3) : Color.blue.opacity(0.3))
-                                )
-
-                                if let ext = userImage.file_extension {
-                                    Text(ext.uppercased())
-                                        .font(.caption2)
-                                        .foregroundColor(.gray)
-                                }
-
-                                Spacer()
-                            }
-                            .padding(.bottom, 4)
-
-                            // Display Photo Filter or Video Filter information
-                            if isPhotoFilter || isVideoFilter {
-                                // Title - prominent display
-                                if let title = userImage.title, !title.isEmpty {
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        HStack(spacing: 4) {
-                                            Image(systemName: "camera.filters")
-                                                .font(.caption2)
-                                                .foregroundColor(.white.opacity(0.8))
-                                            Text("Filter Name")
-                                                .font(.caption2)
-                                                .foregroundColor(.gray)
-                                        }
-                                        Text(title)
-                                            .font(.title3)
-                                            .fontWeight(.semibold)
-                                            .foregroundColor(.white)
-                                    }
-                                    .padding(.bottom, 8)
-                                }
-
-                                // Grid layout for metadata
-                                LazyVGrid(columns: [
-                                    GridItem(.flexible()),
-                                    GridItem(.flexible()),
-                                ], spacing: 10) {
-                                    if let type = userImage.type {
-                                        MetadataCard(icon: "tag.fill", label: "Type", value: type)
-                                    }
-
-                                    if let cost = userImage.cost {
-                                        MetadataCard(icon: "dollarsign.circle.fill", label: "Cost", value: formatCost(cost))
-                                    }
-
-                                    if let aspectRatio = userImage.aspect_ratio, !aspectRatio.isEmpty {
-                                        AspectRatioCard(aspectRatio: aspectRatio)
-                                    }
-                                }
-                            }
-
-                            else if isImageModel || isVideoModel {
-                                // Title - prominent display with model image
-                                if let title = userImage.title, !title.isEmpty {
-                                    VStack(alignment: .leading, spacing: 12) {
-                                        HStack(spacing: 4) {
-                                            Image(systemName: "cpu")
-                                                .font(.caption2)
-                                                .foregroundColor(.white.opacity(0.8))
-                                            Text("AI Model")
-                                                .font(.caption2)
-                                                .foregroundColor(.gray)
-                                        }
-
-                                        HStack(spacing: 12) {
-                                            // Display model image if available
-                                            if let model = matchingImageModel {
-                                                Image(model.display.imageName)
-                                                    .resizable()
-                                                    .aspectRatio(contentMode: .fill)
-                                                    .frame(width: 60, height: 60)
-                                                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                                                    .overlay(
-                                                        RoundedRectangle(cornerRadius: 8)
-                                                            .stroke(Color.white.opacity(0.2), lineWidth: 1)
-                                                    )
-                                            }
-
-                                            Text(title)
-                                                .font(.title3)
-                                                .fontWeight(.semibold)
-                                                .foregroundColor(.white)
-                                        }
-                                    }
-                                }
-
-                                // Grid layout for metadata
-                                LazyVGrid(columns: [
-                                    GridItem(.flexible()),
-                                    GridItem(.flexible()),
-                                ], spacing: 10) {
-                                    if let type = userImage.type {
-                                        MetadataCard(icon: "tag.fill", label: "Type", value: type)
-                                    }
-
-                                    if let cost = userImage.cost {
-                                        MetadataCard(icon: "dollarsign.circle.fill", label: "Cost", value: formatCost(cost))
-                                    }
-
-                                    if let model = userImage.model, !model.isEmpty {
-                                        MetadataCard(icon: "cpu.fill", label: "Model", value: model)
-                                    }
-
-                                    if let aspectRatio = userImage.aspect_ratio, !aspectRatio.isEmpty {
-                                        AspectRatioCard(aspectRatio: aspectRatio)
-                                    }
-                                }
-
-                                // Prompt (if exists) - special prominent display
-                                if let prompt = userImage.prompt, !prompt.isEmpty {
-                                    VStack(alignment: .leading, spacing: 8) {
-                                        HStack {
-                                            Image(systemName: "text.alignleft")
-                                                .font(.caption2)
-                                                .foregroundColor(.white.opacity(0.8))
-                                            Text("Prompt")
-                                                .font(.caption2)
-                                                .foregroundColor(.gray)
-
-                                            Spacer()
-
-                                            Button(action: {
-                                                copyPromptToClipboard(prompt)
-                                            }) {
-                                                HStack(spacing: 4) {
-                                                    Image(systemName: showCopySuccess ? "checkmark.circle.fill" : "doc.on.doc")
-                                                        .foregroundColor(showCopySuccess ? .green : .white.opacity(0.8))
-                                                        .font(.system(size: 14, weight: .regular))
-                                                    if showCopySuccess {
-                                                        Text("Copied")
-                                                            .font(.caption2)
-                                                            .foregroundColor(.green)
-                                                    }
-                                                }
-                                            }
-                                        }
-
-                                        VStack(alignment: .leading, spacing: 4) {
-                                            Text(prompt)
-                                                .font(.system(size: 15, weight: .medium))
-                                                .foregroundColor(.white)
-                                                .fixedSize(horizontal: false, vertical: true)
-                                                .frame(maxWidth: .infinity, alignment: .leading)
-                                        }
-                                        .padding(12)
-                                        .background(Color.white.opacity(0.05))
-                                        .cornerRadius(8)
-                                    }
-                                }
-                            }
-
-                            else {
-                                // For other types, show generic info
-                                VStack(alignment: .leading, spacing: 12) {
-                                    HStack(spacing: 4) {
-                                        Image(systemName: "sparkles")
-                                            .foregroundColor(.white.opacity(0.6))
-                                        Text("AI Generated")
-                                            .font(.subheadline)
-                                            .foregroundColor(.gray)
-                                    }
-
-                                    if let model = userImage.model, !model.isEmpty {
-                                        MetadataCard(icon: "cpu.fill", label: "Model", value: model)
-                                    }
-                                }
-                            }
-                        }
-                        .padding()
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Color.black.opacity(0.8))
-
-                        Spacer()
-                    }
-                    // Bottom spacing
-                    Color.clear.frame(height: 80)
-                }
+                normalModeView
             }
         }
         .alert("Delete Image?", isPresented: $showDeleteAlert) {
@@ -744,7 +816,9 @@ struct FullScreenImageView: View {
                 }
             }
         } message: {
-            Text("This will permanently delete this \(isVideo ? "video" : "image"). This action cannot be undone.")
+            Text(
+                "This will permanently delete this \(isVideo ? "video" : "image"). This action cannot be undone."
+            )
         }
         .alert("Delete Failed", isPresented: $showDeleteError) {
             Button("OK", role: .cancel) {}
@@ -803,12 +877,14 @@ struct FullScreenImageView: View {
             let (data, _) = try await URLSession.shared.data(from: url)
 
             // Request photo library permission and save
-            let status = await PHPhotoLibrary.requestAuthorization(for: .addOnly)
+            let status = await PHPhotoLibrary.requestAuthorization(
+                for: .addOnly)
 
             guard status == .authorized || status == .limited else {
                 await MainActor.run {
                     isDownloading = false
-                    downloadErrorMessage = "Photo library access denied. Please enable photo library access in Settings."
+                    downloadErrorMessage =
+                        "Photo library access denied. Please enable photo library access in Settings."
                     showDownloadError = true
                 }
                 return
@@ -825,7 +901,8 @@ struct FullScreenImageView: View {
 
                 // Save to photo library
                 try await PHPhotoLibrary.shared().performChanges {
-                    PHAssetCreationRequest.creationRequestForAssetFromVideo(atFileURL: tempURL)
+                    PHAssetCreationRequest.creationRequestForAssetFromVideo(
+                        atFileURL: tempURL)
                 }
 
                 // Clean up temp file
@@ -835,7 +912,12 @@ struct FullScreenImageView: View {
             } else {
                 // Save image to photo library
                 guard let image = UIImage(data: data) else {
-                    throw NSError(domain: "DownloadError", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to create image from data"])
+                    throw NSError(
+                        domain: "DownloadError", code: -1,
+                        userInfo: [
+                            NSLocalizedDescriptionKey:
+                                "Failed to create image from data"
+                        ])
                 }
 
                 try await PHPhotoLibrary.shared().performChanges {
@@ -863,9 +945,11 @@ struct FullScreenImageView: View {
             await MainActor.run {
                 isDownloading = false
                 if let urlError = error as? URLError {
-                    downloadErrorMessage = "Network error: \(urlError.localizedDescription)"
+                    downloadErrorMessage =
+                        "Network error: \(urlError.localizedDescription)"
                 } else {
-                    downloadErrorMessage = "Failed to download: \(error.localizedDescription)"
+                    downloadErrorMessage =
+                        "Failed to download: \(error.localizedDescription)"
                 }
                 showDownloadError = true
             }
@@ -882,10 +966,12 @@ struct FullScreenImageView: View {
         let maxRetries = 3
         var lastError: Error?
 
-        for attempt in 1 ... maxRetries {
+        for attempt in 1...maxRetries {
             do {
                 let imageUrl = userImage.image_url
-                print("🔍 Deletion attempt \(attempt)/\(maxRetries) - Full image URL: \(imageUrl)")
+                print(
+                    "🔍 Deletion attempt \(attempt)/\(maxRetries) - Full image URL: \(imageUrl)"
+                )
 
                 // Delete from database first (with retry)
                 try await retryOperation(maxAttempts: 2) {
@@ -899,8 +985,11 @@ struct FullScreenImageView: View {
                 print("✅ Image record deleted from database")
 
                 // Determine which storage bucket to use
-                let bucketName = isVideo ? "user-generated-videos" : "user-generated-images"
-                let bucketPath = isVideo ? "/user-generated-videos/" : "/user-generated-images/"
+                let bucketName =
+                    isVideo ? "user-generated-videos" : "user-generated-images"
+                let bucketPath =
+                    isVideo
+                    ? "/user-generated-videos/" : "/user-generated-images/"
 
                 // Extract the storage path from the URL
                 var storagePath: String?
@@ -910,15 +999,22 @@ struct FullScreenImageView: View {
                     storagePath = String(imageUrl[bucketIndex.upperBound...])
                 }
                 // Method 2: Look for /public/bucket/
-                else if let publicIndex = imageUrl.range(of: "/public\(bucketPath)") {
+                else if let publicIndex = imageUrl.range(
+                    of: "/public\(bucketPath)")
+                {
                     storagePath = String(imageUrl[publicIndex.upperBound...])
                 }
                 // Method 3: Parse URL components
                 else if let url = URL(string: imageUrl) {
                     print("🔍 URL components: \(url.pathComponents)")
-                    let bucketComponent = isVideo ? "user-generated-videos" : "user-generated-images"
-                    if let bucketIdx = url.pathComponents.firstIndex(of: bucketComponent) {
-                        let pathAfterBucket = url.pathComponents.dropFirst(bucketIdx + 1)
+                    let bucketComponent =
+                        isVideo
+                        ? "user-generated-videos" : "user-generated-images"
+                    if let bucketIdx = url.pathComponents.firstIndex(
+                        of: bucketComponent)
+                    {
+                        let pathAfterBucket = url.pathComponents.dropFirst(
+                            bucketIdx + 1)
                         storagePath = pathAfterBucket.joined(separator: "/")
                     }
                 }
@@ -928,27 +1024,35 @@ struct FullScreenImageView: View {
                     print("🗑️ Also deleting video thumbnail: \(thumbnailUrl)")
 
                     var thumbnailPath: String?
-                    if let bucketIndex = thumbnailUrl.range(of: "/user-generated-images/") {
-                        thumbnailPath = String(thumbnailUrl[bucketIndex.upperBound...])
+                    if let bucketIndex = thumbnailUrl.range(
+                        of: "/user-generated-images/")
+                    {
+                        thumbnailPath = String(
+                            thumbnailUrl[bucketIndex.upperBound...])
                     }
 
                     if let thumbnailPath = thumbnailPath {
                         do {
                             try await retryOperation(maxAttempts: 2) {
-                                _ = try await SupabaseManager.shared.client.storage
+                                _ = try await SupabaseManager.shared.client
+                                    .storage
                                     .from("user-generated-images")
                                     .remove(paths: [thumbnailPath])
                             }
                             print("✅ Thumbnail deleted successfully")
                         } catch {
-                            print("⚠️ Thumbnail deletion failed (non-critical): \(error)")
+                            print(
+                                "⚠️ Thumbnail deletion failed (non-critical): \(error)"
+                            )
                         }
                     }
                 }
 
                 // Delete main storage file (with retry)
                 if let storagePath = storagePath {
-                    print("🗑️ Extracted storage path: '\(storagePath)' from bucket: \(bucketName)")
+                    print(
+                        "🗑️ Extracted storage path: '\(storagePath)' from bucket: \(bucketName)"
+                    )
 
                     do {
                         try await retryOperation(maxAttempts: 2) {
@@ -956,12 +1060,18 @@ struct FullScreenImageView: View {
                                 .from(bucketName)
                                 .remove(paths: [storagePath])
                         }
-                        print("✅ \(isVideo ? "Video" : "Image") file deleted from storage successfully")
+                        print(
+                            "✅ \(isVideo ? "Video" : "Image") file deleted from storage successfully"
+                        )
                     } catch {
-                        print("⚠️ Storage deletion failed (non-critical): \(error)")
+                        print(
+                            "⚠️ Storage deletion failed (non-critical): \(error)"
+                        )
                     }
                 } else {
-                    print("⚠️ Could not extract storage path from URL: \(imageUrl)")
+                    print(
+                        "⚠️ Could not extract storage path from URL: \(imageUrl)"
+                    )
                 }
 
                 // Success - close the view
@@ -974,13 +1084,16 @@ struct FullScreenImageView: View {
 
             } catch {
                 lastError = error
-                print("❌ Deletion attempt \(attempt) failed: \(error.localizedDescription)")
+                print(
+                    "❌ Deletion attempt \(attempt) failed: \(error.localizedDescription)"
+                )
 
                 if attempt < maxRetries {
                     // Wait before retrying (exponential backoff)
                     let delaySeconds = Double(attempt) * 0.5
                     print("⏳ Retrying in \(delaySeconds) seconds...")
-                    try? await Task.sleep(nanoseconds: UInt64(delaySeconds * 1_000_000_000))
+                    try? await Task.sleep(
+                        nanoseconds: UInt64(delaySeconds * 1_000_000_000))
                 }
             }
         }
@@ -990,9 +1103,11 @@ struct FullScreenImageView: View {
             isDeleting = false
             if let error = lastError as NSError? {
                 if error.domain == NSURLErrorDomain {
-                    deleteErrorMessage = "Network connection lost. Please check your internet connection and try again."
+                    deleteErrorMessage =
+                        "Network connection lost. Please check your internet connection and try again."
                 } else {
-                    deleteErrorMessage = "Failed to delete: \(error.localizedDescription)"
+                    deleteErrorMessage =
+                        "Failed to delete: \(error.localizedDescription)"
                 }
             } else {
                 deleteErrorMessage = "Failed to delete. Please try again."
@@ -1018,22 +1133,31 @@ struct FullScreenImageView: View {
 
     // MARK: - Retry Helper
 
-    private func retryOperation<T>(maxAttempts: Int, operation: () async throws -> T) async throws -> T {
+    private func retryOperation<T>(
+        maxAttempts: Int, operation: () async throws -> T
+    ) async throws -> T {
         var lastError: Error?
 
-        for attempt in 1 ... maxAttempts {
+        for attempt in 1...maxAttempts {
             do {
                 return try await operation()
             } catch {
                 lastError = error
                 if attempt < maxAttempts {
                     let delay = 0.3 * Double(attempt)
-                    try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
+                    try? await Task.sleep(
+                        nanoseconds: UInt64(delay * 1_000_000_000))
                 }
             }
         }
 
-        throw lastError ?? NSError(domain: "RetryError", code: -1, userInfo: [NSLocalizedDescriptionKey: "Operation failed after \(maxAttempts) attempts"])
+        throw lastError
+            ?? NSError(
+                domain: "RetryError", code: -1,
+                userInfo: [
+                    NSLocalizedDescriptionKey:
+                        "Operation failed after \(maxAttempts) attempts"
+                ])
     }
 }
 
@@ -1044,19 +1168,29 @@ struct CreatePresetSheet: View {
     let userImage: UserImage
     @State private var presetTitle: String = ""
     @FocusState private var isTitleFocused: Bool
-    
-    // Find matching image model based on title
+
+    // Cache image models to avoid repeated JSON loading
+    private static var cachedImageModels: [InfoPacket]?
+    private var allImageModels: [InfoPacket] {
+        if let cached = Self.cachedImageModels {
+            return cached
+        }
+        let models = ImageModelsViewModel.loadImageModels()
+        Self.cachedImageModels = models
+        return models
+    }
+
+    // Find matching image model based on title - now uses cached models
     private var matchingImageModel: InfoPacket? {
         guard let title = userImage.title, !title.isEmpty else { return nil }
-        let allModels = ImageModelsViewModel.loadImageModels()
-        return allModels.first { $0.display.title == title }
+        return allImageModels.first { $0.display.title == title }
     }
-    
+
     var body: some View {
         NavigationView {
             ZStack {
                 Color.black.ignoresSafeArea()
-                
+
                 ScrollView {
                     VStack(alignment: .leading, spacing: 24) {
                         // Information section
@@ -1069,34 +1203,73 @@ struct CreatePresetSheet: View {
                                     .font(.headline)
                                     .foregroundColor(.white)
                             }
-                            
-                            Text("A preset saves the current image, image model, and prompt settings. You can quickly reuse these settings later to generate similar images with the same style and configuration.")
-                                .font(.subheadline)
-                                .foregroundColor(.gray)
-                                .lineSpacing(4)
+
+                            Text(
+                                "A preset saves the current image, image model, and prompt settings. You can quickly reuse these settings later to generate similar images with the same style and configuration."
+                            )
+                            .font(.subheadline)
+                            .foregroundColor(.gray)
+                            .lineSpacing(4)
                         }
                         .padding()
                         .background(Color.white.opacity(0.05))
                         .cornerRadius(12)
-                        
+
+                        // Title input section
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Preset Title")
+                                .font(.headline)
+                                .foregroundColor(.white)
+
+                            TextField(
+                                "Enter a name for this preset",
+                                text: $presetTitle
+                            )
+                            .textFieldStyle(.plain)
+                            .font(.body)
+                            .foregroundColor(.white)
+                            .padding(12)
+                            .background(Color.white.opacity(0.1))
+                            .cornerRadius(8)
+                            .focused($isTitleFocused)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(
+                                        isTitleFocused
+                                            ? Color.blue
+                                            : Color.white.opacity(0.2),
+                                        lineWidth: 1)
+                            )
+
+                            Text(
+                                "Choose a memorable name to easily identify this preset later."
+                            )
+                            .font(.caption)
+                            .foregroundColor(.gray)
+                        }
+                        .padding()
+                        .background(Color.white.opacity(0.05))
+                        .cornerRadius(12)
+
                         // Preset details preview
                         VStack(alignment: .leading, spacing: 16) {
                             Text("Preset Details")
                                 .font(.headline)
                                 .foregroundColor(.white)
-                            
+
                             // AI Model section - matching FullScreenImageView style
                             if let title = userImage.title, !title.isEmpty {
                                 VStack(alignment: .leading, spacing: 12) {
                                     HStack(spacing: 4) {
                                         Image(systemName: "cpu")
                                             .font(.caption2)
-                                            .foregroundColor(.white.opacity(0.8))
+                                            .foregroundColor(
+                                                .white.opacity(0.8))
                                         Text("AI Model")
                                             .font(.caption2)
                                             .foregroundColor(.gray)
                                     }
-                                    
+
                                     HStack(spacing: 12) {
                                         // Display model image if available
                                         if let model = matchingImageModel {
@@ -1104,13 +1277,20 @@ struct CreatePresetSheet: View {
                                                 .resizable()
                                                 .aspectRatio(contentMode: .fill)
                                                 .frame(width: 60, height: 60)
-                                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                                                .clipShape(
+                                                    RoundedRectangle(
+                                                        cornerRadius: 8)
+                                                )
                                                 .overlay(
-                                                    RoundedRectangle(cornerRadius: 8)
-                                                        .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                                                    RoundedRectangle(
+                                                        cornerRadius: 8
+                                                    )
+                                                    .stroke(
+                                                        Color.white.opacity(
+                                                            0.2), lineWidth: 1)
                                                 )
                                         }
-                                        
+
                                         Text(title)
                                             .font(.title3)
                                             .fontWeight(.semibold)
@@ -1118,27 +1298,36 @@ struct CreatePresetSheet: View {
                                     }
                                 }
                             }
-                            
+
                             // Prompt section - matching FullScreenImageView style
                             if let prompt = userImage.prompt, !prompt.isEmpty {
                                 VStack(alignment: .leading, spacing: 8) {
                                     HStack {
                                         Image(systemName: "text.alignleft")
                                             .font(.caption2)
-                                            .foregroundColor(.white.opacity(0.8))
+                                            .foregroundColor(
+                                                .white.opacity(0.8))
                                         Text("Prompt")
                                             .font(.caption2)
                                             .foregroundColor(.gray)
-                                        
+
                                         Spacer()
                                     }
-                                    
+
                                     VStack(alignment: .leading, spacing: 4) {
                                         Text(prompt)
-                                            .font(.system(size: 15, weight: .medium))
+                                            .font(
+                                                .system(
+                                                    size: 15, weight: .medium)
+                                            )
                                             .foregroundColor(.white)
-                                            .fixedSize(horizontal: false, vertical: true)
-                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                            .fixedSize(
+                                                horizontal: false,
+                                                vertical: true
+                                            )
+                                            .frame(
+                                                maxWidth: .infinity,
+                                                alignment: .leading)
                                     }
                                     .padding(12)
                                     .background(Color.white.opacity(0.05))
@@ -1151,33 +1340,7 @@ struct CreatePresetSheet: View {
                         .padding(.horizontal, 16)
                         .background(Color.white.opacity(0.05))
                         .cornerRadius(12)
-                        
-                        // Title input section
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text("Preset Title")
-                                .font(.headline)
-                                .foregroundColor(.white)
-                            
-                            TextField("Enter a name for this preset", text: $presetTitle)
-                                .textFieldStyle(.plain)
-                                .font(.body)
-                                .foregroundColor(.white)
-                                .padding(12)
-                                .background(Color.white.opacity(0.1))
-                                .cornerRadius(8)
-                                .focused($isTitleFocused)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 8)
-                                        .stroke(isTitleFocused ? Color.blue : Color.white.opacity(0.2), lineWidth: 1)
-                                )
-                            
-                            Text("Choose a memorable name to easily identify this preset later.")
-                                .font(.caption)
-                                .foregroundColor(.gray)
-                        }
-                        .padding()
-                        .background(Color.white.opacity(0.05))
-                        .cornerRadius(12)
+
                     }
                     .padding(.horizontal)
                 }
@@ -1191,7 +1354,7 @@ struct CreatePresetSheet: View {
                     }
                     .foregroundColor(.white)
                 }
-                
+
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Save") {
                         // TODO: Implement preset saving functionality
@@ -1201,7 +1364,7 @@ struct CreatePresetSheet: View {
                     .fontWeight(.semibold)
                     .disabled(presetTitle.isEmpty)
                 }
-                
+
                 ToolbarItemGroup(placement: .keyboard) {
                     Spacer()
                     Button("Done") {

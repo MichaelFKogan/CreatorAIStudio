@@ -208,9 +208,9 @@ struct FilterScrollRow: View {
                     RoundedRectangle(cornerRadius: 14)
                         .stroke(
                             isCaptureEnabled
-                                ? Color.white
+                                ? Color.gray.opacity(0.5)
                                 : Color.gray.opacity(0.5),
-                            lineWidth: 5
+                            lineWidth: 4
                         )
                         .frame(width: frameWidth, height: frameHeight)
                         .shadow(color: .black.opacity(0.5), radius: 8, x: 0, y: 0)

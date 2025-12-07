@@ -64,8 +64,16 @@ struct ProfileViewContent: View {
     @State private var selectedModel: String? = nil
     @State private var showImageModelsPopover: Bool = false
 
-    // Load model data to get images
-    private let allImageModels: [InfoPacket] = ImageModelsViewModel.loadImageModels()
+    // Load model data to get images - cache at static level to avoid repeated loading
+    private static var cachedImageModels: [InfoPacket]?
+    private var allImageModels: [InfoPacket] {
+        if let cached = Self.cachedImageModels {
+            return cached
+        }
+        let models = ImageModelsViewModel.loadImageModels()
+        Self.cachedImageModels = models
+        return models
+    }
 
     enum GalleryTab: String, CaseIterable {
         case all = "All"
@@ -73,27 +81,33 @@ struct ProfileViewContent: View {
         case imageModels = "Image Models"
     }
 
-    // Get models with images and their metadata
+    // Get models with images and their metadata - cached to avoid recomputation
+    @State private var cachedModelsWithMetadata: [(model: String, count: Int, imageName: String)] = []
     private var modelsWithMetadata: [(model: String, count: Int, imageName: String)] {
-        var result: [(String, Int, String)] = []
+        // Only recompute if uniqueModels changed
+        let currentUniqueModels = viewModel.uniqueModels
+        if cachedModelsWithMetadata.isEmpty || cachedModelsWithMetadata.count != currentUniqueModels.count {
+            var result: [(String, Int, String)] = []
 
-        for modelName in viewModel.uniqueModels {
-            let count = viewModel.filteredImages(by: modelName, favoritesOnly: false).count
-            guard count > 0 else { continue }
+            for modelName in currentUniqueModels {
+                let count = viewModel.filteredImages(by: modelName, favoritesOnly: false).count
+                guard count > 0 else { continue }
 
-            // Find the model image from ImageModelData using display.imageName
-            var imageName = "photo.on.rectangle.angled" // fallback
-            if let modelInfo = allImageModels.first(where: { $0.display.modelName == modelName }) {
-                imageName = modelInfo.display.imageName
-            } else if let modelInfo = allImageModels.first(where: { $0.display.title == modelName }) {
-                imageName = modelInfo.display.imageName
+                // Find the model image from ImageModelData using display.imageName
+                var imageName = "photo.on.rectangle.angled" // fallback
+                if let modelInfo = allImageModels.first(where: { $0.display.modelName == modelName }) {
+                    imageName = modelInfo.display.imageName
+                } else if let modelInfo = allImageModels.first(where: { $0.display.title == modelName }) {
+                    imageName = modelInfo.display.imageName
+                }
+
+                result.append((modelName, count, imageName))
             }
 
-            result.append((modelName, count, imageName))
+            // Sort by count descending
+            cachedModelsWithMetadata = result.sorted { $0.1 > $1.1 }
         }
-
-        // Sort by count descending
-        return result.sorted { $0.1 > $1.1 }
+        return cachedModelsWithMetadata
     }
 
     var body: some View {
@@ -127,6 +141,10 @@ struct ProfileViewContent: View {
                         await viewModel.fetchUserImages(forceRefresh: true)
                     }
                 }
+            }
+            .onChange(of: viewModel.uniqueModels) { _, _ in
+                // Clear cache when unique models change
+                cachedModelsWithMetadata = []
             }
             .sheet(item: $selectedUserImage) { userImage in
                 FullScreenImageView(

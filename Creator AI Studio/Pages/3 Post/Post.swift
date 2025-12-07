@@ -44,44 +44,6 @@ struct Post: View {
                     )
                 }
 
-                // MARK: LARGE IMG
-                // Show larger preview image of the centered/selected filter or model
-                // Only visible while scrolling, fades out when scrolling stops
-                if let displayFilter = centeredFilter ?? selectedFilter
-                    ?? selectedImageModel
-                {
-                    VStack(spacing: 12) {
-                        // Filter title above the image
-                        Text(displayFilter.display.title)
-                            .font(
-                                .system(
-                                    size: 18, weight: .semibold,
-                                    design: .rounded)
-                            )
-                            .foregroundColor(.white)
-                            .opacity(isScrollingActive ? 1.0 : 0)
-                            .animation(
-                                .easeOut(duration: 0.3),
-                                value: isScrollingActive
-                            )
-                            .shadow(
-                                color: .black.opacity(0.8), radius: 4, x: 0,
-                                y: 2)
-
-                        // Preview image
-                        Image(displayFilter.display.imageName)
-                            .resizable()
-                            .scaledToFill()
-                            .frame(width: 250, height: 300)
-                            .clipShape(RoundedRectangle(cornerRadius: 16))
-                            .opacity(isScrollingActive ? 0.8 : 0)
-                            .shadow(
-                                color: .black.opacity(0.5), radius: 20, x: 0,
-                                y: 0)
-                    }
-                    .allowsHitTesting(false)
-                }
-
                 // MARK: MAIN STACK
                 VStack {
                     Spacer()
@@ -89,92 +51,130 @@ struct Post: View {
                     // MARK: BOTTOM ROW
                     VStack(spacing: 12) {
                         Spacer()
+
                         HStack {
-                            Spacer()
-
-                            // // MARK: CAPTURE
-
-                            // Button {
-                            //     cameraService.capturePhoto()
-                            // } label: {
-                            //     Circle()
-                            //         .stroke(
-                            //             isFilterOrModelSelected
-                            //                 ? Color.white
-                            //                 : Color.gray.opacity(0.5),
-                            //             lineWidth: 5
-                            //         )
-                            //         .frame(width: 80, height: 80)
-                            // }
-                            // .disabled(!isFilterOrModelSelected)
 
                             // Right side: Photo library and switch camera buttons
-                            VStack(spacing: 24) {
+                            VStack {
+                                Spacer()
 
-                                // MARK: SWITCH
-                                Button {
-                                    cameraService.switchCamera()
-                                } label: {
-                                    Image(
-                                        systemName:
-                                            "arrow.triangle.2.circlepath"
-                                    )
-                                    .font(.system(size: 25))
-                                    .foregroundColor(.white).opacity(0.8)
-                                    .clipShape(Circle())
-                                    .shadow(radius: 3)
-                                }
-                                .accessibilityLabel("Switch camera")
-
-                                // MARK: LIBRARY
-                                Button {
-                                    showLibraryPicker = true
-                                } label: {
-                                    Image(
-                                        systemName: "photo.on.rectangle.angled"
-                                    )
-                                    .font(.system(size: 25))
-                                    .foregroundColor(.white).opacity(0.8)
-                                    .cornerRadius(8)
-                                    .shadow(radius: 3)
-                                }
-
-                                // MARK: MENU
-                                Button {
-                                    showFilterCategorySheet = true
-                                } label: {
-                                    VStack(spacing: 4) {
+                                VStack(spacing: 24) {
+                                    // MARK: SWITCH
+                                    Button {
+                                        // cameraService.switchCamera()
+                                    } label: {
                                         Image(
-                                            systemName: "square.grid.2x2.fill"
+                                            systemName:
+                                                "arrow.triangle.2.circlepath"
                                         )
-                                        .font(
-                                            .system(
-                                                size: 22,
-                                                weight: .medium)
+                                        .font(.system(size: 25))
+                                        .foregroundColor(.white).opacity(0)
+                                        .clipShape(Circle())
+                                        .shadow(radius: 3)
+                                    }
+                                    .accessibilityLabel("Switch camera")
+
+                                    // MARK: LIBRARY
+                                    Button {
+                                        // showLibraryPicker = true
+                                    } label: {
+                                        Image(
+                                            systemName:
+                                                "photo.on.rectangle.angled"
                                         )
-                                        .foregroundColor(.white)
-                                        .opacity(0.9)
-                                        Text("Menu")
-                                            .font(.caption2)
-                                            .foregroundColor(.secondary)
+                                        .font(.system(size: 25))
+                                        .foregroundColor(.white).opacity(0)
+                                        .cornerRadius(8)
+                                        .shadow(radius: 3)
+                                    }
+
+                                    // MARK: MENU
+                                    Button {
+                                        // showFilterCategorySheet = true
+                                    } label: {
+                                        VStack(spacing: 4) {
+                                            Image(
+                                                systemName:
+                                                    "square.grid.2x2.fill"
+                                            )
+                                            .font(
+                                                .system(
+                                                    size: 22,
+                                                    weight: .medium)
+                                            )
+                                            .foregroundColor(.white)
+                                            .opacity(0)
+                                            Text("Menu")
+                                                .font(.caption2)
+                                                .foregroundColor(.secondary)
+                                                .opacity(0)
+                                        }
                                     }
                                 }
-
+                                .padding(.vertical, 12)
+                                .padding(.horizontal, 6)
+                                .background(
+                                    Capsule()
+                                        .fill(Color.black.opacity(0))
+                                )
                             }
-                            .padding(.vertical, 12)
-                            .padding(.horizontal, 6)
-                            .background(
-                                Capsule()
-                                    .fill(Color.black.opacity(0.5))
-                            )
-                            .padding(.horizontal)
-                        }
-
-                        HStack {
 
                             Spacer()
 
                             VStack(spacing: 0) {
+                                Spacer()
+
+                                // MARK: LARGE IMG
+                                // Show larger preview image of the centered/selected filter or model
+                                // Only visible while scrolling, fades out when scrolling stops
+                                if let displayFilter = centeredFilter
+                                    ?? selectedFilter
+                                    ?? selectedImageModel
+                                {
+                                    VStack(spacing: 12) {
+                                        // Filter title above the image
+                                        Text(displayFilter.display.title)
+                                            .font(
+                                                .system(
+                                                    size: 18, weight: .semibold,
+                                                    design: .rounded)
+                                            )
+                                            .foregroundColor(.white)
+                                            .opacity(
+                                                isScrollingActive ? 1.0 : 0
+                                            )
+                                            .animation(
+                                                .easeOut(duration: 0.3),
+                                                value: isScrollingActive
+                                            )
+                                            .shadow(
+                                                color: .black.opacity(0.8),
+                                                radius: 4,
+                                                x: 0,
+                                                y: 2)
+
+                                        // Preview image
+                                        Image(displayFilter.display.imageName)
+                                            .resizable()
+                                            .scaledToFill()
+                                            .frame(width: 250, height: 300)
+                                            .clipShape(
+                                                RoundedRectangle(
+                                                    cornerRadius: 16)
+                                            )
+                                            .opacity(
+                                                isScrollingActive ? 0.8 : 0
+                                            )
+                                            .shadow(
+                                                color: .black.opacity(0.5),
+                                                radius: 20,
+                                                x: 0,
+                                                y: 0)
+                                    }
+                                    .allowsHitTesting(false)
+                                    .padding(.bottom, 24)
+                                }
+
                                 // MARK: MENU
                                 Button {
                                     showFilterCategorySheet = true
@@ -252,6 +252,70 @@ struct Post: View {
 
                             Spacer()
 
+                            // Right side: Photo library and switch camera buttons
+                            VStack {
+                                Spacer()
+
+                                VStack(spacing: 24) {
+                                    // MARK: SWITCH
+                                    Button {
+                                        cameraService.switchCamera()
+                                    } label: {
+                                        Image(
+                                            systemName:
+                                                "arrow.triangle.2.circlepath"
+                                        )
+                                        .font(.system(size: 25))
+                                        .foregroundColor(.white).opacity(0.8)
+                                        .clipShape(Circle())
+                                        .shadow(radius: 3)
+                                    }
+                                    .accessibilityLabel("Switch camera")
+
+                                    // MARK: LIBRARY
+                                    Button {
+                                        showLibraryPicker = true
+                                    } label: {
+                                        Image(
+                                            systemName:
+                                                "photo.on.rectangle.angled"
+                                        )
+                                        .font(.system(size: 25))
+                                        .foregroundColor(.white).opacity(0.8)
+                                        .cornerRadius(8)
+                                        .shadow(radius: 3)
+                                    }
+
+                                    // MARK: MENU
+                                    Button {
+                                        showFilterCategorySheet = true
+                                    } label: {
+                                        VStack(spacing: 4) {
+                                            Image(
+                                                systemName:
+                                                    "square.grid.2x2.fill"
+                                            )
+                                            .font(
+                                                .system(
+                                                    size: 22,
+                                                    weight: .medium)
+                                            )
+                                            .foregroundColor(.white)
+                                            .opacity(0.9)
+                                            Text("Menu")
+                                                .font(.caption2)
+                                                .foregroundColor(.secondary)
+                                        }
+                                    }
+                                }
+                                .padding(.vertical, 12)
+                                .padding(.horizontal, 6)
+                                .background(
+                                    Capsule()
+                                        .fill(Color.black.opacity(0.5))
+                                )
+                            }
+
                         }
                         .padding(.horizontal)
 
@@ -294,6 +358,23 @@ struct Post: View {
                                 isCaptureEnabled: isFilterOrModelSelected)
                             Spacer()
                         }
+
+                        // MARK: CAPTURE
+
+                        Button {
+                            cameraService.capturePhoto()
+                        } label: {
+                            Circle()
+                                .stroke(
+                                    isFilterOrModelSelected
+                                        ? Color.white
+                                        : Color.gray.opacity(0.5),
+                                    lineWidth: 5
+                                )
+                                .frame(width: 80, height: 80)
+                        }
+                        .disabled(!isFilterOrModelSelected)
+
                     }
                     .safeAreaInset(edge: .bottom) {
                         Color.clear.frame(height: 65)
