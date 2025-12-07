@@ -278,7 +278,11 @@ struct Post: View {
                                 },
                                 onScrollingStateChanged: { isScrolling in
                                     isScrollingActive = isScrolling
-                                })
+                                },
+                                onCapture: {
+                                    cameraService.capturePhoto()
+                                },
+                                isCaptureEnabled: isFilterOrModelSelected)
                             Spacer()
                         }
                     }

@@ -10,6 +10,8 @@ struct FilterScrollRow: View {
     let onSelect: (InfoPacket) -> Void
     var onCenteredFilterChanged: ((InfoPacket?) -> Void)? = nil
     var onScrollingStateChanged: ((Bool) -> Void)? = nil
+    var onCapture: (() -> Void)? = nil
+    var isCaptureEnabled: Bool = false
     
     // Combined items: image models first, then filters
     private var allItems: [InfoPacket] {
@@ -40,9 +42,11 @@ struct FilterScrollRow: View {
                 ScrollViewReader { scrollProxy in
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 12) {
-                            // Leading spacer to center first item
+                            // Leading spacer to position first item to the right of white frame
+                            // White frame is centered at width/2, extends 40 points each side
+                            // Position first item to start after the frame (width/2 + 40 + spacing)
                             Color.clear
-                                .frame(width: (geometry.size.width - thumbnailWidth) / 2)
+                                .frame(width: geometry.size.width / 2 + frameWidth / 2 + 12)
                             
 // MARK: FOR EACH                           
                             ForEach(allItems) { item in
@@ -196,11 +200,22 @@ struct FilterScrollRow: View {
                 }
                 
 // MARK: WHITE FRAME
-                RoundedRectangle(cornerRadius: 14)
-                    .stroke(Color.white, lineWidth: 5)
-                    .frame(width: frameWidth, height: frameHeight)
-                    .shadow(color: .black.opacity(0.5), radius: 8, x: 0, y: 0)
-                    .allowsHitTesting(false)
+                Button {
+                    if isCaptureEnabled {
+                        onCapture?()
+                    }
+                } label: {
+                    RoundedRectangle(cornerRadius: 14)
+                        .stroke(
+                            isCaptureEnabled
+                                ? Color.white
+                                : Color.gray.opacity(0.5),
+                            lineWidth: 5
+                        )
+                        .frame(width: frameWidth, height: frameHeight)
+                        .shadow(color: .black.opacity(0.5), radius: 8, x: 0, y: 0)
+                }
+                .disabled(!isCaptureEnabled)
             }
             .frame(width: geometry.size.width)
             .onAppear {
