@@ -270,11 +270,20 @@ struct ProfileViewContent: View {
     private var imageModelsButtonLabel: some View {
         let isSelected = selectedTab == .imageModels && selectedModel != nil
         let title = isSelected && selectedModel != nil ? selectedModel! : "Image Models"
+        let modelCount = viewModel.uniqueModels.count
 
         return HStack(spacing: 6) {
             Text(title)
                 .font(.system(size: 14, weight: isSelected ? .semibold : .regular))
                 .lineLimit(1)
+            
+            // Show count when not selected or when showing all models
+            if !isSelected && modelCount > 0 {
+                Text("(\(modelCount))")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(.secondary)
+            }
+            
             Image(systemName: "chevron.down")
                 .font(.system(size: 10, weight: .medium))
         }
@@ -859,10 +868,10 @@ struct ImageModelsSheet: View {
         NavigationStack {
             ScrollView {
                 LazyVStack(spacing: 0) {
-                    Text("🔍 Models in sheet: \(models.count)")
-                        .font(.caption)
-                        .foregroundColor(.red)
-                        .padding()
+                    // Text("🔍 Models in sheet: \(models.count)")
+                    //     .font(.caption)
+                    //     .foregroundColor(.red)
+                    //     .padding()
                     
                     ForEach(models, id: \.model) { modelData in
                         Button {

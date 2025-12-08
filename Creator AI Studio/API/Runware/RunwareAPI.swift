@@ -28,7 +28,10 @@ struct RunwareResponse: Decodable {
 
 // MARK: - Runware API Key
 
+// Private
 let runwareApiKey = "JNyjLQK12U5NVmiM7aX9YTjxVvNXyYyJ"
+
+"zNNJ1KwqNUadOYKQmm58U84JqDjr5qMV"
 
 // MARK: - Image Upload Response Structure
 
