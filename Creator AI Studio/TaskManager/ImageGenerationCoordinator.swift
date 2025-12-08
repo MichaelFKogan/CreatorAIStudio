@@ -38,7 +38,8 @@ class ImageGenerationCoordinator: ObservableObject {
             title: "Transforming Your Photo",
             message: "Creating your \(item.display.title)...",
             progress: 0.0,
-            thumbnailImage: image
+            thumbnailImage: image,
+            taskId: taskId
         )
 
         // Save initial task state before the process begins.

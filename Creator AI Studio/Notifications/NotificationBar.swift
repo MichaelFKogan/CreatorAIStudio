@@ -5,18 +5,40 @@ struct NotificationBar: View {
     @ObservedObject var notificationManager: NotificationManager
     
     var body: some View {
-        if !notificationManager.notifications.isEmpty {
-            VStack(spacing: 8) {
-                ForEach(notificationManager.notifications) { notification in
-                    NotificationCard(
-                        notification: notification,
-                        onDismiss: {
-                            notificationManager.dismissNotification(id: notification.id)
-                        }
-                    )
+        if !notificationManager.notifications.isEmpty && notificationManager.isNotificationBarVisible {
+            VStack(spacing: 0) {
+                // Chevron down button to hide notification bar - aligned right
+                HStack {
+                    Spacer()
+                    Button(action: {
+                        notificationManager.hideNotificationBar()
+                    }) {
+                        Image(systemName: "chevron.down")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(.white)
+                            .frame(width: 40, height: 24)
+                            .background(Color.gray.opacity(0.6))
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                    }
                 }
+                .padding(.horizontal, 12)
+                .padding(.bottom, 4)
+                
+                VStack(spacing: 8) {
+                    ForEach(notificationManager.notifications) { notification in
+                        NotificationCard(
+                            notification: notification,
+                            onDismiss: {
+                                notificationManager.dismissNotification(id: notification.id)
+                            },
+                            onCancel: {
+                                notificationManager.cancelTask(notificationId: notification.id)
+                            }
+                        )
+                    }
+                }
+                .padding(.horizontal, 12)
             }
-            .padding(.horizontal, 12)
             .transition(.move(edge: .bottom).combined(with: .opacity))
         }
     }
@@ -26,6 +48,7 @@ struct NotificationBar: View {
 struct NotificationCard: View {
     let notification: NotificationData
     let onDismiss: () -> Void
+    let onCancel: () -> Void
     
     @State private var shimmer = false
     @State private var pulseAnimation = false
@@ -34,8 +57,13 @@ struct NotificationCard: View {
         HStack(spacing: 12) {
             NotificationThumbnail(image: notification.thumbnailImage, pulseAnimation: $pulseAnimation)
             NotificationTextContent(notification: notification, shimmer: $shimmer)
-            NotificationCloseButton(onDismiss: onDismiss)
+            Spacer(minLength: 0)
+            NotificationCancelButton(
+                state: notification.state,
+                onCancel: onCancel
+            )
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
         .background(
@@ -89,8 +117,17 @@ struct NotificationThumbnail: View {
     let image: UIImage?
     @Binding var pulseAnimation: Bool
     
+    // Helper to check if image is a placeholder (very small, like 1x1)
+    private var isValidImage: Bool {
+        guard let image = image else { return false }
+        let size = image.size
+        // Consider images smaller than 10x10 as placeholders
+        return size.width >= 10 && size.height >= 10
+    }
+    
     var body: some View {
-        if let image = image {
+        if let image = image, isValidImage {
+            // Show the source image for image-to-image transformations
             Image(uiImage: image)
                 .resizable()
                 .aspectRatio(contentMode: .fill)
@@ -107,21 +144,42 @@ struct NotificationThumbnail: View {
                 .scaleEffect(pulseAnimation ? 1.05 : 1.0)
                 .animation(.easeInOut(duration: 1).repeatForever(autoreverses: true), value: pulseAnimation)
         } else {
+            // Show an AI/magic icon for text-to-image generation
             ZStack {
+                // Animated gradient background
                 Circle()
-                    .fill(LinearGradient(colors: [.blue.opacity(0.3), .purple.opacity(0.3)],
-                                         startPoint: .topLeading,
-                                         endPoint: .bottomTrailing))
-                    .frame(width: 50, height: 50)
-                
-                Image(systemName: "photo.on.rectangle.angled")
-                    .font(.system(size: 22))
-                    .foregroundStyle(
-                        LinearGradient(colors: [.blue, .purple],
-                                       startPoint: .topLeading,
-                                       endPoint: .bottomTrailing)
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                Color(red: 0.4, green: 0.6, blue: 1.0),
+                                Color(red: 0.6, green: 0.4, blue: 1.0),
+                                Color(red: 0.8, green: 0.5, blue: 1.0)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
                     )
+                    .frame(width: 50, height: 50)
+                    .opacity(0.8)
+                
+                // Sparkles/magic wand icon to represent AI text-to-image
+                Image(systemName: "wand.and.stars")
+                    .font(.system(size: 24, weight: .medium))
+                    .foregroundColor(.white)
+                    .shadow(color: .black.opacity(0.2), radius: 2, x: 0, y: 1)
             }
+            .overlay(
+                Circle()
+                    .stroke(
+                        LinearGradient(
+                            colors: [.blue, .purple, .pink],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 2
+                    )
+            )
+            .shadow(color: Color.purple.opacity(0.4), radius: 6, x: 0, y: 2)
             .scaleEffect(pulseAnimation ? 1.05 : 1.0)
             .animation(.easeInOut(duration: 1).repeatForever(autoreverses: true), value: pulseAnimation)
         }
@@ -163,20 +221,18 @@ struct NotificationTextContent: View {
     }
 }
 
-// MARK: - Close Button View
-struct NotificationCloseButton: View {
-    let onDismiss: () -> Void
+// MARK: - Cancel Button View
+struct NotificationCancelButton: View {
+    let state: NotificationState
+    let onCancel: () -> Void
     
     var body: some View {
-        Button(action: onDismiss) {
-            ZStack {
-                Circle()
-                    .fill(Color.secondary.opacity(0.2))
-                    .frame(width: 28, height: 28)
-                
-                Image(systemName: "xmark")
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundColor(.secondary)
+        // Only show cancel button if task is in progress
+        if state == .inProgress {
+            Button(action: onCancel) {
+                Text("Cancel")
+                    .font(.custom("Nunito-Bold", size: 13))
+                    .foregroundColor(.red)
             }
         }
     }

@@ -105,7 +105,7 @@ struct PhotoFilters: View {
             }
             return result
         }
-        print("📊 [PhotoFilters] Total presets: \(presetViewModel.presets.count), Converted: \(converted.count)")
+        // print("📊 [PhotoFilters] Total presets: \(presetViewModel.presets.count), Converted: \(converted.count)") 
         return converted
     }
 

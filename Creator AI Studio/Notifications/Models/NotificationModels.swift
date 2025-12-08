@@ -17,6 +17,7 @@ struct NotificationData: Identifiable {
     var isActive: Bool
     var state: NotificationState
     var errorMessage: String?
+    var taskId: UUID? // Associated task ID for cancellation
     
     init(
         id: UUID = UUID(),
@@ -26,7 +27,8 @@ struct NotificationData: Identifiable {
         thumbnailImage: UIImage? = nil,
         isActive: Bool = true,
         state: NotificationState = .inProgress,
-        errorMessage: String? = nil
+        errorMessage: String? = nil,
+        taskId: UUID? = nil
     ) {
         self.id = id
         self.title = title
@@ -36,6 +38,7 @@ struct NotificationData: Identifiable {
         self.isActive = isActive
         self.state = state
         self.errorMessage = errorMessage
+        self.taskId = taskId
     }
 }
 
@@ -48,6 +51,7 @@ struct PlaceholderImage: Identifiable {
     let thumbnailImage: UIImage?
     let state: NotificationState
     let errorMessage: String?
+    let taskId: UUID? // Associated task ID for cancellation
     
     init(from notification: NotificationData) {
         self.id = notification.id
@@ -57,6 +61,7 @@ struct PlaceholderImage: Identifiable {
         self.thumbnailImage = notification.thumbnailImage
         self.state = notification.state
         self.errorMessage = notification.errorMessage
+        self.taskId = notification.taskId
     }
 }
 

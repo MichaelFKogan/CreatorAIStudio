@@ -174,26 +174,33 @@ struct PhotoConfirmationView: View {
 
                 Button(action: {
                     guard !isLoading else { return }
+                    guard let userId = authViewModel.user?.id.uuidString.lowercased(), !userId.isEmpty else {
+                        isLoading = false
+                        return
+                    }
 
                     isLoading = true
 
-//                    // Start background generation that persists across view changes
-//                    // Note: The generation continues in background even if user leaves this view
-//                    let taskId = notificationManager.startBackgroundGeneration(
-//                        item: item,
-//                        image: image,
-//                        userId: authViewModel.user?.id.uuidString.lowercased() ?? "",
-//                        onImageGenerated: { [weak notificationManager] downloadedImage in
-//                            // Optional: Update local state only if still on this view
-//                            // The image is already saved to database regardless
-//                            DispatchQueue.main.async {
-//                                generatedImage = downloadedImage
-//                                isLoading = false
-//                            }
-//                        }
-//                    )
-
-//                    currentTaskId = taskId
+                    // Start background generation using ImageGenerationCoordinator
+                    Task { @MainActor in
+                        let taskId = ImageGenerationCoordinator.shared.startImageGeneration(
+                            item: item,
+                            image: image,
+                            userId: userId,
+                            onImageGenerated: { downloadedImage in
+                                // Update local state when generation completes
+                                generatedImage = downloadedImage
+                                isLoading = false
+                            },
+                            onError: { error in
+                                // Handle error
+                                isLoading = false
+                                print("Image generation failed: \(error.localizedDescription)")
+                            }
+                        )
+                        
+                        currentTaskId = taskId
+                    }
                 }) {
                     HStack {
                         if isLoading {

@@ -65,7 +65,7 @@ class PresetViewModel: ObservableObject {
             presets = response.value ?? []
             saveCachedPresets()
             hasFetchedFromDatabase = true
-            print("✅ Fetched and cached \(presets.count) presets from Supabase")
+            // print("✅ Fetched and cached \(presets.count) presets from Supabase")
             
         } catch {
             print("❌ Failed to fetch presets: \(error)")

@@ -99,7 +99,7 @@ struct ContentView: View {
             VStack {
                 Spacer()
                 NotificationBar(notificationManager: notificationManager)
-                    .padding(.bottom, 55)  // add space above tab bar
+                    .padding(.bottom, 70)  // add space above tab bar
             }
 
             // Tab Bar
@@ -114,9 +114,7 @@ struct ContentView: View {
 
                     tabButton(icon: "cpu", title: "AI Models", index: 3)
                     // tabButton(icon: "video.fill", title: "Video", index: 3)
-                    tabButton(
-                        icon: "photo.on.rectangle.angled", title: "Gallery",
-                        index: 4)
+                    galleryTabButton()
                 }
                 .padding(.horizontal)
                 .padding(.top, 8)
@@ -167,6 +165,56 @@ struct ContentView: View {
             }
         }
     }
+    
+    // Gallery tab button with circular progress indicator
+    private func galleryTabButton() -> some View {
+        let activeNotifications = notificationManager.notifications.filter { 
+            $0.isActive && $0.state != .completed && $0.state != .failed 
+        }
+        let hasActiveGeneration = !activeNotifications.isEmpty
+        let completedCount = notificationManager.newCompletedCount
+        let failedCount = notificationManager.newFailedCount
+        
+        return Button(action: {
+            let edge: Edge = 4 < selectedTab ? .leading : .trailing
+            currentTransitionEdge = edge
+            previousTab = selectedTab
+            withAnimation(.easeInOut(duration: 0.3)) {
+                selectedTab = 4
+            }
+            // Clear badges when entering Gallery
+            notificationManager.clearBadges()
+        }) {
+            VStack(spacing: 4) {
+                ZStack {
+                    // Spinning circular progress indicator
+                    if hasActiveGeneration {
+                        SpinningProgressRing()
+                    }
+                    
+                    Image(systemName: "photo.on.rectangle.angled")
+                        .font(.system(size: 22))
+                    
+                    // Badge notification
+                    if failedCount > 0 {
+                        // Show X for failures
+                        BadgeView(content: "✕", backgroundColor: .red)
+                    } else if completedCount > 0 {
+                        // Show count for completed images
+                        BadgeView(content: "\(completedCount)", backgroundColor: .red)
+                    }
+                }
+                
+                Text("Gallery")
+                    .font(.caption)
+                    .foregroundColor(selectedTab == 4 ? .white.opacity(0.9) : .gray)
+            }
+            .frame(height: 55)
+            .offset(y: 5)
+            .foregroundColor(selectedTab == 4 ? .white.opacity(0.9) : .gray)
+            .frame(maxWidth: .infinity)
+        }
+    }
 }
 
 struct TabBarButton: View {
@@ -214,5 +262,59 @@ struct TabBarButton: View {
             )
             .frame(maxWidth: .infinity)
         }
+    }
+}
+
+// MARK: - Spinning Progress Ring with Multiple Colors
+struct SpinningProgressRing: View {
+    @State private var isAnimating = false
+    
+    var body: some View {
+        Circle()
+            .trim(from: 0, to: 0.7)
+            .stroke(
+                AngularGradient(
+                    gradient: Gradient(colors: [
+                        .blue,
+                        .purple,
+                        .pink,
+                        .orange,
+                        .blue
+                    ]),
+                    center: .center,
+                    startAngle: .degrees(0),
+                    endAngle: .degrees(360)
+                ),
+                style: StrokeStyle(lineWidth: 2.5, lineCap: .round)
+            )
+            .frame(width: 34, height: 34)
+            .rotationEffect(.degrees(isAnimating ? 360 : 0))
+            .onAppear {
+                withAnimation(.linear(duration: 1.5).repeatForever(autoreverses: false)) {
+                    isAnimating = true
+                }
+            }
+    }
+}
+
+// MARK: - Badge View for Notification Count
+struct BadgeView: View {
+    let content: String
+    let backgroundColor: Color
+    
+    var body: some View {
+        Text(content)
+            .font(.system(size: 10, weight: .bold))
+            .foregroundColor(.white)
+            .frame(minWidth: 16, minHeight: 16)
+            .padding(.horizontal, 4)
+            .background(backgroundColor)
+            .clipShape(Circle())
+            .overlay(
+                Circle()
+                    .stroke(Color.black.opacity(0.2), lineWidth: 1)
+            )
+            .offset(x: 12, y: -12)
+            .transition(.scale.combined(with: .opacity))
     }
 }

@@ -548,7 +548,9 @@ struct PromptSection: View {
                                     .progressViewStyle(CircularProgressViewStyle(tint: .blue))
                                     .scaleEffect(0.8)
                             } else {
-                                Image(systemName: "viewfinder").foregroundColor(.blue)
+                                Image(systemName: "viewfinder")
+                                .font(.system(size: 22))
+                                .foregroundColor(.blue)
                             }
                         }
                     }
@@ -779,7 +781,7 @@ struct ModelGallerySection: View {
                 Image(systemName: "photo.on.rectangle.angled")
                     .foregroundColor(.blue)
                     .font(.subheadline)
-                Text("Your Creations")
+                Text("Your Creations With This Model")
                     .font(.subheadline)
                     .fontWeight(.semibold)
                     .foregroundColor(.secondary)

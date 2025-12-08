@@ -594,10 +594,11 @@ struct FullScreenImageView: View {
                 Text(showDownloadSuccess ? "Saved" : "Save")
                     .font(.caption)
                     .foregroundColor(.gray)
+                    .opacity(showDownloadSuccess ? 1.0 : 0.8)
             }
         }
         .buttonStyle(.plain)
-        .disabled(isDeleting || isDownloading || showDownloadSuccess)
+        .disabled(isDeleting || isDownloading)
     }
 
     private var presetButton: some View {

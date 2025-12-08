@@ -628,6 +628,7 @@ struct PlaceholderImageCard: View {
 
     @State private var shimmer = false
     @State private var pulseAnimation = false
+    @StateObject private var notificationManager = NotificationManager.shared
 
     var body: some View {
         ZStack {
@@ -747,6 +748,18 @@ struct PlaceholderImageCard: View {
                         Text("\(Int(placeholder.progress * 100))%")
                             .font(.custom("Nunito-Regular", size: 9))
                             .foregroundColor(.secondary)
+                        
+                        // Cancel button for in-progress tasks
+                        if placeholder.state == .inProgress {
+                            Button(action: {
+                                notificationManager.cancelTask(notificationId: placeholder.id)
+                            }) {
+                                Text("Cancel")
+                                    .font(.custom("Nunito-Bold", size: 10))
+                                    .foregroundColor(.red)
+                            }
+                            .padding(.top, 2)
+                        }
                     }
                 }
             }
