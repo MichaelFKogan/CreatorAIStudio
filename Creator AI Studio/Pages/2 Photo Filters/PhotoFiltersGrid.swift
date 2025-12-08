@@ -4,32 +4,36 @@ struct PhotoFiltersGrid: View {
     let filters: [InfoPacket]
     let selectedFilter: InfoPacket?
     let onSelect: (InfoPacket) -> Void
+    
+    private let columns = 4
+    private let spacing: CGFloat = 8
+    private let horizontalPadding: CGFloat = 16
+    
+    private var itemSize: CGFloat {
+        let screenWidth = UIScreen.main.bounds.width
+        let totalSpacing = spacing * CGFloat(columns - 1)
+        let availableWidth = max(0, screenWidth - totalSpacing - (horizontalPadding * 2))
+        return max(44, availableWidth / CGFloat(columns))
+    }
 
     var body: some View {
-        GeometryReader { proxy in
-            let spacing: CGFloat = 8
-            let totalSpacing = spacing * 3
-            let availableWidth = max(0, proxy.size.width - totalSpacing - 32)
-            let itemSize = max(44, availableWidth / 4)
-
-            LazyVGrid(
-                columns: Array(repeating: GridItem(.flexible(), spacing: spacing), count: 4),
-                spacing: spacing
-            ) {
-                ForEach(filters) { filter in
-                    FilterThumbnail(
-                        title: filter.display.title,
-                        imageName: filter.display.imageName,
-                        isSelected: selectedFilter?.id == filter.id,
-                        size: itemSize,
-                        cost: filter.cost
-                    )
-                    .onTapGesture { onSelect(filter) }
-                }
+        LazyVGrid(
+            columns: Array(repeating: GridItem(.flexible(), spacing: spacing), count: columns),
+            spacing: spacing
+        ) {
+            ForEach(filters) { filter in
+                FilterThumbnail(
+                    title: filter.display.title,
+                    imageName: filter.display.imageName,
+                    isSelected: selectedFilter?.id == filter.id,
+                    size: itemSize,
+                    cost: filter.cost,
+                    imageUrl: filter.display.imageName.hasPrefix("http") ? filter.display.imageName : nil
+                )
+                .onTapGesture { onSelect(filter) }
             }
-            .padding(.horizontal, 16)
-            .padding(.top, 16)
         }
-        .frame(minHeight: 600)
+        .padding(.horizontal, horizontalPadding)
+        .padding(.top, 16)
     }
 }

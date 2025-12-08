@@ -1,8 +1,10 @@
+import Kingfisher
 import SwiftUI
 
 // MARK: - Filter Scroll Row
 
 struct FilterScrollRow: View {
+    let presets: [InfoPacket]
     let imageModels: [InfoPacket]
     let filters: [InfoPacket]
     let selectedFilter: InfoPacket?
@@ -13,9 +15,9 @@ struct FilterScrollRow: View {
     var onCapture: (() -> Void)? = nil
     var isCaptureEnabled: Bool = false
 
-    // Combined items: image models first, then filters
+    // Combined items: presets first, then image models, then filters
     private var allItems: [InfoPacket] {
-        imageModels + filters
+        presets + imageModels + filters
     }
 
     @State private var filterPositions: [UUID: CGFloat] = [:]
@@ -58,7 +60,9 @@ struct FilterScrollRow: View {
                                     imageName: item.display.imageName,
                                     isSelected: (selectedFilter?.id == item.id)
                                         || (selectedImageModel?.id == item.id),
-                                    cost: item.cost
+                                    cost: item.cost,
+                                    imageUrl: item.display.imageName.hasPrefix(
+                                        "http") ? item.display.imageName : nil
                                 )
                                 .id(item.id)
                                 .background(
@@ -396,67 +400,175 @@ struct FilterThumbnailCompact: View {
     let imageName: String
     let isSelected: Bool
     let cost: Decimal?
+    let imageUrl: String?  // Optional URL for user-generated images (presets)
+
+    init(
+        title: String, imageName: String, isSelected: Bool, cost: Decimal?,
+        imageUrl: String? = nil
+    ) {
+        self.title = title
+        self.imageName = imageName
+        self.isSelected = isSelected
+        self.cost = cost
+        self.imageUrl = imageUrl
+    }
+
+    // Check if imageName is a URL
+    private var isImageUrl: Bool {
+        imageName.hasPrefix("http://") || imageName.hasPrefix("https://")
+    }
+
+    // Use imageUrl if provided, otherwise check if imageName is a URL
+    private var effectiveImageUrl: String? {
+        imageUrl ?? (isImageUrl ? imageName : nil)
+    }
+
+    private var effectiveImageName: String {
+        isImageUrl ? "" : imageName
+    }
 
     var body: some View {
         VStack(spacing: 2) {
             ZStack(alignment: .topTrailing) {
-                Image(imageName)
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width: 70, height: 70)
-                    .clipped()
-                    .cornerRadius(12)
-                    .padding(0)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(
-                                isSelected
-                                    ? Color.pink : Color.black.opacity(0),
-                                lineWidth: isSelected ? 4 : 1)
-                    )
-                    .shadow(color: .black.opacity(0.6), radius: 4, x: 0, y: 0)
-                    .overlay(
-                        VStack(alignment: .trailing, spacing: 3) {
-                            // Price badge (always visible if cost exists)
-                            if let cost = cost {
-                                Text(
-                                    "$\(NSDecimalNumber(decimal: cost).stringValue)"
-                                )
-                                .font(.system(size: 9, weight: .semibold))
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 5)
-                                .padding(.vertical, 2)
-                                .background(
-                                    Capsule()
-                                        .fill(Color.black.opacity(0.7))
-                                )
-                                .shadow(
-                                    color: .black.opacity(0.3), radius: 2, x: 0,
-                                    y: 1)
+                // Use KFImage for URLs, Image for local assets
+                Group {
+                    if let urlString = effectiveImageUrl,
+                        let url = URL(string: urlString)
+                    {
+                        KFImage(url)
+                            .placeholder {
+                                Rectangle()
+                                    .fill(Color.gray.opacity(0.2))
+                                    .overlay(ProgressView())
                             }
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 70, height: 70)
+                            .clipped()
+                            .cornerRadius(12)
+                            .padding(0)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(
+                                        isSelected
+                                            ? Color.pink
+                                            : Color.black.opacity(0),
+                                        lineWidth: isSelected ? 4 : 1)
+                            )
+                            .shadow(
+                                color: .black.opacity(0.6), radius: 4, x: 0,
+                                y: 0
+                            )
+                            .overlay(
+                                VStack(alignment: .trailing, spacing: 3) {
+                                    // Price badge (always visible if cost exists)
+                                    if let cost = cost {
+                                        Text(
+                                            "$\(NSDecimalNumber(decimal: cost).stringValue)"
+                                        )
+                                        .font(
+                                            .system(size: 9, weight: .semibold)
+                                        )
+                                        .foregroundColor(.white)
+                                        .padding(.horizontal, 5)
+                                        .padding(.vertical, 2)
+                                        .background(
+                                            Capsule()
+                                                .fill(Color.black.opacity(0.7))
+                                        )
+                                        .shadow(
+                                            color: .black.opacity(0.3),
+                                            radius: 2, x: 0,
+                                            y: 1)
+                                    }
 
-                            // // Checkmark (shown when selected, below price)
-                            // if isSelected {
-                            //     Image(systemName: "checkmark.circle.fill")
-                            //         .font(.system(size: 18))
-                            //         .foregroundStyle(.white)
-                            //         .background(
-                            //             Circle()
-                            //                 .fill(
-                            //                     LinearGradient(
-                            //                         colors: [.purple, .pink],
-                            //                         startPoint: .topLeading,
-                            //                         endPoint: .bottomTrailing
-                            //                     )
-                            //                 )
-                            //                 .frame(width: 22, height: 22)
-                            //         )
-                            //         .transition(.scale.combined(with: .opacity))
-                            // }
-                        },
-                        alignment: .topTrailing
-                    )
+                                    // Checkmark (shown when selected, below price)
+                                    if isSelected {
+                                        Image(systemName: "checkmark.circle.fill")
+                                            .font(.system(size: 18))
+                                            .foregroundStyle(.white)
+                                            .background(
+                                                Circle()
+                                                    .fill(
+                                                        LinearGradient(
+                                                            colors: [.purple, .pink],
+                                                            startPoint: .topLeading,
+                                                            endPoint: .bottomTrailing
+                                                        )
+                                                    )
+                                                    .frame(width: 22, height: 22)
+                                            )
+                                            .transition(.scale.combined(with: .opacity))
+                                    }
+                                },
+                                alignment: .topTrailing
+                            )
+                    } else {
+                        Image(effectiveImageName)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 70, height: 70)
+                            .clipped()
+                            .cornerRadius(12)
+                            .padding(0)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(
+                                        isSelected
+                                            ? Color.pink
+                                            : Color.black.opacity(0),
+                                        lineWidth: isSelected ? 4 : 1)
+                            )
+                            .shadow(
+                                color: .black.opacity(0.6), radius: 4, x: 0,
+                                y: 0
+                            )
+                            .overlay(
+                                VStack(alignment: .trailing, spacing: 3) {
+                                    // Price badge (always visible if cost exists)
+                                    if let cost = cost {
+                                        Text(
+                                            "$\(NSDecimalNumber(decimal: cost).stringValue)"
+                                        )
+                                        .font(
+                                            .system(size: 9, weight: .semibold)
+                                        )
+                                        .foregroundColor(.white)
+                                        .padding(.horizontal, 5)
+                                        .padding(.vertical, 2)
+                                        .background(
+                                            Capsule()
+                                                .fill(Color.black.opacity(0.7))
+                                        )
+                                        .shadow(
+                                            color: .black.opacity(0.3),
+                                            radius: 2, x: 0,
+                                            y: 1)
+                                    }
 
+                                    // Checkmark (shown when selected, below price)
+                                    if isSelected {
+                                        Image(systemName: "checkmark.circle.fill")
+                                            .font(.system(size: 18))
+                                            .foregroundStyle(.white)
+                                            .background(
+                                                Circle()
+                                                    .fill(
+                                                        LinearGradient(
+                                                            colors: [.purple, .pink],
+                                                            startPoint: .topLeading,
+                                                            endPoint: .bottomTrailing
+                                                        )
+                                                    )
+                                                    .frame(width: 22, height: 22)
+                                            )
+                                            .transition(.scale.combined(with: .opacity))
+                                    }
+                                },
+                                alignment: .topTrailing
+                            )
+                    }
+                }
             }
             .animation(
                 .spring(response: 0.3, dampingFraction: 0.7), value: isSelected)

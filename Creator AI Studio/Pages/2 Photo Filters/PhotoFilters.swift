@@ -92,9 +92,21 @@ struct PhotoFilters: View {
     // Convert presets to InfoPacket format
     private var presetInfoPackets: [InfoPacket] {
         let allModels = ImageModelsViewModel.loadImageModels()
-        return presetViewModel.presets.compactMap { preset in
-            preset.toInfoPacket(allModels: allModels)
+        let converted = presetViewModel.presets.compactMap { preset -> InfoPacket? in
+            let result = preset.toInfoPacket(allModels: allModels)
+            if result == nil {
+                print("⚠️ [PhotoFilters] Preset '\(preset.title)' could not be converted to InfoPacket")
+                print("   - Has modelName: \(preset.modelName != nil && !preset.modelName!.isEmpty)")
+                if let modelName = preset.modelName {
+                    print("   - ModelName: '\(modelName)'")
+                    let matchingModel = allModels.first(where: { $0.display.title == modelName })
+                    print("   - Found matching model: \(matchingModel != nil)")
+                }
+            }
+            return result
         }
+        print("📊 [PhotoFilters] Total presets: \(presetViewModel.presets.count), Converted: \(converted.count)")
+        return converted
     }
 
     var body: some View {
@@ -104,7 +116,7 @@ struct PhotoFilters: View {
                     VStack(spacing: 0) {
                         // Presets section (if any exist)
                         if !presetInfoPackets.isEmpty {
-                            VStack(alignment: .leading, spacing: 12) {
+                            VStack(alignment: .leading, spacing: 0) {
                                 HStack {
                                     Image(systemName: "bookmark.fill")
                                         .font(.system(size: 16))
@@ -122,11 +134,10 @@ struct PhotoFilters: View {
                                     selectedFilter: selectedFilter,
                                     onSelect: { selectedFilter = $0 }
                                 )
-                                .padding(.bottom, 8)
                                 
                                 Divider()
                                     .padding(.horizontal, 16)
-                                    .padding(.vertical, 8)
+                                    .padding(.top, 8)
                             }
                         }
                         
@@ -142,7 +153,7 @@ struct PhotoFilters: View {
                                 Spacer()
                             }
                             .padding(.horizontal, 16)
-                            .padding(.top, presetInfoPackets.isEmpty ? 16 : 0)
+                            .padding(.top, presetInfoPackets.isEmpty ? 16 : 8)
                             
                             PhotoFiltersGrid(
                                 filters: viewModel.filters,

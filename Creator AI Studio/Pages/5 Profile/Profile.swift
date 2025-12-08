@@ -59,6 +59,7 @@ struct ProfileViewContent: View {
     @ObservedObject var viewModel: ProfileViewModel
     @EnvironmentObject var authViewModel: AuthViewModel
     @StateObject private var notificationManager = NotificationManager.shared
+    @StateObject private var presetViewModel = PresetViewModel()
     @State private var selectedUserImage: UserImage? = nil
     @State private var selectedTab: GalleryTab = .all
     @State private var selectedModel: String? = nil
@@ -143,6 +144,14 @@ struct ProfileViewContent: View {
             .refreshable {
                 await viewModel.fetchUserImages(forceRefresh: true)
             }
+            .onAppear {
+                if let userId = authViewModel.user?.id.uuidString {
+                    Task {
+                        presetViewModel.userId = userId
+                        await presetViewModel.fetchPresets()
+                    }
+                }
+            }
             .onChange(of: notificationManager.notifications.count) {
                 oldCount, newCount in
                 // When notification count decreases (notification dismissed), refresh images
@@ -218,32 +227,34 @@ struct ProfileViewContent: View {
 
     private var filterSection: some View {
         VStack(spacing: 12) {
-            HStack(spacing: 8) {
-                // All pill
-                GalleryTabPill(
-                    title: "All",
-                    isSelected: selectedTab == .all && selectedModel == nil,
-                    count: viewModel.userImages.count
-                ) {
-                    selectedTab = .all
-                    selectedModel = nil
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    // All pill
+                    GalleryTabPill(
+                        title: "All",
+                        icon: "photo.on.rectangle.angled",
+                        isSelected: selectedTab == .all && selectedModel == nil,
+                        count: viewModel.userImages.count
+                    ) {
+                        selectedTab = .all
+                        selectedModel = nil
+                    }
+
+                    // Favorites pill
+                    GalleryTabPill(
+                        title: "Favorites",
+                        icon: "heart.fill",
+                        isSelected: selectedTab == .favorites && selectedModel == nil,
+                        count: viewModel.favoriteImages.count
+                    ) {
+                        selectedTab = .favorites
+                        selectedModel = nil
+                    }
+
+                    imageModelsButton
                 }
-
-                // Favorites pill
-                GalleryTabPill(
-                    title: "Favorites",
-                    isSelected: selectedTab == .favorites && selectedModel == nil,
-                    count: viewModel.favoriteImages.count
-                ) {
-                    selectedTab = .favorites
-                    selectedModel = nil
-                }
-
-                imageModelsButton
-
-                Spacer()
+                .padding(.horizontal)
             }
-            .padding(.horizontal)
             .padding(.top, 8)
         }
     }
@@ -273,6 +284,9 @@ struct ProfileViewContent: View {
         let modelCount = viewModel.uniqueModels.count
 
         return HStack(spacing: 6) {
+            Image(systemName: "cpu")
+                .font(.system(size: 12, weight: .medium))
+            
             Text(title)
                 .font(.system(size: 14, weight: isSelected ? .semibold : .regular))
                 .lineLimit(1)
@@ -307,25 +321,26 @@ struct ProfileViewContent: View {
         }
     }
 
+    @ViewBuilder
     private var filteredContent: some View {
         let filteredImages = getFilteredImages()
 
-        return Group {
-            if filteredImages.isEmpty && notificationManager.activePlaceholders.isEmpty {
-                EmptyGalleryView(
-                    tab: selectedTab,
-                    model: selectedModel,
-                    isImageModelsTab: selectedTab == .imageModels
-                )
-            } else {
-                ImageGridView(
-                    userImages: filteredImages,
-                    placeholders: notificationManager.activePlaceholders,
-                    viewModel: viewModel
-                ) { userImage in
+        if filteredImages.isEmpty && notificationManager.activePlaceholders.isEmpty {
+            EmptyGalleryView(
+                tab: selectedTab,
+                model: selectedModel,
+                isImageModelsTab: selectedTab == .imageModels
+            )
+        } else {
+            ImageGridView(
+                userImages: filteredImages,
+                placeholders: notificationManager.activePlaceholders,
+                onSelect: { userImage in
                     selectedUserImage = userImage
-                }
-            }
+                },
+                viewModel: viewModel,
+                presetViewModel: presetViewModel
+            )
         }
     }
 
@@ -355,6 +370,7 @@ struct ImageGridView: View {
     let spacing: CGFloat = 2
     var onSelect: (UserImage) -> Void
     var viewModel: ProfileViewModel?
+    var presetViewModel: PresetViewModel?
 
     @State private var favoritedImageIds: Set<String> = []
 
@@ -417,36 +433,52 @@ struct ImageGridView: View {
                             }
                             .buttonStyle(.plain)
 
-                            // Heart icon overlay
+                            // Heart icon and bookmark icon overlay
                             VStack {
                                 HStack {
                                     Spacer()
-                                    ZStack {
-                                        Color.clear
-                                            .frame(width: 32, height: 32)
-                                            .contentShape(Rectangle())
-                                            .onTapGesture {
-                                                if let viewModel = viewModel {
-                                                    Task {
-                                                        await viewModel.toggleFavorite(imageId: userImage.id)
-                                                    }
-                                                } else {
-                                                    // Fallback to local state if no viewModel
-                                                    let imageId = userImage.id
-                                                    if favoritedImageIds.contains(imageId) {
-                                                        favoritedImageIds.remove(imageId)
+                                    VStack(spacing: 4) {
+                                        ZStack {
+                                            Color.clear
+                                                .frame(width: 32, height: 32)
+                                                .contentShape(Rectangle())
+                                                .onTapGesture {
+                                                    if let viewModel = viewModel {
+                                                        Task {
+                                                            await viewModel.toggleFavorite(imageId: userImage.id)
+                                                        }
                                                     } else {
-                                                        favoritedImageIds.insert(imageId)
+                                                        // Fallback to local state if no viewModel
+                                                        let imageId = userImage.id
+                                                        if favoritedImageIds.contains(imageId) {
+                                                            favoritedImageIds.remove(imageId)
+                                                        } else {
+                                                            favoritedImageIds.insert(imageId)
+                                                        }
                                                     }
                                                 }
-                                            }
 
-                                        // Heart icon
-                                        Image(systemName: (userImage.is_favorite ?? false) ? "heart.fill" : "heart")
-                                            .font(.system(size: 16, weight: .semibold))
-                                            .foregroundColor((userImage.is_favorite ?? false) ? .red : .white)
-                                            .shadow(color: .black.opacity(0.5), radius: 2, x: 0, y: 1)
-                                            .allowsHitTesting(false)
+                                            // Heart icon
+                                            Image(systemName: (userImage.is_favorite ?? false) ? "heart.fill" : "heart")
+                                                .font(.system(size: 16, weight: .semibold))
+                                                .foregroundColor((userImage.is_favorite ?? false) ? .red : .white)
+                                                .shadow(color: .black.opacity(0.5), radius: 2, x: 0, y: 1)
+                                                .allowsHitTesting(false)
+                                        }
+                                        
+                                        // Bookmark icon (blue) if preset is enabled
+                                        if hasMatchingPreset(for: userImage) {
+                                            ZStack {
+                                                Circle()
+                                                    .fill(Color.black.opacity(0.3))
+                                                    .frame(width: 24, height: 24)
+                                                
+                                                Image(systemName: "bookmark.fill")
+                                                    .font(.system(size: 16, weight: .semibold))
+                                                    .foregroundColor(.blue)
+                                            }
+                                            .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 1)
+                                        }
                                     }
                                 }
                                 Spacer()
@@ -490,36 +522,52 @@ struct ImageGridView: View {
                             }
                             .buttonStyle(.plain)
 
-                            // Heart icon overlay
+                            // Heart icon and bookmark icon overlay
                             VStack {
                                 HStack {
                                     Spacer()
-                                    ZStack {
-                                        Color.clear
-                                            .frame(width: 32, height: 32)
-                                            .contentShape(Rectangle())
-                                            .onTapGesture {
-                                                if let viewModel = viewModel {
-                                                    Task {
-                                                        await viewModel.toggleFavorite(imageId: userImage.id)
-                                                    }
-                                                } else {
-                                                    // Fallback to local state if no viewModel
-                                                    let imageId = userImage.id
-                                                    if favoritedImageIds.contains(imageId) {
-                                                        favoritedImageIds.remove(imageId)
+                                    VStack(spacing: 4) {
+                                        ZStack {
+                                            Color.clear
+                                                .frame(width: 32, height: 32)
+                                                .contentShape(Rectangle())
+                                                .onTapGesture {
+                                                    if let viewModel = viewModel {
+                                                        Task {
+                                                            await viewModel.toggleFavorite(imageId: userImage.id)
+                                                        }
                                                     } else {
-                                                        favoritedImageIds.insert(imageId)
+                                                        // Fallback to local state if no viewModel
+                                                        let imageId = userImage.id
+                                                        if favoritedImageIds.contains(imageId) {
+                                                            favoritedImageIds.remove(imageId)
+                                                        } else {
+                                                            favoritedImageIds.insert(imageId)
+                                                        }
                                                     }
                                                 }
-                                            }
 
-                                        // Heart icon
-                                        Image(systemName: (userImage.is_favorite ?? false) ? "heart.fill" : "heart")
-                                            .font(.system(size: 16, weight: .semibold))
-                                            .foregroundColor((userImage.is_favorite ?? false) ? .red : .white)
-                                            .shadow(color: .black.opacity(0.5), radius: 2, x: 0, y: 1)
-                                            .allowsHitTesting(false)
+                                            // Heart icon
+                                            Image(systemName: (userImage.is_favorite ?? false) ? "heart.fill" : "heart")
+                                                .font(.system(size: 16, weight: .semibold))
+                                                .foregroundColor((userImage.is_favorite ?? false) ? .red : .white)
+                                                .shadow(color: .black.opacity(0.5), radius: 2, x: 0, y: 1)
+                                                .allowsHitTesting(false)
+                                        }
+                                        
+                                        // Bookmark icon (blue) if preset is enabled
+                                        if hasMatchingPreset(for: userImage) {
+                                            ZStack {
+                                                Circle()
+                                                    .fill(Color.gray.opacity(0.7))
+                                                    .frame(width: 24, height: 24)
+                                                
+                                                Image(systemName: "bookmark.fill")
+                                                    .font(.system(size: 12, weight: .semibold))
+                                                    .foregroundColor(.blue)
+                                            }
+                                            .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 1)
+                                        }
                                     }
                                 }
                                 Spacer()
@@ -538,6 +586,36 @@ struct ImageGridView: View {
         let rows = ceil(Double(count) / 3.0)
         let itemWidth = (UIScreen.main.bounds.width - 16) / 3
         return CGFloat(rows) * (itemWidth * 1.8 + spacing)
+    }
+    
+    // Check if an image has a matching preset
+    private func hasMatchingPreset(for userImage: UserImage) -> Bool {
+        guard let presetViewModel = presetViewModel else { return false }
+        
+        let currentModelName = userImage.title
+        let currentPrompt = userImage.prompt
+        
+        return presetViewModel.presets.contains { preset in
+            // Compare model names (both can be nil or empty)
+            let modelMatch: Bool
+            if let currentModel = currentModelName, !currentModel.isEmpty {
+                modelMatch = preset.modelName == currentModel
+            } else {
+                // Both are nil/empty - consider it a match
+                modelMatch = preset.modelName == nil || preset.modelName?.isEmpty == true
+            }
+            
+            // Compare prompts (both can be nil or empty)
+            let promptMatch: Bool
+            if let current = currentPrompt, !current.isEmpty {
+                promptMatch = preset.prompt == current
+            } else {
+                // Both are nil/empty - consider it a match
+                promptMatch = preset.prompt == nil || preset.prompt?.isEmpty == true
+            }
+            
+            return modelMatch && promptMatch
+        }
     }
 }
 
@@ -725,6 +803,7 @@ struct PlaceholderImageCard: View {
 
 struct GalleryTabPill: View {
     let title: String
+    let icon: String
     let isSelected: Bool
     let count: Int
     let action: () -> Void
@@ -732,6 +811,9 @@ struct GalleryTabPill: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: 6) {
+                Image(systemName: icon)
+                    .font(.system(size: 12, weight: .medium))
+                
                 Text(title)
                     .font(.system(size: 14, weight: isSelected ? .semibold : .regular))
                     .foregroundColor(isSelected ? .white : .primary)

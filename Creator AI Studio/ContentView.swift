@@ -184,11 +184,14 @@ struct TabBarButton: View {
                         Circle()
                             // The stroke modifier draws the border around the shape.
                             // .stroke(isSelected ? Color.gray : Color.clear, lineWidth: 2)
-                            .fill(isSelected ? Color.clear : Color.pink.opacity(0.9))
+                            .fill(
+                                isSelected
+                                    ? Color.clear : Color.pink.opacity(0.9))
                         // .frame(width: 60, height: 60)
                         Image(systemName: isSelected ? "camera" : icon)
                             .font(.system(size: 22))
-                            .foregroundColor(isSelected ? .white.opacity(0.9) : .black)
+                            .foregroundColor(
+                                isSelected ? .white.opacity(0.9) : .black)
                     }
                     .frame(width: 60, height: 60)
                     .offset(y: 5)
@@ -206,7 +209,8 @@ struct TabBarButton: View {
             .frame(height: 55)
             .offset(y: 5)
             .foregroundColor(
-                hasSpecialStyling ? .clear : (isSelected ? .white.opacity(0.9) : .gray)
+                hasSpecialStyling
+                    ? .clear : (isSelected ? .white.opacity(0.9) : .gray)
             )
             .frame(maxWidth: .infinity)
         }

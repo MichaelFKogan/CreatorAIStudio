@@ -1,4 +1,5 @@
 import SwiftUI
+import Kingfisher
 
 struct PhotoConfirmationView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
@@ -80,21 +81,46 @@ struct PhotoConfirmationView: View {
 
                     ZStack(alignment: .center) {
                         // Right image (example result) - drawn first so it's behind
-                        Image(item.display.imageName)
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                            .frame(width: imageWidth, height: imageHeight)
-                            .clipShape(RoundedRectangle(cornerRadius: 16))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 16)
-                                    .stroke(
-                                        LinearGradient(colors: [.white, .gray], startPoint: .topLeading, endPoint: .bottomTrailing),
-                                        lineWidth: 2
+                        // Check if imageName is a URL (for presets)
+                        Group {
+                            if item.display.imageName.hasPrefix("http://") || item.display.imageName.hasPrefix("https://"),
+                               let url = URL(string: item.display.imageName) {
+                                KFImage(url)
+                                    .placeholder {
+                                        Rectangle()
+                                            .fill(Color.gray.opacity(0.2))
+                                            .overlay(ProgressView())
+                                    }
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                                    .frame(width: imageWidth, height: imageHeight)
+                                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 16)
+                                            .stroke(
+                                                LinearGradient(colors: [.white, .gray], startPoint: .topLeading, endPoint: .bottomTrailing),
+                                                lineWidth: 2
+                                            )
                                     )
-                            )
-                            .shadow(color: Color.black.opacity(0.25), radius: 12, x: 4, y: 4)
-                            .rotationEffect(.degrees(8))
-                            .offset(x: imageWidth * 0.50)
+                                    .shadow(color: Color.black.opacity(0.25), radius: 12, x: 4, y: 4)
+                            } else {
+                                Image(item.display.imageName)
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                                    .frame(width: imageWidth, height: imageHeight)
+                                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 16)
+                                            .stroke(
+                                                LinearGradient(colors: [.white, .gray], startPoint: .topLeading, endPoint: .bottomTrailing),
+                                                lineWidth: 2
+                                            )
+                                    )
+                                    .shadow(color: Color.black.opacity(0.25), radius: 12, x: 4, y: 4)
+                            }
+                        }
+                        .rotationEffect(.degrees(8))
+                        .offset(x: imageWidth * 0.50)
 
                         // Left image (user's photo) - drawn second so it's on top
                         Image(uiImage: image)

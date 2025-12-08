@@ -220,12 +220,12 @@ struct FullScreenImageView: View {
         guard let title = userImage.title, !title.isEmpty else { return nil }
         return allImageModels.first { $0.display.title == title }
     }
-    
+
     // Check if current image matches an existing preset
     private var matchingPreset: Preset? {
         let currentModelName = userImage.title
         let currentPrompt = userImage.prompt
-        
+
         return presetViewModel.presets.first { preset in
             // Compare model names (both can be nil or empty)
             let modelMatch: Bool
@@ -233,22 +233,24 @@ struct FullScreenImageView: View {
                 modelMatch = preset.modelName == currentModel
             } else {
                 // Both are nil/empty - consider it a match
-                modelMatch = preset.modelName == nil || preset.modelName?.isEmpty == true
+                modelMatch =
+                    preset.modelName == nil || preset.modelName?.isEmpty == true
             }
-            
+
             // Compare prompts (both can be nil or empty)
             let promptMatch: Bool
             if let current = currentPrompt, !current.isEmpty {
                 promptMatch = preset.prompt == current
             } else {
                 // Both are nil/empty - consider it a match
-                promptMatch = preset.prompt == nil || preset.prompt?.isEmpty == true
+                promptMatch =
+                    preset.prompt == nil || preset.prompt?.isEmpty == true
             }
-            
+
             return modelMatch && promptMatch
         }
     }
-    
+
     // Check if preset button should be filled/colored
     private var isPresetSaved: Bool {
         matchingPreset != nil
@@ -878,7 +880,7 @@ struct FullScreenImageView: View {
         .onAppear {
             // Initialize favorite state from userImage
             isFavorited = userImage.is_favorite ?? false
-            
+
             // Load presets if user is signed in
             if let userId = authViewModel.user?.id.uuidString {
                 presetViewModel.userId = userId
@@ -1415,7 +1417,9 @@ struct CreatePresetSheet: View {
                             await savePreset()
                         }
                     }
-                    .foregroundColor(presetTitle.isEmpty || isSaving ? .gray : .blue)
+                    .foregroundColor(
+                        presetTitle.isEmpty || isSaving ? .gray : .blue
+                    )
                     .fontWeight(.semibold)
                     .disabled(presetTitle.isEmpty || isSaving)
                 }
@@ -1445,45 +1449,56 @@ struct CreatePresetSheet: View {
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
-    
+
     // MARK: - Save Preset
     private func savePreset() async {
         print("🟢 [CreatePresetSheet] Save button pressed")
         print("🟢 [CreatePresetSheet] Preset title: '\(presetTitle)'")
-        
+
         guard let userId = authViewModel.user?.id.uuidString else {
             print("❌ [CreatePresetSheet] User not signed in")
             errorMessage = "You must be signed in to save presets."
             showError = true
             return
         }
-        
+
         print("🟢 [CreatePresetSheet] User ID: \(userId)")
         print("🟢 [CreatePresetSheet] Setting user ID in presetViewModel...")
-        
+
         // Ensure presetViewModel has the user ID
         presetViewModel.userId = userId
-        
+
         isSaving = true
-        
+
         // Get model name from userImage
         let modelName = userImage.title
-        print("🟢 [CreatePresetSheet] Model name from userImage: '\(modelName ?? "nil")'")
-        
+        print(
+            "🟢 [CreatePresetSheet] Model name from userImage: '\(modelName ?? "nil")'"
+        )
+
         // Get prompt from userImage
         let prompt = userImage.prompt
-        print("🟢 [CreatePresetSheet] Prompt from userImage: '\(prompt?.prefix(50) ?? "nil")...'")
-        
+        print(
+            "🟢 [CreatePresetSheet] Prompt from userImage: '\(prompt?.prefix(50) ?? "nil")...'"
+        )
+
+        // Get image URL from userImage
+        let imageUrl = userImage.image_url
+        print("🟢 [CreatePresetSheet] Image URL from userImage: '\(imageUrl)'")
+
         do {
             print("🟢 [CreatePresetSheet] Calling presetViewModel.savePreset...")
             try await presetViewModel.savePreset(
                 title: presetTitle,
                 modelName: modelName,
-                prompt: prompt
+                prompt: prompt,
+                imageUrl: imageUrl
             )
-            
-            print("✅ [CreatePresetSheet] Preset saved successfully, closing sheet...")
-            
+
+            print(
+                "✅ [CreatePresetSheet] Preset saved successfully, closing sheet..."
+            )
+
             // Success - refresh parent view model and close the sheet
             await MainActor.run {
                 // Sync presets with parent view model
@@ -1494,16 +1509,20 @@ struct CreatePresetSheet: View {
         } catch {
             print("❌ [CreatePresetSheet] Error saving preset")
             print("❌ [CreatePresetSheet] Error type: \(type(of: error))")
-            print("❌ [CreatePresetSheet] Error description: \(error.localizedDescription)")
+            print(
+                "❌ [CreatePresetSheet] Error description: \(error.localizedDescription)"
+            )
             if let nsError = error as NSError? {
                 print("❌ [CreatePresetSheet] Error domain: \(nsError.domain)")
                 print("❌ [CreatePresetSheet] Error code: \(nsError.code)")
-                print("❌ [CreatePresetSheet] Error userInfo: \(nsError.userInfo)")
+                print(
+                    "❌ [CreatePresetSheet] Error userInfo: \(nsError.userInfo)")
             }
-            
+
             await MainActor.run {
                 isSaving = false
-                errorMessage = "Failed to save preset: \(error.localizedDescription)"
+                errorMessage =
+                    "Failed to save preset: \(error.localizedDescription)"
                 showError = true
             }
         }

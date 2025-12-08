@@ -9,7 +9,8 @@ struct CompactFiltersGrid: View {
 
     var body: some View {
         let spacing: CGFloat = 8
-        let columns = Array(repeating: GridItem(.flexible(), spacing: spacing), count: 4)
+        let columns = Array(
+            repeating: GridItem(.flexible(), spacing: spacing), count: 4)
 
         LazyVGrid(
             columns: columns,
@@ -21,7 +22,9 @@ struct CompactFiltersGrid: View {
                     imageName: filter.display.imageName,
                     isSelected: selectedFilter?.id == filter.id,
                     size: 80,
-                    cost: filter.cost
+                    cost: filter.cost,
+                    imageUrl: filter.display.imageName.hasPrefix("http")
+                        ? filter.display.imageName : nil
                 )
                 .onTapGesture { onSelect(filter) }
             }
@@ -45,7 +48,7 @@ struct FilterCategorySheet: View {
     @State private var expandedCategories: Set<FilterCategory> = []
     @StateObject private var presetViewModel = PresetViewModel()
     @EnvironmentObject var authViewModel: AuthViewModel
-    
+
     // Convert presets to InfoPacket format
     private var presetInfoPackets: [InfoPacket] {
         let allModels = ImageModelsViewModel.loadImageModels()
@@ -64,7 +67,7 @@ struct FilterCategorySheet: View {
     var body: some View {
         NavigationView {
             ZStack {
-//                Color.black.ignoresSafeArea()
+                //                Color.black.ignoresSafeArea()
 
                 ScrollView {
                     VStack(spacing: 0) {
@@ -74,8 +77,8 @@ struct FilterCategorySheet: View {
                             .foregroundColor(.white.opacity(0.8))
                             .multilineTextAlignment(.center)
                             .padding(.horizontal, 20)
-                        // .padding(.top, 16)
-                        .padding(.bottom, 12)
+                            // .padding(.top, 16)
+                            .padding(.bottom, 12)
 
                         Divider()
                             .background(Color.white.opacity(0.2))
@@ -87,10 +90,9 @@ struct FilterCategorySheet: View {
                                 title: "My Presets",
                                 icon: "bookmark.fill",
                                 filters: presetInfoPackets,
-                                selectedFilter: selectedImageModel, // Presets are models, so check against selectedImageModel
-                                onSelect: { preset in
-                                    // When a preset is selected, it should select the model and apply the prompt
-                                    onSelectModel(preset)
+                                selectedFilter: selectedFilter ?? selectedImageModel,
+                                onSelect: { filter in
+                                    onSelect(filter)
                                 },
                                 isExpanded: true,
                                 isAlwaysExpanded: true
@@ -142,7 +144,9 @@ struct FilterCategorySheet: View {
 
                         // Category sections
                         ForEach(FilterCategory.allCases) { category in
-                            if let filters = categorizedFilters[category], !filters.isEmpty {
+                            if let filters = categorizedFilters[category],
+                                !filters.isEmpty
+                            {
                                 CategorySection(
                                     title: category.rawValue,
                                     icon: category.icon,
@@ -151,10 +155,12 @@ struct FilterCategorySheet: View {
                                     onSelect: { filter in
                                         onSelect(filter)
                                     },
-                                    isExpanded: expandedCategories.contains(category),
+                                    isExpanded: expandedCategories.contains(
+                                        category),
                                     isAlwaysExpanded: false,
                                     onToggle: {
-                                        if expandedCategories.contains(category) {
+                                        if expandedCategories.contains(category)
+                                        {
                                             expandedCategories.remove(category)
                                         } else {
                                             expandedCategories.insert(category)
@@ -183,7 +189,7 @@ struct FilterCategorySheet: View {
                     .foregroundColor(.white)
                 }
             }
-//            .preferredColorScheme(.dark)
+            //            .preferredColorScheme(.dark)
         }
         .presentationDetents([.medium, .large])
         .onAppear {
@@ -238,9 +244,12 @@ struct CategorySection: View {
                     Spacer()
 
                     if !isAlwaysExpanded {
-                        Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundColor(.white.opacity(0.7))
+                        Image(
+                            systemName: isExpanded
+                                ? "chevron.up" : "chevron.down"
+                        )
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.white.opacity(0.7))
                     }
                 }
                 .padding(.horizontal, 20)

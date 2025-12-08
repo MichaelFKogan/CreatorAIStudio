@@ -6,6 +6,7 @@ struct Preset: Codable, Identifiable, Equatable {
     let title: String
     let modelName: String?
     let prompt: String?
+    let imageUrl: String?
     let created_at: String?
     
     enum CodingKeys: String, CodingKey {
@@ -13,6 +14,7 @@ struct Preset: Codable, Identifiable, Equatable {
         case title
         case modelName = "model_name"
         case prompt
+        case imageUrl = "image_url"
         case created_at
     }
 }
@@ -23,12 +25,14 @@ struct PresetMetadata: Encodable {
     let title: String
     let model_name: String?
     let prompt: String?
+    let image_url: String?
     
-    init(userId: String, title: String, modelName: String? = nil, prompt: String? = nil) {
+    init(userId: String, title: String, modelName: String? = nil, prompt: String? = nil, imageUrl: String? = nil) {
         self.user_id = userId
         self.title = title
         self.model_name = modelName
         self.prompt = prompt
+        self.image_url = imageUrl
     }
 }
 
@@ -48,11 +52,33 @@ extension Preset {
             return nil
         }
         
-        // Create a new InfoPacket with the preset's prompt and title
+        // Create a new InfoPacket with the preset's prompt, title, and image
         var infoPacket = matchingModel
         infoPacket.prompt = prompt
         infoPacket.display.title = title // Use preset title instead of model title
-        infoPacket.id = UUID() // Generate new ID so it's unique
+        // Use a stable ID based on the preset's ID to ensure selection tracking works
+        // Preset IDs from Supabase are UUIDs, so convert the string to UUID
+        if let presetUUID = UUID(uuidString: id) {
+            infoPacket.id = presetUUID
+        } else {
+            // Fallback: create a deterministic UUID from the preset ID string hash
+            // This ensures the same preset always gets the same UUID for selection tracking
+            var hash = id.hashValue
+            let uuidString = String(format: "%08x-%04x-%04x-%04x-%012x",
+                UInt32(truncatingIfNeeded: hash),
+                UInt16(truncatingIfNeeded: hash >> 16),
+                UInt16(truncatingIfNeeded: (hash >> 32) & 0xFFFF),
+                UInt16(truncatingIfNeeded: ((hash >> 48) & 0x0FFF) | 0x4000),
+                UInt64(abs(hash)) % 1000000000000
+            )
+            infoPacket.id = UUID(uuidString: uuidString) ?? UUID()
+        }
+        
+        // Use the saved user-generated image URL if available, otherwise use model's default image
+        if let imageUrl = imageUrl, !imageUrl.isEmpty {
+            // Store the image URL in the imageName field so FilterThumbnail can detect it's a URL
+            infoPacket.display.imageName = imageUrl
+        }
         
         return infoPacket
     }

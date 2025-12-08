@@ -77,11 +77,12 @@ class PresetViewModel: ObservableObject {
     }
     
     /// Saves a new preset to Supabase database
-    func savePreset(title: String, modelName: String?, prompt: String?) async throws {
+    func savePreset(title: String, modelName: String?, prompt: String?, imageUrl: String? = nil) async throws {
         print("🔵 [PresetViewModel] Starting savePreset")
         print("🔵 [PresetViewModel] Title: '\(title)'")
         print("🔵 [PresetViewModel] Model Name: '\(modelName ?? "nil")'")
         print("🔵 [PresetViewModel] Prompt: '\(prompt?.prefix(50) ?? "nil")...'")
+        print("🔵 [PresetViewModel] Image URL: '\(imageUrl ?? "nil")'")
         
         guard let userId = userId else {
             print("❌ [PresetViewModel] User ID is nil!")
@@ -110,7 +111,8 @@ class PresetViewModel: ObservableObject {
             userId: userId,
             title: title,
             modelName: modelName,
-            prompt: prompt
+            prompt: prompt,
+            imageUrl: imageUrl
         )
         
         print("🔵 [PresetViewModel] Created metadata:")

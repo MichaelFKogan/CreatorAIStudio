@@ -1,6 +1,7 @@
 import AVFoundation
 import SwiftUI
 import UIKit
+import Kingfisher
 
 struct Post: View {
     @EnvironmentObject var authViewModel: AuthViewModel
@@ -20,6 +21,17 @@ struct Post: View {
     // Image Model mode state
     @StateObject private var imageModelsViewModel = ImageModelsViewModel()
     @State private var selectedImageModel: InfoPacket?
+    
+    // Presets state
+    @StateObject private var presetViewModel = PresetViewModel()
+    
+    // Convert presets to InfoPacket format
+    private var presetInfoPackets: [InfoPacket] {
+        let allModels = imageModelsViewModel.filteredAndSortedImageModels
+        return presetViewModel.presets.compactMap { preset in
+            preset.toInfoPacket(allModels: allModels)
+        }
+    }
 
     var body: some View {
         NavigationView {
@@ -191,57 +203,99 @@ struct Post: View {
                                                 y: 2)
 
                                         // Preview image
-                                        Image(displayFilter.display.imageName)
-                                            .resizable()
-                                            .scaledToFill()
-                                            .frame(width: 250, height: 300)
-                                            .clipShape(
-                                                RoundedRectangle(
-                                                    cornerRadius: 16)
-                                            )
-                                            .opacity(
-                                                isScrollingActive ? 0.8 : 0
-                                            )
-                                            .shadow(
-                                                color: .black.opacity(0.5),
-                                                radius: 20,
-                                                x: 0,
-                                                y: 0)
+                                        // Check if imageName is a URL (for presets)
+                                        Group {
+                                            if displayFilter.display.imageName.hasPrefix("http://") || displayFilter.display.imageName.hasPrefix("https://"),
+                                               let url = URL(string: displayFilter.display.imageName) {
+                                                KFImage(url)
+                                                    .placeholder {
+                                                        Rectangle()
+                                                            .fill(Color.gray.opacity(0.2))
+                                                            .overlay(ProgressView())
+                                                    }
+                                                    .resizable()
+                                                    .scaledToFill()
+                                                    .frame(width: 250, height: 300)
+                                                    .clipShape(
+                                                        RoundedRectangle(
+                                                            cornerRadius: 16)
+                                                    )
+                                                    .opacity(
+                                                        isScrollingActive ? 0.8 : 0
+                                                    )
+                                                    .shadow(
+                                                        color: .black.opacity(0.5),
+                                                        radius: 20,
+                                                        x: 0,
+                                                        y: 0
+                                                    )
+                                            } else {
+                                                Image(displayFilter.display.imageName)
+                                                    .resizable()
+                                                    .scaledToFill()
+                                                    .frame(width: 250, height: 300)
+                                                    .clipShape(
+                                                        RoundedRectangle(
+                                                            cornerRadius: 16)
+                                                    )
+                                                    .opacity(
+                                                        isScrollingActive ? 0.8 : 0
+                                                    )
+                                                    .shadow(
+                                                        color: .black.opacity(0.5),
+                                                        radius: 20,
+                                                        x: 0,
+                                                        y: 0
+                                                    )
+                                            }
+                                        }
                                             .overlay(
                                                 // Cost badge in top right
                                                 Group {
-                                                    if let cost = displayFilter.cost {
+                                                    if let cost = displayFilter
+                                                        .cost
+                                                    {
                                                         Text(
                                                             "$\(NSDecimalNumber(decimal: cost).stringValue)"
                                                         )
                                                         .font(
                                                             .system(
                                                                 size: 13,
-                                                                weight: .semibold,
-                                                                design: .rounded)
+                                                                weight:
+                                                                    .semibold,
+                                                                design: .rounded
+                                                            )
                                                         )
                                                         .foregroundColor(.white)
-                                                        .padding(.horizontal, 10)
+                                                        .padding(
+                                                            .horizontal, 10
+                                                        )
                                                         .padding(.vertical, 5)
                                                         .background(
                                                             Capsule()
                                                                 .fill(
                                                                     Color.black
-                                                                        .opacity(0.75)
+                                                                        .opacity(
+                                                                            0.75
+                                                                        )
                                                                 )
                                                         )
                                                         .shadow(
                                                             color: .black
                                                                 .opacity(0.4),
                                                             radius: 4, x: 0,
-                                                            y: 2)
+                                                            y: 2
+                                                        )
                                                         .padding(12)
                                                         .opacity(
-                                                            isScrollingActive ? 1.0 : 0
+                                                            isScrollingActive
+                                                                ? 1.0 : 0
                                                         )
                                                         .animation(
-                                                            .easeOut(duration: 0.3),
-                                                            value: isScrollingActive
+                                                            .easeOut(
+                                                                duration: 0.3),
+                                                            value:
+                                                                isScrollingActive
                                                         )
                                                     }
                                                 },
@@ -384,14 +438,21 @@ struct Post: View {
                         HStack {
                             Spacer()
                             FilterScrollRow(
+                                presets: presetInfoPackets,
                                 imageModels: imageModelsViewModel
                                     .filteredAndSortedImageModels,
                                 filters: filtersViewModel.filters,
                                 selectedFilter: selectedFilter,
                                 selectedImageModel: selectedImageModel,
                                 onSelect: { item in
+                                    // Check if the item is a preset
+                                    if presetInfoPackets.contains(where: { $0.id == item.id }) {
+                                        // It's a preset - treat as a filter
+                                        selectedFilter = item
+                                        selectedImageModel = nil
+                                    }
                                     // Check if the item is an image model or a filter
-                                    if imageModelsViewModel
+                                    else if imageModelsViewModel
                                         .filteredAndSortedImageModels.contains(
                                             where: { $0.id == item.id })
                                     {
@@ -450,6 +511,14 @@ struct Post: View {
                 shouldShowCapturedImage = false
                 // Ensure session is running when view appears
                 cameraService.startSession()
+                
+                // Load presets if user is signed in
+                if let userId = authViewModel.user?.id.uuidString {
+                    presetViewModel.userId = userId
+                    Task {
+                        await presetViewModel.fetchPresets()
+                    }
+                }
             }
             .onDisappear {
                 isViewActive = false
@@ -502,8 +571,14 @@ struct Post: View {
                     selectedFilter: $selectedFilter,
                     selectedImageModel: $selectedImageModel,
                     onSelect: { filter in
-                        selectedFilter = filter
-                        selectedImageModel = nil  // Clear model when filter is selected
+                        // Check if it's a preset
+                        if presetInfoPackets.contains(where: { $0.id == filter.id }) {
+                            selectedFilter = filter
+                            selectedImageModel = nil
+                        } else {
+                            selectedFilter = filter
+                            selectedImageModel = nil  // Clear model when filter is selected
+                        }
                     },
                     onSelectModel: { model in
                         selectedImageModel = model
@@ -526,6 +601,11 @@ struct Post: View {
 
     // Helper function to get category title for an item
     private func categoryTitle(for item: InfoPacket) -> String {
+        // Check if it's a preset first
+        if presetInfoPackets.contains(where: { $0.id == item.id }) {
+            return "Presets"
+        }
+        
         // Check if it's an image model
         if imageModelsViewModel.filteredAndSortedImageModels.contains(where: {
             $0.id == item.id
