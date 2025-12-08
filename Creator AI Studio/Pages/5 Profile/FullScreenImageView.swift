@@ -153,6 +153,7 @@ struct FullScreenImageView: View {
     let userImage: UserImage
     @Binding var isPresented: Bool
     var viewModel: ProfileViewModel?
+    @EnvironmentObject var authViewModel: AuthViewModel
     @State private var zoom: CGFloat = 1.0
     @State private var lastZoom: CGFloat = 1.0
     @State private var panOffset: CGSize = .zero
@@ -170,6 +171,7 @@ struct FullScreenImageView: View {
     @State private var isImmersiveMode = false
     @State private var isFavorited = false
     @State private var showCreatePresetSheet = false
+    @StateObject private var presetViewModel = PresetViewModel()
 
     // Cache image models to avoid repeated JSON loading
     static var cachedImageModels: [InfoPacket]?
@@ -217,6 +219,39 @@ struct FullScreenImageView: View {
     private var matchingImageModel: InfoPacket? {
         guard let title = userImage.title, !title.isEmpty else { return nil }
         return allImageModels.first { $0.display.title == title }
+    }
+    
+    // Check if current image matches an existing preset
+    private var matchingPreset: Preset? {
+        let currentModelName = userImage.title
+        let currentPrompt = userImage.prompt
+        
+        return presetViewModel.presets.first { preset in
+            // Compare model names (both can be nil or empty)
+            let modelMatch: Bool
+            if let currentModel = currentModelName, !currentModel.isEmpty {
+                modelMatch = preset.modelName == currentModel
+            } else {
+                // Both are nil/empty - consider it a match
+                modelMatch = preset.modelName == nil || preset.modelName?.isEmpty == true
+            }
+            
+            // Compare prompts (both can be nil or empty)
+            let promptMatch: Bool
+            if let current = currentPrompt, !current.isEmpty {
+                promptMatch = preset.prompt == current
+            } else {
+                // Both are nil/empty - consider it a match
+                promptMatch = preset.prompt == nil || preset.prompt?.isEmpty == true
+            }
+            
+            return modelMatch && promptMatch
+        }
+    }
+    
+    // Check if preset button should be filled/colored
+    private var isPresetSaved: Bool {
+        matchingPreset != nil
     }
 
     // Helper function to format cost with full precision
@@ -568,13 +603,13 @@ struct FullScreenImageView: View {
             showCreatePresetSheet = true
         }) {
             VStack(spacing: 6) {
-                Image(systemName: "bookmark")
+                Image(systemName: isPresetSaved ? "bookmark.fill" : "bookmark")
                     .font(.system(size: 20, weight: .medium))
-                    .foregroundColor(.white)
-                    .opacity(0.8)
+                    .foregroundColor(isPresetSaved ? .blue : .white)
+                    .opacity(isPresetSaved ? 1.0 : 0.8)
                 Text("Preset")
                     .font(.caption)
-                    .foregroundColor(.gray)
+                    .foregroundColor(isPresetSaved ? .blue : .gray)
             }
         }
         .buttonStyle(.plain)
@@ -843,6 +878,14 @@ struct FullScreenImageView: View {
         .onAppear {
             // Initialize favorite state from userImage
             isFavorited = userImage.is_favorite ?? false
+            
+            // Load presets if user is signed in
+            if let userId = authViewModel.user?.id.uuidString {
+                presetViewModel.userId = userId
+                Task {
+                    await presetViewModel.fetchPresets()
+                }
+            }
         }
         .onChange(of: userImage.is_favorite) { _, newValue in
             // Update favorite state if userImage changes
@@ -851,8 +894,13 @@ struct FullScreenImageView: View {
         .sheet(isPresented: $showCreatePresetSheet) {
             CreatePresetSheet(
                 isPresented: $showCreatePresetSheet,
-                userImage: userImage
+                userImage: userImage,
+                parentPresetViewModel: presetViewModel
             )
+            .environmentObject(authViewModel)
+        }
+        .onChange(of: presetViewModel.presets) { _, _ in
+            // Update UI when presets change (e.g., after saving)
         }
     }
 
@@ -1166,8 +1214,14 @@ struct FullScreenImageView: View {
 struct CreatePresetSheet: View {
     @Binding var isPresented: Bool
     let userImage: UserImage
+    @EnvironmentObject var authViewModel: AuthViewModel
+    @ObservedObject var parentPresetViewModel: PresetViewModel
+    @StateObject private var presetViewModel = PresetViewModel()
     @State private var presetTitle: String = ""
     @FocusState private var isTitleFocused: Bool
+    @State private var isSaving = false
+    @State private var showError = false
+    @State private var errorMessage = ""
 
     // Cache image models to avoid repeated JSON loading
     private static var cachedImageModels: [InfoPacket]?
@@ -1357,12 +1411,13 @@ struct CreatePresetSheet: View {
 
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Save") {
-                        // TODO: Implement preset saving functionality
-                        isPresented = false
+                        Task {
+                            await savePreset()
+                        }
                     }
-                    .foregroundColor(presetTitle.isEmpty ? .gray : .blue)
+                    .foregroundColor(presetTitle.isEmpty || isSaving ? .gray : .blue)
                     .fontWeight(.semibold)
-                    .disabled(presetTitle.isEmpty)
+                    .disabled(presetTitle.isEmpty || isSaving)
                 }
 
                 ToolbarItemGroup(placement: .keyboard) {
@@ -1375,5 +1430,82 @@ struct CreatePresetSheet: View {
         }
         .preferredColorScheme(.dark)
         .presentationDetents([.medium, .large])
+        .onAppear {
+            // Set user ID for preset view model
+            if let userId = authViewModel.user?.id.uuidString {
+                presetViewModel.userId = userId
+                // Sync presets from parent view model
+                presetViewModel.presets = parentPresetViewModel.presets
+            }
+        }
+        .alert("Error Saving Preset", isPresented: $showError) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(errorMessage)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+    
+    // MARK: - Save Preset
+    private func savePreset() async {
+        print("🟢 [CreatePresetSheet] Save button pressed")
+        print("🟢 [CreatePresetSheet] Preset title: '\(presetTitle)'")
+        
+        guard let userId = authViewModel.user?.id.uuidString else {
+            print("❌ [CreatePresetSheet] User not signed in")
+            errorMessage = "You must be signed in to save presets."
+            showError = true
+            return
+        }
+        
+        print("🟢 [CreatePresetSheet] User ID: \(userId)")
+        print("🟢 [CreatePresetSheet] Setting user ID in presetViewModel...")
+        
+        // Ensure presetViewModel has the user ID
+        presetViewModel.userId = userId
+        
+        isSaving = true
+        
+        // Get model name from userImage
+        let modelName = userImage.title
+        print("🟢 [CreatePresetSheet] Model name from userImage: '\(modelName ?? "nil")'")
+        
+        // Get prompt from userImage
+        let prompt = userImage.prompt
+        print("🟢 [CreatePresetSheet] Prompt from userImage: '\(prompt?.prefix(50) ?? "nil")...'")
+        
+        do {
+            print("🟢 [CreatePresetSheet] Calling presetViewModel.savePreset...")
+            try await presetViewModel.savePreset(
+                title: presetTitle,
+                modelName: modelName,
+                prompt: prompt
+            )
+            
+            print("✅ [CreatePresetSheet] Preset saved successfully, closing sheet...")
+            
+            // Success - refresh parent view model and close the sheet
+            await MainActor.run {
+                // Sync presets with parent view model
+                parentPresetViewModel.presets = presetViewModel.presets
+                isSaving = false
+                isPresented = false
+            }
+        } catch {
+            print("❌ [CreatePresetSheet] Error saving preset")
+            print("❌ [CreatePresetSheet] Error type: \(type(of: error))")
+            print("❌ [CreatePresetSheet] Error description: \(error.localizedDescription)")
+            if let nsError = error as NSError? {
+                print("❌ [CreatePresetSheet] Error domain: \(nsError.domain)")
+                print("❌ [CreatePresetSheet] Error code: \(nsError.code)")
+                print("❌ [CreatePresetSheet] Error userInfo: \(nsError.userInfo)")
+            }
+            
+            await MainActor.run {
+                isSaving = false
+                errorMessage = "Failed to save preset: \(error.localizedDescription)"
+                showError = true
+            }
+        }
     }
 }

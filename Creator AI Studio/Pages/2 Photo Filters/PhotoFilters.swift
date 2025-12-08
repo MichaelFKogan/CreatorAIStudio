@@ -1,5 +1,6 @@
 import PhotosUI
 import SwiftUI
+import Combine
 
 // MARK: - Filter Category
 
@@ -79,22 +80,77 @@ class PhotoFiltersViewModel: ObservableObject {
 
 struct PhotoFilters: View {
     @StateObject private var viewModel = PhotoFiltersViewModel()
+    @StateObject private var presetViewModel = PresetViewModel()
+    @EnvironmentObject var authViewModel: AuthViewModel
     @State private var selectedFilter: InfoPacket? = nil
     @State private var selectedPhotoItem: PhotosPickerItem?
     @State private var selectedImage: UIImage?
     @State private var navigateToConfirmation: Bool = false
     @State private var showPhotoPicker: Bool = false
     @State private var prompt: String = ""
+    
+    // Convert presets to InfoPacket format
+    private var presetInfoPackets: [InfoPacket] {
+        let allModels = ImageModelsViewModel.loadImageModels()
+        return presetViewModel.presets.compactMap { preset in
+            preset.toInfoPacket(allModels: allModels)
+        }
+    }
 
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
                 ScrollView {
-                    PhotoFiltersGrid(
-                        filters: viewModel.filters,
-                        selectedFilter: selectedFilter,
-                        onSelect: { selectedFilter = $0 }
-                    )
+                    VStack(spacing: 0) {
+                        // Presets section (if any exist)
+                        if !presetInfoPackets.isEmpty {
+                            VStack(alignment: .leading, spacing: 12) {
+                                HStack {
+                                    Image(systemName: "bookmark.fill")
+                                        .font(.system(size: 16))
+                                        .foregroundColor(.blue)
+                                    Text("My Presets")
+                                        .font(.system(size: 18, weight: .semibold))
+                                        .foregroundColor(.primary)
+                                    Spacer()
+                                }
+                                .padding(.horizontal, 16)
+                                .padding(.top, 16)
+                                
+                                PhotoFiltersGrid(
+                                    filters: presetInfoPackets,
+                                    selectedFilter: selectedFilter,
+                                    onSelect: { selectedFilter = $0 }
+                                )
+                                .padding(.bottom, 8)
+                                
+                                Divider()
+                                    .padding(.horizontal, 16)
+                                    .padding(.vertical, 8)
+                            }
+                        }
+                        
+                        // All Filters section
+                        VStack(alignment: .leading, spacing: 12) {
+                            HStack {
+                                Image(systemName: "square.grid.2x2.fill")
+                                    .font(.system(size: 16))
+                                    .foregroundColor(.green)
+                                Text("Photo Filters")
+                                    .font(.system(size: 18, weight: .semibold))
+                                    .foregroundColor(.primary)
+                                Spacer()
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.top, presetInfoPackets.isEmpty ? 16 : 0)
+                            
+                            PhotoFiltersGrid(
+                                filters: viewModel.filters,
+                                selectedFilter: selectedFilter,
+                                onSelect: { selectedFilter = $0 }
+                            )
+                        }
+                    }
                 }
 
 //               PhotoFiltersBottomBar(
@@ -175,7 +231,16 @@ struct PhotoFilters: View {
             )
         }
         .onChange(of: selectedPhotoItem, perform: loadPhoto)
-        .onAppear(perform: setDefaultFilter)
+        .onAppear {
+            setDefaultFilter()
+            // Load presets if user is signed in
+            if let userId = authViewModel.user?.id.uuidString {
+                presetViewModel.userId = userId
+                Task {
+                    await presetViewModel.fetchPresets()
+                }
+            }
+        }
     }
 
     @ViewBuilder

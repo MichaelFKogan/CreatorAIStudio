@@ -3,6 +3,7 @@ import SwiftUI
 import UIKit
 
 struct Post: View {
+    @EnvironmentObject var authViewModel: AuthViewModel
     @StateObject private var cameraService = CameraService()
     @State private var selectedUIImage: UIImage?
     @State private var showLibraryPicker = false
@@ -125,6 +126,7 @@ struct Post: View {
                                 Spacer()
 
                                 // MARK: LARGE IMG
+
                                 // Show larger preview image of the centered/selected filter or model
                                 // Only visible while scrolling, fades out when scrolling stops
                                 if let displayFilter = centeredFilter
@@ -133,7 +135,7 @@ struct Post: View {
                                 {
                                     VStack(spacing: 12) {
 
-// Category title
+                                        // Category title
                                         if let displayFilter =
                                             centeredFilter
                                             ?? selectedFilter
@@ -148,7 +150,9 @@ struct Post: View {
                                                     size: 12, weight: .medium,
                                                     design: .rounded)
                                             )
-                                            .foregroundColor(.white.opacity(0.7))
+                                            .foregroundColor(
+                                                .white.opacity(0.7)
+                                            )
                                             .textCase(.uppercase)
                                             .tracking(1.2)
                                             .opacity(
@@ -203,6 +207,46 @@ struct Post: View {
                                                 radius: 20,
                                                 x: 0,
                                                 y: 0)
+                                            .overlay(
+                                                // Cost badge in top right
+                                                Group {
+                                                    if let cost = displayFilter.cost {
+                                                        Text(
+                                                            "$\(NSDecimalNumber(decimal: cost).stringValue)"
+                                                        )
+                                                        .font(
+                                                            .system(
+                                                                size: 13,
+                                                                weight: .semibold,
+                                                                design: .rounded)
+                                                        )
+                                                        .foregroundColor(.white)
+                                                        .padding(.horizontal, 10)
+                                                        .padding(.vertical, 5)
+                                                        .background(
+                                                            Capsule()
+                                                                .fill(
+                                                                    Color.black
+                                                                        .opacity(0.75)
+                                                                )
+                                                        )
+                                                        .shadow(
+                                                            color: .black
+                                                                .opacity(0.4),
+                                                            radius: 4, x: 0,
+                                                            y: 2)
+                                                        .padding(12)
+                                                        .opacity(
+                                                            isScrollingActive ? 1.0 : 0
+                                                        )
+                                                        .animation(
+                                                            .easeOut(duration: 0.3),
+                                                            value: isScrollingActive
+                                                        )
+                                                    }
+                                                },
+                                                alignment: .topTrailing
+                                            )
                                     }
                                     .allowsHitTesting(false)
                                     .padding(.bottom, 24)
@@ -466,6 +510,7 @@ struct Post: View {
                         selectedFilter = nil  // Clear filter when model is selected
                     }
                 )
+                .environmentObject(authViewModel)
             }
             .background(
                 photoReviewNavigationLink

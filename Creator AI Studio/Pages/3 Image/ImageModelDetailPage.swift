@@ -767,6 +767,7 @@ struct ModelGallerySection: View {
     let userId: String?
 
     @StateObject private var viewModel = ProfileViewModel()
+    @EnvironmentObject var authViewModel: AuthViewModel
     @State private var modelImages: [UserImage] = []
     @State private var isLoading = false
     @State private var hasLoaded = false
@@ -830,6 +831,7 @@ struct ModelGallerySection: View {
                     set: { if !$0 { selectedUserImage = nil } }
                 )
             )
+            .environmentObject(authViewModel)
             .presentationDetents([.large])
             .presentationDragIndicator(.visible)
             .ignoresSafeArea()

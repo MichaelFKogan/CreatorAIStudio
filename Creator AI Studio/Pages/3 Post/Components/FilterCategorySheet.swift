@@ -43,6 +43,16 @@ struct FilterCategorySheet: View {
     let onSelectModel: (InfoPacket) -> Void
 
     @State private var expandedCategories: Set<FilterCategory> = []
+    @StateObject private var presetViewModel = PresetViewModel()
+    @EnvironmentObject var authViewModel: AuthViewModel
+    
+    // Convert presets to InfoPacket format
+    private var presetInfoPackets: [InfoPacket] {
+        let allModels = ImageModelsViewModel.loadImageModels()
+        return presetViewModel.presets.compactMap { preset in
+            preset.toInfoPacket(allModels: allModels)
+        }
+    }
 
     // Filter image models to only show those with Image to Image capability
     private var imageToImageModels: [InfoPacket] {
@@ -70,6 +80,27 @@ struct FilterCategorySheet: View {
                         Divider()
                             .background(Color.white.opacity(0.2))
                             .padding(.vertical, 8)
+
+                        // Presets section (if any exist, shown first)
+                        if !presetInfoPackets.isEmpty {
+                            CategorySection(
+                                title: "My Presets",
+                                icon: "bookmark.fill",
+                                filters: presetInfoPackets,
+                                selectedFilter: selectedImageModel, // Presets are models, so check against selectedImageModel
+                                onSelect: { preset in
+                                    // When a preset is selected, it should select the model and apply the prompt
+                                    onSelectModel(preset)
+                                },
+                                isExpanded: true,
+                                isAlwaysExpanded: true
+                            )
+                            .padding(.top, 8)
+
+                            Divider()
+                                .background(Color.white.opacity(0.2))
+                                .padding(.vertical, 8)
+                        }
 
                         // AI Models section (first row, always visible)
                         if !imageToImageModels.isEmpty {
@@ -155,6 +186,15 @@ struct FilterCategorySheet: View {
 //            .preferredColorScheme(.dark)
         }
         .presentationDetents([.medium, .large])
+        .onAppear {
+            // Load presets if user is signed in
+            if let userId = authViewModel.user?.id.uuidString {
+                presetViewModel.userId = userId
+                Task {
+                    await presetViewModel.fetchPresets()
+                }
+            }
+        }
     }
 }
 

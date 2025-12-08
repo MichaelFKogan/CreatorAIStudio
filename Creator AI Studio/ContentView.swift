@@ -33,7 +33,7 @@ struct ContentView: View {
                                     with: .move(edge: .leading))
                             ))
                 case 1:
-                    LazyView(PhotoFilters())
+                    LazyView(PhotoFilters().environmentObject(authViewModel))
                         .transition(
                             .asymmetric(
                                 insertion: .opacity.combined(
@@ -44,7 +44,7 @@ struct ContentView: View {
                                             ? .trailing : .leading))
                             ))
                 case 2:
-                    LazyView(Post())
+                    LazyView(Post().environmentObject(authViewModel))
                         .transition(
                             .asymmetric(
                                 insertion: .opacity.combined(
