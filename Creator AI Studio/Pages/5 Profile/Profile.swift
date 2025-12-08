@@ -470,11 +470,11 @@ struct ImageGridView: View {
                                         if hasMatchingPreset(for: userImage) {
                                             ZStack {
                                                 Circle()
-                                                    .fill(Color.black.opacity(0.3))
-                                                    .frame(width: 24, height: 24)
+                                                    .fill(Color.black)
+                                                    .frame(width: 28, height: 28)
                                                 
                                                 Image(systemName: "bookmark.fill")
-                                                    .font(.system(size: 16, weight: .semibold))
+                                                    .font(.system(size: 12, weight: .semibold))
                                                     .foregroundColor(.blue)
                                             }
                                             .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 1)
