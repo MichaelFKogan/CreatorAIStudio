@@ -306,7 +306,7 @@ private struct ContentList: View {
                         ForEach(viewModel.filteredAndSortedImageModels) { item in
                             // Lightweight navigation (replace EmptyView with your detail view if needed)
                             NavigationLink(destination: ImageModelDetailPage(item: item)) {
-                                ImageModelGridItem(item: item)
+                                ImageModelGridItem(item: item, viewModel: viewModel)
                             }
                         }
                     }
@@ -315,7 +315,7 @@ private struct ContentList: View {
                     VStack(spacing: 12) {
                         ForEach(viewModel.filteredAndSortedImageModels) { item in
                             NavigationLink(destination: ImageModelDetailPage(item: item)) {
-                                ImageModelListItem(item: item)
+                                ImageModelListItem(item: item, viewModel: viewModel)
                             }
                             .buttonStyle(.plain)
                         }
@@ -331,6 +331,7 @@ private struct ContentList: View {
 
 private struct ImageModelGridItem: View {
     let item: InfoPacket
+    @ObservedObject var viewModel: ImageModelsViewModel
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -389,6 +390,7 @@ private struct ImageModelGridItem: View {
 
 private struct ImageModelListItem: View {
     let item: InfoPacket
+    @ObservedObject var viewModel: ImageModelsViewModel
 
     var body: some View {
         HStack(spacing: 12) {
@@ -404,7 +406,7 @@ private struct ImageModelListItem: View {
                     .foregroundColor(.primary)
                     .lineLimit(2)
 
-                if let capabilities = item.capabilities, !capabilities.isEmpty {
+                if viewModel.hasActiveFilters, let capabilities = item.capabilities, !capabilities.isEmpty {
                     Text(capabilities.joined(separator: " • "))
                         .font(.system(size: 12, weight: .medium, design: .rounded))
                         .foregroundColor(.blue)
