@@ -141,7 +141,9 @@ struct Post: View {
 
                                 // Show larger preview image of the centered/selected filter or model
                                 // Only visible while scrolling, fades out when scrolling stops
-                                if let displayFilter = centeredFilter
+                                // Hide when showing captured image
+                                if !shouldShowCapturedImage,
+                                   let displayFilter = centeredFilter
                                     ?? selectedFilter
                                     ?? selectedImageModel
                                 {
@@ -484,6 +486,8 @@ struct Post: View {
                         // MARK: CAPTURE
 
                         Button {
+                            // Explicitly hide the large image preview when capturing
+                            isScrollingActive = false
                             cameraService.capturePhoto()
                         } label: {
                             Circle()
