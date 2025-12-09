@@ -59,10 +59,42 @@ class PresetViewModel: ObservableObject {
                 .from("user_presets")
                 .select()
                 .eq("user_id", value: userId)
+                .order("display_order", ascending: true)
                 .order("created_at", ascending: false)
                 .execute()
             
-            presets = response.value ?? []
+            var fetchedPresets = response.value ?? []
+            
+            // Ensure all presets have a display_order (fallback for any that don't)
+            for (index, preset) in fetchedPresets.enumerated() {
+                if preset.displayOrder == nil {
+                    let orderUpdate = PresetOrderUpdateMetadata(displayOrder: index)
+                    do {
+                        try await client.database
+                            .from("user_presets")
+                            .update(orderUpdate)
+                            .eq("id", value: preset.id)
+                            .eq("user_id", value: userId)
+                            .execute()
+                        
+                        // Update the preset in the array
+                        let updatedPreset = Preset(
+                            id: preset.id,
+                            title: preset.title,
+                            modelName: preset.modelName,
+                            prompt: preset.prompt,
+                            imageUrl: preset.imageUrl,
+                            created_at: preset.created_at,
+                            displayOrder: index
+                        )
+                        fetchedPresets[index] = updatedPreset
+                    } catch {
+                        print("⚠️ Failed to set display_order for preset \(preset.id): \(error)")
+                    }
+                }
+            }
+            
+            presets = fetchedPresets
             saveCachedPresets()
             hasFetchedFromDatabase = true
             // print("✅ Fetched and cached \(presets.count) presets from Supabase")
@@ -154,9 +186,42 @@ class PresetViewModel: ObservableObject {
                 print("🔵 [PresetViewModel] Preset ID: \(response.value.id)")
                 print("🔵 [PresetViewModel] Preset title: \(response.value.title)")
                 
-                // Add to local array
-                let newPreset = response.value
-                presets.insert(newPreset, at: 0)
+                // Add to local array and set display_order if needed
+                var newPreset = response.value
+                
+                // If display_order is nil, set it to the maximum + 1 (or 0 if no presets)
+                if newPreset.displayOrder == nil {
+                    let maxOrder = presets.compactMap { $0.displayOrder }.max() ?? -1
+                    let newOrder = maxOrder + 1
+                    
+                    // Update the preset in the database with the display_order
+                    do {
+                        let orderUpdate = PresetOrderUpdateMetadata(displayOrder: newOrder)
+                        try await client.database
+                            .from("user_presets")
+                            .update(orderUpdate)
+                            .eq("id", value: newPreset.id)
+                            .eq("user_id", value: userId)
+                            .execute()
+                        
+                        // Update local preset with the new order
+                        newPreset = Preset(
+                            id: newPreset.id,
+                            title: newPreset.title,
+                            modelName: newPreset.modelName,
+                            prompt: newPreset.prompt,
+                            imageUrl: newPreset.imageUrl,
+                            created_at: newPreset.created_at,
+                            displayOrder: newOrder
+                        )
+                    } catch {
+                        print("⚠️ [PresetViewModel] Failed to set display_order for new preset: \(error)")
+                    }
+                }
+                
+                presets.append(newPreset)
+                // Sort by display_order to maintain order
+                presets.sort { ($0.displayOrder ?? Int.max) < ($1.displayOrder ?? Int.max) }
                 saveCachedPresets()
                 print("✅ [PresetViewModel] Preset saved successfully!")
                 print("✅ [PresetViewModel] Preset ID: \(newPreset.id)")
@@ -199,14 +264,15 @@ class PresetViewModel: ObservableObject {
         
         // Update local array
         if let index = presets.firstIndex(where: { $0.id == presetId }) {
-            // Create updated preset
+            // Create updated preset (preserve displayOrder)
             let updatedPreset = Preset(
                 id: presets[index].id,
                 title: title,
                 modelName: modelName,
                 prompt: prompt,
                 imageUrl: imageUrl,
-                created_at: presets[index].created_at
+                created_at: presets[index].created_at,
+                displayOrder: presets[index].displayOrder
             )
             presets[index] = updatedPreset
             saveCachedPresets()
@@ -237,10 +303,59 @@ class PresetViewModel: ObservableObject {
         }
     }
     
-    /// Reorders presets (updates local order, doesn't persist to database)
+    /// Reorders presets and persists the order to the database
     func reorderPresets(from source: IndexSet, to destination: Int) {
+        guard let userId = userId else {
+            print("⚠️ Cannot reorder presets: userId is nil")
+            return
+        }
+        
+        // Update local array
         presets.move(fromOffsets: source, toOffset: destination)
         saveCachedPresets()
+        
+        // Update display_order in database for all affected presets
+        Task {
+            do {
+                // Update each preset's display_order based on its new position
+                for (index, preset) in presets.enumerated() {
+                    let newOrder = index
+                    
+                    // Only update if the order has changed
+                    if preset.displayOrder != newOrder {
+                        let orderUpdate = PresetOrderUpdateMetadata(displayOrder: newOrder)
+                        
+                        try await client.database
+                            .from("user_presets")
+                            .update(orderUpdate)
+                            .eq("id", value: preset.id)
+                            .eq("user_id", value: userId)
+                            .execute()
+                        
+                        // Update local preset with new order
+                        if let presetIndex = presets.firstIndex(where: { $0.id == preset.id }) {
+                            let updatedPreset = Preset(
+                                id: preset.id,
+                                title: preset.title,
+                                modelName: preset.modelName,
+                                prompt: preset.prompt,
+                                imageUrl: preset.imageUrl,
+                                created_at: preset.created_at,
+                                displayOrder: newOrder
+                            )
+                            presets[presetIndex] = updatedPreset
+                        }
+                    }
+                }
+                
+                saveCachedPresets()
+                print("✅ Preset order saved successfully")
+            } catch {
+                print("❌ Failed to save preset order: \(error)")
+                // Reload presets to restore correct order from database
+                await fetchPresets(forceRefresh: true)
+            }
+        }
     }
     
     /// Deletes a preset from Supabase database

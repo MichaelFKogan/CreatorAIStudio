@@ -1,14 +1,14 @@
 import SwiftUI
 
 // MARK: - Notification State
-enum NotificationState {
+enum NotificationState: Equatable {
     case inProgress
     case completed
     case failed
 }
 
 // MARK: - Notification Data Model
-struct NotificationData: Identifiable {
+struct NotificationData: Identifiable, Equatable {
     let id: UUID
     var title: String
     var message: String
@@ -18,6 +18,16 @@ struct NotificationData: Identifiable {
     var state: NotificationState
     var errorMessage: String?
     var taskId: UUID? // Associated task ID for cancellation
+    
+    static func == (lhs: NotificationData, rhs: NotificationData) -> Bool {
+        lhs.id == rhs.id
+            && lhs.state == rhs.state
+            && lhs.progress == rhs.progress
+            && lhs.title == rhs.title
+            && lhs.message == rhs.message
+            && lhs.errorMessage == rhs.errorMessage
+            && lhs.taskId == rhs.taskId
+    }
     
     init(
         id: UUID = UUID(),

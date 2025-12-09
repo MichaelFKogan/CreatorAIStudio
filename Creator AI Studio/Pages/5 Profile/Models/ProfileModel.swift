@@ -489,4 +489,90 @@ class ProfileViewModel: ObservableObject {
 
         return filtered
     }
+    
+    // MARK: - Remove Image
+    
+    /// Removes an image from the local array and cache
+    /// - Parameter imageId: The ID of the image to remove
+    func removeImage(imageId: String) {
+        guard let userId = userId else { return }
+        
+        // Remove from local array
+        userImages.removeAll { $0.id == imageId }
+        
+        // Update cache
+        saveCachedImages(for: userId)
+    }
+    
+    // MARK: - Add Image
+    
+    /// Adds a new image to the local array and cache
+    /// - Parameter image: The UserImage to add
+    func addImage(_ image: UserImage) {
+        guard let userId = userId else { return }
+        
+        // Check if image already exists (avoid duplicates)
+        guard !userImages.contains(where: { $0.id == image.id }) else {
+            return
+        }
+        
+        // Insert at the beginning (newest first)
+        userImages.insert(image, at: 0)
+        
+        // Update cache
+        saveCachedImages(for: userId)
+    }
+    
+    /// Fetches a single image by URL and adds it to the list
+    /// - Parameter imageUrl: The URL of the image to fetch
+    func fetchAndAddImage(imageUrl: String) async {
+        guard let userId = userId else { return }
+        
+        do {
+            // Fetch the image by URL
+            let response: PostgrestResponse<[UserImage]> = try await client.database
+                .from("user_media")
+                .select()
+                .eq("user_id", value: userId)
+                .eq("image_url", value: imageUrl)
+                .order("created_at", ascending: false)
+                .limit(1)
+                .execute()
+            
+            if let newImage = response.value.first {
+                await MainActor.run {
+                    addImage(newImage)
+                }
+            }
+        } catch {
+            print("❌ Failed to fetch new image: \(error)")
+        }
+    }
+    
+    /// Fetches the most recent image and adds it to the list
+    func fetchLatestImage() async {
+        guard let userId = userId else { return }
+        
+        do {
+            // Fetch the most recent image for this user
+            let response: PostgrestResponse<[UserImage]> = try await client.database
+                .from("user_media")
+                .select()
+                .eq("user_id", value: userId)
+                .order("created_at", ascending: false)
+                .limit(1)
+                .execute()
+            
+            if let latestImage = response.value.first {
+                await MainActor.run {
+                    // Only add if it's not already in the list
+                    if !userImages.contains(where: { $0.id == latestImage.id }) {
+                        addImage(latestImage)
+                    }
+                }
+            }
+        } catch {
+            print("❌ Failed to fetch latest image: \(error)")
+        }
+    }
 }

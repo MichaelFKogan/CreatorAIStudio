@@ -160,6 +160,12 @@ struct ProfileViewContent: View {
                     }
                 }
             }
+            .onChange(of: notificationManager.notifications) { oldNotifications, newNotifications in
+                handleNotificationChange(
+                    oldNotifications: oldNotifications,
+                    newNotifications: newNotifications
+                )
+            }
             .sheet(item: $selectedUserImage) { userImage in
                 FullScreenImageView(
                     userImage: userImage,
@@ -173,6 +179,25 @@ struct ProfileViewContent: View {
                 .presentationDragIndicator(.visible)
                 .ignoresSafeArea()
             }
+        }
+    }
+
+    private func handleNotificationChange(
+        oldNotifications: [NotificationData],
+        newNotifications: [NotificationData]
+    ) {
+        // When a notification is marked as completed, fetch and add the new image
+        let newlyCompleted = newNotifications.filter { notification in
+            notification.state == .completed &&
+            !oldNotifications.contains(where: { existing in
+                existing.id == notification.id && existing.state == .completed
+            })
+        }
+
+        guard !newlyCompleted.isEmpty else { return }
+
+        Task {
+            await viewModel.fetchLatestImage()
         }
     }
 
@@ -290,6 +315,8 @@ struct ProfileViewContent: View {
                     presetViewModel: presetViewModel,
                     isPresented: $showPresetsSheet
                 )
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
             }
     }
 
@@ -1207,6 +1234,8 @@ struct PresetsListSheet: View {
                         set: { if !$0 { selectedPreset = nil } }
                     )
                 )
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
             }
             .onAppear {
                 Task {
@@ -1311,7 +1340,6 @@ private struct PresetRow: View {
             RoundedRectangle(cornerRadius: 12)
                 .stroke(Color.gray.opacity(0.2), lineWidth: 1)
         )
-        .presentationDetents([.large])
     }
 }
 
@@ -1470,6 +1498,7 @@ struct PresetDetailView: View {
             .navigationTitle("Edit Preset")
             .navigationBarTitleDisplayMode(.inline)
             .presentationDetents([.large])
+            .presentationDragIndicator(.visible)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Done") {

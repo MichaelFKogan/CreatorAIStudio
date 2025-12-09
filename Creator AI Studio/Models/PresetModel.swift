@@ -8,6 +8,7 @@ struct Preset: Codable, Identifiable, Equatable {
     let prompt: String?
     let imageUrl: String?
     let created_at: String?
+    let displayOrder: Int?
     
     enum CodingKeys: String, CodingKey {
         case id
@@ -16,15 +17,17 @@ struct Preset: Codable, Identifiable, Equatable {
         case prompt
         case imageUrl = "image_url"
         case created_at
+        case displayOrder = "display_order"
     }
     
-    init(id: String, title: String, modelName: String?, prompt: String?, imageUrl: String?, created_at: String?) {
+    init(id: String, title: String, modelName: String?, prompt: String?, imageUrl: String?, created_at: String?, displayOrder: Int? = nil) {
         self.id = id
         self.title = title
         self.modelName = modelName
         self.prompt = prompt
         self.imageUrl = imageUrl
         self.created_at = created_at
+        self.displayOrder = displayOrder
     }
 }
 
@@ -57,6 +60,15 @@ struct PresetUpdateMetadata: Encodable {
         self.model_name = modelName
         self.prompt = prompt
         self.image_url = imageUrl
+    }
+}
+
+// MARK: - Preset Order Update Metadata for Database
+struct PresetOrderUpdateMetadata: Encodable {
+    let display_order: Int
+    
+    init(displayOrder: Int) {
+        self.display_order = displayOrder
     }
 }
 

@@ -1146,9 +1146,13 @@ struct FullScreenImageView: View {
                     )
                 }
 
-                // Success - close the view
+                // Success - remove from view model and close the view
                 print("✅ Deletion completed successfully")
                 await MainActor.run {
+                    // Remove the image from the view model's list
+                    if let viewModel = viewModel {
+                        viewModel.removeImage(imageId: userImage.id)
+                    }
                     isDeleting = false
                     isPresented = false
                 }
