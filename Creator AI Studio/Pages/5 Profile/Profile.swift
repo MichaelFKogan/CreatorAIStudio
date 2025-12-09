@@ -1303,43 +1303,9 @@ struct PresetDetailView: View {
     @State private var showError = false
     @State private var errorMessage = ""
     @FocusState private var focusedField: Field?
-    @State private var promptHeight: CGFloat = 120
     
     enum Field {
         case title, modelName, prompt
-    }
-    
-    // Calculate height based on text content
-    private func calculatePromptHeight(for text: String) -> CGFloat {
-        let minHeight: CGFloat = 120
-        let textEditorPadding: CGFloat = 16 // Top and bottom padding inside TextEditor
-        let horizontalPadding: CGFloat = 32 // Left and right padding (16 * 2)
-        let containerPadding: CGFloat = 32 // Container horizontal padding (16 * 2)
-        
-        // Get screen width minus all padding
-        let screenWidth = UIScreen.main.bounds.width
-        let availableWidth = screenWidth - containerPadding - horizontalPadding - 8 // Account for TextEditor internal padding
-        
-        // Calculate number of lines considering word wrapping
-        let font = UIFont.systemFont(ofSize: 17) // Default TextEditor font size
-        let paragraphStyle = NSMutableParagraphStyle()
-        paragraphStyle.lineBreakMode = .byWordWrapping
-        
-        let attributes: [NSAttributedString.Key: Any] = [
-            .font: font,
-            .paragraphStyle: paragraphStyle
-        ]
-        
-        let attributedString = NSAttributedString(string: text, attributes: attributes)
-        let boundingRect = attributedString.boundingRect(
-            with: CGSize(width: max(availableWidth, 200), height: .greatestFiniteMagnitude),
-            options: [.usesLineFragmentOrigin, .usesFontLeading],
-            context: nil
-        )
-        
-        // Add extra padding to ensure all text is visible
-        let calculatedHeight = ceil(boundingRect.height) + textEditorPadding + 20 // Extra buffer
-        return max(minHeight, calculatedHeight)
     }
     
     init(preset: Preset, presetViewModel: PresetViewModel, isPresented: Binding<Bool>) {
@@ -1349,27 +1315,6 @@ struct PresetDetailView: View {
         _title = State(initialValue: preset.title)
         _modelName = State(initialValue: preset.modelName ?? "")
         _prompt = State(initialValue: preset.prompt ?? "")
-        _promptHeight = State(initialValue: {
-            let initialPrompt = preset.prompt ?? ""
-            let lineHeight: CGFloat = 22
-            let padding: CGFloat = 36
-            let screenWidth = UIScreen.main.bounds.width
-            let availableWidth = screenWidth - 64 - 8
-            let font = UIFont.systemFont(ofSize: 17)
-            let paragraphStyle = NSMutableParagraphStyle()
-            paragraphStyle.lineBreakMode = .byWordWrapping
-            let attributes: [NSAttributedString.Key: Any] = [
-                .font: font,
-                .paragraphStyle: paragraphStyle
-            ]
-            let attributedString = NSAttributedString(string: initialPrompt, attributes: attributes)
-            let boundingRect = attributedString.boundingRect(
-                with: CGSize(width: max(availableWidth, 200), height: .greatestFiniteMagnitude),
-                options: [.usesLineFragmentOrigin, .usesFontLeading],
-                context: nil
-            )
-            return max(120, ceil(boundingRect.height) + padding)
-        }())
     }
     
     var body: some View {
@@ -1425,29 +1370,29 @@ struct PresetDetailView: View {
                                 .font(.headline)
                                 .foregroundColor(.primary)
                             
-                            TextEditor(text: $prompt)
-                                .frame(height: promptHeight)
-                                .scrollDisabled(true)
-                                .padding(8)
-                                .background(Color.gray.opacity(0.1))
-                                .clipShape(RoundedRectangle(cornerRadius: 8))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 8)
-                                        .stroke(focusedField == .prompt ? Color.blue : Color.gray.opacity(0.3), lineWidth: 1)
-                                )
-                                .focused($focusedField, equals: .prompt)
-                                .onChange(of: prompt) { _, newValue in
-                                    let newHeight = calculatePromptHeight(for: newValue)
-                                    if abs(newHeight - promptHeight) > 1 {
-                                        withAnimation(.easeInOut(duration: 0.2)) {
-                                            promptHeight = newHeight
-                                        }
-                                    }
-                                }
-                                .onAppear {
-                                    // Recalculate on appear to ensure initial text is fully visible
-                                    promptHeight = calculatePromptHeight(for: prompt)
-                                }
+                            ZStack(alignment: .topLeading) {
+                                // Hidden text to measure content height
+                                Text(prompt.isEmpty ? " " : prompt)
+                                    .font(.system(size: 17))
+                                    .padding(8)
+                                    .opacity(0)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                
+                                // Actual TextEditor
+                                TextEditor(text: $prompt)
+                                    .scrollDisabled(true)
+                                    .padding(8)
+                                    .background(Color.gray.opacity(0.1))
+                                    .focused($focusedField, equals: .prompt)
+                            }
+                            .frame(minHeight: 120)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(focusedField == .prompt ? Color.blue : Color.gray.opacity(0.3), lineWidth: 1)
+                            )
                         }
                     }
                     .padding(.horizontal)
