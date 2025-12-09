@@ -17,6 +17,15 @@ struct Preset: Codable, Identifiable, Equatable {
         case imageUrl = "image_url"
         case created_at
     }
+    
+    init(id: String, title: String, modelName: String?, prompt: String?, imageUrl: String?, created_at: String?) {
+        self.id = id
+        self.title = title
+        self.modelName = modelName
+        self.prompt = prompt
+        self.imageUrl = imageUrl
+        self.created_at = created_at
+    }
 }
 
 // MARK: - Preset Metadata for Database
@@ -29,6 +38,21 @@ struct PresetMetadata: Encodable {
     
     init(userId: String, title: String, modelName: String? = nil, prompt: String? = nil, imageUrl: String? = nil) {
         self.user_id = userId
+        self.title = title
+        self.model_name = modelName
+        self.prompt = prompt
+        self.image_url = imageUrl
+    }
+}
+
+// MARK: - Preset Update Metadata for Database
+struct PresetUpdateMetadata: Encodable {
+    let title: String
+    let model_name: String?
+    let prompt: String?
+    let image_url: String?
+    
+    init(title: String, modelName: String? = nil, prompt: String? = nil, imageUrl: String? = nil) {
         self.title = title
         self.model_name = modelName
         self.prompt = prompt

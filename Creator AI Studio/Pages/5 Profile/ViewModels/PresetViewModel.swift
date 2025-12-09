@@ -187,6 +187,62 @@ class PresetViewModel: ObservableObject {
         }
     }
     
+    /// Updates an existing preset in Supabase database
+    func updatePreset(presetId: String, title: String, modelName: String?, prompt: String?, imageUrl: String?) async throws {
+        guard let userId = userId else {
+            throw NSError(
+                domain: "PresetError",
+                code: -1,
+                userInfo: [NSLocalizedDescriptionKey: "User ID is required to update preset"]
+            )
+        }
+        
+        // Update local array
+        if let index = presets.firstIndex(where: { $0.id == presetId }) {
+            // Create updated preset
+            let updatedPreset = Preset(
+                id: presets[index].id,
+                title: title,
+                modelName: modelName,
+                prompt: prompt,
+                imageUrl: imageUrl,
+                created_at: presets[index].created_at
+            )
+            presets[index] = updatedPreset
+            saveCachedPresets()
+        }
+        
+        // Update database
+        do {
+            let updateData = PresetUpdateMetadata(
+                title: title,
+                modelName: modelName,
+                prompt: prompt,
+                imageUrl: imageUrl
+            )
+            
+            try await client.database
+                .from("user_presets")
+                .update(updateData)
+                .eq("id", value: presetId)
+                .eq("user_id", value: userId)
+                .execute()
+            
+            print("✅ Preset updated successfully")
+        } catch {
+            print("❌ Failed to update preset: \(error)")
+            // Reload presets to restore state
+            await fetchPresets(forceRefresh: true)
+            throw error
+        }
+    }
+    
+    /// Reorders presets (updates local order, doesn't persist to database)
+    func reorderPresets(from source: IndexSet, to destination: Int) {
+        presets.move(fromOffsets: source, toOffset: destination)
+        saveCachedPresets()
+    }
+    
     /// Deletes a preset from Supabase database
     func deletePreset(presetId: String) async throws {
         guard let userId = userId else {

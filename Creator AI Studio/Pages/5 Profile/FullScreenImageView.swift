@@ -171,6 +171,7 @@ struct FullScreenImageView: View {
     @State private var isImmersiveMode = false
     @State private var isFavorited = false
     @State private var showCreatePresetSheet = false
+    @State private var showDeletePresetAlert = false
     @StateObject private var presetViewModel = PresetViewModel()
 
     // Cache image models to avoid repeated JSON loading
@@ -603,7 +604,13 @@ struct FullScreenImageView: View {
 
     private var presetButton: some View {
         Button(action: {
-            showCreatePresetSheet = true
+            if isPresetSaved {
+                // Show alert to confirm deletion
+                showDeletePresetAlert = true
+            } else {
+                // Show create preset sheet
+                showCreatePresetSheet = true
+            }
         }) {
             VStack(spacing: 6) {
                 Image(systemName: isPresetSaved ? "bookmark.fill" : "bookmark")
@@ -877,6 +884,20 @@ struct FullScreenImageView: View {
             }
         } message: {
             Text(downloadErrorMessage)
+        }
+        .alert("Unsave Preset?", isPresented: $showDeletePresetAlert) {
+            Button("Cancel", role: .cancel) {}
+            Button("Unsave", role: .destructive) {
+                Task {
+                    await deletePreset()
+                }
+            }
+        } message: {
+            if let preset = matchingPreset {
+                Text("Are you sure you want to unsave the preset '\(preset.title)'? This action cannot be undone.")
+            } else {
+                Text("Are you sure you want to unsave this preset? This action cannot be undone.")
+            }
         }
         .onAppear {
             // Initialize favorite state from userImage
@@ -1182,6 +1203,23 @@ struct FullScreenImageView: View {
         }
     }
 
+    // MARK: - Delete Preset
+
+    private func deletePreset() async {
+        guard let preset = matchingPreset else {
+            print("⚠️ No matching preset found to delete")
+            return
+        }
+
+        do {
+            try await presetViewModel.deletePreset(presetId: preset.id)
+            print("✅ Preset deleted successfully")
+        } catch {
+            print("❌ Failed to delete preset: \(error)")
+            // Optionally show an error alert here if needed
+        }
+    }
+
     // MARK: - Retry Helper
 
     private func retryOperation<T>(
@@ -1262,7 +1300,7 @@ struct CreatePresetSheet: View {
                             }
 
                             Text(
-                                "A preset saves the current image, image model, and prompt settings. You can quickly reuse these settings later to generate similar images with the same style and configuration."
+                                "A preset saves the current image model and prompt settings. You can quickly reuse these settings later to generate similar images with the same style and configuration."
                             )
                             .font(.subheadline)
                             .foregroundColor(.gray)

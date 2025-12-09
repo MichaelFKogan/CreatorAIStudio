@@ -2,6 +2,7 @@ import AVKit
 import Kingfisher
 import Photos
 import SwiftUI
+import UIKit
 
 // MARK: PROFILE
 
@@ -64,6 +65,7 @@ struct ProfileViewContent: View {
     @State private var selectedTab: GalleryTab = .all
     @State private var selectedModel: String? = nil
     @State private var showImageModelsPopover: Bool = false
+    @State private var showPresetsSheet: Bool = false
 
     // Load model data to get images - cache at static level to avoid repeated loading
     private static var cachedImageModels: [InfoPacket]?
@@ -251,6 +253,16 @@ struct ProfileViewContent: View {
                         selectedModel = nil
                     }
 
+                    // Presets pill
+                    GalleryTabPill(
+                        title: "Presets",
+                        icon: "slider.horizontal.3",
+                        isSelected: false,
+                        count: presetViewModel.presets.count
+                    ) {
+                        showPresetsSheet = true
+                    }
+
                     imageModelsButton
                 }
                 .padding(.horizontal)
@@ -266,16 +278,22 @@ struct ProfileViewContent: View {
         } label: {
             imageModelsButtonLabel
         }
-        .sheet(isPresented: $showImageModelsPopover) {
-            let models = computeModelsWithMetadata()
-            print("🔍 DEBUG: Sheet builder - Passing \(models.count) models to sheet")
-            return ImageModelsSheet(
-                models: models,
-                selectedModel: $selectedModel,
-                selectedTab: $selectedTab,
-                isPresented: $showImageModelsPopover
-            )
-        }
+            .sheet(isPresented: $showImageModelsPopover) {
+                let models = computeModelsWithMetadata()
+                print("🔍 DEBUG: Sheet builder - Passing \(models.count) models to sheet")
+                return ImageModelsSheet(
+                    models: models,
+                    selectedModel: $selectedModel,
+                    selectedTab: $selectedTab,
+                    isPresented: $showImageModelsPopover
+                )
+            }
+            .sheet(isPresented: $showPresetsSheet) {
+                PresetsListSheet(
+                    presetViewModel: presetViewModel,
+                    isPresented: $showPresetsSheet
+                )
+            }
     }
 
     private var imageModelsButtonLabel: some View {
@@ -1049,6 +1067,521 @@ struct ImageModelsSheet: View {
                         isPresented = false
                     }
                 }
+            }
+        }
+    }
+}
+
+// MARK: - PRESETS LIST SHEET
+
+struct PresetsListSheet: View {
+    @ObservedObject var presetViewModel: PresetViewModel
+    @Binding var isPresented: Bool
+    @State private var presetToDelete: Preset? = nil
+    @State private var showDeleteConfirmation = false
+    @State private var isEditMode = false
+    @State private var selectedPreset: Preset? = nil
+    
+    var body: some View {
+        NavigationStack {
+            Group {
+                if presetViewModel.isLoading && presetViewModel.presets.isEmpty {
+                    ProgressView("Loading presets…")
+                        .padding()
+                } else if presetViewModel.presets.isEmpty {
+                    ScrollView {
+                        EmptyPresetsView()
+                            .padding(.vertical, 60)
+                    }
+                } else {
+                    if isEditMode {
+                        // Edit mode with drag and drop using List
+                        List {
+                            ForEach(presetViewModel.presets) { preset in
+                                PresetRow(
+                                    preset: preset,
+                                    isEditMode: true,
+                                    onDelete: {
+                                        presetToDelete = preset
+                                        showDeleteConfirmation = true
+                                    }
+                                )
+                                .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+                                .listRowBackground(Color.clear)
+                            }
+                            .onMove { source, destination in
+                                presetViewModel.reorderPresets(from: source, to: destination)
+                            }
+                        }
+                        .listStyle(.plain)
+                        .environment(\.editMode, .constant(.active))
+                    } else {
+                        // Normal mode with tap navigation
+                        ScrollView {
+                            LazyVStack(spacing: 0) {
+                                ForEach(presetViewModel.presets) { preset in
+                                    Button {
+                                        selectedPreset = preset
+                                    } label: {
+                                        PresetRow(preset: preset, isEditMode: false, onDelete: nil)
+                                            .padding(.horizontal)
+                                            .padding(.vertical, 8)
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                            }
+                            .padding(.vertical)
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Presets")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    if !presetViewModel.presets.isEmpty {
+                        Button(isEditMode ? "Done" : "Edit") {
+                            isEditMode.toggle()
+                        }
+                    }
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        isPresented = false
+                    }
+                }
+            }
+            .alert("Delete Preset", isPresented: $showDeleteConfirmation) {
+                Button("Cancel", role: .cancel) {
+                    presetToDelete = nil
+                }
+                Button("Delete", role: .destructive) {
+                    if let preset = presetToDelete {
+                        Task {
+                            do {
+                                try await presetViewModel.deletePreset(presetId: preset.id)
+                            } catch {
+                                print("❌ Failed to delete preset: \(error)")
+                            }
+                        }
+                    }
+                    presetToDelete = nil
+                }
+            } message: {
+                if let preset = presetToDelete {
+                    Text("Are you sure you want to delete \"\(preset.title)\"?")
+                }
+            }
+            .sheet(item: $selectedPreset) { preset in
+                PresetDetailView(
+                    preset: preset,
+                    presetViewModel: presetViewModel,
+                    isPresented: Binding(
+                        get: { selectedPreset != nil },
+                        set: { if !$0 { selectedPreset = nil } }
+                    )
+                )
+            }
+            .onAppear {
+                Task {
+                    await presetViewModel.fetchPresets(forceRefresh: true)
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Preset Row
+
+private struct PresetRow: View {
+    let preset: Preset
+    let isEditMode: Bool
+    let onDelete: (() -> Void)?
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            // Drag handle in edit mode
+            if isEditMode {
+                Image(systemName: "line.3.horizontal")
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundColor(.secondary)
+                    .padding(.trailing, 4)
+            }
+            
+            // Icon or image
+            ZStack {
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color.blue.opacity(0.1))
+                    .frame(width: 60, height: 60)
+                
+                if let imageUrl = preset.imageUrl, let url = URL(string: imageUrl) {
+                    KFImage(url)
+                        .placeholder {
+                            Image(systemName: "slider.horizontal.3")
+                                .font(.system(size: 24))
+                                .foregroundColor(.blue)
+                        }
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: 60, height: 60)
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                } else {
+                    Image(systemName: "slider.horizontal.3")
+                        .font(.system(size: 24))
+                        .foregroundColor(.blue)
+                }
+            }
+            .frame(width: 60, height: 60)
+            
+            // Preset details
+            VStack(alignment: .leading, spacing: 6) {
+                Text(preset.title)
+                    .font(.system(size: 16, weight: .semibold, design: .rounded))
+                    .foregroundColor(.primary)
+                    .lineLimit(1)
+                
+                if let modelName = preset.modelName, !modelName.isEmpty {
+                    HStack(spacing: 4) {
+                        Image(systemName: "cpu")
+                            .font(.system(size: 11))
+                            .foregroundColor(.secondary)
+                        Text(modelName)
+                            .font(.system(size: 13, weight: .medium, design: .rounded))
+                            .foregroundColor(.secondary)
+                            .lineLimit(1)
+                    }
+                }
+                
+                if let prompt = preset.prompt, !prompt.isEmpty {
+                    Text(prompt)
+                        .font(.system(size: 12, design: .rounded))
+                        .foregroundColor(.secondary)
+                        .lineLimit(2)
+                }
+            }
+            
+            Spacer()
+            
+            // Delete button in edit mode, chevron in normal mode
+            if isEditMode {
+                Button(action: {
+                    onDelete?()
+                }) {
+                    Image(systemName: "minus.circle.fill")
+                        .font(.system(size: 24))
+                        .foregroundColor(.red)
+                }
+                .buttonStyle(.plain)
+            } else {
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(.secondary)
+            }
+        }
+        .padding(12)
+        .background(Color.gray.opacity(0.06))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+        )
+    }
+}
+
+// MARK: - Preset Detail View
+
+struct PresetDetailView: View {
+    let preset: Preset
+    @ObservedObject var presetViewModel: PresetViewModel
+    @Binding var isPresented: Bool
+    
+    @State private var title: String
+    @State private var modelName: String
+    @State private var prompt: String
+    @State private var isSaving = false
+    @State private var showDeleteConfirmation = false
+    @State private var showError = false
+    @State private var errorMessage = ""
+    @FocusState private var focusedField: Field?
+    @State private var promptHeight: CGFloat = 120
+    
+    enum Field {
+        case title, modelName, prompt
+    }
+    
+    // Calculate height based on text content
+    private func calculatePromptHeight(for text: String) -> CGFloat {
+        let minHeight: CGFloat = 120
+        let textEditorPadding: CGFloat = 16 // Top and bottom padding inside TextEditor
+        let horizontalPadding: CGFloat = 32 // Left and right padding (16 * 2)
+        let containerPadding: CGFloat = 32 // Container horizontal padding (16 * 2)
+        
+        // Get screen width minus all padding
+        let screenWidth = UIScreen.main.bounds.width
+        let availableWidth = screenWidth - containerPadding - horizontalPadding - 8 // Account for TextEditor internal padding
+        
+        // Calculate number of lines considering word wrapping
+        let font = UIFont.systemFont(ofSize: 17) // Default TextEditor font size
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.lineBreakMode = .byWordWrapping
+        
+        let attributes: [NSAttributedString.Key: Any] = [
+            .font: font,
+            .paragraphStyle: paragraphStyle
+        ]
+        
+        let attributedString = NSAttributedString(string: text, attributes: attributes)
+        let boundingRect = attributedString.boundingRect(
+            with: CGSize(width: max(availableWidth, 200), height: .greatestFiniteMagnitude),
+            options: [.usesLineFragmentOrigin, .usesFontLeading],
+            context: nil
+        )
+        
+        // Add extra padding to ensure all text is visible
+        let calculatedHeight = ceil(boundingRect.height) + textEditorPadding + 20 // Extra buffer
+        return max(minHeight, calculatedHeight)
+    }
+    
+    init(preset: Preset, presetViewModel: PresetViewModel, isPresented: Binding<Bool>) {
+        self.preset = preset
+        self.presetViewModel = presetViewModel
+        self._isPresented = isPresented
+        _title = State(initialValue: preset.title)
+        _modelName = State(initialValue: preset.modelName ?? "")
+        _prompt = State(initialValue: preset.prompt ?? "")
+        _promptHeight = State(initialValue: {
+            let initialPrompt = preset.prompt ?? ""
+            let lineHeight: CGFloat = 22
+            let padding: CGFloat = 36
+            let screenWidth = UIScreen.main.bounds.width
+            let availableWidth = screenWidth - 64 - 8
+            let font = UIFont.systemFont(ofSize: 17)
+            let paragraphStyle = NSMutableParagraphStyle()
+            paragraphStyle.lineBreakMode = .byWordWrapping
+            let attributes: [NSAttributedString.Key: Any] = [
+                .font: font,
+                .paragraphStyle: paragraphStyle
+            ]
+            let attributedString = NSAttributedString(string: initialPrompt, attributes: attributes)
+            let boundingRect = attributedString.boundingRect(
+                with: CGSize(width: max(availableWidth, 200), height: .greatestFiniteMagnitude),
+                options: [.usesLineFragmentOrigin, .usesFontLeading],
+                context: nil
+            )
+            return max(120, ceil(boundingRect.height) + padding)
+        }())
+    }
+    
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: 24) {
+                    // Image preview
+                    if let imageUrl = preset.imageUrl, let url = URL(string: imageUrl) {
+                        KFImage(url)
+                            .placeholder {
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(Color.gray.opacity(0.2))
+                                    .overlay(
+                                        Image(systemName: "photo")
+                                            .font(.system(size: 40))
+                                            .foregroundColor(.gray)
+                                    )
+                            }
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(maxHeight: 300)
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                            .padding(.horizontal)
+                    }
+                    
+                    // Edit fields
+                    VStack(alignment: .leading, spacing: 20) {
+                        // Title field
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Title")
+                                .font(.headline)
+                                .foregroundColor(.primary)
+                            
+                            TextField("Preset title", text: $title)
+                                .textFieldStyle(.roundedBorder)
+                                .focused($focusedField, equals: .title)
+                        }
+                        
+                        // Model name field
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Model Name")
+                                .font(.headline)
+                                .foregroundColor(.primary)
+                            
+                            TextField("Image model", text: $modelName)
+                                .textFieldStyle(.roundedBorder)
+                                .focused($focusedField, equals: .modelName)
+                        }
+                        
+                        // Prompt field
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Prompt")
+                                .font(.headline)
+                                .foregroundColor(.primary)
+                            
+                            TextEditor(text: $prompt)
+                                .frame(height: promptHeight)
+                                .scrollDisabled(true)
+                                .padding(8)
+                                .background(Color.gray.opacity(0.1))
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .stroke(focusedField == .prompt ? Color.blue : Color.gray.opacity(0.3), lineWidth: 1)
+                                )
+                                .focused($focusedField, equals: .prompt)
+                                .onChange(of: prompt) { _, newValue in
+                                    let newHeight = calculatePromptHeight(for: newValue)
+                                    if abs(newHeight - promptHeight) > 1 {
+                                        withAnimation(.easeInOut(duration: 0.2)) {
+                                            promptHeight = newHeight
+                                        }
+                                    }
+                                }
+                                .onAppear {
+                                    // Recalculate on appear to ensure initial text is fully visible
+                                    promptHeight = calculatePromptHeight(for: prompt)
+                                }
+                        }
+                    }
+                    .padding(.horizontal)
+                    
+                    // Save button
+                    Button(action: {
+                        Task {
+                            await savePreset()
+                        }
+                    }) {
+                        HStack {
+                            if isSaving {
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                            }
+                            Text(isSaving ? "Saving..." : "Save Changes")
+                                .font(.headline)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(title.isEmpty ? Color.gray : Color.blue)
+                        .foregroundColor(.white)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                    }
+                    .disabled(title.isEmpty || isSaving)
+                    .padding(.horizontal)
+                    
+                    // Delete button
+                    Button(action: {
+                        showDeleteConfirmation = true
+                    }) {
+                        HStack {
+                            Image(systemName: "trash")
+                            Text("Delete Preset")
+                                .font(.headline)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.red.opacity(0.1))
+                        .foregroundColor(.red)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                    }
+                    .padding(.horizontal)
+                    .padding(.bottom)
+                }
+                .padding(.vertical)
+            }
+            .navigationTitle("Edit Preset")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        isPresented = false
+                    }
+                }
+            }
+            .alert("Delete Preset", isPresented: $showDeleteConfirmation) {
+                Button("Cancel", role: .cancel) {}
+                Button("Delete", role: .destructive) {
+                    Task {
+                        await deletePreset()
+                    }
+                }
+            } message: {
+                Text("Are you sure you want to delete \"\(preset.title)\"? This action cannot be undone.")
+            }
+            .alert("Error", isPresented: $showError) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(errorMessage)
+            }
+        }
+    }
+    
+    private func savePreset() async {
+        isSaving = true
+        
+        do {
+            try await presetViewModel.updatePreset(
+                presetId: preset.id,
+                title: title.trimmingCharacters(in: .whitespacesAndNewlines),
+                modelName: modelName.isEmpty ? nil : modelName.trimmingCharacters(in: .whitespacesAndNewlines),
+                prompt: prompt.isEmpty ? nil : prompt.trimmingCharacters(in: .whitespacesAndNewlines),
+                imageUrl: preset.imageUrl
+            )
+            
+            await MainActor.run {
+                isSaving = false
+                isPresented = false
+            }
+        } catch {
+            await MainActor.run {
+                isSaving = false
+                errorMessage = "Failed to update preset: \(error.localizedDescription)"
+                showError = true
+            }
+        }
+    }
+    
+    private func deletePreset() async {
+        do {
+            try await presetViewModel.deletePreset(presetId: preset.id)
+            
+            await MainActor.run {
+                isPresented = false
+            }
+        } catch {
+            await MainActor.run {
+                errorMessage = "Failed to delete preset: \(error.localizedDescription)"
+                showError = true
+            }
+        }
+    }
+}
+
+// MARK: - Empty Presets View
+
+private struct EmptyPresetsView: View {
+    var body: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "slider.horizontal.3")
+                .font(.system(size: 48))
+                .foregroundColor(.gray.opacity(0.5))
+            
+            VStack(spacing: 8) {
+                Text("No Presets Yet")
+                    .font(.headline)
+                    .foregroundColor(.primary)
+                
+                Text("Save presets from your images to quickly reuse your favorite settings")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 32)
             }
         }
     }
