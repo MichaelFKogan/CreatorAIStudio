@@ -19,15 +19,16 @@ struct PhotoFiltersBottomBar: View {
             .frame(height: 20)
 
             VStack(spacing: 16) {
+
+                CostBadge(cost: cost)
+                    .padding(.horizontal, 16)
+
                 SpinningPlusButton(showPhotoPicker: $showPhotoPicker)
                     .photosPicker(
                         isPresented: $showPhotoPicker,
                         selection: $selectedPhotoItem,
                         matching: .images
                     )
-                    .padding(.horizontal, 16)
-
-                CostBadge(cost: cost)
                     .padding(.horizontal, 16)
             }
             .padding(.bottom, 80)

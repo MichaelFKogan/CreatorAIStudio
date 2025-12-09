@@ -11,22 +11,20 @@ struct SpinningPlusButton: View {
             showPhotoPicker = true
         }) {
             HStack {
-                Image(systemName: "photo.on.rectangle")
-                    .font(.system(size: 16, weight: .semibold))
-                    .rotationEffect(.degrees(rotation))
+                Image(systemName: "arrow.right")
+                    .font(.system(size: 20, weight: .bold, design: .rounded)).opacity(0)
+                Spacer()
                 Text("Add Photo")
-                    .font(.system(size: 17, weight: .semibold))
+                    .font(.system(size: 20, weight: .bold, design: .rounded))
+                Spacer()
+                Image(systemName: "arrow.right")
+                    .font(.system(size: 20, weight: .bold, design: .rounded))
+                    .rotationEffect(.degrees(rotation))
             }
             .frame(maxWidth: .infinity)
             .padding()
-            .background(
-                LinearGradient(
-                    colors: [Color.green.opacity(1), Color.mint.opacity(0.8)],
-                    startPoint: .leading,
-                    endPoint: .trailing
-                )
-            )
-            .foregroundColor(.white)
+            .background(Color.white)
+            .foregroundColor(.black)
             .clipShape(RoundedRectangle(cornerRadius: 12))
             .shadow(color: Color.green.opacity(0.4), radius: 8, x: 0, y: 4)
             .scaleEffect(isAnimating ? 1.02 : 1.0)

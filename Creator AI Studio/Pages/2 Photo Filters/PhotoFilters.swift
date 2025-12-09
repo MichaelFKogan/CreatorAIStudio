@@ -164,11 +164,11 @@ struct PhotoFilters: View {
                     }
                 }
 
-//               PhotoFiltersBottomBar(
-//                   showPhotoPicker: $showPhotoPicker,
-//                   selectedPhotoItem: $selectedPhotoItem,
-//                   cost: (selectedFilter?.cost as NSDecimalNumber?)?.doubleValue ?? 0.04
-//               )
+            //   PhotoFiltersBottomBar(
+            //       showPhotoPicker: $showPhotoPicker,
+            //       selectedPhotoItem: $selectedPhotoItem,
+            //       cost: (selectedFilter?.cost as NSDecimalNumber?)?.doubleValue ?? 0.04
+            //   )
             }
 
             .background(Color(.systemGroupedBackground))

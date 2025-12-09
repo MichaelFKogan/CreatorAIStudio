@@ -32,21 +32,26 @@ struct CostBadge: View {
                     Text(formatCost(cost))
                         .font(.subheadline)
                         .fontWeight(.semibold)
-                        .foregroundColor(.green).opacity(0.9)
+                        .foregroundColor(.teal)
                 }
             }
             Spacer()
             Text(formatCost(cost))
-                .font(.title3)
+                .font(
+                    .system(
+                        size: 16, weight: .semibold,
+                        design: .rounded
+                    )
+                )
                 .fontWeight(.bold)
-                .foregroundColor(.green).opacity(0.9)
+                .foregroundColor(.teal)
         }
         .padding()
-        .background(Color.green.opacity(0.08))
+        .background(Color.teal.opacity(0.08))
         .cornerRadius(12)
         .overlay(
             RoundedRectangle(cornerRadius: 12)
-                .stroke(Color.green.opacity(0.2), lineWidth: 1)
+                .stroke(Color.teal.opacity(0.2), lineWidth: 1)
         )
     }
 }
