@@ -20,6 +20,31 @@ struct PhotoConfirmationView: View {
 
     @State private var arrowWiggle: Bool = false
     @State private var currentTaskId: UUID? = nil
+    @State private var selectedAspectIndex: Int = 0
+
+    // MARK: - Aspect Ratio Options
+    private let imageAspectOptions: [AspectRatioOption] = [
+        AspectRatioOption(
+            id: "3:4", label: "3:4", width: 3, height: 4,
+            platforms: ["Portrait"]
+        ),
+        AspectRatioOption(
+            id: "9:16", label: "9:16", width: 9, height: 16,
+            platforms: ["TikTok", "Reels"]
+        ),
+        AspectRatioOption(
+            id: "1:1", label: "1:1", width: 1, height: 1,
+            platforms: ["Instagram"]
+        ),
+        AspectRatioOption(
+            id: "4:3", label: "4:3", width: 4, height: 3,
+            platforms: ["Landscape"]
+        ),
+        AspectRatioOption(
+            id: "16:9", label: "16:9", width: 16, height: 9,
+            platforms: ["YouTube"]
+        ),
+    ]
 
     var body: some View {
         ScrollView {
@@ -170,6 +195,12 @@ struct PhotoConfirmationView: View {
                     }
                 }
 
+                // MARK: - Size Selector
+                AspectRatioSection(
+                    options: imageAspectOptions,
+                    selectedIndex: $selectedAspectIndex
+                )
+
                 // MARK: - Generate Button
 
                 Button(action: {
@@ -181,10 +212,15 @@ struct PhotoConfirmationView: View {
 
                     isLoading = true
 
+                    // Get selected aspect ratio and update item
+                    let selectedAspectOption = imageAspectOptions[selectedAspectIndex]
+                    var modifiedItem = item
+                    modifiedItem.apiConfig.aspectRatio = selectedAspectOption.id
+
                     // Start background generation using ImageGenerationCoordinator
                     Task { @MainActor in
                         let taskId = ImageGenerationCoordinator.shared.startImageGeneration(
-                            item: item,
+                            item: modifiedItem,
                             image: image,
                             userId: userId,
                             onImageGenerated: { downloadedImage in

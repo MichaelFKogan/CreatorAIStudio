@@ -171,3 +171,22 @@ struct AspectRatioSelectorSheet: View {
         .presentationDetents([.medium, .large])
     }
 }
+
+//// MARK: ASPECT RATIO SECTION
+//
+//struct AspectRatioSection: View {
+//    let options: [AspectRatioOption]
+//    @Binding var selectedIndex: Int
+//    var body: some View {
+//        VStack(alignment: .leading, spacing: 6) {
+//            Text("Size")
+//                .font(.caption)
+//                .foregroundColor(.secondary)
+//                .padding(.top, -6)
+//            AspectRatioSelector(
+//                options: options, selectedIndex: $selectedIndex, color: .blue
+//            )
+//        }
+//        .padding(.horizontal)
+//    }
+//}
