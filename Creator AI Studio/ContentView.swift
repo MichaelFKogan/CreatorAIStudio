@@ -239,7 +239,7 @@ struct TabBarButton: View {
                         Image(systemName: isSelected ? "camera" : icon)
                             .font(.system(size: 22))
                             .foregroundColor(
-                                isSelected ? .gray : .black)
+                                isSelected ? .white.opacity(0.9) : .black)
                     }
                     .frame(width: 60, height: 60)
                     .offset(y: 5)

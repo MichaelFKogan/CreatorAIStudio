@@ -13,7 +13,6 @@
       "provider": "runware",
       "runwareModel": "google:4@1",
       "endpoint": "https://api.runware.ai/v1",
-      "aspectRatio": "3:4, 9:16, 1:1, 4:3, 16:9",
       "runwareConfig": {
         "imageToImageMethod": "referenceImages",
         "requiresDimensions": true,
@@ -39,7 +38,6 @@
       "provider": "runware",
       "runwareModel": "google:4@2",
       "endpoint": "https://api.runware.ai/v1",
-      "aspectRatio": "3:4, 9:16, 1:1, 4:3, 16:9",
       "runwareConfig": {
         "imageToImageMethod": "referenceImages",
         "requiresDimensions": true,
