@@ -191,6 +191,9 @@ struct Post: View {
                                                     design: .rounded)
                                             )
                                             .foregroundColor(.white)
+                                            .lineLimit(1)
+                                            .truncationMode(.tail)
+                                            .frame(maxWidth: 300)
                                             .opacity(
                                                 isScrollingActive ? 1.0 : 0
                                             )
@@ -330,6 +333,9 @@ struct Post: View {
                                                         design: .rounded)
                                                 )
                                                 .foregroundColor(.white)
+                                                .lineLimit(1)
+                                                .truncationMode(.tail)
+                                                .fixedSize(horizontal: true, vertical: false)
                                                 .padding(.horizontal, 16)
                                                 .padding(.vertical, 8)
                                                 .background(

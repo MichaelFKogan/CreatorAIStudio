@@ -234,7 +234,7 @@ struct TabBarButton: View {
                             // .stroke(isSelected ? Color.white.opacity(0.9) : Color.clear, lineWidth: 2)
                             .fill(
                                 isSelected
-                                    ? Color.clear : Color.pink)
+                                    ? Color.clear : Color.white)
                         // .frame(width: 60, height: 60)
                         Image(systemName: isSelected ? "camera" : icon)
                             .font(.system(size: 22))
