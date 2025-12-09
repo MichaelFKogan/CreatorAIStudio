@@ -16,7 +16,7 @@ struct Home: View {
                             Image("logo-image")
                                 .resizable()
                                 .scaledToFit()
-                                .frame(width: 44, height: 44)  // adjust size as needed
+                                .frame(width: 46, height: 46)  // adjust size as needed
 
                             Text("RunSpeed AI")
                                 .italic()

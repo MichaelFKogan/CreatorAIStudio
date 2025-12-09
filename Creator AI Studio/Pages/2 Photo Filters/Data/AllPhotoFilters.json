@@ -16,7 +16,16 @@
         "anime6",
         "anime7"
       ],
-      "moreStyles": []
+      "moreStyles": [
+        ["Caricature"],
+        ["photobooth"],
+        ["halloween"],
+        ["artist"],
+        ["luxury"],
+        ["videogamesItems"],
+        ["chibi"],
+        ["cute"]
+      ]
     },
     "apiConfig": {
       "provider": "wavespeed",

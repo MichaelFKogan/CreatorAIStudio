@@ -1,6 +1,112 @@
 [
   {
     "display": {
+      "title": "Google Gemini 3 Pro (Nano Banana 2)",
+      "imageName": "geminiproimage3",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Google Gemini 3 Pro (Nano Banana 2)",
+      "modelDescription": "A premium image model developed by Google, designed for clean, photorealistic enhancements and high-accuracy edits. Great for portraits, objects, and natural scenes where clarity, lighting control, and realism matter. Fast, reliable, and ideal for everyday creative use.",
+      "modelImageName": "geminiproimage3",
+      "exampleImages": []
+    },
+    "apiConfig": {
+      "provider": "runware",
+      "runwareModel": "google:4@2",
+      "endpoint": "https://api.runware.ai/v1",
+      "runwareConfig": {
+        "imageToImageMethod": "referenceImages",
+        "requiresDimensions": true,
+        "imageCompressionQuality": 0.9
+      }
+    },
+    "prompt": "",
+    "cost": 0.134,
+    "type": "Image Model",
+    "capabilities": ["Text to Image", "Image to Image"]
+  },
+
+  {
+    "display": {
+      "title": "Riverflow 2 Fast",
+      "imageName": "riverflow2fast",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Riverflow 2 Fast",
+      "modelDescription": "Lightweight edition of Riverflow 2 for fast workflows and lower cost. Combines text-to-image generation with precise editing capabilities, supporting strong product accuracy across both workflows.",
+      "modelImageName": "riverflow2fast",
+      "exampleImages": []
+    },
+    "apiConfig": {
+      "provider": "runware",
+      "runwareModel": "sourceful:2@2",
+      "endpoint": "https://api.runware.ai/v1",
+      "runwareConfig": {
+        "imageToImageMethod": "referenceImages",
+        "requiresDimensions": true,
+        "imageCompressionQuality": 0.9,
+        "outputQuality": 85
+      }
+    },
+    "prompt": "",
+    "cost": 0.03,
+    "type": "Image Model",
+    "capabilities": ["Text to Image", "Image to Image"]
+  },
+  {
+    "display": {
+      "title": "Riverflow 2 Standard",
+      "imageName": "riverflow2standard",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Riverflow 2 Standard",
+      "modelDescription": "Balanced version of Riverflow 2 combining realistic output with reliable detail control and smooth integration of reference products for professional image creation. This unified model excels at both generation and editing workflows.",
+      "modelImageName": "riverflow2standard",
+      "exampleImages": []
+    },
+    "apiConfig": {
+      "provider": "runware",
+      "runwareModel": "sourceful:2@1",
+      "endpoint": "https://api.runware.ai/v1",
+
+      "runwareConfig": {
+        "imageToImageMethod": "referenceImages",
+        "requiresDimensions": true,
+        "imageCompressionQuality": 0.9
+      }
+    },
+    "prompt": "",
+    "cost": 0.035,
+    "type": "Image Model",
+    "capabilities": ["Text to Image", "Image to Image"]
+  },
+
+  {
+    "display": {
+      "title": "Riverflow 2 Max",
+      "imageName": "riverflow2max",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Riverflow 2 Max",
+      "modelDescription": "Highest-quality version of Riverflow 2 focused on maximum detail, lighting control, and accuracy for demanding commercial work and premium product visuals. Delivers visuals that feel close to professionally staged photography.",
+      "modelImageName": "riverflow2max",
+      "exampleImages": []
+    },
+    "apiConfig": {
+      "provider": "runware",
+      "runwareModel": "sourceful:2@3",
+      "endpoint": "https://api.runware.ai/v1",
+
+      "runwareConfig": {
+        "imageToImageMethod": "referenceImages",
+        "requiresDimensions": true,
+        "imageCompressionQuality": 0.9
+      }
+    },
+    "prompt": "",
+    "cost": 0.075,
+    "type": "Image Model",
+    "capabilities": ["Text to Image", "Image to Image"]
+  },
+
+  {
+    "display": {
       "title": "GPT Image 1",
       "imageName": "gptimage1",
       "imageNameOriginal": "yourphoto",
