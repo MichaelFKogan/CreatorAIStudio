@@ -406,7 +406,7 @@ struct ReferenceImagesSectionWithPhoto: View {
                 HStack(spacing: 6) {
                     Image(systemName: "photo.on.rectangle")
                         .foregroundColor(color)
-                    Text("Your Photo(s)")
+                    Text("Your Photo")
                         .font(.subheadline)
                         .fontWeight(.semibold)
                         .foregroundColor(.secondary)
@@ -431,37 +431,37 @@ struct ReferenceImagesSectionWithPhoto: View {
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
                     if referenceImages.isEmpty {
-                        // Full-width button when no images
-                        Button {
-                            showActionSheet = true
-                        } label: {
-                            VStack(spacing: 8) {
-                                Image(systemName: "camera")
-                                    .font(.system(size: 26))
-                                    .foregroundColor(.gray.opacity(0.6))
-                                Text("Add Images")
-                                    .font(.subheadline)
-                                    .fontWeight(.medium)
-                                    .foregroundColor(.gray)
-                                Text("Camera or Gallery")
-                                    .font(.caption)
-                                    .foregroundColor(.gray.opacity(0.7))
-                            }
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 160)
-                            .background(Color.gray.opacity(0.03))
-                            .clipShape(RoundedRectangle(cornerRadius: 6))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 6)
-                                    .strokeBorder(
-                                        style: StrokeStyle(
-                                            lineWidth: 3.5, dash: [6, 4]
-                                        )
-                                    )
-                                    .foregroundColor(.gray.opacity(0.4))
-                            )
-                        }
-                        .buttonStyle(PlainButtonStyle())
+                        // // Full-width button when no images
+                        // Button {
+                        //     showActionSheet = true
+                        // } label: {
+                        //     VStack(spacing: 8) {
+                        //         Image(systemName: "camera")
+                        //             .font(.system(size: 26))
+                        //             .foregroundColor(.gray.opacity(0.6))
+                        //         Text("Add Images")
+                        //             .font(.subheadline)
+                        //             .fontWeight(.medium)
+                        //             .foregroundColor(.gray)
+                        //         Text("Camera or Gallery")
+                        //             .font(.caption)
+                        //             .foregroundColor(.gray.opacity(0.7))
+                        //     }
+                        //     .frame(maxWidth: .infinity)
+                        //     .frame(height: 160)
+                        //     .background(Color.gray.opacity(0.03))
+                        //     .clipShape(RoundedRectangle(cornerRadius: 6))
+                        //     .overlay(
+                        //         RoundedRectangle(cornerRadius: 6)
+                        //             .strokeBorder(
+                        //                 style: StrokeStyle(
+                        //                     lineWidth: 3.5, dash: [6, 4]
+                        //                 )
+                        //             )
+                        //             .foregroundColor(.gray.opacity(0.4))
+                        //     )
+                        // }
+                        // .buttonStyle(PlainButtonStyle())
                     } else {
                         // Grid layout when images exist
                         LazyVGrid(columns: columns, spacing: 12) {
@@ -503,36 +503,36 @@ struct ReferenceImagesSectionWithPhoto: View {
                                 }
                             }
 
-                            // Grid-sized add button
-                            Button {
-                                showActionSheet = true
-                            } label: {
-                                VStack(spacing: 8) {
-                                    Image(systemName: "camera")
-                                        .font(.system(size: 26))
-                                        .foregroundColor(.gray.opacity(0.6))
-                                    Text("Add Images")
-                                        .font(.subheadline)
-                                        .fontWeight(.medium)
-                                        .foregroundColor(.gray)
-                                    Text("Camera or Gallery")
-                                        .font(.caption)
-                                        .foregroundColor(.gray.opacity(0.7))
-                                }
-                                .frame(width: 115, height: 160)
-                                .background(Color.gray.opacity(0.03))
-                                .clipShape(RoundedRectangle(cornerRadius: 6))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 6)
-                                        .strokeBorder(
-                                            style: StrokeStyle(
-                                                lineWidth: 3.5, dash: [6, 4]
-                                            )
-                                        )
-                                        .foregroundColor(.gray.opacity(0.4))
-                                )
-                            }
-                            .buttonStyle(PlainButtonStyle())
+                            // // Grid-sized add button
+                            // Button {
+                            //     showActionSheet = true
+                            // } label: {
+                            //     VStack(spacing: 8) {
+                            //         Image(systemName: "camera")
+                            //             .font(.system(size: 26))
+                            //             .foregroundColor(.gray.opacity(0.6))
+                            //         Text("Add Images")
+                            //             .font(.subheadline)
+                            //             .fontWeight(.medium)
+                            //             .foregroundColor(.gray)
+                            //         Text("Camera or Gallery")
+                            //             .font(.caption)
+                            //             .foregroundColor(.gray.opacity(0.7))
+                            //     }
+                            //     .frame(width: 115, height: 160)
+                            //     .background(Color.gray.opacity(0.03))
+                            //     .clipShape(RoundedRectangle(cornerRadius: 6))
+                            //     .overlay(
+                            //         RoundedRectangle(cornerRadius: 6)
+                            //             .strokeBorder(
+                            //                 style: StrokeStyle(
+                            //                     lineWidth: 3.5, dash: [6, 4]
+                            //                 )
+                            //             )
+                            //             .foregroundColor(.gray.opacity(0.4))
+                            //     )
+                            // }
+                            // .buttonStyle(PlainButtonStyle())
                         }
                         .frame(width: gridWidth, alignment: .leading)
                     }
