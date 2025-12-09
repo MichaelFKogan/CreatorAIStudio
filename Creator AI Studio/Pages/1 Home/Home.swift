@@ -12,15 +12,24 @@ struct Home: View {
 
                     // MARK: Leading Title
                     ToolbarItem(placement: .navigationBarLeading) {
-                        Text("RunSpeed AI")
-                            .font(.system(size: 28, weight: .bold, design: .rounded))
-                            .foregroundStyle(
-                                LinearGradient(
-                                    colors: titleGradient,
-                                    startPoint: .leading,
-                                    endPoint: .trailing
+                        HStack(spacing: 8) {
+                            Image("logo-image")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 44, height: 44)  // adjust size as needed
+
+                            Text("RunSpeed AI")
+                                .italic()
+                                    .font(.system(size: 28, weight: .bold))
+                                    .italic()
+                                .foregroundStyle(
+                                    LinearGradient(
+                                        colors: titleGradient,
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    )
                                 )
-                            )
+                        }
                     }
 
                     // MARK: Credits Badge
@@ -37,7 +46,11 @@ struct Home: View {
                                 .font(.system(size: 8))
 
                             Text("$5.00")
-                                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                                .font(
+                                    .system(
+                                        size: 14, weight: .semibold,
+                                        design: .rounded)
+                                )
                                 .foregroundColor(.primary)
 
                             Text("credits left")
@@ -57,9 +70,10 @@ struct Home: View {
                         .overlay(
                             RoundedRectangle(cornerRadius: 20)
                                 .strokeBorder(
-                                    LinearGradient(colors: [.purple, .purple],
-                                                   startPoint: .leading,
-                                                   endPoint: .trailing),
+                                    LinearGradient(
+                                        colors: [.purple, .purple],
+                                        startPoint: .leading,
+                                        endPoint: .trailing),
                                     lineWidth: 1.5
                                 )
                         )
@@ -70,7 +84,7 @@ struct Home: View {
 
     private var titleGradient: [Color] {
         colorScheme == .dark
-        ? [.pink, .purple]
-        : [.pink, .purple]
+            ? [.pink, .purple]
+            : [.pink, .purple]
     }
 }

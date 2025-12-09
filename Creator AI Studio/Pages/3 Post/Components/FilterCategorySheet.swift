@@ -17,7 +17,7 @@ struct CompactFiltersGrid: View {
             spacing: spacing
         ) {
             ForEach(filters) { filter in
-                FilterThumbnail(
+                FilterThumbnailTwo(
                     title: filter.display.title,
                     imageName: filter.display.imageName,
                     isSelected: selectedFilter?.id == filter.id,

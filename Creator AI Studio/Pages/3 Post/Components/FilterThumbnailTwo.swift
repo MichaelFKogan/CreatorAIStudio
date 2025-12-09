@@ -3,7 +3,7 @@ import Kingfisher
 
 // MARK: - Filter Thumbnail (Square)
 
-struct FilterThumbnail: View {
+struct FilterThumbnailTwo: View {
     let title: String
     let imageName: String
     let isSelected: Bool
@@ -51,32 +51,32 @@ struct FilterThumbnail: View {
                             .frame(width: size, height: size)
                             .clipped()
                             .cornerRadius(8)
-                            // .overlay(
-                            //     RoundedRectangle(cornerRadius: 8)
-                            //         .stroke(
-                            //             isSelected ? Color.pink : Color.clear,
-                            //             lineWidth: 3)
-                            // )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(
+                                        isSelected ? Color.pink : Color.clear,
+                                        lineWidth: 3)
+                            )
                             .overlay(
                                 VStack(alignment: .trailing, spacing: 4) {
-                                    // // Checkmark (shown when selected, below price)
-                                    // if isSelected {
-                                    //     Image(systemName: "checkmark.circle.fill")
-                                    //         .font(.system(size: 16))
-                                    //         .foregroundStyle(.white)
-                                    //         .background(
-                                    //             Circle()
-                                    //                 .fill(
-                                    //                     LinearGradient(
-                                    //                         colors: [.pink, .pink],
-                                    //                         startPoint: .topLeading,
-                                    //                         endPoint: .bottomTrailing
-                                    //                     )
-                                    //                 )
-                                    //                 .frame(width: 20, height: 20)
-                                    //         )
-                                    //         .transition(.scale.combined(with: .opacity))
-                                    // }
+                                    // Checkmark (shown when selected, below price)
+                                    if isSelected {
+                                        Image(systemName: "checkmark.circle.fill")
+                                            .font(.system(size: 16))
+                                            .foregroundStyle(.white)
+                                            .background(
+                                                Circle()
+                                                    .fill(
+                                                        LinearGradient(
+                                                            colors: [.pink, .pink],
+                                                            startPoint: .topLeading,
+                                                            endPoint: .bottomTrailing
+                                                        )
+                                                    )
+                                                    .frame(width: 20, height: 20)
+                                            )
+                                            .transition(.scale.combined(with: .opacity))
+                                    }
 
                                     Spacer()
 
@@ -108,32 +108,32 @@ struct FilterThumbnail: View {
                             .frame(width: size, height: size)
                             .clipped()
                             .cornerRadius(8)
-                            // .overlay(
-                            //     RoundedRectangle(cornerRadius: 8)
-                            //         .stroke(
-                            //             isSelected ? Color.pink : Color.clear,
-                            //             lineWidth: 3)
-                            // )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(
+                                        isSelected ? Color.pink : Color.clear,
+                                        lineWidth: 3)
+                            )
                             .overlay(
                                 VStack(alignment: .trailing, spacing: 4) {
-                                    // // Checkmark (shown when selected, below price)
-                                    // if isSelected {
-                                    //     Image(systemName: "checkmark.circle.fill")
-                                    //         .font(.system(size: 16))
-                                    //         .foregroundStyle(.white)
-                                    //         .background(
-                                    //             Circle()
-                                    //                 .fill(
-                                    //                     LinearGradient(
-                                    //                         colors: [.pink, .pink],
-                                    //                         startPoint: .topLeading,
-                                    //                         endPoint: .bottomTrailing
-                                    //                     )
-                                    //                 )
-                                    //                 .frame(width: 20, height: 20)
-                                    //         )
-                                    //         .transition(.scale.combined(with: .opacity))
-                                    // }
+                                    // Checkmark (shown when selected, below price)
+                                    if isSelected {
+                                        Image(systemName: "checkmark.circle.fill")
+                                            .font(.system(size: 16))
+                                            .foregroundStyle(.white)
+                                            .background(
+                                                Circle()
+                                                    .fill(
+                                                        LinearGradient(
+                                                            colors: [.pink, .pink],
+                                                            startPoint: .topLeading,
+                                                            endPoint: .bottomTrailing
+                                                        )
+                                                    )
+                                                    .frame(width: 20, height: 20)
+                                            )
+                                            .transition(.scale.combined(with: .opacity))
+                                    }
 
                                     Spacer()
 

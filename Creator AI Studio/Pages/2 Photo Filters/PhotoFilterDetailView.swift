@@ -130,7 +130,7 @@ struct PhotoFilterDetailView: View {
                                 .doubleValue ?? 0.0
 
                             Text("Cost: $\(costValue, specifier: "%.2f")")
-                                .font(.custom("Nunito-Bold", size: 16))
+                                .font(.system(size: 16, weight: .semibold, design: .rounded))
                                 .foregroundColor(.primary)
                         }
                         .padding(.horizontal, 12)
@@ -239,8 +239,7 @@ struct AnimatedTitle: View {
     var body: some View {
         ZStack {
             Text(text)
-                //                .font(.title)
-                .font(.custom("Nunito-Black", size: 30))
+                .font(.system(size: 28, weight: .bold, design: .rounded))
                 .foregroundColor(.primary)
                 .overlay(
                     LinearGradient(
@@ -384,14 +383,16 @@ struct SpinningPlusButton: View {
             showPhotoPicker = true
         }) {
             HStack {
+                Image(systemName: "arrow.right")
+                    .font(.system(size: 20, weight: .bold, design: .rounded)).opacity(0)
+                    .foregroundColor(.black)
                 Spacer()
                 Text("Add Photo")
-                    .font(.custom("Nunito-ExtraBold", size: 20))
+                    .font(.system(size: 20, weight: .bold, design: .rounded))
                     .foregroundColor(.black)
                 Spacer()
                 Image(systemName: "arrow.right")
-                    .font(.custom("Nunito-ExtraBold", size: 22))
-                    .fontWeight(.bold)
+                    .font(.system(size: 20, weight: .bold, design: .rounded))
                     .foregroundColor(.black)
                     .rotationEffect(.degrees(rotation))
             }
@@ -503,7 +504,7 @@ struct ExampleImagesSection: View {
                 Image(systemName: "photo.on.rectangle.angled")
                     .foregroundColor(.blue)
                 Text("Example Gallery")
-                    .font(.custom("Nunito-Bold", size: 22))
+                .font(.system(size: 22, weight: .bold, design: .rounded))
                 Spacer()
             }
 

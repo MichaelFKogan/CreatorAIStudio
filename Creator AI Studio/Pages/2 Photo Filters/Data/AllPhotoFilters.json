@@ -3,7 +3,7 @@
     "display": {
       "title": "Anime",
       "imageName": "anime1",
-      "imageNameOriginal": "anime",
+      "imageNameOriginal": "yourphoto",
       "description": "",
       "modelName": "",
       "modelDescription": "",
@@ -36,7 +36,7 @@
     "display": {
       "title": "Watercolor",
       "imageName": "watercolor",
-      "imageNameOriginal": "watercolor",
+      "imageNameOriginal": "yourphoto",
       "description": "",
       "modelName": "",
       "modelDescription": "",
@@ -69,7 +69,7 @@
     "display": {
       "title": "Van Gogh",
       "imageName": "vangogh",
-      "imageNameOriginal": "vangogh",
+      "imageNameOriginal": "yourphoto",
       "description": "",
       "modelName": "",
       "modelDescription": "",
@@ -102,7 +102,7 @@
     "display": {
       "title": "Blocky Aesthetic",
       "imageName": "minecraft1",
-      "imageNameOriginal": "minecraft",
+      "imageNameOriginal": "yourphoto",
       "exampleImages": [
         "minecraft2",
         "minecraft3",
@@ -123,7 +123,7 @@
     "display": {
       "title": "Micro Landscape",
       "imageName": "micro-landscape-mini-world1",
-      "imageNameOriginal": "micro-landscape-mini-world",
+      "imageNameOriginal": "yourphoto",
       "exampleImages": [
         "micro-landscape-mini-world2",
         "micro-landscape-mini-world3",
@@ -144,7 +144,7 @@
     "display": {
       "title": "Plastic Bubble Figure",
       "imageName": "plasticbubblefigure1",
-      "imageNameOriginal": "plasticbubblefigure",
+      "imageNameOriginal": "yourphoto",
       "exampleImages": [
         "plasticbubblefigure6",
         "plasticbubblefigure3",
@@ -165,7 +165,7 @@
     "display": {
       "title": "Designer Toy Figure",
       "imageName": "trending1",
-      "imageNameOriginal": "trending",
+      "imageNameOriginal": "yourphoto",
       "description": "",
       "modelName": "Google Gemini Flash 2.5 (Nano Banana)",
       "modelDescription": "Google's Gemini Flash Image 2.5 model for advanced image transformations",
@@ -190,7 +190,7 @@
     "display": {
       "title": "Felt 3D Polaroid",
       "imageName": "felt3dpolaroid1",
-      "imageNameOriginal": "felt3dpolaroid",
+      "imageNameOriginal": "yourphoto",
       "exampleImages": [
         "felt3dpolaroid2",
         "felt3dpolaroid3",
@@ -211,7 +211,7 @@
     "display": {
       "title": "Snow Globe",
       "imageName": "glassball1",
-      "imageNameOriginal": "glassball",
+      "imageNameOriginal": "yourphoto",
       "exampleImages": [
         "glassball2",
         "glassball3",
@@ -232,7 +232,7 @@
     "display": {
       "title": "Futuristic",
       "imageName": "futuristic1",
-      "imageNameOriginal": "futuristic",
+      "imageNameOriginal": "yourphoto",
       "exampleImages": [
         "futuristic2",
         "futuristic3",
@@ -253,7 +253,7 @@
     "display": {
       "title": "Cyberpunk",
       "imageName": "cyberpunk1",
-      "imageNameOriginal": "cyberpunk",
+      "imageNameOriginal": "yourphoto",
       "exampleImages": [
         "cyberpunk2",
         "cyberpunk3",
@@ -274,7 +274,7 @@
     "display": {
       "title": "Low-Key Lighting",
       "imageName": "lowkeylighting1",
-      "imageNameOriginal": "lowkeylighting",
+      "imageNameOriginal": "yourphoto",
       "exampleImages": [
         "lowkeylighting2",
         "lowkeylighting3",
