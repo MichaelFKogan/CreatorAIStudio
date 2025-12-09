@@ -88,6 +88,7 @@ struct PhotoFilters: View {
     @State private var navigateToConfirmation: Bool = false
     @State private var showPhotoPicker: Bool = false
     @State private var prompt: String = ""
+    @State private var navigationPath = NavigationPath()
     
     // Convert presets to InfoPacket format
     private var presetInfoPackets: [InfoPacket] {
@@ -110,7 +111,7 @@ struct PhotoFilters: View {
     }
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $navigationPath) {
             VStack(spacing: 0) {
                 ScrollView {
                     VStack(spacing: 0) {
@@ -132,7 +133,10 @@ struct PhotoFilters: View {
                                 PhotoFiltersGrid(
                                     filters: presetInfoPackets,
                                     selectedFilter: selectedFilter,
-                                    onSelect: { selectedFilter = $0 }
+                                    onSelect: { filter in
+                                        selectedFilter = filter
+                                        navigationPath.append(filter)
+                                    }
                                 )
                                 
                                 Divider()
@@ -158,7 +162,10 @@ struct PhotoFilters: View {
                             PhotoFiltersGrid(
                                 filters: viewModel.filters,
                                 selectedFilter: selectedFilter,
-                                onSelect: { selectedFilter = $0 }
+                                onSelect: { filter in
+                                    selectedFilter = filter
+                                    navigationPath.append(filter)
+                                }
                             )
                         }
                     }
@@ -240,6 +247,9 @@ struct PhotoFilters: View {
                 isActive: $navigateToConfirmation,
                 label: { EmptyView() }
             )
+            .navigationDestination(for: InfoPacket.self) { filter in
+                PhotoFilterDetailView(item: filter)
+            }
         }
         .onChange(of: selectedPhotoItem, perform: loadPhoto)
         .onAppear {

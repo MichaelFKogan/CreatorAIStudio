@@ -6,7 +6,7 @@
 
 import SwiftUI
 
-struct InfoPacket: Codable, Identifiable {
+struct InfoPacket: Codable, Identifiable, Hashable {
     var id: UUID = .init()
     var display: DisplayInfo
     var apiConfig: APIConfiguration
@@ -22,7 +22,7 @@ struct InfoPacket: Codable, Identifiable {
     }
 }
 
-struct DisplayInfo: Codable {
+struct DisplayInfo: Codable, Hashable {
     var title: String
     var imageName: String
     var imageNameOriginal: String?
@@ -31,9 +31,10 @@ struct DisplayInfo: Codable {
     var modelDescription: String?
     var modelImageName: String?
     var exampleImages: [String]?
+    var moreStyles: [[String]]? = []
 }
 
-struct APIConfiguration: Codable {
+struct APIConfiguration: Codable, Hashable {
     var provider: APIProvider
     var endpoint: String
     var runwareModel: String?
@@ -43,13 +44,13 @@ struct APIConfiguration: Codable {
     var runwareConfig: RunwareConfig?
 }
 
-struct WaveSpeedConfig: Codable {
+struct WaveSpeedConfig: Codable, Hashable {
     var outputFormat: String?
     var enableSyncMode: Bool?
     var enableBase64Output: Bool?
 }
 
-struct RunwareConfig: Codable {
+struct RunwareConfig: Codable, Hashable {
     // How to handle image-to-image: "referenceImages" or "seedImage"
     var imageToImageMethod: String? // "referenceImages" or "seedImage"
     // Strength for image-to-image (only used with seedImage method)
@@ -68,7 +69,7 @@ struct RunwareConfig: Codable {
     var outputQuality: Int?
 }
 
-enum APIProvider: String, Codable {
+enum APIProvider: String, Codable, Hashable {
     case wavespeed
     case runware
 }
