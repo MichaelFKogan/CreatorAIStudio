@@ -118,14 +118,31 @@ struct UserImage: Codable, Identifiable {
 class ProfileViewModel: ObservableObject {
     @Published var userImages: [UserImage] = []
     @Published var isLoading = false
+    @Published var isLoadingMore = false
+    @Published var hasMorePages = true
+
+    private struct CachedUserMediaEntry: Codable {
+        let images: [UserImage]
+        let lastFetchedAt: Date
+    }
 
     private let client = SupabaseManager.shared.client
     private var hasFetchedFromDatabase = false
-    var userId: String?
+    private var currentPage = 0
+    private let pageSize = 50 // Fetch 50 images at a time
+    private let cacheStaleInterval: TimeInterval = 5 * 60 // 5 minutes
 
-    // ✅ Cache user images persistently between launches
-    // Note: Changed key from "cachedUserImages" to "cachedUserImagesV2" after adding metadata support
-    @AppStorage("cachedUserImagesV2") private var cachedUserImagesData: Data = .init()
+    var userId: String? {
+        didSet {
+            guard oldValue != userId, let userId else { return }
+            handleUserChange(userId: userId)
+        }
+    }
+
+    // ✅ Cache user images persistently between launches, keyed per user
+    @AppStorage("cachedUserImagesV3") private var cachedUserImagesData: Data = .init()
+    private var cachedUserImagesMap: [String: CachedUserMediaEntry] = [:]
+    private var lastFetchedAt: Date?
 
     // Convenience computed property for backward compatibility (just URLs)
     var images: [String] {
@@ -133,27 +150,86 @@ class ProfileViewModel: ObservableObject {
     }
 
     init() {
-        loadCachedImages()
+        decodeCacheStore()
     }
 
-    private func loadCachedImages() {
-        if let decoded = try? JSONDecoder().decode([UserImage].self, from: cachedUserImagesData) {
-            userImages = decoded
-//            print("📦 Loaded cached user images (\(userImages.count))")
+    private func decodeCacheStore() {
+        if let decoded = try? JSONDecoder().decode([String: CachedUserMediaEntry].self, from: cachedUserImagesData) {
+            cachedUserImagesMap = decoded
+        } else {
+            cachedUserImagesMap = [:]
         }
     }
 
-    private func saveCachedImages() {
-        if let encoded = try? JSONEncoder().encode(userImages) {
+    private func handleUserChange(userId: String) {
+        // Reset pagination state for the new user
+        currentPage = 0
+        hasMorePages = true
+        hasFetchedFromDatabase = false
+
+        // Load cached data for this user if available
+        loadCachedImages(for: userId)
+    }
+
+    private func loadCachedImages(for userId: String) {
+        // Ensure cache is decoded
+        if cachedUserImagesMap.isEmpty {
+            decodeCacheStore()
+        }
+
+        if let entry = cachedUserImagesMap[userId] {
+            userImages = entry.images
+            lastFetchedAt = entry.lastFetchedAt
+            // Set the page based on cached count so pagination continues correctly
+            currentPage = Int(ceil(Double(entry.images.count) / Double(pageSize)))
+            hasMorePages = entry.images.count >= pageSize
+
+            // If the cache is fresh, skip the initial fetch to avoid egress
+            if isCacheFresh {
+                hasFetchedFromDatabase = true
+            }
+        } else {
+            userImages = []
+            lastFetchedAt = nil
+            hasFetchedFromDatabase = false
+            currentPage = 0
+        }
+    }
+
+    private func saveCachedImages(for userId: String) {
+        let now = Date()
+        lastFetchedAt = lastFetchedAt ?? now
+        cachedUserImagesMap[userId] = CachedUserMediaEntry(
+            images: userImages,
+            lastFetchedAt: lastFetchedAt ?? now
+        )
+        if let encoded = try? JSONEncoder().encode(cachedUserImagesMap) {
             cachedUserImagesData = encoded
         }
+    }
+
+    private var isCacheFresh: Bool {
+        guard let lastFetchedAt else { return false }
+        return Date().timeIntervalSince(lastFetchedAt) < cacheStaleInterval
     }
 
     func fetchUserImages(forceRefresh: Bool = false) async {
         guard let userId = userId else { return }
 
-        // If we've already fetched this session and it's not a forced refresh, skip
+        // If we have fresh cached data and this is not a forced refresh, avoid a network call
+        if !forceRefresh, isCacheFresh {
+            hasFetchedFromDatabase = true
+            return
+        }
+
+        // If we've already fetched during this session and there's no force refresh, skip
         guard !hasFetchedFromDatabase || forceRefresh else { return }
+
+        // For force refresh, try to fetch only the newest items since the last cache entry
+        if forceRefresh {
+            await refreshLatest(for: userId)
+            return
+        }
 
         // Only show loading state if we don't have any cached images to display
         let shouldShowLoading = userImages.isEmpty
@@ -168,13 +244,26 @@ class ProfileViewModel: ObservableObject {
                 .select()
                 .eq("user_id", value: userId)
                 .order("created_at", ascending: false)
+                .limit(pageSize)
+                .range(from: currentPage * pageSize, to: (currentPage + 1) * pageSize - 1)
                 .execute()
 
-            userImages = response.value ?? []
-            saveCachedImages() // ✅ Store new images locally
-            hasFetchedFromDatabase = true
-//            print("✅ Fetched and cached \(userImages.count) images from Supabase")
+            let newImages = response.value ?? []
 
+            // If we got fewer images than pageSize, we've reached the end
+            hasMorePages = newImages.count == pageSize
+
+            // Append new images (or replace if it's the first page)
+            if currentPage == 0 {
+                userImages = newImages
+            } else {
+                userImages.append(contentsOf: newImages)
+            }
+
+            lastFetchedAt = Date()
+            saveCachedImages(for: userId) // ✅ Store new images locally
+            hasFetchedFromDatabase = true
+            currentPage += 1
         } catch {
             print("❌ Failed to fetch user images: \(error)")
         }
@@ -182,6 +271,101 @@ class ProfileViewModel: ObservableObject {
         if shouldShowLoading {
             isLoading = false
         }
+    }
+
+    // MARK: - Refresh latest without re-downloading everything
+
+    private func refreshLatest(for userId: String) async {
+        guard !isLoading else { return }
+
+        let latestTimestamp = userImages.compactMap { $0.created_at }.max()
+
+        do {
+            // Fetch the latest page (server-side filtered to newest items)
+            let response: PostgrestResponse<[UserImage]> = try await client.database
+                .from("user_media")
+                .select()
+                .eq("user_id", value: userId)
+                .order("created_at", ascending: false)
+                .range(from: 0, to: pageSize - 1)
+                .execute()
+
+            let fetched = response.value ?? []
+
+            guard !fetched.isEmpty else {
+                lastFetchedAt = Date()
+                saveCachedImages(for: userId)
+                hasFetchedFromDatabase = true
+                return
+            }
+
+            // If we have a cached timestamp, keep only new items compared to cache
+            let freshItems: [UserImage]
+            if let latestTimestamp {
+                freshItems = fetched.filter { ($0.created_at ?? "") > latestTimestamp }
+            } else {
+                freshItems = fetched
+            }
+
+            guard !freshItems.isEmpty else {
+                lastFetchedAt = Date()
+                saveCachedImages(for: userId)
+                hasFetchedFromDatabase = true
+                return
+            }
+
+            // Deduplicate and prepend new items
+            let existingIds = Set(userImages.map { $0.id })
+            let dedupedFresh = freshItems.filter { !existingIds.contains($0.id) }
+            userImages.insert(contentsOf: dedupedFresh, at: 0)
+
+            // Update pagination marker to reflect total cached items
+            currentPage = Int(ceil(Double(userImages.count) / Double(pageSize)))
+
+            lastFetchedAt = Date()
+            saveCachedImages(for: userId)
+            hasFetchedFromDatabase = true
+        } catch {
+            print("❌ Failed to refresh user images: \(error)")
+        }
+    }
+    
+    // MARK: - Load More Images (Pagination)
+    
+    /// Loads the next page of images
+    func loadMoreImages() async {
+        guard let userId = userId else { return }
+        guard hasMorePages, !isLoadingMore else { return }
+        
+        isLoadingMore = true
+        
+        do {
+            let response: PostgrestResponse<[UserImage]> = try await client.database
+                .from("user_media")
+                .select()
+                .eq("user_id", value: userId)
+                .order("created_at", ascending: false)
+                .limit(pageSize)
+                .range(from: currentPage * pageSize, to: (currentPage + 1) * pageSize - 1)
+                .execute()
+            
+            let newImages = response.value ?? []
+            
+            // If we got fewer images than pageSize, we've reached the end
+            hasMorePages = newImages.count == pageSize
+            
+            // Append new images
+            userImages.append(contentsOf: newImages)
+            lastFetchedAt = Date()
+            saveCachedImages(for: userId)
+            currentPage += 1
+//            print("✅ Loaded more images, page \(currentPage), total: \(userImages.count), hasMore: \(hasMorePages)")
+            
+        } catch {
+            print("❌ Failed to load more images: \(error)")
+        }
+        
+        isLoadingMore = false
     }
 
     // MARK: - Fetch Images by Model
@@ -243,7 +427,7 @@ class ProfileViewModel: ObservableObject {
         userImages[index] = updatedImage
 
         // Save to cache
-        saveCachedImages()
+        saveCachedImages(for: userId)
 
         // Update database
         do {
@@ -259,7 +443,7 @@ class ProfileViewModel: ObservableObject {
             var revertedImage = userImages[index]
             revertedImage.is_favorite = currentFavorite
             userImages[index] = revertedImage
-            saveCachedImages()
+            saveCachedImages(for: userId)
         }
     }
 

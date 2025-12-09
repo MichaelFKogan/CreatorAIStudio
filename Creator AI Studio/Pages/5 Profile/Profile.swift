@@ -143,9 +143,6 @@ struct ProfileViewContent: View {
                     }
                 }
             }
-            .refreshable {
-                await viewModel.fetchUserImages(forceRefresh: true)
-            }
             .onAppear {
                 if let userId = authViewModel.user?.id.uuidString {
                     Task {
@@ -502,6 +499,16 @@ struct ImageGridView: View {
                                 Spacer()
                             }
                         }
+                        .onAppear {
+                            // Trigger loading more when we're 10 items from the end
+                            if let viewModel = viewModel, 
+                               let index = userImages.firstIndex(where: { $0.id == userImage.id }),
+                               index >= userImages.count - 10 {
+                                Task {
+                                    await viewModel.loadMoreImages()
+                                }
+                            }
+                        }
 
                     } else if let url = URL(string: userImage.image_url) {
                         // Fallback for videos without thumbnails
@@ -591,19 +598,38 @@ struct ImageGridView: View {
                                 Spacer()
                             }
                         }
+                        .onAppear {
+                            // Trigger loading more when we're 10 items from the end
+                            if let viewModel = viewModel,
+                               let index = userImages.firstIndex(where: { $0.id == userImage.id }),
+                               index >= userImages.count - 10 {
+                                Task {
+                                    await viewModel.loadMoreImages()
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // Loading indicator for pagination
+                if let viewModel = viewModel, viewModel.isLoadingMore {
+                    HStack {
+                        Spacer()
+                        ProgressView()
+                            .padding()
+                        Spacer()
                     }
                 }
             }
             .padding(.horizontal, 4)
         }
-        .frame(
-            height: calculateHeight(for: placeholders.count + userImages.count))
+        .frame(height: calculateHeight(for: placeholders.count + userImages.count))
     }
 
     private func calculateHeight(for count: Int) -> CGFloat {
         let rows = ceil(Double(count) / 3.0)
         let itemWidth = (UIScreen.main.bounds.width - 16) / 3
-        return CGFloat(rows) * (itemWidth * 1.8 + spacing)
+        return CGFloat(rows) * (itemWidth * 1.4 + spacing)
     }
     
     // Check if an image has a matching preset
@@ -1138,18 +1164,18 @@ struct PresetsListSheet: View {
             .navigationTitle("Presets")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
+                ToolbarItem(placement: .navigationBarTrailing) {
                     if !presetViewModel.presets.isEmpty {
                         Button(isEditMode ? "Done" : "Edit") {
                             isEditMode.toggle()
                         }
                     }
                 }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
-                        isPresented = false
-                    }
-                }
+                // ToolbarItem(placement: .navigationBarTrailing) {
+                //     Button("Done") {
+                //         isPresented = false
+                //     }
+                // }
             }
             .alert("Delete Preset", isPresented: $showDeleteConfirmation) {
                 Button("Cancel", role: .cancel) {
@@ -1200,13 +1226,13 @@ private struct PresetRow: View {
     
     var body: some View {
         HStack(spacing: 12) {
-            // Drag handle in edit mode
-            if isEditMode {
-                Image(systemName: "line.3.horizontal")
-                    .font(.system(size: 16, weight: .medium))
-                    .foregroundColor(.secondary)
-                    .padding(.trailing, 4)
-            }
+            // // Drag handle in edit mode
+            // if isEditMode {
+            //     Image(systemName: "line.3.horizontal")
+            //         .font(.system(size: 16, weight: .medium))
+            //         .foregroundColor(.secondary)
+            //         .padding(.trailing, 4)
+            // }
             
             // Icon or image
             ZStack {
@@ -1285,6 +1311,7 @@ private struct PresetRow: View {
             RoundedRectangle(cornerRadius: 12)
                 .stroke(Color.gray.opacity(0.2), lineWidth: 1)
         )
+        .presentationDetents([.large])
     }
 }
 
@@ -1442,6 +1469,7 @@ struct PresetDetailView: View {
             }
             .navigationTitle("Edit Preset")
             .navigationBarTitleDisplayMode(.inline)
+            .presentationDetents([.large])
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Done") {
