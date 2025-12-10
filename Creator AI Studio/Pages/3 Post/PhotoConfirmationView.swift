@@ -241,12 +241,12 @@ struct PhotoConfirmationView: View {
                     HStack(spacing: 12) {
                         if isLoading {
                             ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle(tint: .purple))
+                                .progressViewStyle(CircularProgressViewStyle(tint: .black))
                                 .scaleEffect(1.2)
                         }
                         Text(isLoading ? "Generating..." : "Generate")
                             .font(.system(size: 18, weight: .bold, design: .rounded))
-                            .foregroundColor(isLoading ? .secondary : .black)
+                            .foregroundColor(.black)
                         if !isLoading {
                             Image(systemName: "photo.on.rectangle")
                                 .font(.system(size: 18))
@@ -263,10 +263,8 @@ struct PhotoConfirmationView: View {
                     .overlay(
                         RoundedRectangle(cornerRadius: 12)
                             .stroke(
-                                isLoading
-                                    ? LinearGradient(colors: [.purple, .blue], startPoint: .topLeading, endPoint: .bottomTrailing)
-                                    : LinearGradient(colors: [.clear, .clear], startPoint: .topLeading, endPoint: .bottomTrailing),
-                                lineWidth: isLoading ? 2 : 0
+                                LinearGradient(colors: [.clear, .clear], startPoint: .topLeading, endPoint: .bottomTrailing),
+                                lineWidth: 0
                             )
                             .animation(.easeInOut(duration: 0.3), value: isLoading)
                     )

@@ -168,29 +168,68 @@ class ProfileViewModel: ObservableObject {
     
     /// Sets up notification observer for when new images are saved to the database
     private func setupImageSavedNotification() {
+        print("📢 ProfileViewModel: Setting up ImageSavedToDatabase notification observer")
         imageSavedObserver = NotificationCenter.default.addObserver(
             forName: NSNotification.Name("ImageSavedToDatabase"),
             object: nil,
             queue: .main
         ) { [weak self] notification in
+            print("📢 ProfileViewModel: Notification received in observer closure")
             self?.handleImageSavedNotification(notification)
         }
+        print("✅ ProfileViewModel: Notification observer set up successfully")
     }
     
     /// Handles the notification when a new image is saved to the database
     /// Fetches the latest image immediately so it appears on the Profile page
     private func handleImageSavedNotification(_ notification: Notification) {
-        guard let userInfo = notification.userInfo,
-              let savedUserId = userInfo["userId"] as? String,
-              let currentUserId = userId,
-              savedUserId == currentUserId else {
-            // Notification is for a different user, ignore it
+        print("📢 ProfileViewModel received ImageSavedToDatabase notification")
+        
+        guard let userInfo = notification.userInfo else {
+            print("⚠️ Notification missing userInfo")
             return
         }
         
-        // Fetch the latest image immediately
+        guard let savedUserId = userInfo["userId"] as? String else {
+            print("⚠️ Notification missing userId")
+            return
+        }
+        
+        guard let imageUrl = userInfo["imageUrl"] as? String else {
+            print("⚠️ Notification missing imageUrl")
+            return
+        }
+        
+        print("📢 Notification details - savedUserId: \(savedUserId), imageUrl: \(imageUrl)")
+        print("📢 Current ProfileViewModel userId: \(userId ?? "nil")")
+        
+        // If userId is not set yet, we'll check again after a short delay
+        // This handles the case where the Profile view hasn't appeared yet
+        guard let currentUserId = userId else {
+            print("⚠️ ProfileViewModel userId not set yet, will retry in 1 second")
+            Task {
+                try? await Task.sleep(for: .seconds(1))
+                await MainActor.run {
+                    if let userId = self.userId, userId == savedUserId {
+                        print("📢 Retrying fetch after userId was set")
+                        Task {
+                            await self.fetchAndAddImage(imageUrl: imageUrl)
+                        }
+                    }
+                }
+            }
+            return
+        }
+        
+        guard savedUserId == currentUserId else {
+            print("⚠️ Notification is for different user (saved: \(savedUserId), current: \(currentUserId))")
+            return
+        }
+        
+        print("✅ Fetching image by URL: \(imageUrl)")
+        // Fetch the specific image by URL (more reliable than fetching latest)
         Task {
-            await fetchLatestImage()
+            await fetchAndAddImage(imageUrl: imageUrl)
         }
     }
 
@@ -567,27 +606,61 @@ class ProfileViewModel: ObservableObject {
     /// Fetches a single image by URL and adds it to the list
     /// - Parameter imageUrl: The URL of the image to fetch
     func fetchAndAddImage(imageUrl: String) async {
-        guard let userId = userId else { return }
-        
-        do {
-            // Fetch the image by URL
-            let response: PostgrestResponse<[UserImage]> = try await client.database
-                .from("user_media")
-                .select()
-                .eq("user_id", value: userId)
-                .eq("image_url", value: imageUrl)
-                .order("created_at", ascending: false)
-                .limit(1)
-                .execute()
-            
-            if let newImage = response.value.first {
-                await MainActor.run {
-                    addImage(newImage)
-                }
-            }
-        } catch {
-            print("❌ Failed to fetch new image: \(error)")
+        guard let userId = userId else {
+            print("⚠️ fetchAndAddImage: userId is nil")
+            return
         }
+        
+        print("🔍 fetchAndAddImage: Fetching image with URL: \(imageUrl) for userId: \(userId)")
+        
+        // Retry logic: database might not be immediately available after insert
+        var retryCount = 0
+        let maxRetries = 3
+        
+        while retryCount < maxRetries {
+            do {
+                // Fetch the image by URL
+                let response: PostgrestResponse<[UserImage]> = try await client.database
+                    .from("user_media")
+                    .select()
+                    .eq("user_id", value: userId)
+                    .eq("image_url", value: imageUrl)
+                    .order("created_at", ascending: false)
+                    .limit(1)
+                    .execute()
+                
+                let images = response.value ?? []
+                print("🔍 fetchAndAddImage: Found \(images.count) image(s) with URL: \(imageUrl)")
+                
+                if let newImage = images.first {
+                    print("✅ fetchAndAddImage: Adding image to list (id: \(newImage.id))")
+                    await MainActor.run {
+                        // Check if already exists before adding
+                        if !userImages.contains(where: { $0.id == newImage.id }) {
+                            addImage(newImage)
+                            print("✅ fetchAndAddImage: Image added successfully. Total images: \(userImages.count)")
+                        } else {
+                            print("⚠️ fetchAndAddImage: Image already exists in list, skipping")
+                        }
+                    }
+                    return // Success, exit retry loop
+                } else {
+                    print("⚠️ fetchAndAddImage: No image found with URL: \(imageUrl) (attempt \(retryCount + 1)/\(maxRetries))")
+                }
+            } catch {
+                print("❌ fetchAndAddImage: Error on attempt \(retryCount + 1)/\(maxRetries): \(error)")
+            }
+            
+            // If we didn't find the image and have retries left, wait and try again
+            retryCount += 1
+            if retryCount < maxRetries {
+                let delay = Double(retryCount) * 0.5 // 0.5s, 1.0s delays
+                print("⏳ fetchAndAddImage: Retrying in \(delay) seconds...")
+                try? await Task.sleep(for: .seconds(delay))
+            }
+        }
+        
+        print("❌ fetchAndAddImage: Failed to fetch image after \(maxRetries) attempts")
     }
     
     /// Fetches the most recent image and adds it to the list

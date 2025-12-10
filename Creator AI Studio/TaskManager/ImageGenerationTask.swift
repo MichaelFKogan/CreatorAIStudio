@@ -188,9 +188,14 @@ class ImageGenerationTask: MediaGenerationTask {
             // Saves with exponential backoff retry for reliability.
             try await saveMetadataWithRetry(metadata)
 
+            // Small delay to ensure database transaction is fully committed
+            // This helps with eventual consistency in Supabase
+            try? await Task.sleep(for: .milliseconds(500))
+
             // Post notification that image was saved to database
             // This allows ProfileViewModel to immediately fetch and display the new image
             await MainActor.run {
+                print("📢 Posting ImageSavedToDatabase notification for userId: \(userId), imageUrl: \(supabaseImageURL)")
                 NotificationCenter.default.post(
                     name: NSNotification.Name("ImageSavedToDatabase"),
                     object: nil,
