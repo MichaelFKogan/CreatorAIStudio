@@ -44,7 +44,37 @@
   {
     "display": {
       "title": "Anime 2",
-      "imageName": "",
+      "imageName": "anime2boyfluxkontextpro",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "FLUX.1 Kontext [pro]",
+      "modelDescription": "A professional-grade model from Black Forest Labs built for sharp detail, consistent anatomy, accurate lighting, and clean visual structure. Excellent for portraits, branding images, product photography, and polished commercial-quality artwork.",
+      "modelImageName": "fluxkontextpro",
+      "exampleImages": []
+    },
+    "apiConfig": {
+      "provider": "runware",
+      "runwareModel": "bfl:3@1",
+      "endpoint": "https://api.runware.ai/v1",
+      "runwareConfig": {
+        "imageToImageMethod": "referenceImages",
+
+        "requiresDimensions": true,
+        "imageCompressionQuality": 0.85,
+
+        "outputFormat": "JPG",
+        "outputType": "URL",
+        "outputQuality": 85
+      }
+    },
+    "prompt": "Transform to Anime style",
+    "cost": 0.04,
+    "type": "Photo Filter",
+    "capabilities": ["Text to Image", "Image to Image"]
+  },
+  {
+    "display": {
+      "title": "Anime 2",
+      "imageName": "anime2girlfluxkontextpro",
       "imageNameOriginal": "yourphoto",
       "modelName": "FLUX.1 Kontext [pro]",
       "modelDescription": "A professional-grade model from Black Forest Labs built for sharp detail, consistent anatomy, accurate lighting, and clean visual structure. Excellent for portraits, branding images, product photography, and polished commercial-quality artwork.",
