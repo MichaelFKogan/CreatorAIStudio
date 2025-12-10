@@ -11,8 +11,9 @@ struct ImageMetadata: Encodable {
     let endpoint: String?
     let prompt: String?
     let aspect_ratio: String?
+    let provider: String?
     
-    init(userId: String, imageUrl: String, model: String? = nil, title: String? = nil, cost: Double? = nil, type: String? = nil, endpoint: String? = nil, prompt: String? = nil, aspectRatio: String? = nil) {
+    init(userId: String, imageUrl: String, model: String? = nil, title: String? = nil, cost: Double? = nil, type: String? = nil, endpoint: String? = nil, prompt: String? = nil, aspectRatio: String? = nil, provider: String? = nil) {
         self.user_id = userId
         self.image_url = imageUrl
         self.model = model
@@ -22,6 +23,7 @@ struct ImageMetadata: Encodable {
         self.endpoint = endpoint
         self.prompt = prompt
         self.aspect_ratio = aspectRatio
+        self.provider = provider
     }
 }
 

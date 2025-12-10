@@ -180,10 +180,11 @@ class ImageGenerationTask: MediaGenerationTask {
                 type: item.type?.isEmpty == false ? item.type : nil,
                 endpoint: item.apiConfig.endpoint.isEmpty ? nil : item.apiConfig.endpoint,
                 prompt: (item.prompt?.isEmpty == false ? item.prompt : nil),
-                aspectRatio: item.apiConfig.aspectRatio
+                aspectRatio: item.apiConfig.aspectRatio,
+                provider: item.apiConfig.provider.rawValue
             )
 
-            print("📝 Saving metadata: title=\(metadata.title ?? "none"), cost=\(metadata.cost ?? 0), type=\(metadata.type ?? "none")")
+            print("📝 Saving metadata: title=\(metadata.title ?? "none"), cost=\(metadata.cost ?? 0), type=\(metadata.type ?? "none"), provider=\(metadata.provider ?? "none")")
 
             // Saves with exponential backoff retry for reliability.
             try await saveMetadataWithRetry(metadata)

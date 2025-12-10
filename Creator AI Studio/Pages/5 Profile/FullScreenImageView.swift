@@ -150,6 +150,8 @@ struct AspectRatioCard: View {
 // MARK: - Full Screen Image View
 
 struct FullScreenImageView: View {
+    // MARK: - Properties
+    
     let userImage: UserImage
     @Binding var isPresented: Bool
     var viewModel: ProfileViewModel?
@@ -174,6 +176,8 @@ struct FullScreenImageView: View {
     @State private var showDeletePresetAlert = false
     @StateObject private var presetViewModel = PresetViewModel()
 
+    // MARK: - Computed Properties
+    
     // Cache image models to avoid repeated JSON loading
     static var cachedImageModels: [InfoPacket]?
     private var allImageModels: [InfoPacket] {
@@ -257,6 +261,8 @@ struct FullScreenImageView: View {
         matchingPreset != nil
     }
 
+    // MARK: - Helper Functions
+    
     // Helper function to format cost with full precision
     private func formatCost(_ cost: Double) -> String {
         // Use NumberFormatter to show all significant digits
@@ -269,6 +275,8 @@ struct FullScreenImageView: View {
     }
 
     // MARK: - View Components
+    
+    // MARK: - Immersive Mode Views
 
     @ViewBuilder
     private var immersiveModeView: some View {
@@ -400,6 +408,8 @@ struct FullScreenImageView: View {
         }
     }
 
+    // MARK: - Normal Mode Views
+    
     @ViewBuilder
     private var normalModeView: some View {
         ScrollView {
@@ -510,6 +520,8 @@ struct FullScreenImageView: View {
         .padding(12)
     }
 
+    // MARK: - Action Buttons
+    
     @ViewBuilder
     private var actionButtons: some View {
         HStack(spacing: 36) {
@@ -644,6 +656,8 @@ struct FullScreenImageView: View {
         .disabled(isDeleting)
     }
 
+    // MARK: - Metadata Views
+    
     @ViewBuilder
     private var metadataSection: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -690,13 +704,15 @@ struct FullScreenImageView: View {
         .padding(.bottom, 4)
     }
 
+    // MARK: - Filter Metadata
+    
     @ViewBuilder
     private var filterMetadata: some View {
         if let title = userImage.title, !title.isEmpty {
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 4) {
                     Image(systemName: "camera.filters")
-                        .font(.caption2)
+                        .font(.body)
                         .foregroundColor(.white.opacity(0.8))
                     Text("Filter Name")
                         .font(.caption2)
@@ -728,6 +744,8 @@ struct FullScreenImageView: View {
         }
     }
 
+    // MARK: - Model Metadata
+    
     @ViewBuilder
     private var modelMetadata: some View {
         if let title = userImage.title, !title.isEmpty {
@@ -844,6 +862,8 @@ struct FullScreenImageView: View {
         }
     }
 
+    // MARK: - Body & Lifecycle
+    
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
@@ -1285,6 +1305,8 @@ struct CreatePresetSheet: View {
         return allImageModels.first { $0.display.title == title }
     }
 
+    // MARK: - Body
+    
     var body: some View {
         NavigationView {
             ZStack {

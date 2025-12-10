@@ -52,6 +52,7 @@ struct UserImage: Codable, Identifiable {
     let thumbnail_url: String? // Thumbnail for videos
     let prompt: String? // Prompt used for generation
     let aspect_ratio: String? // Aspect ratio used for generation
+    let provider: String? // Provider used for generation (e.g., "wavespeed", "runware")
     var is_favorite: Bool? // Whether the image is favorited
 
     // Computed property for convenience
@@ -78,6 +79,7 @@ struct UserImage: Codable, Identifiable {
         case thumbnail_url
         case prompt
         case aspect_ratio
+        case provider
         case is_favorite
     }
 
@@ -108,6 +110,7 @@ struct UserImage: Codable, Identifiable {
         thumbnail_url = try? container.decode(String.self, forKey: .thumbnail_url)
         prompt = try? container.decode(String.self, forKey: .prompt)
         aspect_ratio = try? container.decode(String.self, forKey: .aspect_ratio)
+        provider = try? container.decode(String.self, forKey: .provider)
         is_favorite = try? container.decode(Bool.self, forKey: .is_favorite) ?? false
     }
 }

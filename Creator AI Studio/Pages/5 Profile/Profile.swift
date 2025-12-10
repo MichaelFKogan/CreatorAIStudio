@@ -837,6 +837,25 @@ struct PlaceholderImageCard: View {
             .padding(.vertical, 12)
         }
         .frame(width: itemWidth, height: itemHeight)
+        .overlay(alignment: .topTrailing) {
+            // Close button for failed image generations
+            if placeholder.state == .failed {
+                Button(action: {
+                    notificationManager.dismissNotification(id: placeholder.id)
+                }) {
+                    ZStack {
+                        Circle()
+                            .fill(Color.red.opacity(0.2))
+                            .frame(width: 24, height: 24)
+                        
+                        Image(systemName: "xmark")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundColor(.red)
+                    }
+                }
+                .padding(6)
+            }
+        }
         .onAppear {
             pulseAnimation = true
             withAnimation(
