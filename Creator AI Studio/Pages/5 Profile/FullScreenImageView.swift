@@ -704,7 +704,7 @@ struct FullScreenImageView: View {
         .padding(.bottom, 4)
     }
 
-    // MARK: - Filter Metadata
+    // MARK: IF FILTER
     
     @ViewBuilder
     private var filterMetadata: some View {
@@ -715,7 +715,7 @@ struct FullScreenImageView: View {
                         .font(.body)
                         .foregroundColor(.white.opacity(0.8))
                     Text("Filter Name")
-                        .font(.caption2)
+                        .font(.body)
                         .foregroundColor(.gray)
                 }
                 Text(title)
@@ -729,6 +729,7 @@ struct FullScreenImageView: View {
             GridItem(.flexible()),
             GridItem(.flexible()),
         ]
+        let isWavespeed = userImage.provider?.lowercased() == "wavespeed"
         LazyVGrid(columns: gridColumns, spacing: 10) {
             if let type = userImage.type {
                 MetadataCard(icon: "tag.fill", label: "Type", value: type)
@@ -738,13 +739,23 @@ struct FullScreenImageView: View {
                     icon: "dollarsign.circle.fill", label: "Cost",
                     value: formatCost(cost))
             }
-            if let aspectRatio = userImage.aspect_ratio, !aspectRatio.isEmpty {
+            if isWavespeed {
+                MetadataCard(icon: "cpu.fill", label: "Model", value: "WaveSpeed")
+            } else if let model = userImage.model, !model.isEmpty {
+                MetadataCard(icon: "cpu.fill", label: "Model", value: model)
+            }
+            if isWavespeed {
+                AspectRatioCard(aspectRatio: "Auto")
+            } else if let aspectRatio = userImage.aspect_ratio, !aspectRatio.isEmpty {
                 AspectRatioCard(aspectRatio: aspectRatio)
             }
         }
+        if !isWavespeed, let prompt = userImage.prompt, !prompt.isEmpty {
+            promptSection(prompt)
+        }
     }
 
-    // MARK: - Model Metadata
+    // MARK: IF MODEL
     
     @ViewBuilder
     private var modelMetadata: some View {
@@ -752,10 +763,10 @@ struct FullScreenImageView: View {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(spacing: 4) {
                     Image(systemName: "cpu")
-                        .font(.caption2)
+                        .font(.body)
                         .foregroundColor(.white.opacity(0.8))
                     Text("AI Model")
-                        .font(.caption2)
+                        .font(.body)
                         .foregroundColor(.gray)
                 }
                 HStack(spacing: 12) {

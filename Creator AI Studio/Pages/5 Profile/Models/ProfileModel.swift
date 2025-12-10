@@ -203,7 +203,8 @@ class ProfileViewModel: ObservableObject {
             return
         }
         
-        print("📢 Notification details - savedUserId: \(savedUserId), imageUrl: \(imageUrl)")
+        let imageId = userInfo["imageId"] as? String
+        print("📢 Notification details - savedUserId: \(savedUserId), imageId: \(imageId ?? "nil"), imageUrl: \(imageUrl)")
         print("📢 Current ProfileViewModel userId: \(userId ?? "nil")")
         
         // If userId is not set yet, we'll check again after a short delay
@@ -216,7 +217,13 @@ class ProfileViewModel: ObservableObject {
                     if let userId = self.userId, userId == savedUserId {
                         print("📢 Retrying fetch after userId was set")
                         Task {
-                            await self.fetchAndAddImage(imageUrl: imageUrl)
+                            // Small delay to ensure database transaction is committed
+                            try? await Task.sleep(for: .milliseconds(500))
+                            if let imageId = imageId {
+                                await self.fetchAndAddImageById(imageId: imageId)
+                            } else {
+                                await self.fetchLatestImage()
+                            }
                         }
                     }
                 }
@@ -229,10 +236,35 @@ class ProfileViewModel: ObservableObject {
             return
         }
         
-        print("✅ Fetching image by URL: \(imageUrl)")
-        // Fetch the specific image by URL (more reliable than fetching latest)
+        print("✅ Fetching image (preferring ID, then URL, then latest)")
+        // Add a small delay to ensure database transaction is fully committed
         Task {
+            // Small delay to ensure database transaction is committed
+            try? await Task.sleep(for: .milliseconds(500))
+            
+            // Priority 1: Fetch by ID if available (most reliable)
+            if let imageId = imageId {
+                await fetchAndAddImageById(imageId: imageId)
+                let imageWasAdded = await MainActor.run {
+                    return userImages.contains(where: { $0.id == imageId })
+                }
+                if imageWasAdded {
+                    print("✅ Image added successfully by ID")
+                    return
+                }
+            }
+            
+            // Priority 2: Try fetching by URL
             await fetchAndAddImage(imageUrl: imageUrl)
+            let imageWasAdded = await MainActor.run {
+                return userImages.contains(where: { $0.image_url == imageUrl })
+            }
+            
+            // Priority 3: Fall back to fetching the latest image
+            if !imageWasAdded {
+                print("⚠️ Image not found by ID/URL, falling back to fetching latest image")
+                await fetchLatestImage()
+            }
         }
     }
 
@@ -299,20 +331,36 @@ class ProfileViewModel: ObservableObject {
     func fetchUserImages(forceRefresh: Bool = false) async {
         guard let userId = userId else { return }
 
-        // If we have fresh cached data and this is not a forced refresh, avoid a network call
-        if !forceRefresh, isCacheFresh {
-            hasFetchedFromDatabase = true
-            return
-        }
-
-        // If we've already fetched during this session and there's no force refresh, skip
-        guard !hasFetchedFromDatabase || forceRefresh else { return }
-
         // For force refresh, try to fetch only the newest items since the last cache entry
         if forceRefresh {
             await refreshLatest(for: userId)
             return
         }
+
+        // If we have cached images, always do a lightweight refresh to check for new images
+        // This ensures newly created images appear even if the page was already loaded
+        // We do this asynchronously so it doesn't block the UI
+        if !userImages.isEmpty {
+            print("🔄 Profile: Found \(userImages.count) cached images, doing lightweight refresh to check for new images")
+            // Do a background refresh to check for new images
+            // This runs asynchronously and won't block the UI
+            Task { @MainActor [weak self] in
+                guard let self = self else { return }
+                await self.refreshLatest(for: userId)
+            }
+            // Mark as fetched so we don't do a full fetch below
+            hasFetchedFromDatabase = true
+            return
+        }
+
+        // If we have fresh cached data and this is not a forced refresh, avoid a network call
+        if isCacheFresh {
+            hasFetchedFromDatabase = true
+            return
+        }
+
+        // If we've already fetched during this session and there's no force refresh, skip
+        guard !hasFetchedFromDatabase else { return }
 
         // Only show loading state if we don't have any cached images to display
         let shouldShowLoading = userImages.isEmpty
@@ -359,9 +407,13 @@ class ProfileViewModel: ObservableObject {
     // MARK: - Refresh latest without re-downloading everything
 
     private func refreshLatest(for userId: String) async {
-        guard !isLoading else { return }
+        guard !isLoading else { 
+            print("⚠️ refreshLatest: Already loading, skipping")
+            return 
+        }
 
         let latestTimestamp = userImages.compactMap { $0.created_at }.max()
+        print("🔄 refreshLatest: Checking for new images (latest cached timestamp: \(latestTimestamp ?? "none"), cached count: \(userImages.count))")
 
         do {
             // Fetch the latest page (server-side filtered to newest items)
@@ -374,8 +426,10 @@ class ProfileViewModel: ObservableObject {
                 .execute()
 
             let fetched = response.value ?? []
+            print("🔄 refreshLatest: Fetched \(fetched.count) images from database")
 
             guard !fetched.isEmpty else {
+                print("⚠️ refreshLatest: No images found in database")
                 lastFetchedAt = Date()
                 saveCachedImages(for: userId)
                 hasFetchedFromDatabase = true
@@ -383,24 +437,41 @@ class ProfileViewModel: ObservableObject {
             }
 
             // If we have a cached timestamp, keep only new items compared to cache
+            // Also check by ID to catch any images that might have the same timestamp
+            let existingIds = Set(userImages.map { $0.id })
             let freshItems: [UserImage]
             if let latestTimestamp {
-                freshItems = fetched.filter { ($0.created_at ?? "") > latestTimestamp }
+                // Filter by timestamp OR by ID (in case timestamp comparison fails)
+                freshItems = fetched.filter { image in
+                    !existingIds.contains(image.id) || (image.created_at ?? "") > latestTimestamp
+                }
             } else {
-                freshItems = fetched
+                // No timestamp, check by ID only
+                freshItems = fetched.filter { !existingIds.contains($0.id) }
             }
 
+            print("🔄 refreshLatest: Found \(freshItems.count) new images")
+
             guard !freshItems.isEmpty else {
+                print("✅ refreshLatest: No new images found")
                 lastFetchedAt = Date()
                 saveCachedImages(for: userId)
                 hasFetchedFromDatabase = true
                 return
             }
 
-            // Deduplicate and prepend new items
-            let existingIds = Set(userImages.map { $0.id })
+            // Deduplicate and prepend new items (existingIds already declared above)
             let dedupedFresh = freshItems.filter { !existingIds.contains($0.id) }
-            userImages.insert(contentsOf: dedupedFresh, at: 0)
+            
+            if !dedupedFresh.isEmpty {
+                print("✅ refreshLatest: Adding \(dedupedFresh.count) new image(s) to list")
+                for image in dedupedFresh {
+                    print("  - Added image: id=\(image.id), url=\(image.image_url)")
+                }
+                userImages.insert(contentsOf: dedupedFresh, at: 0)
+            } else {
+                print("⚠️ refreshLatest: All fresh items were duplicates, nothing to add")
+            }
 
             // Update pagination marker to reflect total cached items
             currentPage = Int(ceil(Double(userImages.count) / Double(pageSize)))
@@ -408,6 +479,7 @@ class ProfileViewModel: ObservableObject {
             lastFetchedAt = Date()
             saveCachedImages(for: userId)
             hasFetchedFromDatabase = true
+            print("✅ refreshLatest: Complete. Total images: \(userImages.count)")
         } catch {
             print("❌ Failed to refresh user images: \(error)")
         }
@@ -606,6 +678,65 @@ class ProfileViewModel: ObservableObject {
         saveCachedImages(for: userId)
     }
     
+    /// Fetches a single image by ID and adds it to the list
+    /// - Parameter imageId: The ID of the image to fetch
+    func fetchAndAddImageById(imageId: String) async {
+        guard let userId = userId else {
+            print("⚠️ fetchAndAddImageById: userId is nil")
+            return
+        }
+        
+        print("🔍 fetchAndAddImageById: Fetching image with ID: \(imageId) for userId: \(userId)")
+        
+        // Retry logic: database might not be immediately available after insert
+        var retryCount = 0
+        let maxRetries = 3
+        
+        while retryCount < maxRetries {
+            do {
+                // Fetch the image by ID
+                let response: PostgrestResponse<[UserImage]> = try await client.database
+                    .from("user_media")
+                    .select()
+                    .eq("user_id", value: userId)
+                    .eq("id", value: imageId)
+                    .limit(1)
+                    .execute()
+                
+                let images = response.value ?? []
+                print("🔍 fetchAndAddImageById: Found \(images.count) image(s) with ID: \(imageId)")
+                
+                if let newImage = images.first {
+                    print("✅ fetchAndAddImageById: Adding image to list (id: \(newImage.id))")
+                    await MainActor.run {
+                        // Check if already exists before adding
+                        if !userImages.contains(where: { $0.id == newImage.id }) {
+                            addImage(newImage)
+                            print("✅ fetchAndAddImageById: Image added successfully. Total images: \(userImages.count)")
+                        } else {
+                            print("⚠️ fetchAndAddImageById: Image already exists in list, skipping")
+                        }
+                    }
+                    return // Success, exit retry loop
+                } else {
+                    print("⚠️ fetchAndAddImageById: No image found with ID: \(imageId) (attempt \(retryCount + 1)/\(maxRetries))")
+                }
+            } catch {
+                print("❌ fetchAndAddImageById: Error on attempt \(retryCount + 1)/\(maxRetries): \(error)")
+            }
+            
+            // If we didn't find the image and have retries left, wait and try again
+            retryCount += 1
+            if retryCount < maxRetries {
+                let delay = Double(retryCount) * 0.5 // 0.5s, 1.0s delays
+                print("⏳ fetchAndAddImageById: Retrying in \(delay) seconds...")
+                try? await Task.sleep(for: .seconds(delay))
+            }
+        }
+        
+        print("❌ fetchAndAddImageById: Failed to fetch image after \(maxRetries) attempts")
+    }
+    
     /// Fetches a single image by URL and adds it to the list
     /// - Parameter imageUrl: The URL of the image to fetch
     func fetchAndAddImage(imageUrl: String) async {
@@ -668,7 +799,12 @@ class ProfileViewModel: ObservableObject {
     
     /// Fetches the most recent image and adds it to the list
     func fetchLatestImage() async {
-        guard let userId = userId else { return }
+        guard let userId = userId else {
+            print("⚠️ fetchLatestImage: userId is nil")
+            return
+        }
+        
+        print("🔍 fetchLatestImage: Fetching most recent image for userId: \(userId)")
         
         do {
             // Fetch the most recent image for this user
@@ -680,13 +816,22 @@ class ProfileViewModel: ObservableObject {
                 .limit(1)
                 .execute()
             
-            if let latestImage = response.value.first {
+            let images = response.value ?? []
+            print("🔍 fetchLatestImage: Found \(images.count) image(s)")
+            
+            if let latestImage = images.first {
+                print("✅ fetchLatestImage: Found latest image (id: \(latestImage.id), url: \(latestImage.image_url))")
                 await MainActor.run {
                     // Only add if it's not already in the list
                     if !userImages.contains(where: { $0.id == latestImage.id }) {
                         addImage(latestImage)
+                        print("✅ fetchLatestImage: Image added successfully. Total images: \(userImages.count)")
+                    } else {
+                        print("⚠️ fetchLatestImage: Image already exists in list, skipping")
                     }
                 }
+            } else {
+                print("⚠️ fetchLatestImage: No images found")
             }
         } catch {
             print("❌ Failed to fetch latest image: \(error)")

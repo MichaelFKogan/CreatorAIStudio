@@ -1,3 +1,4 @@
+import Supabase
 import SwiftUI
 
 // MARK: - Image Generation Task
@@ -187,7 +188,8 @@ class ImageGenerationTask: MediaGenerationTask {
             print("📝 Saving metadata: title=\(metadata.title ?? "none"), cost=\(metadata.cost ?? 0), type=\(metadata.type ?? "none"), provider=\(metadata.provider ?? "none")")
 
             // Saves with exponential backoff retry for reliability.
-            try await saveMetadataWithRetry(metadata)
+            // Returns the inserted image so we can get the ID for the notification
+            let insertedImage = try await saveMetadataWithRetry(metadata)
 
             // Small delay to ensure database transaction is fully committed
             // This helps with eventual consistency in Supabase
@@ -196,14 +198,23 @@ class ImageGenerationTask: MediaGenerationTask {
             // Post notification that image was saved to database
             // This allows ProfileViewModel to immediately fetch and display the new image
             await MainActor.run {
-                print("📢 Posting ImageSavedToDatabase notification for userId: \(userId), imageUrl: \(supabaseImageURL)")
+                var userInfo: [String: Any] = [
+                    "userId": userId,
+                    "imageUrl": supabaseImageURL
+                ]
+                
+                // Include image ID if available (most reliable way to fetch)
+                if let imageId = insertedImage?.id {
+                    userInfo["imageId"] = imageId
+                    print("📢 Posting ImageSavedToDatabase notification for userId: \(userId), imageId: \(imageId), imageUrl: \(supabaseImageURL)")
+                } else {
+                    print("📢 Posting ImageSavedToDatabase notification for userId: \(userId), imageUrl: \(supabaseImageURL)")
+                }
+                
                 NotificationCenter.default.post(
                     name: NSNotification.Name("ImageSavedToDatabase"),
                     object: nil,
-                    userInfo: [
-                        "userId": userId,
-                        "imageUrl": supabaseImageURL
-                    ]
+                    userInfo: userInfo
                 )
             }
 
@@ -257,20 +268,27 @@ class ImageGenerationTask: MediaGenerationTask {
 
     /// Saves the generated image metadata to Supabase with exponential backoff.
     /// Attempts up to 3 times, doubling wait time after each failure.
-    private func saveMetadataWithRetry(_ metadata: ImageMetadata) async throws {
+    /// Returns the inserted UserImage if successful, nil otherwise.
+    private func saveMetadataWithRetry(_ metadata: ImageMetadata) async throws -> UserImage? {
         var saveSuccessful = false
         var retryCount = 0
         let maxRetries = 3
 
         while !saveSuccessful, retryCount < maxRetries {
             do {
-                try await SupabaseManager.shared.client.database
+                // Use .select() after .insert() to get the inserted row back
+                let response: PostgrestResponse<[UserImage]> = try await SupabaseManager.shared.client.database
                     .from("user_media")
                     .insert(metadata)
+                    .select()
                     .execute()
 
                 print("✅ Image metadata saved to database")
                 saveSuccessful = true
+                
+                // Return the inserted image (should be first and only item)
+                let insertedImages = response.value ?? []
+                return insertedImages.first
 
             } catch {
                 retryCount += 1
@@ -285,6 +303,8 @@ class ImageGenerationTask: MediaGenerationTask {
                 }
             }
         }
+        
+        return nil
     }
 
     // MARK: - Helper: Extract Model from Endpoint
