@@ -131,6 +131,9 @@ class ProfileViewModel: ObservableObject {
     private var currentPage = 0
     private let pageSize = 50 // Fetch 50 images at a time
     private let cacheStaleInterval: TimeInterval = 5 * 60 // 5 minutes
+    
+    // Notification observer for new image saves
+    private var imageSavedObserver: NSObjectProtocol?
 
     var userId: String? {
         didSet {
@@ -151,6 +154,44 @@ class ProfileViewModel: ObservableObject {
 
     init() {
         decodeCacheStore()
+        setupImageSavedNotification()
+    }
+    
+    deinit {
+        // Remove notification observer when view model is deallocated
+        if let observer = imageSavedObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
+    }
+    
+    // MARK: - Notification Setup
+    
+    /// Sets up notification observer for when new images are saved to the database
+    private func setupImageSavedNotification() {
+        imageSavedObserver = NotificationCenter.default.addObserver(
+            forName: NSNotification.Name("ImageSavedToDatabase"),
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            self?.handleImageSavedNotification(notification)
+        }
+    }
+    
+    /// Handles the notification when a new image is saved to the database
+    /// Fetches the latest image immediately so it appears on the Profile page
+    private func handleImageSavedNotification(_ notification: Notification) {
+        guard let userInfo = notification.userInfo,
+              let savedUserId = userInfo["userId"] as? String,
+              let currentUserId = userId,
+              savedUserId == currentUserId else {
+            // Notification is for a different user, ignore it
+            return
+        }
+        
+        // Fetch the latest image immediately
+        Task {
+            await fetchLatestImage()
+        }
     }
 
     private func decodeCacheStore() {

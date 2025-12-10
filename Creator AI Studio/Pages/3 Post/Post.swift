@@ -1,7 +1,7 @@
 import AVFoundation
+import Kingfisher
 import SwiftUI
 import UIKit
-import Kingfisher
 
 struct Post: View {
     @EnvironmentObject var authViewModel: AuthViewModel
@@ -21,10 +21,10 @@ struct Post: View {
     // Image Model mode state
     @StateObject private var imageModelsViewModel = ImageModelsViewModel()
     @State private var selectedImageModel: InfoPacket?
-    
+
     // Presets state
     @StateObject private var presetViewModel = PresetViewModel()
-    
+
     // Convert presets to InfoPacket format
     private var presetInfoPackets: [InfoPacket] {
         let allModels = imageModelsViewModel.filteredAndSortedImageModels
@@ -143,230 +143,257 @@ struct Post: View {
                                 // Only visible while scrolling, fades out when scrolling stops
                                 // Hide when showing captured image
                                 if !shouldShowCapturedImage,
-                                   let displayFilter = centeredFilter
-                                    ?? selectedFilter
-                                    ?? selectedImageModel
+                                    let displayFilter = centeredFilter
+                                        ?? selectedFilter
+                                        ?? selectedImageModel
                                 {
                                     VStack(spacing: 12) {
 
-                                        // Category title
-                                        if let displayFilter =
-                                            centeredFilter
-                                            ?? selectedFilter
-                                            ?? selectedImageModel
-                                        {
-                                            Text(
-                                                categoryTitle(
-                                                    for: displayFilter)
-                                            )
-                                            .font(
-                                                .system(
-                                                    size: 12, weight: .medium,
-                                                    design: .rounded)
-                                            )
-                                            .foregroundColor(
-                                                .white.opacity(0.7)
-                                            )
-                                            .textCase(.uppercase)
-                                            .tracking(1.2)
-                                            .opacity(
-                                                isScrollingActive ? 1.0 : 0
-                                            )
-                                            .animation(
-                                                .easeOut(duration: 0.3),
-                                                value: isScrollingActive
-                                            )
-                                            .shadow(
-                                                color: .black.opacity(0.6),
-                                                radius: 2,
-                                                x: 0,
-                                                y: 1)
-                                        }
-
-                                        // Filter title above the image
-                                        Text(displayFilter.display.title)
-                                            .font(
-                                                .system(
-                                                    size: 18, weight: .semibold,
-                                                    design: .rounded)
-                                            )
-                                            .foregroundColor(.white)
-                                            .lineLimit(1)
-                                            .truncationMode(.tail)
-                                            .frame(maxWidth: 300)
-                                            .opacity(
-                                                isScrollingActive ? 1.0 : 0
-                                            )
-                                            .animation(
-                                                .easeOut(duration: 0.3),
-                                                value: isScrollingActive
-                                            )
-                                            .shadow(
-                                                color: .black.opacity(0.8),
-                                                radius: 4,
-                                                x: 0,
-                                                y: 2)
+                                        // // Filter title above the image
+                                        // Text(displayFilter.display.title)
+                                        //     .font(
+                                        //         .system(
+                                        //             size: 18, weight: .semibold,
+                                        //             design: .rounded)
+                                        //     )
+                                        //     .foregroundColor(.white)
+                                        //     .lineLimit(1)
+                                        //     .truncationMode(.tail)
+                                        //     .frame(maxWidth: 300)
+                                        //     .opacity(
+                                        //         isScrollingActive ? 1.0 : 0
+                                        //     )
+                                        //     .animation(
+                                        //         .easeOut(duration: 0.3),
+                                        //         value: isScrollingActive
+                                        //     )
+                                        //     .shadow(
+                                        //         color: .black.opacity(0.8),
+                                        //         radius: 4,
+                                        //         x: 0,
+                                        //         y: 2)
 
                                         // Preview image
                                         // Check if imageName is a URL (for presets)
                                         Group {
-                                            if displayFilter.display.imageName.hasPrefix("http://") || displayFilter.display.imageName.hasPrefix("https://"),
-                                               let url = URL(string: displayFilter.display.imageName) {
+                                            if displayFilter.display.imageName
+                                                .hasPrefix("http://")
+                                                || displayFilter.display
+                                                    .imageName.hasPrefix(
+                                                        "https://"),
+                                                let url = URL(
+                                                    string: displayFilter
+                                                        .display.imageName)
+                                            {
                                                 KFImage(url)
                                                     .placeholder {
                                                         Rectangle()
-                                                            .fill(Color.gray.opacity(0.2))
-                                                            .overlay(ProgressView())
+                                                            .fill(
+                                                                Color.gray
+                                                                    .opacity(
+                                                                        0.2)
+                                                            )
+                                                            .overlay(
+                                                                ProgressView())
                                                     }
                                                     .resizable()
                                                     .scaledToFill()
-                                                    .frame(width: 250, height: 300)
+                                                    .frame(
+                                                        width: 250, height: 300
+                                                    )
                                                     .clipShape(
                                                         RoundedRectangle(
                                                             cornerRadius: 16)
                                                     )
                                                     .opacity(
-                                                        isScrollingActive ? 0.8 : 0
+                                                        isScrollingActive
+                                                            ? 0.8 : 0
                                                     )
                                                     .shadow(
-                                                        color: .black.opacity(0.5),
+                                                        color: .black.opacity(
+                                                            0.5),
                                                         radius: 20,
                                                         x: 0,
                                                         y: 0
                                                     )
                                             } else {
-                                                Image(displayFilter.display.imageName)
-                                                    .resizable()
-                                                    .scaledToFill()
-                                                    .frame(width: 250, height: 300)
-                                                    .clipShape(
-                                                        RoundedRectangle(
-                                                            cornerRadius: 16)
-                                                    )
-                                                    .opacity(
-                                                        isScrollingActive ? 0.8 : 0
-                                                    )
-                                                    .shadow(
-                                                        color: .black.opacity(0.5),
-                                                        radius: 20,
-                                                        x: 0,
-                                                        y: 0
-                                                    )
+                                                Image(
+                                                    displayFilter.display
+                                                        .imageName
+                                                )
+                                                .resizable()
+                                                .scaledToFill()
+                                                .frame(width: 250, height: 300)
+                                                .clipShape(
+                                                    RoundedRectangle(
+                                                        cornerRadius: 16)
+                                                )
+                                                .opacity(
+                                                    isScrollingActive ? 0.8 : 0
+                                                )
+                                                .shadow(
+                                                    color: .black.opacity(0.5),
+                                                    radius: 20,
+                                                    x: 0,
+                                                    y: 0
+                                                )
                                             }
                                         }
-                                            .overlay(
-                                                // Cost badge in top right
-                                                Group {
-                                                    if let cost = displayFilter
-                                                        .cost
-                                                    {
-                                                        Text(
-                                                            "$\(NSDecimalNumber(decimal: cost).stringValue)"
+                                        .overlay(
+                                            // Cost badge in top right
+                                            Group {
+                                                if let cost = displayFilter
+                                                    .cost
+                                                {
+                                                    Text(
+                                                        "$\(NSDecimalNumber(decimal: cost).stringValue)"
+                                                    )
+                                                    .font(
+                                                        .system(
+                                                            size: 13,
+                                                            weight:
+                                                                .semibold,
+                                                            design: .rounded
                                                         )
-                                                        .font(
-                                                            .system(
-                                                                size: 13,
-                                                                weight:
-                                                                    .semibold,
-                                                                design: .rounded
+                                                    )
+                                                    .foregroundColor(.white)
+                                                    .padding(
+                                                        .horizontal, 10
+                                                    )
+                                                    .padding(.vertical, 5)
+                                                    .background(
+                                                        Capsule()
+                                                            .fill(
+                                                                Color.black
+                                                                    .opacity(
+                                                                        0.75
+                                                                    )
                                                             )
-                                                        )
-                                                        .foregroundColor(.white)
-                                                        .padding(
-                                                            .horizontal, 10
-                                                        )
-                                                        .padding(.vertical, 5)
-                                                        .background(
-                                                            Capsule()
-                                                                .fill(
-                                                                    Color.black
-                                                                        .opacity(
-                                                                            0.75
-                                                                        )
-                                                                )
-                                                        )
-                                                        .shadow(
-                                                            color: .black
-                                                                .opacity(0.4),
-                                                            radius: 4, x: 0,
-                                                            y: 2
-                                                        )
-                                                        .padding(12)
-                                                        .opacity(
+                                                    )
+                                                    .shadow(
+                                                        color: .black
+                                                            .opacity(0.4),
+                                                        radius: 4, x: 0,
+                                                        y: 2
+                                                    )
+                                                    .padding(12)
+                                                    .opacity(
+                                                        isScrollingActive
+                                                            ? 1.0 : 0
+                                                    )
+                                                    .animation(
+                                                        .easeOut(
+                                                            duration: 0.3),
+                                                        value:
                                                             isScrollingActive
-                                                                ? 1.0 : 0
-                                                        )
-                                                        .animation(
-                                                            .easeOut(
-                                                                duration: 0.3),
-                                                            value:
-                                                                isScrollingActive
-                                                        )
-                                                    }
-                                                },
-                                                alignment: .topTrailing
-                                            )
+                                                    )
+                                                }
+                                            },
+                                            alignment: .bottomTrailing
+                                        )
                                     }
                                     .allowsHitTesting(false)
                                     .padding(.bottom, 24)
                                 }
 
-                                // MARK: FILTER TITLE
-                                Button {
-                                    showFilterCategorySheet = true
-                                } label: {
-                                    Group {
-                                        HStack {
-                                            // Show centered filter while scrolling, otherwise show selected filter or model
-                                            if let displayFilter =
-                                                centeredFilter
-                                                ?? selectedFilter
-                                                ?? selectedImageModel
-                                            {
-                                                Text(
-                                                    displayFilter.display.title
-                                                )
-                                                .font(
-                                                    .system(
-                                                        size: 13,
-                                                        weight: .medium,
-                                                        design: .rounded)
-                                                )
-                                                .foregroundColor(.white)
-                                                .lineLimit(1)
-                                                .truncationMode(.tail)
-                                                .fixedSize(horizontal: true, vertical: false)
-                                                .padding(.horizontal, 16)
-                                                .padding(.vertical, 8)
-                                                .background(
-                                                    RoundedRectangle(
-                                                        cornerRadius: 12
+                                VStack(spacing: 12) {
+                                    // Category title
+                                    if let displayFilter =
+                                        centeredFilter
+                                        ?? selectedFilter
+                                        ?? selectedImageModel
+                                    {
+                                        Text(
+                                            categoryTitle(
+                                                for: displayFilter)
+                                        )
+                                        .font(
+                                            .system(
+                                                size: 12, weight: .medium,
+                                                design: .rounded)
+                                        )
+                                        .foregroundColor(
+                                            .white.opacity(0.7)
+                                        )
+                                        .textCase(.uppercase)
+                                        .tracking(1.2)
+                                        .opacity(
+                                            isScrollingActive ? 1.0 : 0
+                                        )
+                                        .animation(
+                                            .easeOut(duration: 0.3),
+                                            value: isScrollingActive
+                                        )
+                                        .shadow(
+                                            color: .black.opacity(0.6),
+                                            radius: 2,
+                                            x: 0,
+                                            y: 1)
+                                    }
+
+                                    // MARK: FILTER TITLE
+                                    Button {
+                                        showFilterCategorySheet = true
+                                    } label: {
+                                        Group {
+                                            HStack {
+                                                // Show centered filter while scrolling, otherwise show selected filter or model
+                                                if let displayFilter =
+                                                    centeredFilter
+                                                    ?? selectedFilter
+                                                    ?? selectedImageModel
+                                                {
+                                                    Text(
+                                                        displayFilter.display
+                                                            .title
                                                     )
-                                                    .fill(
-                                                        Color.black.opacity(0.5)
+                                                    .font(
+                                                        .system(
+                                                            size: 14,
+                                                            weight: .medium,
+                                                            design: .rounded)
                                                     )
-                                                )
-                                            } else {
-                                                Text(
-                                                    "Select an AI Model or Photo Filter"
-                                                )
-                                                .font(
-                                                    .system(
-                                                        size: 13,
-                                                        weight: .medium,
-                                                        design: .rounded)
-                                                )
-                                                .foregroundColor(.white)
-                                                .padding(.horizontal, 16)
-                                                .padding(.vertical, 8)
-                                                .background(
-                                                    RoundedRectangle(
-                                                        cornerRadius: 12
+                                                    .foregroundColor(.white)
+                                                    .lineLimit(1)
+                                                    .truncationMode(.tail)
+                                                    .fixedSize(
+                                                        horizontal: true,
+                                                        vertical: false
                                                     )
-                                                    .fill(
-                                                        Color.black.opacity(0.5)
+                                                    .padding(.horizontal, 16)
+                                                    .padding(.vertical, 8)
+                                                    .background(
+                                                        RoundedRectangle(
+                                                            cornerRadius: 12
+                                                        )
+                                                        .fill(
+                                                            Color.black.opacity(
+                                                                0.5)
+                                                        )
                                                     )
-                                                )
+                                                } else {
+                                                    Text(
+                                                        "Select an AI Model or Photo Filter"
+                                                    )
+                                                    .font(
+                                                        .system(
+                                                            size: 14,
+                                                            weight: .medium,
+                                                            design: .rounded)
+                                                    )
+                                                    .foregroundColor(.white)
+                                                    .padding(.horizontal, 16)
+                                                    .padding(.vertical, 8)
+                                                    .background(
+                                                        RoundedRectangle(
+                                                            cornerRadius: 12
+                                                        )
+                                                        .fill(
+                                                            Color.black.opacity(
+                                                                0.5)
+                                                        )
+                                                    )
+                                                }
                                             }
                                         }
                                     }
@@ -454,7 +481,9 @@ struct Post: View {
                                 selectedImageModel: selectedImageModel,
                                 onSelect: { item in
                                     // Check if the item is a preset
-                                    if presetInfoPackets.contains(where: { $0.id == item.id }) {
+                                    if presetInfoPackets.contains(where: {
+                                        $0.id == item.id
+                                    }) {
                                         // It's a preset - treat as a filter
                                         selectedFilter = item
                                         selectedImageModel = nil
@@ -521,7 +550,7 @@ struct Post: View {
                 shouldShowCapturedImage = false
                 // Ensure session is running when view appears
                 cameraService.startSession()
-                
+
                 // Load presets if user is signed in
                 if let userId = authViewModel.user?.id.uuidString {
                     presetViewModel.userId = userId
@@ -582,7 +611,9 @@ struct Post: View {
                     selectedImageModel: $selectedImageModel,
                     onSelect: { filter in
                         // Check if it's a preset
-                        if presetInfoPackets.contains(where: { $0.id == filter.id }) {
+                        if presetInfoPackets.contains(where: {
+                            $0.id == filter.id
+                        }) {
                             selectedFilter = filter
                             selectedImageModel = nil
                         } else {
@@ -615,7 +646,7 @@ struct Post: View {
         if presetInfoPackets.contains(where: { $0.id == item.id }) {
             return "Presets"
         }
-        
+
         // Check if it's an image model
         if imageModelsViewModel.filteredAndSortedImageModels.contains(where: {
             $0.id == item.id

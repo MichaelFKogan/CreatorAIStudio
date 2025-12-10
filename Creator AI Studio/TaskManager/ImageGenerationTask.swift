@@ -188,6 +188,19 @@ class ImageGenerationTask: MediaGenerationTask {
             // Saves with exponential backoff retry for reliability.
             try await saveMetadataWithRetry(metadata)
 
+            // Post notification that image was saved to database
+            // This allows ProfileViewModel to immediately fetch and display the new image
+            await MainActor.run {
+                NotificationCenter.default.post(
+                    name: NSNotification.Name("ImageSavedToDatabase"),
+                    object: nil,
+                    userInfo: [
+                        "userId": userId,
+                        "imageUrl": supabaseImageURL
+                    ]
+                )
+            }
+
             // MARK: STEP 6 — SUCCESS CALLBACK
 
             await onComplete(.imageSuccess(downloadedImage, url: supabaseImageURL))

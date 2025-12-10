@@ -238,31 +238,44 @@ struct PhotoConfirmationView: View {
                         currentTaskId = taskId
                     }
                 }) {
-                    HStack {
+                    HStack(spacing: 12) {
                         if isLoading {
                             ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: .purple))
+                                .scaleEffect(1.2)
                         }
-                        Text("Generate")
+                        Text(isLoading ? "Generating..." : "Generate")
                             .font(.system(size: 18, weight: .bold, design: .rounded))
-                            .foregroundColor(.black)
-                        Image(systemName: "photo.on.rectangle")
-                            .font(.system(size: 18))
-                            .fontWeight(.bold)
-                            .foregroundColor(.black)
-                            .rotationEffect(.degrees(rotation))
-                            .drawingGroup()
+                            .foregroundColor(isLoading ? .secondary : .black)
+                        if !isLoading {
+                            Image(systemName: "photo.on.rectangle")
+                                .font(.system(size: 18))
+                                .fontWeight(.bold)
+                                .foregroundColor(.black)
+                                .rotationEffect(.degrees(rotation))
+                                .drawingGroup()
+                        }
                     }
                     .padding(.vertical, 16)
                     .frame(maxWidth: .infinity)
                     .background(.white)
-//                    .background(
-//                        LinearGradient(colors: [.blue, .purple], startPoint: .topLeading, endPoint: .bottomTrailing)
-//                    )
                     .cornerRadius(12)
-                    .shadow(color: Color.purple.opacity(0.3), radius: 8, x: 0, y: 4)
-                    .scaleEffect(generatePulse ? 1.05 : 1.0)
-                    .animation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true), value: generatePulse)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(
+                                isLoading
+                                    ? LinearGradient(colors: [.purple, .blue], startPoint: .topLeading, endPoint: .bottomTrailing)
+                                    : LinearGradient(colors: [.clear, .clear], startPoint: .topLeading, endPoint: .bottomTrailing),
+                                lineWidth: isLoading ? 2 : 0
+                            )
+                            .animation(.easeInOut(duration: 0.3), value: isLoading)
+                    )
+                    .shadow(color: isLoading ? Color.purple.opacity(0.4) : Color.purple.opacity(0.3), radius: isLoading ? 12 : 8, x: 0, y: 4)
+                    .scaleEffect(isLoading ? 0.98 : (generatePulse ? 1.05 : 1.0))
+                    .animation(isLoading ? .easeInOut(duration: 0.3) : .easeInOut(duration: 1.2).repeatForever(autoreverses: true), value: isLoading ? isLoading : generatePulse)
+                    .opacity(isLoading ? 0.85 : 1.0)
                 }
+                .disabled(isLoading)
                 .padding(.horizontal, 24)
                 .onAppear {
                     generatePulse = true
