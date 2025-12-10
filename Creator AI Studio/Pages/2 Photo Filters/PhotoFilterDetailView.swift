@@ -125,11 +125,7 @@ struct PhotoFilterDetailView: View {
                                         startPoint: .topLeading,
                                         endPoint: .bottomTrailing))
 
-                            // Decimal? -> Double for formatter safety
-                            let costValue = (item.cost as NSDecimalNumber?)?
-                                .doubleValue ?? 0.0
-
-                            Text("Cost: $\(costValue, specifier: "%.2f")")
+                            Text("Cost: $\(NSDecimalNumber(decimal: item.cost ?? 0).stringValue)")
                                 .font(.system(size: 16, weight: .semibold, design: .rounded))
                                 .foregroundColor(.primary)
                         }

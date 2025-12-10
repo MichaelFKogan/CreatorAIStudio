@@ -21,6 +21,7 @@ struct PhotoConfirmationView: View {
     @State private var arrowWiggle: Bool = false
     @State private var currentTaskId: UUID? = nil
     @State private var selectedAspectIndex: Int = 0
+    @State private var sizeButtonTapped: Bool = false
 
     // MARK: - Aspect Ratio Options
     private let imageAspectOptions: [AspectRatioOption] = [
@@ -196,10 +197,67 @@ struct PhotoConfirmationView: View {
                 }
 
                 // MARK: - Size Selector
-                AspectRatioSection(
-                    options: imageAspectOptions,
-                    selectedIndex: $selectedAspectIndex
-                )
+                if item.apiConfig.provider == .wavespeed {
+                    // For wavespeed, show only "auto" and disable interaction
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Size")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .padding(.top, -6)
+                        Button(action: {
+                            // Show feedback when tapped
+                            sizeButtonTapped = true
+                            // Reset after a short delay
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                                sizeButtonTapped = false
+                            }
+                        }) {
+                            HStack(spacing: 12) {
+                                // Rectangular preview (matching normal style)
+                                ZStack {
+                                    RoundedRectangle(cornerRadius: 6)
+                                        .fill(Color.gray.opacity(0.2))
+                                    RoundedRectangle(cornerRadius: 3)
+                                        .stroke(Color.blue, lineWidth: 2)
+                                        .padding(4)
+                                }
+                                .frame(width: 40, height: 40)
+                                
+                                // Label
+                                Text("Auto")
+                                    .font(.subheadline)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.primary)
+                                
+                                Spacer()
+                            }
+                            .padding(.vertical, 8)
+                            .padding(.horizontal, 12)
+                            .background(Color(UIColor.systemBackground))
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                            .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.blue.opacity(0.3), lineWidth: 1))
+                        }
+                        .buttonStyle(.plain)
+                        
+                        // Disclaimer text with info icon
+                        HStack(spacing: 4) {
+                            Image(systemName: "info.circle")
+                                .font(.caption2)
+                                .foregroundColor(sizeButtonTapped ? .red : .secondary)
+                            Text("This filter does not allow you to change the aspect ratio. The image size will be automatically matched to your uploaded image.")
+                                .font(.caption2)
+                                .foregroundColor(sizeButtonTapped ? .red : .secondary)
+                        }
+                        .padding(.top, 4)
+                        .padding(.leading, 4)
+                    }
+                    .padding(.horizontal)
+                } else {
+                    AspectRatioSection(
+                        options: imageAspectOptions,
+                        selectedIndex: $selectedAspectIndex
+                    )
+                }
 
                 // MARK: - Generate Button
 
