@@ -166,7 +166,7 @@ struct ProfileViewContent: View {
                                 Button(action: {
                                     isSelectionMode = true
                                 }) {
-                                    Image(systemName: "checkmark.circle")
+                                    Text("Edit")
                                         .font(.headline)
                                         .foregroundColor(.gray)
                                 }

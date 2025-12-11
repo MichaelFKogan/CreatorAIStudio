@@ -259,7 +259,7 @@
   {
     "display": {
       "title": "Japanese Painting",
-      "imageName": "japanesepainting-nanobanana",
+      "imageName": "japanesepainting-man",
       "imageNameOriginal": "yourphoto",
       "modelName": "Google Gemini Flash 2.5 (Nano Banana)",
       "modelDescription": "",
@@ -276,7 +276,34 @@
         "imageCompressionQuality": 0.9
       }
     },
-    "prompt": "Transform to Japanese Painting style. The person should be wearing traditional Japanese clothing (kimono for women, yukata or hakama for men)",
+    "prompt": "Transform to Japanese Painting style.\n\nThe person should be wearing traditional Japanese clothing (kimono for women, yukata or hakama for men)",
+    "cost": 0.039,
+    "type": "Photo Filter",
+    "capabilities": ["Text to Image", "Image to Image"],
+    "category": "Art"
+  },
+
+  {
+    "display": {
+      "title": "Japanese Painting",
+      "imageName": "japanesepainting-woman",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)",
+      "modelDescription": "",
+      "modelImageName": "geminiflashimage25",
+      "exampleImages": []
+    },
+    "apiConfig": {
+      "provider": "runware",
+      "runwareModel": "google:4@1",
+      "endpoint": "https://api.runware.ai/v1",
+      "runwareConfig": {
+        "imageToImageMethod": "referenceImages",
+        "requiresDimensions": true,
+        "imageCompressionQuality": 0.9
+      }
+    },
+    "prompt": "Transform to Japanese Painting style.\n\nThe person should be wearing traditional Japanese clothing (kimono for women, yukata or hakama for men)",
     "cost": 0.039,
     "type": "Photo Filter",
     "capabilities": ["Text to Image", "Image to Image"],
@@ -286,7 +313,7 @@
   {
     "display": {
       "title": "Palette Knife Portrait",
-      "imageName": "paletteknifeportrait-nanobanana",
+      "imageName": "paletteknifeportrait-man",
       "imageNameOriginal": "yourphoto",
       "modelName": "Google Gemini Flash 2.5 (Nano Banana)",
       "modelDescription": "",
@@ -309,10 +336,11 @@
     "capabilities": ["Text to Image", "Image to Image"],
     "category": "Art"
   },
+
   {
     "display": {
-      "title": "Designer Toy Figure",
-      "imageName": "designertoyfigure",
+      "title": "Palette Knife Portrait",
+      "imageName": "paletteknifeportrait-woman",
       "imageNameOriginal": "yourphoto",
       "modelName": "Google Gemini Flash 2.5 (Nano Banana)",
       "modelDescription": "",
@@ -329,12 +357,67 @@
         "imageCompressionQuality": 0.9
       }
     },
-    "prompt": "Turn this photo into a character figure. Behind it, place a box with the character's image printed on it,and a computer showing the Blender modeling process on its screen. In front of the box, add a round plastic base with the character figure standing on it. Set the scene indoors if possible.",
+    "prompt": "Generate an image from the uploaded photo.\n\nKeep your facial features and skin tone at 100 percent. Keep the look gender neutral.\n\nShow you as a painted figure with thick palette knife texture, visible strokes, fresh oil paint, and a heavy textured canvas surface.\n\nPlace you in a chaotic colorful abstract background with uneven marks and strokes that match the same painted style.\n\nUse close camera framing so you fill most of the scene. Keep strong light from the front to show texture and color contrast.",
+    "cost": 0.039,
+    "type": "Photo Filter",
+    "capabilities": ["Text to Image", "Image to Image"],
+    "category": "Art"
+  },
+
+  {
+    "display": {
+      "title": "Designer Toy Figure",
+      "imageName": "designertoyfigure-man",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)",
+      "modelDescription": "",
+      "modelImageName": "geminiflashimage25",
+      "exampleImages": []
+    },
+    "apiConfig": {
+      "provider": "runware",
+      "runwareModel": "google:4@1",
+      "endpoint": "https://api.runware.ai/v1",
+      "runwareConfig": {
+        "imageToImageMethod": "referenceImages",
+        "requiresDimensions": true,
+        "imageCompressionQuality": 0.9
+      }
+    },
+    "prompt": "Turn this photo into a character figure.\n\nBehind it, place a box with the character's image printed on it, and a computer showing the Blender modeling process on its screen.\n\nIn front of the box, add a round plastic base with the character figure standing on it.\n\nSet the scene indoors if possible.",
     "cost": 0.039,
     "type": "Photo Filter",
     "capabilities": ["Text to Image", "Image to Image"],
     "category": "Character"
   },
+
+  {
+    "display": {
+      "title": "Designer Toy Figure",
+      "imageName": "designertoyfigure-woman",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)",
+      "modelDescription": "",
+      "modelImageName": "geminiflashimage25",
+      "exampleImages": []
+    },
+    "apiConfig": {
+      "provider": "runware",
+      "runwareModel": "google:4@1",
+      "endpoint": "https://api.runware.ai/v1",
+      "runwareConfig": {
+        "imageToImageMethod": "referenceImages",
+        "requiresDimensions": true,
+        "imageCompressionQuality": 0.9
+      }
+    },
+    "prompt": "Turn this photo into a character figure.\n\nBehind it, place a box with the character's image printed on it, and a computer showing the Blender modeling process on its screen.\n\nIn front of the box, add a round plastic base with the character figure standing on it.\n\nSet the scene indoors if possible.",
+    "cost": 0.039,
+    "type": "Photo Filter",
+    "capabilities": ["Text to Image", "Image to Image"],
+    "category": "Character"
+  },
+
   {
     "display": {
       "title": "3D Caricature",
@@ -355,10 +438,91 @@
         "imageCompressionQuality": 0.9
       }
     },
-    "prompt": "Full-body 3D caricature of [Character Name] in Pixar/DreamWorks style, featuring expressive large eyes, slightly oversized head, and subtly exaggerated facial features. Realistic skin with soft subsurface scattering, detailed hair, and a gentle warm smile. Smooth polished surfaces with subtle fabric texture on clothing. Dynamic pose showing personality, with full body visible and balanced proportions. Soft ambient lighting, warm reddish-orange gradient background. Cinematic quality, high detail, vibrant yet natural colors, stylized charm with balanced realism.",
+    "prompt": "Full-body 3D caricature of [Character Name] in Pixar/DreamWorks style, featuring expressive large eyes, slightly oversized head, and subtly exaggerated facial features.\n\nRealistic skin with soft subsurface scattering, detailed hair, and a gentle warm smile.\n\nSmooth polished surfaces with subtle fabric texture on clothing.\n\nDynamic pose showing personality, with full body visible and balanced proportions.\n\nSoft ambient lighting, warm reddish-orange gradient background.\n\nCinematic quality, high detail, vibrant yet natural colors, stylized charm with balanced realism.",
     "cost": 0.039,
     "type": "Photo Filter",
     "capabilities": ["Text to Image", "Image to Image"],
     "category": "Character"
+  },
+
+  {
+    "display": {
+      "title": "3D Caricature",
+      "imageName": "3dcaricature-dog",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)",
+      "modelDescription": "",
+      "modelImageName": "geminiflashimage25",
+      "exampleImages": []
+    },
+    "apiConfig": {
+      "provider": "runware",
+      "runwareModel": "google:4@1",
+      "endpoint": "https://api.runware.ai/v1",
+      "runwareConfig": {
+        "imageToImageMethod": "referenceImages",
+        "requiresDimensions": true,
+        "imageCompressionQuality": 0.9
+      }
+    },
+    "prompt": "Full-body 3D caricature of [Character Name] in Pixar/DreamWorks style, featuring expressive large eyes, slightly oversized head, and subtly exaggerated facial features.\n\nRealistic skin with soft subsurface scattering, detailed hair, and a gentle warm smile.\n\nSmooth polished surfaces with subtle fabric texture on clothing.\n\nDynamic pose showing personality, with full body visible and balanced proportions.\n\nSoft ambient lighting, warm reddish-orange gradient background.\n\nCinematic quality, high detail, vibrant yet natural colors, stylized charm with balanced realism.",
+    "cost": 0.039,
+    "type": "Photo Filter",
+    "capabilities": ["Text to Image", "Image to Image"],
+    "category": "Character"
+  },
+
+  {
+    "display": {
+      "title": "Persona5 Graffiti Pop Art",
+      "imageName": "Persona5-graffitipopart-man",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)",
+      "modelDescription": "",
+      "modelImageName": "geminiflashimage25",
+      "exampleImages": []
+    },
+    "apiConfig": {
+      "provider": "runware",
+      "runwareModel": "google:4@1",
+      "endpoint": "https://api.runware.ai/v1",
+      "runwareConfig": {
+        "imageToImageMethod": "referenceImages",
+        "requiresDimensions": true,
+        "imageCompressionQuality": 0.9
+      }
+    },
+    "prompt": "Transform the subject in the uploaded photo into a visually explosive and trendy pop-art anime illustration while strictly preserving the exact facial identity, features, and likeness of the real person in the reference photo. The face must remain instantly recognizable as the same individual—no generic anime face, no heavy stylization that alters bone structure, eye shape, nose, mouth, jawline, or unique facial details. Even under the extreme Persona 5 / graffiti style, the character’s real-world face must stay 100% consistent and accurate to the photo.\\n\\nThe overall style must be a high-contrast blend of Persona 5’s aesthetic and street graffiti visuals, making the subject look like an extremely flamboyant, extremely flat, ultra-cool anime figure—like an over-the-top chuunibyou character or a phantom thief preparing for a special attack.\\n\\n• Character and Shading: Apply sharp cel-shading with hard, clean lines and crisp contours. The pose must be exaggerated and full of motion. Use a wide-angle or fisheye perspective to make parts (like the hands or props) appear extremely close to the camera, emphasizing the action. The expression should be highly dramatic, confident, manic, or cold-blooded “overacting” intensity, but it must still be the same person’s face from the photo performing that expression.\\n\\n• Color and Contrast: Reject realistic volume and shading. Instead, rely on large areas of pure black heavy shadows and highly saturated flat color blocks to create an extreme, high-contrast flat look. Use a palette of bright red, lemon yellow, electric blue, and neon purple, contrasting them against large black shadow silhouettes. Hair and eye color should match the reference photo exactly unless the photo is black-and-white.\\n\\n• Texture and Graphics: Integrate screentones, halftone dots, speed lines, and radiating lines in the shadows and background to create a maximalist, layered graphic feel, like printed manga mixed with street art. Add rough spray paint, smears, or hand-drawn graffiti textures in select areas (avoid placing heavy textures directly over the face that would obscure identity).\\n\\n• Background and UI: The background should be a flat visual collage stage—not a realistic perspective space. Fill it with huge sans-serif English letters, torn paper effects, ink splatters, bold arrow graphics, speech bubbles, and onomatopoeia (e.g., “BOOM,” “SLASH,” “WAKE UP” graffiti sound effects). Seamlessly integrate game UI elements (health bars, skill names, tooltips, buttons) floating around the main character, merging the game interface and the illustration, breaking the fourth wall.\\n\\n• Mood and Resolution: Keep the lighting high-contrast and graphic, not physically realistic. Edges must be very sharp, without soft gradients. The final mood must be extremely dynamic, chuunibyou, and cool, like the image is about to explode off the screen. Avoid realistic painting styles, low-saturation vintage looks, soft pastels, and natural landscapes. The image should be a vertical 2:3 high-resolution illustration suitable as a tension-filled, maximalist pop-art manga poster.\\n\\nKey consistency directives (repeat for best results): –identitical face to reference, same person, preserve exact facial structure, do not change eye-smile or genericize, keep real proportions and unique traits of the uploaded person’s face even in extreme anime style, face must remain 100% recognizable.",
+    "cost": 0.039,
+    "type": "Photo Filter",
+    "capabilities": ["Text to Image", "Image to Image"],
+    "category": "Video Games"
+  },
+
+  {
+    "display": {
+      "title": "Persona5 Graffiti Pop Art",
+      "imageName": "Persona5-graffitipopart-woman",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)",
+      "modelDescription": "",
+      "modelImageName": "geminiflashimage25",
+      "exampleImages": []
+    },
+    "apiConfig": {
+      "provider": "runware",
+      "runwareModel": "google:4@1",
+      "endpoint": "https://api.runware.ai/v1",
+      "runwareConfig": {
+        "imageToImageMethod": "referenceImages",
+        "requiresDimensions": true,
+        "imageCompressionQuality": 0.9
+      }
+    },
+    "prompt": "Transform the subject in the uploaded photo into a visually explosive and trendy pop-art anime illustration while strictly preserving the exact facial identity, features, and likeness of the real person in the reference photo. The face must remain instantly recognizable as the same individual—no generic anime face, no heavy stylization that alters bone structure, eye shape, nose, mouth, jawline, or unique facial details. Even under the extreme Persona 5 / graffiti style, the character’s real-world face must stay 100% consistent and accurate to the photo.\\n\\nThe overall style must be a high-contrast blend of Persona 5’s aesthetic and street graffiti visuals, making the subject look like an extremely flamboyant, extremely flat, ultra-cool anime figure—like an over-the-top chuunibyou character or a phantom thief preparing for a special attack.\\n\\n• Character and Shading: Apply sharp cel-shading with hard, clean lines and crisp contours. The pose must be exaggerated and full of motion. Use a wide-angle or fisheye perspective to make parts (like the hands or props) appear extremely close to the camera, emphasizing the action. The expression should be highly dramatic, confident, manic, or cold-blooded “overacting” intensity, but it must still be the same person’s face from the photo performing that expression.\\n\\n• Color and Contrast: Reject realistic volume and shading. Instead, rely on large areas of pure black heavy shadows and highly saturated flat color blocks to create an extreme, high-contrast flat look. Use a palette of bright red, lemon yellow, electric blue, and neon purple, contrasting them against large black shadow silhouettes. Hair and eye color should match the reference photo exactly unless the photo is black-and-white.\\n\\n• Texture and Graphics: Integrate screentones, halftone dots, speed lines, and radiating lines in the shadows and background to create a maximalist, layered graphic feel, like printed manga mixed with street art. Add rough spray paint, smears, or hand-drawn graffiti textures in select areas (avoid placing heavy textures directly over the face that would obscure identity).\\n\\n• Background and UI: The background should be a flat visual collage stage—not a realistic perspective space. Fill it with huge sans-serif English letters, torn paper effects, ink splatters, bold arrow graphics, speech bubbles, and onomatopoeia (e.g., “BOOM,” “SLASH,” “WAKE UP” graffiti sound effects). Seamlessly integrate game UI elements (health bars, skill names, tooltips, buttons) floating around the main character, merging the game interface and the illustration, breaking the fourth wall.\\n\\n• Mood and Resolution: Keep the lighting high-contrast and graphic, not physically realistic. Edges must be very sharp, without soft gradients. The final mood must be extremely dynamic, chuunibyou, and cool, like the image is about to explode off the screen. Avoid realistic painting styles, low-saturation vintage looks, soft pastels, and natural landscapes. The image should be a vertical 2:3 high-resolution illustration suitable as a tension-filled, maximalist pop-art manga poster.\\n\\nKey consistency directives (repeat for best results): –identitical face to reference, same person, preserve exact facial structure, do not change eye-smile or genericize, keep real proportions and unique traits of the uploaded person’s face even in extreme anime style, face must remain 100% recognizable.",
+    "cost": 0.039,
+    "type": "Photo Filter",
+    "capabilities": ["Text to Image", "Image to Image"],
+    "category": "Video Games"
   }
 ]

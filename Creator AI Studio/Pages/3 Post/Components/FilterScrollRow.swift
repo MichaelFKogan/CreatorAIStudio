@@ -39,9 +39,9 @@ struct FilterScrollRow: View {
     @State private var hasUserInteracted = false
 
     // Frame dimensions
-    private let frameWidth: CGFloat = 80
-    private let frameHeight: CGFloat = 80
-    private let thumbnailWidth: CGFloat = 70
+    private let frameWidth: CGFloat = 110
+    private let frameHeight: CGFloat = 110
+    private let thumbnailWidth: CGFloat = 100
 
     var body: some View {
         GeometryReader { geometry in
@@ -448,7 +448,7 @@ struct FilterThumbnailCompact: View {
                             }
                             .resizable()
                             .scaledToFill()
-                            .frame(width: 70, height: 70)
+                            .frame(width: 100, height: 100)
                             .clipped()
                             .cornerRadius(12)
                             .padding(0)
@@ -510,7 +510,7 @@ struct FilterThumbnailCompact: View {
                         Image(effectiveImageName)
                             .resizable()
                             .scaledToFill()
-                            .frame(width: 70, height: 70)
+                            .frame(width: 100, height: 100)
                             .clipped()
                             .cornerRadius(12)
                             .padding(0)

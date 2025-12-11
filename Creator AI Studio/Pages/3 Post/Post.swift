@@ -149,29 +149,29 @@ struct Post: View {
                                 {
                                     VStack(spacing: 12) {
 
-                                        // // Filter title above the image
-                                        // Text(displayFilter.display.title)
-                                        //     .font(
-                                        //         .system(
-                                        //             size: 18, weight: .semibold,
-                                        //             design: .rounded)
-                                        //     )
-                                        //     .foregroundColor(.white)
-                                        //     .lineLimit(1)
-                                        //     .truncationMode(.tail)
-                                        //     .frame(maxWidth: 300)
-                                        //     .opacity(
-                                        //         isScrollingActive ? 1.0 : 0
-                                        //     )
-                                        //     .animation(
-                                        //         .easeOut(duration: 0.3),
-                                        //         value: isScrollingActive
-                                        //     )
-                                        //     .shadow(
-                                        //         color: .black.opacity(0.8),
-                                        //         radius: 4,
-                                        //         x: 0,
-                                        //         y: 2)
+                                        // Filter title above the image
+                                        Text(displayFilter.display.title)
+                                            .font(
+                                                .system(
+                                                    size: 18, weight: .semibold,
+                                                    design: .rounded)
+                                            )
+                                            .foregroundColor(.white)
+                                            .lineLimit(1)
+                                            .truncationMode(.tail)
+                                            .frame(maxWidth: 300)
+                                            .opacity(
+                                                isScrollingActive ? 1.0 : 0
+                                            )
+                                            .animation(
+                                                .easeOut(duration: 0.3),
+                                                value: isScrollingActive
+                                            )
+                                            .shadow(
+                                                color: .black.opacity(0.8),
+                                                radius: 4,
+                                                x: 0,
+                                                y: 2)
 
                                         // Preview image
                                         // Check if imageName is a URL (for presets)
