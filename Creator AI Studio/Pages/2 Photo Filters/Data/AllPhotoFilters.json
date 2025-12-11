@@ -40,7 +40,7 @@
     "prompt": "",
     "cost": 0.005,
     "type": "Photo Filter",
-    "category": "Artistic"
+    "category": "Anime"
   },
   {
     "display": {
@@ -83,7 +83,7 @@
     "prompt": "",
     "cost": 0.005,
     "type": "Photo Filter",
-    "category": "Artistic"
+    "category": "Anime"
   },
 
   {
@@ -115,7 +115,7 @@
     "cost": 0.04,
     "type": "Photo Filter",
     "capabilities": ["Text to Image", "Image to Image"],
-    "category": "Artistic"
+    "category": "Anime"
   },
   {
     "display": {
@@ -146,7 +146,7 @@
     "cost": 0.04,
     "type": "Photo Filter",
     "capabilities": ["Text to Image", "Image to Image"],
-    "category": "Artistic"
+    "category": "Anime"
   },
 
   {
@@ -173,7 +173,7 @@
     "cost": 0.04,
     "type": "Photo Filter",
     "capabilities": ["Text to Image", "Image to Image"],
-    "category": "Artistic"
+    "category": "Anime"
   },
   {
     "display": {
@@ -199,7 +199,7 @@
     "cost": 0.04,
     "type": "Photo Filter",
     "capabilities": ["Text to Image", "Image to Image"],
-    "category": "Artistic"
+    "category": "Anime"
   },
 
   {
@@ -226,7 +226,7 @@
     "cost": 0.03,
     "type": "Photo Filter",
     "capabilities": ["Text to Image", "Image to Image"],
-    "category": "Artistic"
+    "category": "Anime"
   },
 
   {
@@ -253,7 +253,7 @@
     "cost": 0.03,
     "type": "Photo Filter",
     "capabilities": ["Text to Image", "Image to Image"],
-    "category": "Artistic"
+    "category": "Anime"
   },
 
   {
@@ -280,7 +280,7 @@
     "cost": 0.039,
     "type": "Photo Filter",
     "capabilities": ["Text to Image", "Image to Image"],
-    "category": "Artistic"
+    "category": "Art"
   },
 
   {
@@ -307,7 +307,7 @@
     "cost": 0.039,
     "type": "Photo Filter",
     "capabilities": ["Text to Image", "Image to Image"],
-    "category": "Artistic"
+    "category": "Art"
   },
   {
     "display": {
@@ -333,7 +333,7 @@
     "cost": 0.039,
     "type": "Photo Filter",
     "capabilities": ["Text to Image", "Image to Image"],
-    "category": "Creative"
+    "category": "Character"
   },
   {
     "display": {
@@ -359,6 +359,6 @@
     "cost": 0.039,
     "type": "Photo Filter",
     "capabilities": ["Text to Image", "Image to Image"],
-    "category": "Creative"
+    "category": "Character"
   }
 ]

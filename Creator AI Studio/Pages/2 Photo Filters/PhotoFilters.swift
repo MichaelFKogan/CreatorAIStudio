@@ -5,7 +5,9 @@ import Combine
 // MARK: - Filter Category
 
 enum FilterCategory: String, CaseIterable, Identifiable {
-    case artistic = "Artistic"
+    case art = "Art"
+    case anime = "Anime"
+    case character = "Character"
     case gaming = "Gaming"
     case creative = "Creative"
     case photography = "Photography"
@@ -14,30 +16,14 @@ enum FilterCategory: String, CaseIterable, Identifiable {
 
     var icon: String {
         switch self {
-        case .artistic: return "paintbrush.fill"
+        case .art: return "paintbrush.fill"
+        case .anime: return "sparkles"
+        case .character: return "figure.stand"
         case .gaming: return "gamecontroller.fill"
-        case .creative: return "sparkles"
+        case .creative: return "paintbrush.fill"
         case .photography: return "camera.fill"
-        }
-    }
-
-    func matches(_ filter: InfoPacket) -> Bool {
-        // Use the category field if available, otherwise fall back to title matching for backward compatibility
-        if let category = filter.category {
-            return category == rawValue
-        }
-        
-        // Fallback to title matching for filters without category field
-        let title = filter.display.title.lowercased()
-        switch self {
-        case .artistic:
-            return title.contains("anime") || title.contains("watercolor") || title.contains("vangogh") || title.contains("van gogh")
-        case .gaming:
-            return title.contains("blocky") || title.contains("cyberpunk") || title.contains("futuristic") || title.contains("minecraft")
-        case .creative:
-            return title.contains("snow globe") || title.contains("felt") || title.contains("polaroid") || title.contains("plastic") || title.contains("bubble") || title.contains("micro landscape") || title.contains("designer toy")
-        case .photography:
-            return title.contains("low-key") || title.contains("lighting") || title.contains("photography")
+//        case luxury: return ""
+//        case fashion: return ""
         }
     }
 }
@@ -55,13 +41,26 @@ class PhotoFiltersViewModel: ObservableObject {
         }
     }
 
-    // Categorized filters
-    var categorizedFilters: [FilterCategory: [InfoPacket]] {
-        var result: [FilterCategory: [InfoPacket]] = [:]
-        for category in FilterCategory.allCases {
-            result[category] = filters.filter { category.matches($0) }
+    // Categorized filters - dynamically extracted from JSON category field
+    var categorizedFilters: [String: [InfoPacket]] {
+        var result: [String: [InfoPacket]] = [:]
+        
+        // Group filters by their category field
+        for filter in filters {
+            if let category = filter.category, !category.isEmpty {
+                if result[category] == nil {
+                    result[category] = []
+                }
+                result[category]?.append(filter)
+            }
         }
+        
         return result
+    }
+    
+    // Get sorted category names for display
+    var sortedCategoryNames: [String] {
+        categorizedFilters.keys.sorted()
     }
 
     init() {

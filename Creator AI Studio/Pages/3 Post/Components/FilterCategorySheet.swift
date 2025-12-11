@@ -37,7 +37,7 @@ struct CompactFiltersGrid: View {
 
 struct FilterCategorySheet: View {
     @Binding var isPresented: Bool
-    let categorizedFilters: [FilterCategory: [InfoPacket]]
+    let categorizedFilters: [String: [InfoPacket]]
     let allFilters: [InfoPacket]
     let imageModels: [InfoPacket]
     @Binding var selectedFilter: InfoPacket?
@@ -45,7 +45,7 @@ struct FilterCategorySheet: View {
     let onSelect: (InfoPacket) -> Void
     let onSelectModel: (InfoPacket) -> Void
 
-    @State private var expandedCategories: Set<FilterCategory> = []
+    @State private var expandedCategories: Set<String> = []
 //    @StateObject private var presetViewModel = PresetViewModel()
     @EnvironmentObject var authViewModel: AuthViewModel
 
@@ -142,33 +142,31 @@ struct FilterCategorySheet: View {
                             .background(Color.white.opacity(0.2))
                             .padding(.vertical, 8)
 
-                        // Category sections
-                        ForEach(FilterCategory.allCases) { category in
-                            if let filters = categorizedFilters[category],
+                        // Category sections - dynamically generated from JSON
+                        ForEach(Array(categorizedFilters.keys.sorted()), id: \.self) { categoryName in
+                            if let filters = categorizedFilters[categoryName],
                                 !filters.isEmpty
                             {
                                 CategorySection(
-                                    title: category.rawValue,
-                                    icon: category.icon,
+                                    title: categoryName,
+                                    icon: iconForCategory(categoryName),
                                     filters: filters,
                                     selectedFilter: selectedFilter,
                                     onSelect: { filter in
                                         onSelect(filter)
                                     },
-                                    isExpanded: expandedCategories.contains(
-                                        category),
+                                    isExpanded: expandedCategories.contains(categoryName),
                                     isAlwaysExpanded: false,
                                     onToggle: {
-                                        if expandedCategories.contains(category)
-                                        {
-                                            expandedCategories.remove(category)
+                                        if expandedCategories.contains(categoryName) {
+                                            expandedCategories.remove(categoryName)
                                         } else {
-                                            expandedCategories.insert(category)
+                                            expandedCategories.insert(categoryName)
                                         }
                                     }
                                 )
 
-                                if category != FilterCategory.allCases.last {
+                                if categoryName != categorizedFilters.keys.sorted().last {
                                     Divider()
                                         .background(Color.white.opacity(0.2))
                                         .padding(.vertical, 4)
@@ -201,6 +199,32 @@ struct FilterCategorySheet: View {
 //                }
 //            }
 //        }
+    }
+    
+    // Helper function to get icon for category name
+    private func iconForCategory(_ categoryName: String) -> String {
+        // Try to match with FilterCategory enum first for known categories
+        if let category = FilterCategory(rawValue: categoryName) {
+            return category.icon
+        }
+        
+        // Default icons for common category names
+        let lowercased = categoryName.lowercased()
+        if lowercased.contains("anime") {
+            return "sparkles.rectangle.stack.fill"
+        } else if lowercased.contains("character") || lowercased.contains("figure") {
+            return "figure.stand"
+        } else if lowercased.contains("art") || lowercased.contains("artistic") {
+            return "paintbrush.fill"
+        } else if lowercased.contains("game") || lowercased.contains("gaming") {
+            return "gamecontroller.fill"
+        } else if lowercased.contains("photo") || lowercased.contains("camera") {
+            return "camera.fill"
+        } else if lowercased.contains("creative") || lowercased.contains("design") {
+            return "sparkles"
+        } else {
+            return "square.grid.2x2.fill" // Default icon
+        }
     }
 }
 

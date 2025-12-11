@@ -658,14 +658,12 @@ struct Post: View {
             return "AI Models"
         }
 
-        // Check which filter category it belongs to
-        for category in FilterCategory.allCases {
-            if category.matches(item) {
-                return category.rawValue
-            }
+        // Use the category field directly from JSON
+        if let category = item.category, !category.isEmpty {
+            return category
         }
 
-        // If it doesn't match any specific category, it's in "Popular"
+        // If it doesn't have a category, it's in "Popular"
         return "Popular"
     }
 
