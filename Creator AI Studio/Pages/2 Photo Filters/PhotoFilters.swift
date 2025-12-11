@@ -148,16 +148,17 @@ struct PhotoFilters: View {
                         
                         // All Filters section
                         VStack(alignment: .leading, spacing: 12) {
-                            HStack {
-                                Image(systemName: "square.grid.2x2.fill")
-                                    .font(.system(size: 16))
-                                    .foregroundColor(.green)
-                                Text("Photo Filters")
-                                    .font(.system(size: 18, weight: .semibold))
-                                    .foregroundColor(.primary)
-                                Spacer()
-                            }
-                            .padding(.horizontal, 16)
+                            // HStack {
+                            //     Image(systemName: "square.grid.2x2.fill")
+                            //         .font(.system(size: 16))
+                            //         .foregroundColor(.green)
+                            //     Text("Photo Filters")
+                            //         .font(.system(size: 18, weight: .semibold))
+                            //         .foregroundColor(.primary)
+                            //     Spacer()
+                            // }
+                            // .padding(.horizontal, 16)
+
 //                            .padding(.top, presetInfoPackets.isEmpty ? 16 : 8)
                             
                             PhotoFiltersGrid(

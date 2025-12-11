@@ -81,7 +81,16 @@ class NotificationManager: ObservableObject {
         notifications[index].title = title
     }
     
-    /// Dismiss a specific notification by ID
+    /// Hide a notification from the notification bar (but keep it for placeholders)
+    @MainActor
+    func hideNotificationFromBar(id: UUID) {
+        guard let index = notifications.firstIndex(where: { $0.id == id }) else { return }
+        withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) {
+            notifications[index].isHiddenFromBar = true
+        }
+    }
+    
+    /// Dismiss a specific notification by ID (removes it completely)
     @MainActor
     func dismissNotification(id: UUID) {
         withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) {

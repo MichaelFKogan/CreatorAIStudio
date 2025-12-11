@@ -21,6 +21,7 @@ struct NotificationData: Identifiable, Equatable {
     var modelName: String? // Model name for retry
     var prompt: String? // Prompt for retry
     var originalImage: UIImage? // Original image for retry
+    var isHiddenFromBar: Bool // Whether notification is hidden from the notification bar but still shows as placeholder
     
     static func == (lhs: NotificationData, rhs: NotificationData) -> Bool {
         lhs.id == rhs.id
@@ -30,6 +31,7 @@ struct NotificationData: Identifiable, Equatable {
             && lhs.message == rhs.message
             && lhs.errorMessage == rhs.errorMessage
             && lhs.taskId == rhs.taskId
+            && lhs.isHiddenFromBar == rhs.isHiddenFromBar
     }
     
     init(
@@ -44,7 +46,8 @@ struct NotificationData: Identifiable, Equatable {
         taskId: UUID? = nil,
         modelName: String? = nil,
         prompt: String? = nil,
-        originalImage: UIImage? = nil
+        originalImage: UIImage? = nil,
+        isHiddenFromBar: Bool = false
     ) {
         self.id = id
         self.title = title
@@ -58,6 +61,7 @@ struct NotificationData: Identifiable, Equatable {
         self.modelName = modelName
         self.prompt = prompt
         self.originalImage = originalImage
+        self.isHiddenFromBar = isHiddenFromBar
     }
 }
 

@@ -5,13 +5,14 @@ struct NotificationBar: View {
     @ObservedObject var notificationManager: NotificationManager
     
     var body: some View {
-        if !notificationManager.notifications.isEmpty && notificationManager.isNotificationBarVisible {
+        let visibleNotifications = notificationManager.notifications.filter { !$0.isHiddenFromBar }
+        if !visibleNotifications.isEmpty && notificationManager.isNotificationBarVisible {
             VStack(spacing: 8) {
-                ForEach(notificationManager.notifications) { notification in
+                ForEach(visibleNotifications) { notification in
                     NotificationCard(
                         notification: notification,
                         onDismiss: {
-                            notificationManager.dismissNotification(id: notification.id)
+                            notificationManager.hideNotificationFromBar(id: notification.id)
                         },
                         onCancel: {
                             notificationManager.cancelTask(notificationId: notification.id)
