@@ -405,10 +405,10 @@ struct PhotoConfirmationView: View {
                             )
                             .font(.system(size: 9))
 
-                        Text("$5.00")
+                        Text("250")
                             .font(.system(size: 16, weight: .semibold, design: .rounded))
                             .foregroundColor(.primary)
-                        Text("credits left")
+                        Text("credits")
                             .font(.caption2)
                             .foregroundColor(.secondary)
                     }

@@ -45,7 +45,7 @@ struct Home: View {
                                 )
                                 .font(.system(size: 8))
 
-                            Text("$5.00")
+                            Text("250")
                                 .font(
                                     .system(
                                         size: 14, weight: .semibold,
@@ -53,7 +53,7 @@ struct Home: View {
                                 )
                                 .foregroundColor(.primary)
 
-                            Text("credits left")
+                            Text("credits")
                                 .font(.caption2)
                                 .foregroundColor(.secondary)
                         }

@@ -15,9 +15,14 @@ struct FilterScrollRow: View {
     var onCapture: (() -> Void)? = nil
     var isCaptureEnabled: Bool = false
 
-    // Combined items: presets first, then image models, then filters
+    // // Combined items: presets first, then image models, then filters
+    // private var allItems: [InfoPacket] {
+    //     presets + imageModels + filters
+    // }
+
+        // Combined items: presets first, then image models, then filters
     private var allItems: [InfoPacket] {
-        presets + imageModels + filters
+        imageModels + filters
     }
 
     @State private var filterPositions: [UUID: CGFloat] = [:]
@@ -463,12 +468,9 @@ struct FilterThumbnailCompact: View {
                                 VStack(alignment: .trailing, spacing: 3) {
                                     // Price badge (always visible if cost exists)
                                     if let cost = cost {
-                                        Text(
-                                            "$\(NSDecimalNumber(decimal: cost).stringValue)"
-                                        )
-                                        .font(
-                                            .system(size: 9, weight: .semibold)
-                                        )
+                                        // Text( "$\(NSDecimalNumber(decimal: cost).stringValue)")
+                                        Text("\(cost.credits)")
+                                        .font(.system(size: 9, weight: .semibold))
                                         .foregroundColor(.white)
                                         .padding(.horizontal, 5)
                                         .padding(.vertical, 2)
@@ -482,26 +484,27 @@ struct FilterThumbnailCompact: View {
                                             y: 1)
                                     }
 
-                                    // Checkmark (shown when selected, below price)
-                                    if isSelected {
-                                        Image(systemName: "checkmark.circle.fill")
-                                            .font(.system(size: 18))
-                                            .foregroundStyle(.white)
-                                            .background(
-                                                Circle()
-                                                    .fill(
-                                                        LinearGradient(
-                                                            colors: [.purple, .pink],
-                                                            startPoint: .topLeading,
-                                                            endPoint: .bottomTrailing
-                                                        )
-                                                    )
-                                                    .frame(width: 22, height: 22)
-                                            )
-                                            .transition(.scale.combined(with: .opacity))
-                                    }
-                                },
-                                alignment: .topTrailing
+                                    // // Checkmark (shown when selected, below price)
+                                    // if isSelected {
+                                    //     Image(systemName: "checkmark.circle.fill")
+                                    //         .font(.system(size: 18))
+                                    //         .foregroundStyle(.white)
+                                    //         .background(
+                                    //             Circle()
+                                    //                 .fill(
+                                    //                     LinearGradient(
+                                    //                         colors: [.purple, .pink],
+                                    //                         startPoint: .topLeading,
+                                    //                         endPoint: .bottomTrailing
+                                    //                     )
+                                    //                 )
+                                    //                 .frame(width: 22, height: 22)
+                                    //         )
+                                    //         .transition(.scale.combined(with: .opacity))
+                                    // }
+                                }
+                                .padding(3),
+                                alignment: .bottomTrailing
                             )
                     } else {
                         Image(effectiveImageName)
@@ -527,45 +530,36 @@ struct FilterThumbnailCompact: View {
                                 VStack(alignment: .trailing, spacing: 3) {
                                     // Price badge (always visible if cost exists)
                                     if let cost = cost {
-                                        Text(
-                                            "$\(NSDecimalNumber(decimal: cost).stringValue)"
-                                        )
-                                        .font(
-                                            .system(size: 9, weight: .semibold)
-                                        )
+                                        // Text("$\(NSDecimalNumber(decimal: cost).stringValue)")
+                                        Text("\(cost.credits)")
+                                        .font(.system(size: 9, weight: .semibold))
                                         .foregroundColor(.white)
                                         .padding(.horizontal, 5)
                                         .padding(.vertical, 2)
-                                        .background(
-                                            Capsule()
-                                                .fill(Color.black.opacity(0.7))
-                                        )
-                                        .shadow(
-                                            color: .black.opacity(0.3),
-                                            radius: 2, x: 0,
-                                            y: 1)
-                                    }
+                                        .background( Capsule().fill(Color.black.opacity(0.7)))
+                                        .shadow( color: .black.opacity(0.3), radius: 2, x: 0,y: 1)}
 
-                                    // Checkmark (shown when selected, below price)
-                                    if isSelected {
-                                        Image(systemName: "checkmark.circle.fill")
-                                            .font(.system(size: 18))
-                                            .foregroundStyle(.white)
-                                            .background(
-                                                Circle()
-                                                    .fill(
-                                                        LinearGradient(
-                                                            colors: [.purple, .pink],
-                                                            startPoint: .topLeading,
-                                                            endPoint: .bottomTrailing
-                                                        )
-                                                    )
-                                                    .frame(width: 22, height: 22)
-                                            )
-                                            .transition(.scale.combined(with: .opacity))
-                                    }
-                                },
-                                alignment: .topTrailing
+                                    // // Checkmark (shown when selected, below price)
+                                    // if isSelected {
+                                    //     Image(systemName: "checkmark.circle.fill")
+                                    //         .font(.system(size: 18))
+                                    //         .foregroundStyle(.white)
+                                    //         .background(
+                                    //             Circle()
+                                    //                 .fill(
+                                    //                     LinearGradient(
+                                    //                         colors: [.purple, .pink],
+                                    //                         startPoint: .topLeading,
+                                    //                         endPoint: .bottomTrailing
+                                    //                     )
+                                    //                 )
+                                    //                 .frame(width: 22, height: 22)
+                                    //         )
+                                    //         .transition(.scale.combined(with: .opacity))
+                                    // }
+                                }
+                                .padding(3),
+                                alignment: .bottomTrailing
                             )
                     }
                 }

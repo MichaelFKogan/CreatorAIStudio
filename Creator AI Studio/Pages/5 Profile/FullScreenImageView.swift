@@ -273,6 +273,11 @@ struct FullScreenImageView: View {
         formatter.minimumFractionDigits = 0  // Don't force trailing zeros
         return formatter.string(from: NSNumber(value: cost)) ?? "$\(cost)"
     }
+    
+    // Helper function to format credits
+    private func formatCredits(_ credits: Int) -> String {
+        return "\(credits) credits"
+    }
 
     // MARK: - View Components
     
@@ -530,7 +535,7 @@ struct FullScreenImageView: View {
                 shareButton
             }
             saveButton
-            presetButton
+            // presetButton
             deleteButton
         }
         .padding(.top, 8)
@@ -736,8 +741,8 @@ struct FullScreenImageView: View {
             }
             if let cost = userImage.cost {
                 MetadataCard(
-                    icon: "dollarsign.circle.fill", label: "Cost",
-                    value: formatCost(cost))
+                    icon: "dollarsign.circle.fill", label: "Credits",
+                    value: formatCredits(cost.credits))
             }
             if isWavespeed {
                 MetadataCard(icon: "cpu.fill", label: "Model", value: "WaveSpeed")
@@ -799,8 +804,8 @@ struct FullScreenImageView: View {
             }
             if let cost = userImage.cost {
                 MetadataCard(
-                    icon: "dollarsign.circle.fill", label: "Cost",
-                    value: formatCost(cost))
+                    icon: "dollarsign.circle.fill", label: "Credits",
+                    value: formatCredits(cost.credits))
             }
             if let model = userImage.model, !model.isEmpty {
                 MetadataCard(icon: "cpu.fill", label: "Model", value: model)
@@ -1602,5 +1607,21 @@ struct CreatePresetSheet: View {
                 showError = true
             }
         }
+    }
+}
+
+// MARK: - Credit Conversion Helper
+extension Double {
+    /// Converts dollar amount to credits (1 credit = $0.01)
+    var credits: Int {
+        return Int((self * 100).rounded())
+    }
+}
+
+extension Optional where Wrapped == Double {
+    /// Converts dollar amount to credits, returns 0 if nil
+    var credits: Int {
+        guard let value = self else { return 0 }
+        return value.credits
     }
 }

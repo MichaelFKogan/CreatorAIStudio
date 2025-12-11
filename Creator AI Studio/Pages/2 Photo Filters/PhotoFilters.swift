@@ -115,35 +115,36 @@ struct PhotoFilters: View {
             VStack(spacing: 0) {
                 ScrollView {
                     VStack(spacing: 0) {
-                        // Presets section (if any exist)
-                        if !presetInfoPackets.isEmpty {
-                            VStack(alignment: .leading, spacing: 0) {
-                                HStack {
-                                    Image(systemName: "bookmark.fill")
-                                        .font(.system(size: 16))
-                                        .foregroundColor(.blue)
-                                    Text("My Presets")
-                                        .font(.system(size: 18, weight: .semibold))
-                                        .foregroundColor(.primary)
-                                    Spacer()
-                                }
-                                .padding(.horizontal, 16)
-                                .padding(.top, 16)
+                        
+                        // // Presets section (if any exist)
+                        // if !presetInfoPackets.isEmpty {
+                        //     VStack(alignment: .leading, spacing: 0) {
+                        //         HStack {
+                        //             Image(systemName: "bookmark.fill")
+                        //                 .font(.system(size: 16))
+                        //                 .foregroundColor(.blue)
+                        //             Text("My Presets")
+                        //                 .font(.system(size: 18, weight: .semibold))
+                        //                 .foregroundColor(.primary)
+                        //             Spacer()
+                        //         }
+                        //         .padding(.horizontal, 16)
+                        //         .padding(.top, 16)
                                 
-                                PhotoFiltersGrid(
-                                    filters: presetInfoPackets,
-                                    selectedFilter: selectedFilter,
-                                    onSelect: { filter in
-                                        selectedFilter = filter
-                                        navigationPath.append(filter)
-                                    }
-                                )
+                        //         PhotoFiltersGrid(
+                        //             filters: presetInfoPackets,
+                        //             selectedFilter: selectedFilter,
+                        //             onSelect: { filter in
+                        //                 selectedFilter = filter
+                        //                 navigationPath.append(filter)
+                        //             }
+                        //         )
                                 
-                                Divider()
-                                    .padding(.horizontal, 16)
-                                    .padding(.top, 8)
-                            }
-                        }
+                        //         Divider()
+                        //             .padding(.horizontal, 16)
+                        //             .padding(.top, 8)
+                        //     }
+                        // }
                         
                         // All Filters section
                         VStack(alignment: .leading, spacing: 12) {
@@ -206,7 +207,7 @@ struct PhotoFilters: View {
                                 )
                             )
                             .font(.system(size: 8))
-                        Text("$5.00")
+                        Text("250")
                             .font(
                                 .system(
                                     size: 14, weight: .semibold,
@@ -214,7 +215,7 @@ struct PhotoFilters: View {
                                 )
                             )
                             .foregroundColor(.white)
-                        Text("credits left")
+                        Text("credits")
                             .font(.caption2)
                             .foregroundColor(.white.opacity(0.9))
                     }

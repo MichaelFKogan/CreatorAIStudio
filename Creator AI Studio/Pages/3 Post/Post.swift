@@ -34,7 +34,7 @@ struct Post: View {
     }
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 // Black background
                 Color.black.ignoresSafeArea()
@@ -245,9 +245,8 @@ struct Post: View {
                                                 if let cost = displayFilter
                                                     .cost
                                                 {
-                                                    Text(
-                                                        "$\(NSDecimalNumber(decimal: cost).stringValue)"
-                                                    )
+                                                    // Text( "$\(NSDecimalNumber(decimal: cost).stringValue)")
+                                                    Text("\(cost.credits)")
                                                     .font(
                                                         .system(
                                                             size: 13,
@@ -594,6 +593,14 @@ struct Post: View {
                     shouldShowCapturedImage = false
                 }
             }
+            .background(
+                NavigationLink(
+                    destination: photoReviewDestination,
+                    isActive: $navigateToPhotoReview
+                ) {
+                    EmptyView()
+                }
+            )
             .sheet(isPresented: $showLibraryPicker) {
                 PhotoLibraryPickerView(
                     isPresented: $showLibraryPicker,
@@ -628,9 +635,6 @@ struct Post: View {
                 )
                 .environmentObject(authViewModel)
             }
-            .background(
-                photoReviewNavigationLink
-            )
         }
     }
 
@@ -665,15 +669,7 @@ struct Post: View {
         return "Popular"
     }
 
-    private var photoReviewNavigationLink: some View {
-        NavigationLink(
-            destination: photoReviewDestination,
-            isActive: $navigateToPhotoReview
-        ) {
-            EmptyView()
-        }
-    }
-
+    @ViewBuilder
     private var photoReviewDestination: some View {
         Group {
             if let capturedImage = cameraService.capturedImage {

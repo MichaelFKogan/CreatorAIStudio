@@ -378,7 +378,7 @@ private struct ImageModelGridItem: View {
 
                 Spacer()
 
-                Text("$\(NSDecimalNumber(decimal: item.cost ?? 0).stringValue)")
+                Text("\(item.cost.credits) credits")
                     .font(.system(size: 12, weight: .semibold, design: .rounded))
                     .foregroundColor(.blue)
             }
@@ -416,9 +416,13 @@ private struct ImageModelListItem: View {
             Spacer()
 
             VStack(alignment: .trailing) {
-                Text("$\(NSDecimalNumber(decimal: item.cost ?? 0).stringValue)")
-                    .font(.system(size: 15, weight: .semibold, design: .rounded))
-                    .foregroundColor(.blue)
+                Text("\(item.cost.credits)")
+                    .font(.caption)
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color.secondary.opacity(0.4))
+                    .clipShape(Capsule())
                 Text("per image")
                     .font(.caption2)
                     .foregroundColor(.secondary)
@@ -454,13 +458,13 @@ private struct CreditsToolbar: ToolbarContent {
                         )
                     )
 
-                Text("$5.00")
+                Text("250")
                     .font(.system(size: 14, weight: .semibold, design: .rounded))
-                    .foregroundColor(.white)
+                    .foregroundColor(.white).opacity(0.9)
 
-                Text("credits left")
+                Text("credits")
                     .font(.caption2)
-                    .foregroundColor(.white.opacity(0.9))
+                    .foregroundColor(.secondary)
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
@@ -524,5 +528,22 @@ private struct EmptyStateView: View {
                 .foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity, minHeight: 120)
+    }
+}
+
+// MARK: - Credit Conversion Helper
+extension Decimal {
+    /// Converts dollar amount to credits (1 credit = $0.01)
+    var credits: Int {
+        let dollars = NSDecimalNumber(decimal: self).doubleValue
+        return Int((dollars * 100).rounded())
+    }
+}
+
+extension Optional where Wrapped == Decimal {
+    /// Converts dollar amount to credits, returns 0 if nil
+    var credits: Int {
+        guard let value = self else { return 0 }
+        return value.credits
     }
 }

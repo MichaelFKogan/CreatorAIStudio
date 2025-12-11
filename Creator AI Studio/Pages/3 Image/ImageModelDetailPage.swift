@@ -741,10 +741,10 @@ struct CreditsView: View {
                     )
                 )
                 .font(.system(size: 8))
-            Text("$5.00").font(
+            Text("$250").font(
                 .system(size: 14, weight: .semibold, design: .rounded)
             ).foregroundColor(.primary)
-            Text("credits left").font(.caption2).foregroundColor(.secondary)
+            Text("credits").font(.caption2).foregroundColor(.secondary)
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 6)

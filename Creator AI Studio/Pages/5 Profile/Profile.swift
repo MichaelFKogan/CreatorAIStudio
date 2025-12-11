@@ -275,15 +275,15 @@ struct ProfileViewContent: View {
                         selectedModel = nil
                     }
 
-                    // Presets pill
-                    GalleryTabPill(
-                        title: "Presets",
-                        icon: "slider.horizontal.3",
-                        isSelected: false,
-                        count: presetViewModel.presets.count
-                    ) {
-                        showPresetsSheet = true
-                    }
+                    // // Presets pill
+                    // GalleryTabPill(
+                    //     title: "Presets",
+                    //     icon: "slider.horizontal.3",
+                    //     isSelected: false,
+                    //     count: presetViewModel.presets.count
+                    // ) {
+                    //     showPresetsSheet = true
+                    // }
 
                     imageModelsButton
                 }
@@ -508,19 +508,19 @@ struct ImageGridView: View {
                                                 .allowsHitTesting(false)
                                         }
                                         
-                                        // Bookmark icon (blue) if preset is enabled
-                                        if hasMatchingPreset(for: userImage) {
-                                            ZStack {
-                                                Circle()
-                                                    .fill(Color.black)
-                                                    .frame(width: 28, height: 28)
+                                        // // Bookmark icon (blue) if preset is enabled
+                                        // if hasMatchingPreset(for: userImage) {
+                                        //     ZStack {
+                                        //         Circle()
+                                        //             .fill(Color.black)
+                                        //             .frame(width: 28, height: 28)
                                                 
-                                                Image(systemName: "bookmark.fill")
-                                                    .font(.system(size: 12, weight: .semibold))
-                                                    .foregroundColor(.blue)
-                                            }
-                                            .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 1)
-                                        }
+                                        //         Image(systemName: "bookmark.fill")
+                                        //             .font(.system(size: 12, weight: .semibold))
+                                        //             .foregroundColor(.blue)
+                                        //     }
+                                        //     .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 1)
+                                        // }
                                     }
                                 }
                                 Spacer()
@@ -607,19 +607,19 @@ struct ImageGridView: View {
                                                 .allowsHitTesting(false)
                                         }
                                         
-                                        // Bookmark icon (blue) if preset is enabled
-                                        if hasMatchingPreset(for: userImage) {
-                                            ZStack {
-                                                Circle()
-                                                    .fill(Color.gray.opacity(0.7))
-                                                    .frame(width: 24, height: 24)
+                                        // // Bookmark icon (blue) if preset is enabled
+                                        // if hasMatchingPreset(for: userImage) {
+                                        //     ZStack {
+                                        //         Circle()
+                                        //             .fill(Color.gray.opacity(0.7))
+                                        //             .frame(width: 24, height: 24)
                                                 
-                                                Image(systemName: "bookmark.fill")
-                                                    .font(.system(size: 12, weight: .semibold))
-                                                    .foregroundColor(.blue)
-                                            }
-                                            .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 1)
-                                        }
+                                        //         Image(systemName: "bookmark.fill")
+                                        //             .font(.system(size: 12, weight: .semibold))
+                                        //             .foregroundColor(.blue)
+                                        //     }
+                                        //     .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 1)
+                                        // }
                                     }
                                 }
                                 Spacer()

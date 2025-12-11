@@ -1,5 +1,5 @@
-import SwiftUI
 import Kingfisher
+import SwiftUI
 
 // MARK: - Filter Thumbnail (Square)
 
@@ -9,9 +9,12 @@ struct FilterThumbnail: View {
     let isSelected: Bool
     let size: CGFloat
     let cost: Decimal?
-    let imageUrl: String? // Optional URL for user-generated images (presets)
+    let imageUrl: String?  // Optional URL for user-generated images (presets)
 
-    init(title: String, imageName: String, isSelected: Bool, size: CGFloat, cost: Decimal?, imageUrl: String? = nil) {
+    init(
+        title: String, imageName: String, isSelected: Bool, size: CGFloat,
+        cost: Decimal?, imageUrl: String? = nil
+    ) {
         self.title = title
         self.imageName = imageName
         self.isSelected = isSelected
@@ -19,17 +22,17 @@ struct FilterThumbnail: View {
         self.cost = cost
         self.imageUrl = imageUrl
     }
-    
+
     // Check if imageName is a URL
     private var isImageUrl: Bool {
         imageName.hasPrefix("http://") || imageName.hasPrefix("https://")
     }
-    
+
     // Use imageUrl if provided, otherwise check if imageName is a URL
     private var effectiveImageUrl: String? {
         imageUrl ?? (isImageUrl ? imageName : nil)
     }
-    
+
     private var effectiveImageName: String {
         isImageUrl ? "" : imageName
     }
@@ -39,7 +42,9 @@ struct FilterThumbnail: View {
             ZStack(alignment: .topTrailing) {
                 // Use KFImage for URLs, Image for local assets
                 Group {
-                    if let urlString = effectiveImageUrl, let url = URL(string: urlString) {
+                    if let urlString = effectiveImageUrl,
+                        let url = URL(string: urlString)
+                    {
                         KFImage(url)
                             .placeholder {
                                 Rectangle()
@@ -82,20 +87,25 @@ struct FilterThumbnail: View {
 
                                     // Price badge (always visible if cost exists)
                                     if let cost = cost {
-                                        Text(
-                                            "$\(NSDecimalNumber(decimal: cost).stringValue)"
-                                        )
-                                        .font(.system(size: 10, weight: .medium))
-                                        .foregroundColor(.white)
-                                        .padding(.horizontal, 4)
-                                        .padding(.vertical, 3)
-                                        .background(
-                                            Capsule()
-                                                .fill(Color.black.opacity(0.5))
-                                        )
-                                        .shadow(
-                                            color: .black.opacity(0.3), radius: 2, x: 0,
-                                            y: 1)
+                                        // Text("$\(NSDecimalNumber(decimal: cost).stringValue)")
+                                        Text("\(cost.credits)")
+                                            .font(
+                                                .system(
+                                                    size: 10, weight: .medium)
+                                            )
+                                            .foregroundColor(.white)
+                                            .padding(.horizontal, 5)
+                                            .padding(.vertical, 3)
+                                            .background(
+                                                Capsule()
+                                                    .fill(
+                                                        Color.black.opacity(0.7)
+                                                    )
+                                            )
+                                            .shadow(
+                                                color: .black.opacity(0.3),
+                                                radius: 2, x: 0,
+                                                y: 1)
                                     }
                                 }
                                 .padding(3),
@@ -139,20 +149,25 @@ struct FilterThumbnail: View {
 
                                     // Price badge (always visible if cost exists)
                                     if let cost = cost {
-                                        Text(
-                                            "$\(NSDecimalNumber(decimal: cost).stringValue)"
-                                        )
-                                        .font(.system(size: 10, weight: .medium))
-                                        .foregroundColor(.white)
-                                        .padding(.horizontal, 4)
-                                        .padding(.vertical, 3)
-                                        .background(
-                                            Capsule()
-                                                .fill(Color.black.opacity(0.5))
-                                        )
-                                        .shadow(
-                                            color: .black.opacity(0.3), radius: 2, x: 0,
-                                            y: 1)
+                                        // Text("$\(NSDecimalNumber(decimal: cost).stringValue)")
+                                        Text("\(cost.credits)")
+                                            .font(
+                                                .system(
+                                                    size: 10, weight: .medium)
+                                            )
+                                            .foregroundColor(.white)
+                                            .padding(.horizontal, 5)
+                                            .padding(.vertical, 3)
+                                            .background(
+                                                Capsule()
+                                                    .fill(
+                                                        Color.black.opacity(0.7)
+                                                    )
+                                            )
+                                            .shadow(
+                                                color: .black.opacity(0.3),
+                                                radius: 2, x: 0,
+                                                y: 1)
                                     }
                                 }
                                 .padding(3),

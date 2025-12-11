@@ -84,25 +84,25 @@ struct FilterCategorySheet: View {
                             .background(Color.white.opacity(0.2))
                             .padding(.vertical, 8)
 
-                        // Presets section (if any exist, shown first)
-                        if !presetInfoPackets.isEmpty {
-                            CategorySection(
-                                title: "My Presets",
-                                icon: "bookmark.fill",
-                                filters: presetInfoPackets,
-                                selectedFilter: selectedFilter ?? selectedImageModel,
-                                onSelect: { filter in
-                                    onSelect(filter)
-                                },
-                                isExpanded: true,
-                                isAlwaysExpanded: true
-                            )
-                            .padding(.top, 8)
+                        // // Presets section (if any exist, shown first)
+                        // if !presetInfoPackets.isEmpty {
+                        //     CategorySection(
+                        //         title: "My Presets",
+                        //         icon: "bookmark.fill",
+                        //         filters: presetInfoPackets,
+                        //         selectedFilter: selectedFilter ?? selectedImageModel,
+                        //         onSelect: { filter in
+                        //             onSelect(filter)
+                        //         },
+                        //         isExpanded: true,
+                        //         isAlwaysExpanded: true
+                        //     )
+                        //     .padding(.top, 8)
 
-                            Divider()
-                                .background(Color.white.opacity(0.2))
-                                .padding(.vertical, 8)
-                        }
+                        //     Divider()
+                        //         .background(Color.white.opacity(0.2))
+                        //         .padding(.vertical, 8)
+                        // }
 
                         // AI Models section (first row, always visible)
                         if !imageToImageModels.isEmpty {
