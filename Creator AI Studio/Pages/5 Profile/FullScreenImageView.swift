@@ -210,6 +210,8 @@ struct FullScreenImageView: View {
     @State private var showCreatePresetSheet = false
     @State private var showDeletePresetAlert = false
     @StateObject private var presetViewModel = PresetViewModel()
+    @State private var isSharing = false
+    @State private var shareItem: URL?
 
     // MARK: - Computed Properties
 
@@ -604,20 +606,33 @@ struct FullScreenImageView: View {
 
     @ViewBuilder
     private var shareButton: some View {
-        if let url = mediaURL {
-            ShareLink(item: url) {
-                VStack(spacing: 6) {
+        Button(action: {
+            Task {
+                await shareImage()
+            }
+        }) {
+            VStack(spacing: 6) {
+                if isSharing {
+                    ProgressView()
+                        .progressViewStyle(
+                            CircularProgressViewStyle(tint: .white)
+                        )
+                        .scaleEffect(0.8)
+                } else {
                     Image(systemName: "square.and.arrow.up")
                         .font(.system(size: 20, weight: .medium))
                         .foregroundColor(.white)
                         .opacity(0.8)
-                    Text("Share")
-                        .font(.caption)
-                        .foregroundColor(.gray)
                 }
+                Text("Share")
+                    .font(.caption)
+                    .foregroundColor(.gray)
             }
-            .buttonStyle(.plain)
-            .disabled(isDeleting || isDownloading)
+        }
+        .buttonStyle(.plain)
+        .disabled(isDeleting || isDownloading || isSharing)
+        .sheet(item: $shareItem) { url in
+            ShareSheet(activityItems: [url])
         }
     }
 
@@ -1102,6 +1117,49 @@ struct FullScreenImageView: View {
                         "Failed to download: \(error.localizedDescription)"
                 }
                 showDownloadError = true
+            }
+        }
+    }
+
+    // MARK: - Share Image
+
+    private func shareImage() async {
+        guard let url = mediaURL else {
+            return
+        }
+
+        await MainActor.run {
+            isSharing = true
+        }
+
+        do {
+            // Download the media data
+            let (data, _) = try await URLSession.shared.data(from: url)
+
+            // Create a temporary file
+            let tempURL = FileManager.default.temporaryDirectory
+                .appendingPathComponent(UUID().uuidString)
+                .appendingPathExtension(isVideo ? (userImage.file_extension ?? "mp4") : (userImage.file_extension ?? "jpg"))
+
+            // Write data to temporary file
+            try data.write(to: tempURL)
+
+            // Share the file URL
+            await MainActor.run {
+                isSharing = false
+                shareItem = tempURL
+            }
+
+            // Clean up the temporary file after a delay (to allow sharing to complete)
+            Task {
+                try? await Task.sleep(nanoseconds: 60_000_000_000) // 60 seconds
+                try? FileManager.default.removeItem(at: tempURL)
+            }
+
+        } catch {
+            print("❌ Failed to share media: \(error)")
+            await MainActor.run {
+                isSharing = false
             }
         }
     }
@@ -1650,6 +1708,23 @@ struct CreatePresetSheet: View {
             }
         }
     }
+}
+
+// MARK: - Share Sheet
+
+struct ShareSheet: UIViewControllerRepresentable {
+    let activityItems: [Any]
+    let applicationActivities: [UIActivity]? = nil
+
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        let controller = UIActivityViewController(
+            activityItems: activityItems,
+            applicationActivities: applicationActivities
+        )
+        return controller
+    }
+
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
 
 // MARK: - Credit Conversion Helper

@@ -2,7 +2,49 @@
   {
     "display": {
       "title": "Anime 1",
-      "imageName": "anime1",
+      "imageName": "anime1-boy-ghibli-wavespeed",
+      "imageNameOriginal": "yourphoto",
+      "description": "",
+      "modelName": "",
+      "modelDescription": "",
+      "modelImageName": "",
+      "exampleImages": [
+        "anime2",
+        "anime3",
+        "anime4",
+        "anime5",
+        "anime6",
+        "anime7"
+      ],
+      "moreStyles": [
+        ["Caricature"],
+        ["photobooth"],
+        ["halloween"],
+        ["artist"],
+        ["luxury"],
+        ["videogamesItems"],
+        ["chibi"],
+        ["cute"]
+      ]
+    },
+    "apiConfig": {
+      "provider": "wavespeed",
+      "endpoint": "https://api.wavespeed.ai/api/v3/wavespeed-ai/ghibli",
+      "wavespeedConfig": {
+        "outputFormat": "jpeg",
+        "enableSyncMode": true,
+        "enableBase64Output": false
+      },
+      "aspectRatio": ""
+    },
+    "prompt": "",
+    "cost": 0.005,
+    "type": "Photo Filter"
+  },
+  {
+    "display": {
+      "title": "Anime 1",
+      "imageName": "anime1-girl-ghibli-wavespeed",
       "imageNameOriginal": "yourphoto",
       "description": "",
       "modelName": "",
@@ -44,7 +86,7 @@
   {
     "display": {
       "title": "Anime 2",
-      "imageName": "anime2boyfluxkontextpro",
+      "imageName": "anime2-boy-fluxkontextpro",
       "imageNameOriginal": "yourphoto",
       "modelName": "FLUX.1 Kontext [pro]",
       "modelDescription": "A professional-grade model from Black Forest Labs built for sharp detail, consistent anatomy, accurate lighting, and clean visual structure. Excellent for portraits, branding images, product photography, and polished commercial-quality artwork.",
@@ -74,7 +116,7 @@
   {
     "display": {
       "title": "Anime 2",
-      "imageName": "anime2girlfluxkontextpro",
+      "imageName": "anime2-girl-fluxkontextpro",
       "imageNameOriginal": "yourphoto",
       "modelName": "FLUX.1 Kontext [pro]",
       "modelDescription": "A professional-grade model from Black Forest Labs built for sharp detail, consistent anatomy, accurate lighting, and clean visual structure. Excellent for portraits, branding images, product photography, and polished commercial-quality artwork.",
