@@ -33,20 +33,29 @@ class ImageGenerationCoordinator: ObservableObject {
         // A unique identifier for this generation job.
         let taskId = UUID()
 
+        // Get model name for notification (use modelName if available, otherwise use title)
+        let modelName = item.display.modelName ?? item.display.title
+        
         // Create a notification to show progress to the user.
         let notificationId = NotificationManager.shared.showNotification(
             title: "Transforming Your Photo",
             message: "Creating your \(item.display.title)...",
             progress: 0.0,
             thumbnailImage: image,
-            taskId: taskId
+            taskId: taskId,
+            modelName: modelName,
+            prompt: item.prompt,
+            originalImage: image
         )
 
-        // Save initial task state before the process begins.
+        // Save initial task state before the process begins (including retry info).
         generationTasks[taskId] = GenerationTaskInfo(
             taskId: taskId,
             notificationId: notificationId,
-            generatedImage: nil
+            generatedImage: nil,
+            item: item,
+            originalImage: image,
+            userId: userId
         )
 
         // Create the worker that actually performs the API call / processing.
@@ -129,8 +138,9 @@ class ImageGenerationCoordinator: ObservableObject {
                 errorMessage: "Generation failed: \(error.localizedDescription)"
             )
 
-            // Remove the task from memory.
-            cleanupTask(taskId: taskId)
+            // Don't cleanup task info on failure - keep it for retry functionality
+            // Only remove the background task reference
+            backgroundTasks.removeValue(forKey: taskId)
 
         // Other result types (if added later) are simply ignored here.
         default:
@@ -152,5 +162,82 @@ class ImageGenerationCoordinator: ObservableObject {
     private func cleanupTask(taskId: UUID) {
         generationTasks.removeValue(forKey: taskId)
         backgroundTasks.removeValue(forKey: taskId)
+    }
+    
+    // MARK: - Retry a failed generation task
+    
+    /// Retries a failed image generation using the stored item and image from the notification
+    /// - Parameter notificationId: The notification ID of the failed task
+    /// - Parameter onImageGenerated: Callback when image is successfully generated
+    /// - Parameter onError: Callback when generation fails
+    func retryImageGeneration(
+        notificationId: UUID,
+        onImageGenerated: @escaping (UIImage) -> Void = { _ in },
+        onError: @escaping (Error) -> Void = { _ in }
+    ) -> Bool {
+        // Find the task info by notification ID
+        guard let taskInfo = generationTasks.values.first(where: { $0.notificationId == notificationId }),
+              let item = taskInfo.item,
+              let image = taskInfo.originalImage,
+              let userId = taskInfo.userId else {
+            print("⚠️ Cannot retry: Task info not found for notification \(notificationId)")
+            return false
+        }
+        
+        // Reset the notification state to in-progress
+        NotificationManager.shared.resetForRetry(notificationId: notificationId)
+        
+        // Create a new task ID for the retry
+        let newTaskId = UUID()
+        
+        // Update the notification's taskId to the new task
+        NotificationManager.shared.updateTaskId(newTaskId, for: notificationId)
+        
+        // Update the task info with the new task ID
+        if let oldTaskId = generationTasks.first(where: { $0.value.notificationId == notificationId })?.key {
+            var updatedTaskInfo = generationTasks[oldTaskId]!
+            updatedTaskInfo = GenerationTaskInfo(
+                taskId: newTaskId,
+                notificationId: notificationId,
+                generatedImage: nil,
+                item: item,
+                originalImage: image,
+                userId: userId
+            )
+            generationTasks.removeValue(forKey: oldTaskId)
+            generationTasks[newTaskId] = updatedTaskInfo
+        }
+        
+        // Create the worker that actually performs the API call / processing.
+        let task = ImageGenerationTask(item: item, image: image, userId: userId)
+        
+        // Run the worker on a background thread using Swift concurrency.
+        let backgroundTask = Task.detached { [weak self] in
+            await task.execute(
+                notificationId: notificationId,
+                
+                // Called repeatedly while progress updates occur.
+                onProgress: { progress in
+                    await NotificationManager.shared.updateProgress(progress.progress, for: notificationId)
+                    await NotificationManager.shared.updateMessage(progress.message, for: notificationId)
+                },
+                
+                // Called once the task returns a success or failure.
+                onComplete: { result in
+                    await self?.handleCompletion(
+                        taskId: newTaskId,
+                        notificationId: notificationId,
+                        result: result,
+                        onImageGenerated: onImageGenerated,
+                        onError: onError
+                    )
+                }
+            )
+        }
+        
+        // Store a reference so we can cancel it later if needed.
+        backgroundTasks[newTaskId] = backgroundTask
+        
+        return true
     }
 }

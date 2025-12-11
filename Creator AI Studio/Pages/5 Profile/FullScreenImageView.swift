@@ -209,7 +209,7 @@ struct FullScreenImageView: View {
     @State private var isFavorited = false
     @State private var showCreatePresetSheet = false
     @State private var showDeletePresetAlert = false
-    @StateObject private var presetViewModel = PresetViewModel()
+//    @StateObject private var presetViewModel = PresetViewModel()
     @State private var isSharing = false
     @State private var shareItem: URL?
 
@@ -263,40 +263,40 @@ struct FullScreenImageView: View {
         return allImageModels.first { $0.display.title == title }
     }
 
-    // Check if current image matches an existing preset
-    private var matchingPreset: Preset? {
-        let currentModelName = userImage.title
-        let currentPrompt = userImage.prompt
-
-        return presetViewModel.presets.first { preset in
-            // Compare model names (both can be nil or empty)
-            let modelMatch: Bool
-            if let currentModel = currentModelName, !currentModel.isEmpty {
-                modelMatch = preset.modelName == currentModel
-            } else {
-                // Both are nil/empty - consider it a match
-                modelMatch =
-                    preset.modelName == nil || preset.modelName?.isEmpty == true
-            }
-
-            // Compare prompts (both can be nil or empty)
-            let promptMatch: Bool
-            if let current = currentPrompt, !current.isEmpty {
-                promptMatch = preset.prompt == current
-            } else {
-                // Both are nil/empty - consider it a match
-                promptMatch =
-                    preset.prompt == nil || preset.prompt?.isEmpty == true
-            }
-
-            return modelMatch && promptMatch
-        }
-    }
-
-    // Check if preset button should be filled/colored
-    private var isPresetSaved: Bool {
-        matchingPreset != nil
-    }
+//    // Check if current image matches an existing preset
+//    private var matchingPreset: Preset? {
+//        let currentModelName = userImage.title
+//        let currentPrompt = userImage.prompt
+//
+//        return presetViewModel.presets.first { preset in
+//            // Compare model names (both can be nil or empty)
+//            let modelMatch: Bool
+//            if let currentModel = currentModelName, !currentModel.isEmpty {
+//                modelMatch = preset.modelName == currentModel
+//            } else {
+//                // Both are nil/empty - consider it a match
+//                modelMatch =
+//                    preset.modelName == nil || preset.modelName?.isEmpty == true
+//            }
+//
+//            // Compare prompts (both can be nil or empty)
+//            let promptMatch: Bool
+//            if let current = currentPrompt, !current.isEmpty {
+//                promptMatch = preset.prompt == current
+//            } else {
+//                // Both are nil/empty - consider it a match
+//                promptMatch =
+//                    preset.prompt == nil || preset.prompt?.isEmpty == true
+//            }
+//
+//            return modelMatch && promptMatch
+//        }
+//    }
+//
+//    // Check if preset button should be filled/colored
+//    private var isPresetSaved: Bool {
+//        matchingPreset != nil
+//    }
 
     // MARK: - Helper Functions
 
@@ -669,29 +669,29 @@ struct FullScreenImageView: View {
         .disabled(isDeleting || isDownloading)
     }
 
-    private var presetButton: some View {
-        Button(action: {
-            if isPresetSaved {
-                // Show alert to confirm deletion
-                showDeletePresetAlert = true
-            } else {
-                // Show create preset sheet
-                showCreatePresetSheet = true
-            }
-        }) {
-            VStack(spacing: 6) {
-                Image(systemName: isPresetSaved ? "bookmark.fill" : "bookmark")
-                    .font(.system(size: 20, weight: .medium))
-                    .foregroundColor(isPresetSaved ? .blue : .white)
-                    .opacity(isPresetSaved ? 1.0 : 0.8)
-                Text("Preset")
-                    .font(.caption)
-                    .foregroundColor(isPresetSaved ? .blue : .gray)
-            }
-        }
-        .buttonStyle(.plain)
-        .disabled(isDeleting || isDownloading)
-    }
+//    private var presetButton: some View {
+//        Button(action: {
+//            if isPresetSaved {
+//                // Show alert to confirm deletion
+//                showDeletePresetAlert = true
+//            } else {
+//                // Show create preset sheet
+//                showCreatePresetSheet = true
+//            }
+//        }) {
+//            VStack(spacing: 6) {
+//                Image(systemName: isPresetSaved ? "bookmark.fill" : "bookmark")
+//                    .font(.system(size: 20, weight: .medium))
+//                    .foregroundColor(isPresetSaved ? .blue : .white)
+//                    .opacity(isPresetSaved ? 1.0 : 0.8)
+//                Text("Preset")
+//                    .font(.caption)
+//                    .foregroundColor(isPresetSaved ? .blue : .gray)
+//            }
+//        }
+//        .buttonStyle(.plain)
+//        .disabled(isDeleting || isDownloading)
+//    }
 
     private var deleteButton: some View {
         Button(action: {
@@ -974,51 +974,51 @@ struct FullScreenImageView: View {
         } message: {
             Text(downloadErrorMessage)
         }
-        .alert("Unsave Preset?", isPresented: $showDeletePresetAlert) {
-            Button("Cancel", role: .cancel) {}
-            Button("Unsave", role: .destructive) {
-                Task {
-                    await deletePreset()
-                }
-            }
-        } message: {
-            if let preset = matchingPreset {
-                Text(
-                    "Are you sure you want to unsave the preset '\(preset.title)'? This action cannot be undone."
-                )
-            } else {
-                Text(
-                    "Are you sure you want to unsave this preset? This action cannot be undone."
-                )
-            }
-        }
+//        .alert("Unsave Preset?", isPresented: $showDeletePresetAlert) {
+//            Button("Cancel", role: .cancel) {}
+//            Button("Unsave", role: .destructive) {
+//                Task {
+//                    await deletePreset()
+//                }
+//            }
+//        } message: {
+//            if let preset = matchingPreset {
+//                Text(
+//                    "Are you sure you want to unsave the preset '\(preset.title)'? This action cannot be undone."
+//                )
+//            } else {
+//                Text(
+//                    "Are you sure you want to unsave this preset? This action cannot be undone."
+//                )
+//            }
+//        }
         .onAppear {
             // Initialize favorite state from userImage
             isFavorited = userImage.is_favorite ?? false
 
-            // Load presets if user is signed in
-            if let userId = authViewModel.user?.id.uuidString {
-                presetViewModel.userId = userId
-                Task {
-                    await presetViewModel.fetchPresets()
-                }
-            }
+//            // Load presets if user is signed in
+//            if let userId = authViewModel.user?.id.uuidString {
+//                presetViewModel.userId = userId
+//                Task {
+//                    await presetViewModel.fetchPresets()
+//                }
+//            }
         }
         .onChange(of: userImage.is_favorite) { _, newValue in
             // Update favorite state if userImage changes
             isFavorited = newValue ?? false
         }
-        .sheet(isPresented: $showCreatePresetSheet) {
-            CreatePresetSheet(
-                isPresented: $showCreatePresetSheet,
-                userImage: userImage,
-                parentPresetViewModel: presetViewModel
-            )
-            .environmentObject(authViewModel)
-        }
-        .onChange(of: presetViewModel.presets) { _, _ in
-            // Update UI when presets change (e.g., after saving)
-        }
+//        .sheet(isPresented: $showCreatePresetSheet) {
+//            CreatePresetSheet(
+//                isPresented: $showCreatePresetSheet,
+//                userImage: userImage,
+//                parentPresetViewModel: presetViewModel
+//            )
+//            .environmentObject(authViewModel)
+//        }
+//        .onChange(of: presetViewModel.presets) { _, _ in
+//            // Update UI when presets change (e.g., after saving)
+//        }
     }
 
     // MARK: - Download Media (Image or Video)
@@ -1343,22 +1343,22 @@ struct FullScreenImageView: View {
         }
     }
 
-    // MARK: - Delete Preset
-
-    private func deletePreset() async {
-        guard let preset = matchingPreset else {
-            print("⚠️ No matching preset found to delete")
-            return
-        }
-
-        do {
-            try await presetViewModel.deletePreset(presetId: preset.id)
-            print("✅ Preset deleted successfully")
-        } catch {
-            print("❌ Failed to delete preset: \(error)")
-            // Optionally show an error alert here if needed
-        }
-    }
+//    // MARK: - Delete Preset
+//
+//    private func deletePreset() async {
+//        guard let preset = matchingPreset else {
+//            print("⚠️ No matching preset found to delete")
+//            return
+//        }
+//
+//        do {
+//            try await presetViewModel.deletePreset(presetId: preset.id)
+//            print("✅ Preset deleted successfully")
+//        } catch {
+//            print("❌ Failed to delete preset: \(error)")
+//            // Optionally show an error alert here if needed
+//        }
+//    }
 
     // MARK: - Retry Helper
 
@@ -1390,325 +1390,326 @@ struct FullScreenImageView: View {
     }
 }
 
-// MARK: - Create Preset Sheet
-
-struct CreatePresetSheet: View {
-    @Binding var isPresented: Bool
-    let userImage: UserImage
-    @EnvironmentObject var authViewModel: AuthViewModel
-    @ObservedObject var parentPresetViewModel: PresetViewModel
-    @StateObject private var presetViewModel = PresetViewModel()
-    @State private var presetTitle: String = ""
-    @FocusState private var isTitleFocused: Bool
-    @State private var isSaving = false
-    @State private var showError = false
-    @State private var errorMessage = ""
-
-    // Cache image models to avoid repeated JSON loading
-    private static var cachedImageModels: [InfoPacket]?
-    private var allImageModels: [InfoPacket] {
-        if let cached = Self.cachedImageModels {
-            return cached
-        }
-        let models = ImageModelsViewModel.loadImageModels()
-        Self.cachedImageModels = models
-        return models
-    }
-
-    // Find matching image model based on title - now uses cached models
-    private var matchingImageModel: InfoPacket? {
-        guard let title = userImage.title, !title.isEmpty else { return nil }
-        return allImageModels.first { $0.display.title == title }
-    }
-
-    // MARK: - Body
-
-    var body: some View {
-        NavigationView {
-            ZStack {
-                Color.black.ignoresSafeArea()
-
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 24) {
-                        // Information section
-                        VStack(alignment: .leading, spacing: 12) {
-                            HStack(spacing: 8) {
-                                Image(systemName: "info.circle.fill")
-                                    .font(.system(size: 20))
-                                    .foregroundColor(.blue)
-                                Text("What is a Preset?")
-                                    .font(.headline)
-                                    .foregroundColor(.white)
-                            }
-
-                            Text(
-                                "A preset saves the current image model and prompt settings. You can quickly reuse these settings later to generate similar images with the same style and configuration."
-                            )
-                            .font(.subheadline)
-                            .foregroundColor(.gray)
-                            .lineSpacing(4)
-                        }
-                        .padding()
-                        .background(Color.white.opacity(0.05))
-                        .cornerRadius(12)
-
-                        // Title input section
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text("Preset Title")
-                                .font(.headline)
-                                .foregroundColor(.white)
-
-                            TextField(
-                                "Enter a name for this preset",
-                                text: $presetTitle
-                            )
-                            .textFieldStyle(.plain)
-                            .font(.body)
-                            .foregroundColor(.white)
-                            .padding(12)
-                            .background(Color.white.opacity(0.1))
-                            .cornerRadius(8)
-                            .focused($isTitleFocused)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .stroke(
-                                        isTitleFocused
-                                            ? Color.blue
-                                            : Color.white.opacity(0.2),
-                                        lineWidth: 1)
-                            )
-
-                            Text(
-                                "Choose a memorable name to easily identify this preset later."
-                            )
-                            .font(.caption)
-                            .foregroundColor(.gray)
-                        }
-                        .padding()
-                        .background(Color.white.opacity(0.05))
-                        .cornerRadius(12)
-
-                        // Preset details preview
-                        VStack(alignment: .leading, spacing: 16) {
-                            Text("Preset Details")
-                                .font(.headline)
-                                .foregroundColor(.white)
-
-                            // AI Model section - matching FullScreenImageView style
-                            if let title = userImage.title, !title.isEmpty {
-                                VStack(alignment: .leading, spacing: 12) {
-                                    HStack(spacing: 4) {
-                                        Image(systemName: "cpu")
-                                            .font(.caption2)
-                                            .foregroundColor(
-                                                .white.opacity(0.8))
-                                        Text("AI Model")
-                                            .font(.caption2)
-                                            .foregroundColor(.gray)
-                                    }
-
-                                    HStack(spacing: 12) {
-                                        // Display model image if available
-                                        if let model = matchingImageModel {
-                                            Image(model.display.imageName)
-                                                .resizable()
-                                                .aspectRatio(contentMode: .fill)
-                                                .frame(width: 60, height: 60)
-                                                .clipShape(
-                                                    RoundedRectangle(
-                                                        cornerRadius: 8)
-                                                )
-                                                .overlay(
-                                                    RoundedRectangle(
-                                                        cornerRadius: 8
-                                                    )
-                                                    .stroke(
-                                                        Color.white.opacity(
-                                                            0.2), lineWidth: 1)
-                                                )
-                                        }
-
-                                        Text(title)
-                                            .font(.title3)
-                                            .fontWeight(.semibold)
-                                            .foregroundColor(.white)
-                                    }
-                                }
-                            }
-
-                            // Prompt section - matching FullScreenImageView style
-                            if let prompt = userImage.prompt, !prompt.isEmpty {
-                                VStack(alignment: .leading, spacing: 8) {
-                                    HStack {
-                                        Image(systemName: "text.alignleft")
-                                            .font(.caption2)
-                                            .foregroundColor(
-                                                .white.opacity(0.8))
-                                        Text("Prompt")
-                                            .font(.caption2)
-                                            .foregroundColor(.gray)
-
-                                        Spacer()
-                                    }
-
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Text(prompt)
-                                            .font(
-                                                .system(
-                                                    size: 15, weight: .medium)
-                                            )
-                                            .foregroundColor(.white)
-                                            .fixedSize(
-                                                horizontal: false,
-                                                vertical: true
-                                            )
-                                            .frame(
-                                                maxWidth: .infinity,
-                                                alignment: .leading)
-                                    }
-                                    .padding(12)
-                                    .background(Color.white.opacity(0.05))
-                                    .cornerRadius(8)
-                                }
-                            }
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.vertical, 16)
-                        .padding(.horizontal, 16)
-                        .background(Color.white.opacity(0.05))
-                        .cornerRadius(12)
-
-                    }
-                    .padding(.horizontal)
-                }
-            }
-            .navigationTitle("Create Preset")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
-                        isPresented = false
-                    }
-                    .foregroundColor(.white)
-                }
-
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Save") {
-                        Task {
-                            await savePreset()
-                        }
-                    }
-                    .foregroundColor(
-                        presetTitle.isEmpty || isSaving ? .gray : .blue
-                    )
-                    .fontWeight(.semibold)
-                    .disabled(presetTitle.isEmpty || isSaving)
-                }
-
-                ToolbarItemGroup(placement: .keyboard) {
-                    Spacer()
-                    Button("Done") {
-                        isTitleFocused = false
-                    }
-                }
-            }
-        }
-        .preferredColorScheme(.dark)
-        .presentationDetents([.medium, .large])
-        .onAppear {
-            // Set user ID for preset view model
-            if let userId = authViewModel.user?.id.uuidString {
-                presetViewModel.userId = userId
-                // Sync presets from parent view model
-                presetViewModel.presets = parentPresetViewModel.presets
-            }
-        }
-        .alert("Error Saving Preset", isPresented: $showError) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(errorMessage)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-    }
-
-    // MARK: - Save Preset
-    private func savePreset() async {
-        print("🟢 [CreatePresetSheet] Save button pressed")
-        print("🟢 [CreatePresetSheet] Preset title: '\(presetTitle)'")
-
-        guard let userId = authViewModel.user?.id.uuidString else {
-            print("❌ [CreatePresetSheet] User not signed in")
-            errorMessage = "You must be signed in to save presets."
-            showError = true
-            return
-        }
-
-        print("🟢 [CreatePresetSheet] User ID: \(userId)")
-        print("🟢 [CreatePresetSheet] Setting user ID in presetViewModel...")
-
-        // Ensure presetViewModel has the user ID
-        presetViewModel.userId = userId
-
-        isSaving = true
-
-        // Get model name from userImage
-        let modelName = userImage.title
-        print(
-            "🟢 [CreatePresetSheet] Model name from userImage: '\(modelName ?? "nil")'"
-        )
-
-        // Get prompt from userImage
-        let prompt = userImage.prompt
-        print(
-            "🟢 [CreatePresetSheet] Prompt from userImage: '\(prompt?.prefix(50) ?? "nil")...'"
-        )
-
-        // Get image URL from userImage
-        let imageUrl = userImage.image_url
-        print("🟢 [CreatePresetSheet] Image URL from userImage: '\(imageUrl)'")
-
-        do {
-            print("🟢 [CreatePresetSheet] Calling presetViewModel.savePreset...")
-            try await presetViewModel.savePreset(
-                title: presetTitle,
-                modelName: modelName,
-                prompt: prompt,
-                imageUrl: imageUrl
-            )
-
-            print(
-                "✅ [CreatePresetSheet] Preset saved successfully, closing sheet..."
-            )
-
-            // Success - refresh parent view model and close the sheet
-            await MainActor.run {
-                // Sync presets with parent view model
-                parentPresetViewModel.presets = presetViewModel.presets
-                isSaving = false
-                isPresented = false
-            }
-        } catch {
-            print("❌ [CreatePresetSheet] Error saving preset")
-            print("❌ [CreatePresetSheet] Error type: \(type(of: error))")
-            print(
-                "❌ [CreatePresetSheet] Error description: \(error.localizedDescription)"
-            )
-            if let nsError = error as NSError? {
-                print("❌ [CreatePresetSheet] Error domain: \(nsError.domain)")
-                print("❌ [CreatePresetSheet] Error code: \(nsError.code)")
-                print(
-                    "❌ [CreatePresetSheet] Error userInfo: \(nsError.userInfo)")
-            }
-
-            await MainActor.run {
-                isSaving = false
-                errorMessage =
-                    "Failed to save preset: \(error.localizedDescription)"
-                showError = true
-            }
-        }
-    }
-}
+//
+//// MARK: - Create Preset Sheet
+//
+//struct CreatePresetSheet: View {
+//    @Binding var isPresented: Bool
+//    let userImage: UserImage
+//    @EnvironmentObject var authViewModel: AuthViewModel
+////    @ObservedObject var parentPresetViewModel: PresetViewModel
+////    @StateObject private var presetViewModel = PresetViewModel()
+//    @State private var presetTitle: String = ""
+//    @FocusState private var isTitleFocused: Bool
+//    @State private var isSaving = false
+//    @State private var showError = false
+//    @State private var errorMessage = ""
+//
+//    // Cache image models to avoid repeated JSON loading
+//    private static var cachedImageModels: [InfoPacket]?
+//    private var allImageModels: [InfoPacket] {
+//        if let cached = Self.cachedImageModels {
+//            return cached
+//        }
+//        let models = ImageModelsViewModel.loadImageModels()
+//        Self.cachedImageModels = models
+//        return models
+//    }
+//
+//    // Find matching image model based on title - now uses cached models
+//    private var matchingImageModel: InfoPacket? {
+//        guard let title = userImage.title, !title.isEmpty else { return nil }
+//        return allImageModels.first { $0.display.title == title }
+//    }
+//
+//    // MARK: - Body
+//
+//    var body: some View {
+//        NavigationView {
+//            ZStack {
+//                Color.black.ignoresSafeArea()
+//
+//                ScrollView {
+//                    VStack(alignment: .leading, spacing: 24) {
+//                        // Information section
+//                        VStack(alignment: .leading, spacing: 12) {
+//                            HStack(spacing: 8) {
+//                                Image(systemName: "info.circle.fill")
+//                                    .font(.system(size: 20))
+//                                    .foregroundColor(.blue)
+//                                Text("What is a Preset?")
+//                                    .font(.headline)
+//                                    .foregroundColor(.white)
+//                            }
+//
+//                            Text(
+//                                "A preset saves the current image model and prompt settings. You can quickly reuse these settings later to generate similar images with the same style and configuration."
+//                            )
+//                            .font(.subheadline)
+//                            .foregroundColor(.gray)
+//                            .lineSpacing(4)
+//                        }
+//                        .padding()
+//                        .background(Color.white.opacity(0.05))
+//                        .cornerRadius(12)
+//
+//                        // Title input section
+//                        VStack(alignment: .leading, spacing: 12) {
+//                            Text("Preset Title")
+//                                .font(.headline)
+//                                .foregroundColor(.white)
+//
+//                            TextField(
+//                                "Enter a name for this preset",
+//                                text: $presetTitle
+//                            )
+//                            .textFieldStyle(.plain)
+//                            .font(.body)
+//                            .foregroundColor(.white)
+//                            .padding(12)
+//                            .background(Color.white.opacity(0.1))
+//                            .cornerRadius(8)
+//                            .focused($isTitleFocused)
+//                            .overlay(
+//                                RoundedRectangle(cornerRadius: 8)
+//                                    .stroke(
+//                                        isTitleFocused
+//                                            ? Color.blue
+//                                            : Color.white.opacity(0.2),
+//                                        lineWidth: 1)
+//                            )
+//
+//                            Text(
+//                                "Choose a memorable name to easily identify this preset later."
+//                            )
+//                            .font(.caption)
+//                            .foregroundColor(.gray)
+//                        }
+//                        .padding()
+//                        .background(Color.white.opacity(0.05))
+//                        .cornerRadius(12)
+//
+//                        // Preset details preview
+//                        VStack(alignment: .leading, spacing: 16) {
+//                            Text("Preset Details")
+//                                .font(.headline)
+//                                .foregroundColor(.white)
+//
+//                            // AI Model section - matching FullScreenImageView style
+//                            if let title = userImage.title, !title.isEmpty {
+//                                VStack(alignment: .leading, spacing: 12) {
+//                                    HStack(spacing: 4) {
+//                                        Image(systemName: "cpu")
+//                                            .font(.caption2)
+//                                            .foregroundColor(
+//                                                .white.opacity(0.8))
+//                                        Text("AI Model")
+//                                            .font(.caption2)
+//                                            .foregroundColor(.gray)
+//                                    }
+//
+//                                    HStack(spacing: 12) {
+//                                        // Display model image if available
+//                                        if let model = matchingImageModel {
+//                                            Image(model.display.imageName)
+//                                                .resizable()
+//                                                .aspectRatio(contentMode: .fill)
+//                                                .frame(width: 60, height: 60)
+//                                                .clipShape(
+//                                                    RoundedRectangle(
+//                                                        cornerRadius: 8)
+//                                                )
+//                                                .overlay(
+//                                                    RoundedRectangle(
+//                                                        cornerRadius: 8
+//                                                    )
+//                                                    .stroke(
+//                                                        Color.white.opacity(
+//                                                            0.2), lineWidth: 1)
+//                                                )
+//                                        }
+//
+//                                        Text(title)
+//                                            .font(.title3)
+//                                            .fontWeight(.semibold)
+//                                            .foregroundColor(.white)
+//                                    }
+//                                }
+//                            }
+//
+//                            // Prompt section - matching FullScreenImageView style
+//                            if let prompt = userImage.prompt, !prompt.isEmpty {
+//                                VStack(alignment: .leading, spacing: 8) {
+//                                    HStack {
+//                                        Image(systemName: "text.alignleft")
+//                                            .font(.caption2)
+//                                            .foregroundColor(
+//                                                .white.opacity(0.8))
+//                                        Text("Prompt")
+//                                            .font(.caption2)
+//                                            .foregroundColor(.gray)
+//
+//                                        Spacer()
+//                                    }
+//
+//                                    VStack(alignment: .leading, spacing: 4) {
+//                                        Text(prompt)
+//                                            .font(
+//                                                .system(
+//                                                    size: 15, weight: .medium)
+//                                            )
+//                                            .foregroundColor(.white)
+//                                            .fixedSize(
+//                                                horizontal: false,
+//                                                vertical: true
+//                                            )
+//                                            .frame(
+//                                                maxWidth: .infinity,
+//                                                alignment: .leading)
+//                                    }
+//                                    .padding(12)
+//                                    .background(Color.white.opacity(0.05))
+//                                    .cornerRadius(8)
+//                                }
+//                            }
+//                        }
+//                        .frame(maxWidth: .infinity, alignment: .leading)
+//                        .padding(.vertical, 16)
+//                        .padding(.horizontal, 16)
+//                        .background(Color.white.opacity(0.05))
+//                        .cornerRadius(12)
+//
+//                    }
+//                    .padding(.horizontal)
+//                }
+//            }
+//            .navigationTitle("Create Preset")
+//            .navigationBarTitleDisplayMode(.inline)
+//            .toolbar {
+//                ToolbarItem(placement: .navigationBarLeading) {
+//                    Button("Cancel") {
+//                        isPresented = false
+//                    }
+//                    .foregroundColor(.white)
+//                }
+//
+//                ToolbarItem(placement: .navigationBarTrailing) {
+//                    Button("Save") {
+//                        Task {
+//                            await savePreset()
+//                        }
+//                    }
+//                    .foregroundColor(
+//                        presetTitle.isEmpty || isSaving ? .gray : .blue
+//                    )
+//                    .fontWeight(.semibold)
+//                    .disabled(presetTitle.isEmpty || isSaving)
+//                }
+//
+//                ToolbarItemGroup(placement: .keyboard) {
+//                    Spacer()
+//                    Button("Done") {
+//                        isTitleFocused = false
+//                    }
+//                }
+//            }
+//        }
+//        .preferredColorScheme(.dark)
+//        .presentationDetents([.medium, .large])
+////        .onAppear {
+////            // Set user ID for preset view model
+////            if let userId = authViewModel.user?.id.uuidString {
+////                presetViewModel.userId = userId
+////                // Sync presets from parent view model
+////                presetViewModel.presets = parentPresetViewModel.presets
+////            }
+////        }
+//        .alert("Error Saving Preset", isPresented: $showError) {
+//            Button("OK", role: .cancel) {}
+//        } message: {
+//            Text(errorMessage)
+//                .fixedSize(horizontal: false, vertical: true)
+//        }
+//    }
+//
+//    // MARK: - Save Preset
+//    private func savePreset() async {
+//        print("🟢 [CreatePresetSheet] Save button pressed")
+//        print("🟢 [CreatePresetSheet] Preset title: '\(presetTitle)'")
+//
+//        guard let userId = authViewModel.user?.id.uuidString else {
+//            print("❌ [CreatePresetSheet] User not signed in")
+//            errorMessage = "You must be signed in to save presets."
+//            showError = true
+//            return
+//        }
+//
+//        print("🟢 [CreatePresetSheet] User ID: \(userId)")
+//        print("🟢 [CreatePresetSheet] Setting user ID in presetViewModel...")
+//
+//        // Ensure presetViewModel has the user ID
+//        presetViewModel.userId = userId
+//
+//        isSaving = true
+//
+//        // Get model name from userImage
+//        let modelName = userImage.title
+//        print(
+//            "🟢 [CreatePresetSheet] Model name from userImage: '\(modelName ?? "nil")'"
+//        )
+//
+//        // Get prompt from userImage
+//        let prompt = userImage.prompt
+//        print(
+//            "🟢 [CreatePresetSheet] Prompt from userImage: '\(prompt?.prefix(50) ?? "nil")...'"
+//        )
+//
+//        // Get image URL from userImage
+//        let imageUrl = userImage.image_url
+//        print("🟢 [CreatePresetSheet] Image URL from userImage: '\(imageUrl)'")
+//
+//        do {
+//            print("🟢 [CreatePresetSheet] Calling presetViewModel.savePreset...")
+//            try await presetViewModel.savePreset(
+//                title: presetTitle,
+//                modelName: modelName,
+//                prompt: prompt,
+//                imageUrl: imageUrl
+//            )
+//
+//            print(
+//                "✅ [CreatePresetSheet] Preset saved successfully, closing sheet..."
+//            )
+//
+//            // Success - refresh parent view model and close the sheet
+//            await MainActor.run {
+//                // Sync presets with parent view model
+//                parentPresetViewModel.presets = presetViewModel.presets
+//                isSaving = false
+//                isPresented = false
+//            }
+//        } catch {
+//            print("❌ [CreatePresetSheet] Error saving preset")
+//            print("❌ [CreatePresetSheet] Error type: \(type(of: error))")
+//            print(
+//                "❌ [CreatePresetSheet] Error description: \(error.localizedDescription)"
+//            )
+//            if let nsError = error as NSError? {
+//                print("❌ [CreatePresetSheet] Error domain: \(nsError.domain)")
+//                print("❌ [CreatePresetSheet] Error code: \(nsError.code)")
+//                print(
+//                    "❌ [CreatePresetSheet] Error userInfo: \(nsError.userInfo)")
+//            }
+//
+//            await MainActor.run {
+//                isSaving = false
+//                errorMessage =
+//                    "Failed to save preset: \(error.localizedDescription)"
+//                showError = true
+//            }
+//        }
+//    }
+//}
 
 // MARK: - Share Sheet
 

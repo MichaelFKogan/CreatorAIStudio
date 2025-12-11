@@ -6,6 +6,9 @@ struct GenerationTaskInfo {
     let taskId: UUID
     let notificationId: UUID
     var generatedImage: UIImage?
+    let item: InfoPacket? // Stored for retry functionality
+    let originalImage: UIImage? // Stored for retry functionality
+    let userId: String? // Stored for retry functionality
 }
 
 // MARK: - Task Result

@@ -6,39 +6,20 @@ struct NotificationBar: View {
     
     var body: some View {
         if !notificationManager.notifications.isEmpty && notificationManager.isNotificationBarVisible {
-            VStack(spacing: 0) {
-                // Chevron down button to hide notification bar - aligned right
-                HStack {
-                    Spacer()
-                    Button(action: {
-                        notificationManager.hideNotificationBar()
-                    }) {
-                        Image(systemName: "chevron.down")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundColor(.white)
-                            .frame(width: 40, height: 24)
-                            .background(Color.gray.opacity(0.6))
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                    }
+            VStack(spacing: 8) {
+                ForEach(notificationManager.notifications) { notification in
+                    NotificationCard(
+                        notification: notification,
+                        onDismiss: {
+                            notificationManager.dismissNotification(id: notification.id)
+                        },
+                        onCancel: {
+                            notificationManager.cancelTask(notificationId: notification.id)
+                        }
+                    )
                 }
-                .padding(.horizontal, 12)
-                .padding(.bottom, 4)
-                
-                VStack(spacing: 8) {
-                    ForEach(notificationManager.notifications) { notification in
-                        NotificationCard(
-                            notification: notification,
-                            onDismiss: {
-                                notificationManager.dismissNotification(id: notification.id)
-                            },
-                            onCancel: {
-                                notificationManager.cancelTask(notificationId: notification.id)
-                            }
-                        )
-                    }
-                }
-                .padding(.horizontal, 12)
             }
+            .padding(.horizontal, 12)
             .transition(.move(edge: .bottom).combined(with: .opacity))
         }
     }
@@ -54,34 +35,51 @@ struct NotificationCard: View {
     @State private var pulseAnimation = false
     
     var body: some View {
-        HStack(spacing: 12) {
-            NotificationThumbnail(image: notification.thumbnailImage, pulseAnimation: $pulseAnimation)
-            NotificationTextContent(notification: notification, shimmer: $shimmer)
-            Spacer(minLength: 0)
-            NotificationCancelButton(
-                state: notification.state,
-                onCancel: onCancel
-            )
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
-        .background(
-            ZStack {
-                Color.clear.background(.ultraThinMaterial)
-                LinearGradient(
-                    gradient: Gradient(colors: backgroundGradient),
-                    startPoint: .leading,
-                    endPoint: .trailing
+        VStack(spacing: 0) {
+            // Chevron down button to hide this individual notification - aligned right
+            HStack {
+                Spacer()
+                Button(action: onDismiss) {
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.white)
+                        .frame(width: 40, height: 24)
+                        .background(Color.gray.opacity(0.6))
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                }
+            }
+            .padding(.horizontal, 12)
+            .padding(.bottom, 4)
+            
+            HStack(spacing: 12) {
+                NotificationThumbnail(image: notification.thumbnailImage, pulseAnimation: $pulseAnimation)
+                NotificationTextContent(notification: notification, shimmer: $shimmer)
+                Spacer(minLength: 0)
+                NotificationCancelButton(
+                    state: notification.state,
+                    onCancel: onCancel
                 )
             }
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 16))
-        .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 4)
-        .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(borderColor, lineWidth: 1)
-        )
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .background(
+                ZStack {
+                    Color.clear.background(.ultraThinMaterial)
+                    LinearGradient(
+                        gradient: Gradient(colors: backgroundGradient),
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                }
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 4)
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(borderColor, lineWidth: 1)
+            )
+        }
         .transition(.asymmetric(
             insertion: .move(edge: .bottom).combined(with: .opacity),
             removal: .scale(scale: 0.8).combined(with: .opacity)

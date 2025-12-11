@@ -60,12 +60,16 @@ struct ProfileViewContent: View {
     @ObservedObject var viewModel: ProfileViewModel
     @EnvironmentObject var authViewModel: AuthViewModel
     @StateObject private var notificationManager = NotificationManager.shared
-    @StateObject private var presetViewModel = PresetViewModel()
+//    @StateObject private var presetViewModel = PresetViewModel()
     @State private var selectedUserImage: UserImage? = nil
     @State private var selectedTab: GalleryTab = .all
     @State private var selectedModel: String? = nil
     @State private var showImageModelsPopover: Bool = false
     @State private var showPresetsSheet: Bool = false
+    @State private var isSelectionMode: Bool = false
+    @State private var selectedImageIds: Set<String> = []
+    @State private var isDeleting: Bool = false
+    @State private var showDeleteConfirmation: Bool = false
 
     // Load model data to get images - cache at static level to avoid repeated loading
     private static var cachedImageModels: [InfoPacket]?
@@ -135,22 +139,56 @@ struct ProfileViewContent: View {
                 //                .navigationTitle("Profile")
                 .toolbar {
                     ToolbarItem(placement: .navigationBarTrailing) {
-                        NavigationLink(destination: Settings().environmentObject(authViewModel)) {
-                            Image(systemName: "gearshape")
-                                .font(.headline)
-                                .foregroundColor(.gray)
+                        if isSelectionMode {
+                            HStack(spacing: 16) {
+                                if !selectedImageIds.isEmpty {
+                                    Button(action: {
+                                        showDeleteConfirmation = true
+                                    }) {
+                                        Image(systemName: "trash")
+                                            .font(.headline)
+                                            .foregroundColor(.red)
+                                    }
+                                    .disabled(isDeleting)
+                                }
+                                
+                                Button(action: {
+                                    isSelectionMode = false
+                                    selectedImageIds.removeAll()
+                                }) {
+                                    Text("Cancel")
+                                        .font(.headline)
+                                        .foregroundColor(.blue)
+                                }
+                            }
+                        } else {
+                            HStack(spacing: 16) {
+                                Button(action: {
+                                    isSelectionMode = true
+                                }) {
+                                    Image(systemName: "checkmark.circle")
+                                        .font(.headline)
+                                        .foregroundColor(.gray)
+                                }
+                                
+                                NavigationLink(destination: Settings().environmentObject(authViewModel)) {
+                                    Image(systemName: "gearshape")
+                                        .font(.headline)
+                                        .foregroundColor(.gray)
+                                }
+                            }
                         }
                     }
                 }
             }
-            .onAppear {
-                if let userId = authViewModel.user?.id.uuidString {
-                    Task {
-                        presetViewModel.userId = userId
-                        await presetViewModel.fetchPresets()
-                    }
-                }
-            }
+//            .onAppear {
+//                if let userId = authViewModel.user?.id.uuidString {
+//                    Task {
+//                        presetViewModel.userId = userId
+//                        await presetViewModel.fetchPresets()
+//                    }
+//                }
+//            }
             .onChange(of: notificationManager.notifications.count) {
                 oldCount, newCount in
                 // When notification count decreases (notification dismissed), refresh images
@@ -178,6 +216,16 @@ struct ProfileViewContent: View {
                 .presentationDetents([.large])
                 .presentationDragIndicator(.visible)
                 .ignoresSafeArea()
+            }
+            .alert("Delete Selected Images?", isPresented: $showDeleteConfirmation) {
+                Button("Cancel", role: .cancel) {}
+                Button("Delete", role: .destructive) {
+                    Task {
+                        await deleteSelectedImages()
+                    }
+                }
+            } message: {
+                Text("This will permanently delete \(selectedImageIds.count) image\(selectedImageIds.count == 1 ? "" : "s"). This action cannot be undone.")
             }
         }
     }
@@ -310,14 +358,14 @@ struct ProfileViewContent: View {
                     isPresented: $showImageModelsPopover
                 )
             }
-            .sheet(isPresented: $showPresetsSheet) {
-                PresetsListSheet(
-                    presetViewModel: presetViewModel,
-                    isPresented: $showPresetsSheet
-                )
-                .presentationDetents([.large])
-                .presentationDragIndicator(.visible)
-            }
+//            .sheet(isPresented: $showPresetsSheet) {
+//                PresetsListSheet(
+//                    presetViewModel: presetViewModel,
+//                    isPresented: $showPresetsSheet
+//                )
+//                .presentationDetents([.large])
+//                .presentationDragIndicator(.visible)
+//            }
     }
 
     private var imageModelsButtonLabel: some View {
@@ -378,10 +426,20 @@ struct ProfileViewContent: View {
                 userImages: filteredImages,
                 placeholders: notificationManager.activePlaceholders,
                 onSelect: { userImage in
-                    selectedUserImage = userImage
+                    if isSelectionMode {
+                        if selectedImageIds.contains(userImage.id) {
+                            selectedImageIds.remove(userImage.id)
+                        } else {
+                            selectedImageIds.insert(userImage.id)
+                        }
+                    } else {
+                        selectedUserImage = userImage
+                    }
                 },
                 viewModel: viewModel,
-                presetViewModel: presetViewModel
+//                presetViewModel: presetViewModel,
+                isSelectionMode: isSelectionMode,
+                selectedImageIds: $selectedImageIds
             )
         }
     }
@@ -402,6 +460,21 @@ struct ProfileViewContent: View {
                 : viewModel.userImages
         }
     }
+    
+    private func deleteSelectedImages() async {
+        guard !selectedImageIds.isEmpty else { return }
+        
+        isDeleting = true
+        let idsToDelete = Array(selectedImageIds)
+        
+        await viewModel.deleteImages(imageIds: idsToDelete)
+        
+        await MainActor.run {
+            selectedImageIds.removeAll()
+            isSelectionMode = false
+            isDeleting = false
+        }
+    }
 }
 
 // MARK: IMAGE GRID (3×3 PORTRAIT)
@@ -412,7 +485,9 @@ struct ImageGridView: View {
     let spacing: CGFloat = 2
     var onSelect: (UserImage) -> Void
     var viewModel: ProfileViewModel?
-    var presetViewModel: PresetViewModel?
+//    var presetViewModel: PresetViewModel?
+    var isSelectionMode: Bool = false
+    @Binding var selectedImageIds: Set<String>
 
     @State private var favoritedImageIds: Set<String> = []
 
@@ -458,6 +533,39 @@ struct ImageGridView: View {
                                         .scaledToFill()
                                         .frame(width: itemWidth, height: itemHeight)
                                         .clipped()
+                                        .overlay(
+                                            // Selection overlay
+                                            Group {
+                                                if isSelectionMode {
+                                                    Rectangle()
+                                                        .fill(Color.black.opacity(selectedImageIds.contains(userImage.id) ? 0.3 : 0))
+                                                }
+                                            }
+                                        )
+                                        .overlay(
+                                            // Checkmark overlay
+                                            Group {
+                                                if isSelectionMode {
+                                                    VStack {
+                                                        HStack {
+                                                            Spacer()
+                                                            ZStack {
+                                                                Circle()
+                                                                    .fill(selectedImageIds.contains(userImage.id) ? Color.blue : Color.white.opacity(0.3))
+                                                                    .frame(width: 24, height: 24)
+                                                                if selectedImageIds.contains(userImage.id) {
+                                                                    Image(systemName: "checkmark")
+                                                                        .font(.system(size: 14, weight: .bold))
+                                                                        .foregroundColor(.white)
+                                                                }
+                                                            }
+                                                            .padding(6)
+                                                        }
+                                                        Spacer()
+                                                    }
+                                                }
+                                            }
+                                        )
 
                                     // Video play icon overlay
                                     if userImage.isVideo {
@@ -475,55 +583,57 @@ struct ImageGridView: View {
                             }
                             .buttonStyle(.plain)
 
-                            // Heart icon and bookmark icon overlay
-                            VStack {
-                                HStack {
-                                    Spacer()
-                                    VStack(spacing: 4) {
-                                        ZStack {
-                                            Color.clear
-                                                .frame(width: 32, height: 32)
-                                                .contentShape(Rectangle())
-                                                .onTapGesture {
-                                                    if let viewModel = viewModel {
-                                                        Task {
-                                                            await viewModel.toggleFavorite(imageId: userImage.id)
-                                                        }
-                                                    } else {
-                                                        // Fallback to local state if no viewModel
-                                                        let imageId = userImage.id
-                                                        if favoritedImageIds.contains(imageId) {
-                                                            favoritedImageIds.remove(imageId)
+                            // Heart icon and bookmark icon overlay (only show when not in selection mode)
+                            if !isSelectionMode {
+                                VStack {
+                                    HStack {
+                                        Spacer()
+                                        VStack(spacing: 4) {
+                                            ZStack {
+                                                Color.clear
+                                                    .frame(width: 32, height: 32)
+                                                    .contentShape(Rectangle())
+                                                    .onTapGesture {
+                                                        if let viewModel = viewModel {
+                                                            Task {
+                                                                await viewModel.toggleFavorite(imageId: userImage.id)
+                                                            }
                                                         } else {
-                                                            favoritedImageIds.insert(imageId)
+                                                            // Fallback to local state if no viewModel
+                                                            let imageId = userImage.id
+                                                            if favoritedImageIds.contains(imageId) {
+                                                                favoritedImageIds.remove(imageId)
+                                                            } else {
+                                                                favoritedImageIds.insert(imageId)
+                                                            }
                                                         }
                                                     }
-                                                }
 
-                                            // Heart icon
-                                            Image(systemName: (userImage.is_favorite ?? false) ? "heart.fill" : "heart")
-                                                .font(.system(size: 16, weight: .semibold))
-                                                .foregroundColor((userImage.is_favorite ?? false) ? .red : .white)
-                                                .shadow(color: .black.opacity(0.5), radius: 2, x: 0, y: 1)
-                                                .allowsHitTesting(false)
-                                        }
-                                        
-                                        // // Bookmark icon (blue) if preset is enabled
-                                        // if hasMatchingPreset(for: userImage) {
-                                        //     ZStack {
-                                        //         Circle()
-                                        //             .fill(Color.black)
-                                        //             .frame(width: 28, height: 28)
+                                                // Heart icon
+                                                Image(systemName: (userImage.is_favorite ?? false) ? "heart.fill" : "heart")
+                                                    .font(.system(size: 16, weight: .semibold))
+                                                    .foregroundColor((userImage.is_favorite ?? false) ? .red : .white)
+                                                    .shadow(color: .black.opacity(0.5), radius: 2, x: 0, y: 1)
+                                                    .allowsHitTesting(false)
+                                            }
+                                            
+                                            // // Bookmark icon (blue) if preset is enabled
+                                            // if hasMatchingPreset(for: userImage) {
+                                            //     ZStack {
+                                            //         Circle()
+                                            //             .fill(Color.black)
+                                            //             .frame(width: 28, height: 28)
                                                 
-                                        //         Image(systemName: "bookmark.fill")
-                                        //             .font(.system(size: 12, weight: .semibold))
-                                        //             .foregroundColor(.blue)
-                                        //     }
-                                        //     .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 1)
-                                        // }
+                                            //         Image(systemName: "bookmark.fill")
+                                            //             .font(.system(size: 12, weight: .semibold))
+                                            //             .foregroundColor(.blue)
+                                            //     }
+                                            //     .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 1)
+                                            // }
+                                        }
                                     }
+                                    Spacer()
                                 }
-                                Spacer()
                             }
                         }
                         .onAppear {
@@ -558,6 +668,39 @@ struct ImageGridView: View {
                                         .scaledToFill()
                                         .frame(width: itemWidth, height: itemHeight)
                                         .clipped()
+                                        .overlay(
+                                            // Selection overlay
+                                            Group {
+                                                if isSelectionMode {
+                                                    Rectangle()
+                                                        .fill(Color.black.opacity(selectedImageIds.contains(userImage.id) ? 0.3 : 0))
+                                                }
+                                            }
+                                        )
+                                        .overlay(
+                                            // Checkmark overlay
+                                            Group {
+                                                if isSelectionMode {
+                                                    VStack {
+                                                        HStack {
+                                                            Spacer()
+                                                            ZStack {
+                                                                Circle()
+                                                                    .fill(selectedImageIds.contains(userImage.id) ? Color.blue : Color.white.opacity(0.3))
+                                                                    .frame(width: 24, height: 24)
+                                                                if selectedImageIds.contains(userImage.id) {
+                                                                    Image(systemName: "checkmark")
+                                                                        .font(.system(size: 14, weight: .bold))
+                                                                        .foregroundColor(.white)
+                                                                }
+                                                            }
+                                                            .padding(6)
+                                                        }
+                                                        Spacer()
+                                                    }
+                                                }
+                                            }
+                                        )
 
                                     if userImage.isVideo {
                                         ZStack {
@@ -574,55 +717,57 @@ struct ImageGridView: View {
                             }
                             .buttonStyle(.plain)
 
-                            // Heart icon and bookmark icon overlay
-                            VStack {
-                                HStack {
-                                    Spacer()
-                                    VStack(spacing: 4) {
-                                        ZStack {
-                                            Color.clear
-                                                .frame(width: 32, height: 32)
-                                                .contentShape(Rectangle())
-                                                .onTapGesture {
-                                                    if let viewModel = viewModel {
-                                                        Task {
-                                                            await viewModel.toggleFavorite(imageId: userImage.id)
-                                                        }
-                                                    } else {
-                                                        // Fallback to local state if no viewModel
-                                                        let imageId = userImage.id
-                                                        if favoritedImageIds.contains(imageId) {
-                                                            favoritedImageIds.remove(imageId)
+                            // Heart icon and bookmark icon overlay (only show when not in selection mode)
+                            if !isSelectionMode {
+                                VStack {
+                                    HStack {
+                                        Spacer()
+                                        VStack(spacing: 4) {
+                                            ZStack {
+                                                Color.clear
+                                                    .frame(width: 32, height: 32)
+                                                    .contentShape(Rectangle())
+                                                    .onTapGesture {
+                                                        if let viewModel = viewModel {
+                                                            Task {
+                                                                await viewModel.toggleFavorite(imageId: userImage.id)
+                                                            }
                                                         } else {
-                                                            favoritedImageIds.insert(imageId)
+                                                            // Fallback to local state if no viewModel
+                                                            let imageId = userImage.id
+                                                            if favoritedImageIds.contains(imageId) {
+                                                                favoritedImageIds.remove(imageId)
+                                                            } else {
+                                                                favoritedImageIds.insert(imageId)
+                                                            }
                                                         }
                                                     }
-                                                }
 
-                                            // Heart icon
-                                            Image(systemName: (userImage.is_favorite ?? false) ? "heart.fill" : "heart")
-                                                .font(.system(size: 16, weight: .semibold))
-                                                .foregroundColor((userImage.is_favorite ?? false) ? .red : .white)
-                                                .shadow(color: .black.opacity(0.5), radius: 2, x: 0, y: 1)
-                                                .allowsHitTesting(false)
-                                        }
-                                        
-                                        // // Bookmark icon (blue) if preset is enabled
-                                        // if hasMatchingPreset(for: userImage) {
-                                        //     ZStack {
-                                        //         Circle()
-                                        //             .fill(Color.gray.opacity(0.7))
-                                        //             .frame(width: 24, height: 24)
+                                                // Heart icon
+                                                Image(systemName: (userImage.is_favorite ?? false) ? "heart.fill" : "heart")
+                                                    .font(.system(size: 16, weight: .semibold))
+                                                    .foregroundColor((userImage.is_favorite ?? false) ? .red : .white)
+                                                    .shadow(color: .black.opacity(0.5), radius: 2, x: 0, y: 1)
+                                                    .allowsHitTesting(false)
+                                            }
+                                            
+                                            // // Bookmark icon (blue) if preset is enabled
+                                            // if hasMatchingPreset(for: userImage) {
+                                            //     ZStack {
+                                            //         Circle()
+                                            //             .fill(Color.gray.opacity(0.7))
+                                            //             .frame(width: 24, height: 24)
                                                 
-                                        //         Image(systemName: "bookmark.fill")
-                                        //             .font(.system(size: 12, weight: .semibold))
-                                        //             .foregroundColor(.blue)
-                                        //     }
-                                        //     .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 1)
-                                        // }
+                                            //         Image(systemName: "bookmark.fill")
+                                            //             .font(.system(size: 12, weight: .semibold))
+                                            //             .foregroundColor(.blue)
+                                            //     }
+                                            //     .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 1)
+                                            // }
+                                        }
                                     }
+                                    Spacer()
                                 }
-                                Spacer()
                             }
                         }
                         .onAppear {
@@ -659,35 +804,35 @@ struct ImageGridView: View {
         return CGFloat(rows) * (itemWidth * 1.4 + spacing)
     }
     
-    // Check if an image has a matching preset
-    private func hasMatchingPreset(for userImage: UserImage) -> Bool {
-        guard let presetViewModel = presetViewModel else { return false }
-        
-        let currentModelName = userImage.title
-        let currentPrompt = userImage.prompt
-        
-        return presetViewModel.presets.contains { preset in
-            // Compare model names (both can be nil or empty)
-            let modelMatch: Bool
-            if let currentModel = currentModelName, !currentModel.isEmpty {
-                modelMatch = preset.modelName == currentModel
-            } else {
-                // Both are nil/empty - consider it a match
-                modelMatch = preset.modelName == nil || preset.modelName?.isEmpty == true
-            }
-            
-            // Compare prompts (both can be nil or empty)
-            let promptMatch: Bool
-            if let current = currentPrompt, !current.isEmpty {
-                promptMatch = preset.prompt == current
-            } else {
-                // Both are nil/empty - consider it a match
-                promptMatch = preset.prompt == nil || preset.prompt?.isEmpty == true
-            }
-            
-            return modelMatch && promptMatch
-        }
-    }
+//    // Check if an image has a matching preset
+//    private func hasMatchingPreset(for userImage: UserImage) -> Bool {
+//        guard let presetViewModel = presetViewModel else { return false }
+//        
+//        let currentModelName = userImage.title
+//        let currentPrompt = userImage.prompt
+//        
+//        return presetViewModel.presets.contains { preset in
+//            // Compare model names (both can be nil or empty)
+//            let modelMatch: Bool
+//            if let currentModel = currentModelName, !currentModel.isEmpty {
+//                modelMatch = preset.modelName == currentModel
+//            } else {
+//                // Both are nil/empty - consider it a match
+//                modelMatch = preset.modelName == nil || preset.modelName?.isEmpty == true
+//            }
+//            
+//            // Compare prompts (both can be nil or empty)
+//            let promptMatch: Bool
+//            if let current = currentPrompt, !current.isEmpty {
+//                promptMatch = preset.prompt == current
+//            } else {
+//                // Both are nil/empty - consider it a match
+//                promptMatch = preset.prompt == nil || preset.prompt?.isEmpty == true
+//            }
+//            
+//            return modelMatch && promptMatch
+//        }
+//    }
 }
 
 // MARK: PLACEHOLDER Image Card (for in-progress generations)
@@ -700,6 +845,7 @@ struct PlaceholderImageCard: View {
     @State private var shimmer = false
     @State private var pulseAnimation = false
     @StateObject private var notificationManager = NotificationManager.shared
+    @State private var isRetrying = false
 
     var body: some View {
         ZStack {
@@ -768,13 +914,46 @@ struct PlaceholderImageCard: View {
 
                 // Progress Bar or Error Message
                 if placeholder.state == .failed {
-                    if let errorMsg = placeholder.errorMessage {
-                        Text(errorMsg)
-                            .font(.custom("Nunito-Regular", size: 8))
-                            .foregroundColor(.red.opacity(0.8))
-                            .lineLimit(2)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal, 8)
+                    VStack(spacing: 6) {
+                        if let errorMsg = placeholder.errorMessage {
+                            Text(errorMsg)
+                                .font(.custom("Nunito-Regular", size: 8))
+                                .foregroundColor(.red.opacity(0.8))
+                                .lineLimit(2)
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal, 8)
+                        }
+                        
+                        // Retry button
+                        Button(action: {
+                            retryGeneration()
+                        }) {
+                            HStack(spacing: 4) {
+                                if isRetrying {
+                                    ProgressView()
+                                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                        .scaleEffect(0.8)
+                                } else {
+                                    Image(systemName: "arrow.clockwise")
+                                        .font(.system(size: 10, weight: .semibold))
+                                }
+                                Text("Retry")
+                                    .font(.custom("Nunito-Bold", size: 10))
+                            }
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(
+                                LinearGradient(
+                                    colors: [.blue, .purple],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                            .clipShape(Capsule())
+                        }
+                        .disabled(isRetrying)
+                        .padding(.top, 4)
                     }
                 } else {
                     VStack(spacing: 4) {
@@ -898,6 +1077,27 @@ struct PlaceholderImageCard: View {
         case .failed: return Color.red.opacity(0.4)
         case .completed: return Color.green.opacity(0.4)
         default: return Color.gray.opacity(0.3)
+        }
+    }
+    
+    private func retryGeneration() {
+        guard !isRetrying else { return }
+        isRetrying = true
+        
+        Task {
+            let success = ImageGenerationCoordinator.shared.retryImageGeneration(
+                notificationId: placeholder.id,
+                onImageGenerated: { _ in
+                    isRetrying = false
+                },
+                onError: { _ in
+                    isRetrying = false
+                }
+            )
+            
+            if !success {
+                isRetrying = false
+            }
         }
     }
 }
@@ -1143,470 +1343,470 @@ struct ImageModelsSheet: View {
         }
     }
 }
+//
+//// MARK: - PRESETS LIST SHEET
+//
+//struct PresetsListSheet: View {
+//    @ObservedObject var presetViewModel: PresetViewModel
+//    @Binding var isPresented: Bool
+////    @State private var presetToDelete: Preset? = nil
+//    @State private var showDeleteConfirmation = false
+//    @State private var isEditMode = false
+////    @State private var selectedPreset: Preset? = nil
+//    
+//    var body: some View {
+//        NavigationStack {
+//            Group {
+//                if presetViewModel.isLoading && presetViewModel.presets.isEmpty {
+//                    ProgressView("Loading presets…")
+//                        .padding()
+//                } else if presetViewModel.presets.isEmpty {
+//                    ScrollView {
+//                        EmptyPresetsView()
+//                            .padding(.vertical, 60)
+//                    }
+//                } else {
+//                    if isEditMode {
+//                        // Edit mode with drag and drop using List
+//                        List {
+//                            ForEach(presetViewModel.presets) { preset in
+//                                PresetRow(
+//                                    preset: preset,
+//                                    isEditMode: true,
+//                                    onDelete: {
+//                                        presetToDelete = preset
+//                                        showDeleteConfirmation = true
+//                                    }
+//                                )
+//                                .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+//                                .listRowBackground(Color.clear)
+//                            }
+//                            .onMove { source, destination in
+//                                presetViewModel.reorderPresets(from: source, to: destination)
+//                            }
+//                        }
+//                        .listStyle(.plain)
+//                        .environment(\.editMode, .constant(.active))
+//                    } else {
+//                        // Normal mode with tap navigation
+//                        ScrollView {
+//                            LazyVStack(spacing: 0) {
+//                                ForEach(presetViewModel.presets) { preset in
+//                                    Button {
+//                                        selectedPreset = preset
+//                                    } label: {
+//                                        PresetRow(preset: preset, isEditMode: false, onDelete: nil)
+//                                            .padding(.horizontal)
+//                                            .padding(.vertical, 8)
+//                                    }
+//                                    .buttonStyle(.plain)
+//                                }
+//                            }
+//                            .padding(.vertical)
+//                        }
+//                    }
+//                }
+//            }
+//            .navigationTitle("Presets")
+//            .navigationBarTitleDisplayMode(.inline)
+//            .toolbar {
+//                ToolbarItem(placement: .navigationBarTrailing) {
+//                    if !presetViewModel.presets.isEmpty {
+//                        Button(isEditMode ? "Done" : "Edit") {
+//                            isEditMode.toggle()
+//                        }
+//                    }
+//                }
+//                // ToolbarItem(placement: .navigationBarTrailing) {
+//                //     Button("Done") {
+//                //         isPresented = false
+//                //     }
+//                // }
+//            }
+//            .alert("Delete Preset", isPresented: $showDeleteConfirmation) {
+//                Button("Cancel", role: .cancel) {
+//                    presetToDelete = nil
+//                }
+//                Button("Delete", role: .destructive) {
+//                    if let preset = presetToDelete {
+//                        Task {
+//                            do {
+//                                try await presetViewModel.deletePreset(presetId: preset.id)
+//                            } catch {
+//                                print("❌ Failed to delete preset: \(error)")
+//                            }
+//                        }
+//                    }
+//                    presetToDelete = nil
+//                }
+//            } message: {
+//                if let preset = presetToDelete {
+//                    Text("Are you sure you want to delete \"\(preset.title)\"?")
+//                }
+//            }
+//            .sheet(item: $selectedPreset) { preset in
+//                PresetDetailView(
+//                    preset: preset,
+//                    presetViewModel: presetViewModel,
+//                    isPresented: Binding(
+//                        get: { selectedPreset != nil },
+//                        set: { if !$0 { selectedPreset = nil } }
+//                    )
+//                )
+//                .presentationDetents([.large])
+//                .presentationDragIndicator(.visible)
+//            }
+//            .onAppear {
+//                Task {
+//                    await presetViewModel.fetchPresets(forceRefresh: true)
+//                }
+//            }
+//        }
+//    }
+//}
 
-// MARK: - PRESETS LIST SHEET
-
-struct PresetsListSheet: View {
-    @ObservedObject var presetViewModel: PresetViewModel
-    @Binding var isPresented: Bool
-    @State private var presetToDelete: Preset? = nil
-    @State private var showDeleteConfirmation = false
-    @State private var isEditMode = false
-    @State private var selectedPreset: Preset? = nil
-    
-    var body: some View {
-        NavigationStack {
-            Group {
-                if presetViewModel.isLoading && presetViewModel.presets.isEmpty {
-                    ProgressView("Loading presets…")
-                        .padding()
-                } else if presetViewModel.presets.isEmpty {
-                    ScrollView {
-                        EmptyPresetsView()
-                            .padding(.vertical, 60)
-                    }
-                } else {
-                    if isEditMode {
-                        // Edit mode with drag and drop using List
-                        List {
-                            ForEach(presetViewModel.presets) { preset in
-                                PresetRow(
-                                    preset: preset,
-                                    isEditMode: true,
-                                    onDelete: {
-                                        presetToDelete = preset
-                                        showDeleteConfirmation = true
-                                    }
-                                )
-                                .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
-                                .listRowBackground(Color.clear)
-                            }
-                            .onMove { source, destination in
-                                presetViewModel.reorderPresets(from: source, to: destination)
-                            }
-                        }
-                        .listStyle(.plain)
-                        .environment(\.editMode, .constant(.active))
-                    } else {
-                        // Normal mode with tap navigation
-                        ScrollView {
-                            LazyVStack(spacing: 0) {
-                                ForEach(presetViewModel.presets) { preset in
-                                    Button {
-                                        selectedPreset = preset
-                                    } label: {
-                                        PresetRow(preset: preset, isEditMode: false, onDelete: nil)
-                                            .padding(.horizontal)
-                                            .padding(.vertical, 8)
-                                    }
-                                    .buttonStyle(.plain)
-                                }
-                            }
-                            .padding(.vertical)
-                        }
-                    }
-                }
-            }
-            .navigationTitle("Presets")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    if !presetViewModel.presets.isEmpty {
-                        Button(isEditMode ? "Done" : "Edit") {
-                            isEditMode.toggle()
-                        }
-                    }
-                }
-                // ToolbarItem(placement: .navigationBarTrailing) {
-                //     Button("Done") {
-                //         isPresented = false
-                //     }
-                // }
-            }
-            .alert("Delete Preset", isPresented: $showDeleteConfirmation) {
-                Button("Cancel", role: .cancel) {
-                    presetToDelete = nil
-                }
-                Button("Delete", role: .destructive) {
-                    if let preset = presetToDelete {
-                        Task {
-                            do {
-                                try await presetViewModel.deletePreset(presetId: preset.id)
-                            } catch {
-                                print("❌ Failed to delete preset: \(error)")
-                            }
-                        }
-                    }
-                    presetToDelete = nil
-                }
-            } message: {
-                if let preset = presetToDelete {
-                    Text("Are you sure you want to delete \"\(preset.title)\"?")
-                }
-            }
-            .sheet(item: $selectedPreset) { preset in
-                PresetDetailView(
-                    preset: preset,
-                    presetViewModel: presetViewModel,
-                    isPresented: Binding(
-                        get: { selectedPreset != nil },
-                        set: { if !$0 { selectedPreset = nil } }
-                    )
-                )
-                .presentationDetents([.large])
-                .presentationDragIndicator(.visible)
-            }
-            .onAppear {
-                Task {
-                    await presetViewModel.fetchPresets(forceRefresh: true)
-                }
-            }
-        }
-    }
-}
-
-// MARK: - Preset Row
-
-private struct PresetRow: View {
-    let preset: Preset
-    let isEditMode: Bool
-    let onDelete: (() -> Void)?
-    
-    var body: some View {
-        HStack(spacing: 12) {
-            // // Drag handle in edit mode
-            // if isEditMode {
-            //     Image(systemName: "line.3.horizontal")
-            //         .font(.system(size: 16, weight: .medium))
-            //         .foregroundColor(.secondary)
-            //         .padding(.trailing, 4)
-            // }
-            
-            // Icon or image
-            ZStack {
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(Color.blue.opacity(0.1))
-                    .frame(width: 60, height: 60)
-                
-                if let imageUrl = preset.imageUrl, let url = URL(string: imageUrl) {
-                    KFImage(url)
-                        .placeholder {
-                            Image(systemName: "slider.horizontal.3")
-                                .font(.system(size: 24))
-                                .foregroundColor(.blue)
-                        }
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: 60, height: 60)
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                } else {
-                    Image(systemName: "slider.horizontal.3")
-                        .font(.system(size: 24))
-                        .foregroundColor(.blue)
-                }
-            }
-            .frame(width: 60, height: 60)
-            
-            // Preset details
-            VStack(alignment: .leading, spacing: 6) {
-                Text(preset.title)
-                    .font(.system(size: 16, weight: .semibold, design: .rounded))
-                    .foregroundColor(.primary)
-                    .lineLimit(1)
-                
-                if let modelName = preset.modelName, !modelName.isEmpty {
-                    HStack(spacing: 4) {
-                        Image(systemName: "cpu")
-                            .font(.system(size: 11))
-                            .foregroundColor(.secondary)
-                        Text(modelName)
-                            .font(.system(size: 13, weight: .medium, design: .rounded))
-                            .foregroundColor(.secondary)
-                            .lineLimit(1)
-                    }
-                }
-                
-                if let prompt = preset.prompt, !prompt.isEmpty {
-                    Text(prompt)
-                        .font(.system(size: 12, design: .rounded))
-                        .foregroundColor(.secondary)
-                        .lineLimit(2)
-                }
-            }
-            
-            Spacer()
-            
-            // Delete button in edit mode, chevron in normal mode
-            if isEditMode {
-                Button(action: {
-                    onDelete?()
-                }) {
-                    Image(systemName: "minus.circle.fill")
-                        .font(.system(size: 24))
-                        .foregroundColor(.red)
-                }
-                .buttonStyle(.plain)
-            } else {
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(.secondary)
-            }
-        }
-        .padding(12)
-        .background(Color.gray.opacity(0.06))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color.gray.opacity(0.2), lineWidth: 1)
-        )
-    }
-}
-
-// MARK: - Preset Detail View
-
-struct PresetDetailView: View {
-    let preset: Preset
-    @ObservedObject var presetViewModel: PresetViewModel
-    @Binding var isPresented: Bool
-    
-    @State private var title: String
-    @State private var modelName: String
-    @State private var prompt: String
-    @State private var isSaving = false
-    @State private var showDeleteConfirmation = false
-    @State private var showError = false
-    @State private var errorMessage = ""
-    @FocusState private var focusedField: Field?
-    
-    enum Field {
-        case title, modelName, prompt
-    }
-    
-    init(preset: Preset, presetViewModel: PresetViewModel, isPresented: Binding<Bool>) {
-        self.preset = preset
-        self.presetViewModel = presetViewModel
-        self._isPresented = isPresented
-        _title = State(initialValue: preset.title)
-        _modelName = State(initialValue: preset.modelName ?? "")
-        _prompt = State(initialValue: preset.prompt ?? "")
-    }
-    
-    var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(spacing: 24) {
-                    // Image preview
-                    if let imageUrl = preset.imageUrl, let url = URL(string: imageUrl) {
-                        KFImage(url)
-                            .placeholder {
-                                RoundedRectangle(cornerRadius: 12)
-                                    .fill(Color.gray.opacity(0.2))
-                                    .overlay(
-                                        Image(systemName: "photo")
-                                            .font(.system(size: 40))
-                                            .foregroundColor(.gray)
-                                    )
-                            }
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(maxHeight: 300)
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
-                            .padding(.horizontal)
-                    }
-                    
-                    // Edit fields
-                    VStack(alignment: .leading, spacing: 20) {
-                        // Title field
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Title")
-                                .font(.headline)
-                                .foregroundColor(.primary)
-                            
-                            TextField("Preset title", text: $title)
-                                .textFieldStyle(.roundedBorder)
-                                .focused($focusedField, equals: .title)
-                        }
-                        
-                        // Model name field
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Model Name")
-                                .font(.headline)
-                                .foregroundColor(.primary)
-                            
-                            TextField("Image model", text: $modelName)
-                                .textFieldStyle(.roundedBorder)
-                                .focused($focusedField, equals: .modelName)
-                        }
-                        
-                        // Prompt field
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Prompt")
-                                .font(.headline)
-                                .foregroundColor(.primary)
-                            
-                            ZStack(alignment: .topLeading) {
-                                // Hidden text to measure content height
-                                Text(prompt.isEmpty ? " " : prompt)
-                                    .font(.system(size: 17))
-                                    .padding(8)
-                                    .opacity(0)
-                                    .fixedSize(horizontal: false, vertical: true)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                
-                                // Actual TextEditor
-                                TextEditor(text: $prompt)
-                                    .scrollDisabled(true)
-                                    .padding(8)
-                                    .background(Color.gray.opacity(0.1))
-                                    .focused($focusedField, equals: .prompt)
-                            }
-                            .frame(minHeight: 120)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .stroke(focusedField == .prompt ? Color.blue : Color.gray.opacity(0.3), lineWidth: 1)
-                            )
-                        }
-                    }
-                    .padding(.horizontal)
-                    
-                    // Save button
-                    Button(action: {
-                        Task {
-                            await savePreset()
-                        }
-                    }) {
-                        HStack {
-                            if isSaving {
-                                ProgressView()
-                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                            }
-                            Text(isSaving ? "Saving..." : "Save Changes")
-                                .font(.headline)
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(title.isEmpty ? Color.gray : Color.blue)
-                        .foregroundColor(.white)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
-                    }
-                    .disabled(title.isEmpty || isSaving)
-                    .padding(.horizontal)
-                    
-                    // Delete button
-                    Button(action: {
-                        showDeleteConfirmation = true
-                    }) {
-                        HStack {
-                            Image(systemName: "trash")
-                            Text("Delete Preset")
-                                .font(.headline)
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.red.opacity(0.1))
-                        .foregroundColor(.red)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
-                    }
-                    .padding(.horizontal)
-                    .padding(.bottom)
-                }
-                .padding(.vertical)
-            }
-            .navigationTitle("Edit Preset")
-            .navigationBarTitleDisplayMode(.inline)
-            .presentationDetents([.large])
-            .presentationDragIndicator(.visible)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
-                        isPresented = false
-                    }
-                }
-            }
-            .alert("Delete Preset", isPresented: $showDeleteConfirmation) {
-                Button("Cancel", role: .cancel) {}
-                Button("Delete", role: .destructive) {
-                    Task {
-                        await deletePreset()
-                    }
-                }
-            } message: {
-                Text("Are you sure you want to delete \"\(preset.title)\"? This action cannot be undone.")
-            }
-            .alert("Error", isPresented: $showError) {
-                Button("OK", role: .cancel) {}
-            } message: {
-                Text(errorMessage)
-            }
-        }
-    }
-    
-    private func savePreset() async {
-        isSaving = true
-        
-        do {
-            try await presetViewModel.updatePreset(
-                presetId: preset.id,
-                title: title.trimmingCharacters(in: .whitespacesAndNewlines),
-                modelName: modelName.isEmpty ? nil : modelName.trimmingCharacters(in: .whitespacesAndNewlines),
-                prompt: prompt.isEmpty ? nil : prompt.trimmingCharacters(in: .whitespacesAndNewlines),
-                imageUrl: preset.imageUrl
-            )
-            
-            await MainActor.run {
-                isSaving = false
-                isPresented = false
-            }
-        } catch {
-            await MainActor.run {
-                isSaving = false
-                errorMessage = "Failed to update preset: \(error.localizedDescription)"
-                showError = true
-            }
-        }
-    }
-    
-    private func deletePreset() async {
-        do {
-            try await presetViewModel.deletePreset(presetId: preset.id)
-            
-            await MainActor.run {
-                isPresented = false
-            }
-        } catch {
-            await MainActor.run {
-                errorMessage = "Failed to delete preset: \(error.localizedDescription)"
-                showError = true
-            }
-        }
-    }
-}
-
-// MARK: - Empty Presets View
-
-private struct EmptyPresetsView: View {
-    var body: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "slider.horizontal.3")
-                .font(.system(size: 48))
-                .foregroundColor(.gray.opacity(0.5))
-            
-            VStack(spacing: 8) {
-                Text("No Presets Yet")
-                    .font(.headline)
-                    .foregroundColor(.primary)
-                
-                Text("Save presets from your images to quickly reuse your favorite settings")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 32)
-            }
-        }
-    }
-}
+//// MARK: - Preset Row
+//
+//private struct PresetRow: View {
+////    let preset: Preset
+//    let isEditMode: Bool
+//    let onDelete: (() -> Void)?
+//    
+//    var body: some View {
+//        HStack(spacing: 12) {
+//            // // Drag handle in edit mode
+//            // if isEditMode {
+//            //     Image(systemName: "line.3.horizontal")
+//            //         .font(.system(size: 16, weight: .medium))
+//            //         .foregroundColor(.secondary)
+//            //         .padding(.trailing, 4)
+//            // }
+//            
+//            // Icon or image
+//            ZStack {
+//                RoundedRectangle(cornerRadius: 8)
+//                    .fill(Color.blue.opacity(0.1))
+//                    .frame(width: 60, height: 60)
+//                
+//                if let imageUrl = preset.imageUrl, let url = URL(string: imageUrl) {
+//                    KFImage(url)
+//                        .placeholder {
+//                            Image(systemName: "slider.horizontal.3")
+//                                .font(.system(size: 24))
+//                                .foregroundColor(.blue)
+//                        }
+//                        .resizable()
+//                        .aspectRatio(contentMode: .fill)
+//                        .frame(width: 60, height: 60)
+//                        .clipShape(RoundedRectangle(cornerRadius: 8))
+//                } else {
+//                    Image(systemName: "slider.horizontal.3")
+//                        .font(.system(size: 24))
+//                        .foregroundColor(.blue)
+//                }
+//            }
+//            .frame(width: 60, height: 60)
+//            
+//            // Preset details
+//            VStack(alignment: .leading, spacing: 6) {
+//                Text(preset.title)
+//                    .font(.system(size: 16, weight: .semibold, design: .rounded))
+//                    .foregroundColor(.primary)
+//                    .lineLimit(1)
+//                
+//                if let modelName = preset.modelName, !modelName.isEmpty {
+//                    HStack(spacing: 4) {
+//                        Image(systemName: "cpu")
+//                            .font(.system(size: 11))
+//                            .foregroundColor(.secondary)
+//                        Text(modelName)
+//                            .font(.system(size: 13, weight: .medium, design: .rounded))
+//                            .foregroundColor(.secondary)
+//                            .lineLimit(1)
+//                    }
+//                }
+//                
+//                if let prompt = preset.prompt, !prompt.isEmpty {
+//                    Text(prompt)
+//                        .font(.system(size: 12, design: .rounded))
+//                        .foregroundColor(.secondary)
+//                        .lineLimit(2)
+//                }
+//            }
+//            
+//            Spacer()
+//            
+//            // Delete button in edit mode, chevron in normal mode
+//            if isEditMode {
+//                Button(action: {
+//                    onDelete?()
+//                }) {
+//                    Image(systemName: "minus.circle.fill")
+//                        .font(.system(size: 24))
+//                        .foregroundColor(.red)
+//                }
+//                .buttonStyle(.plain)
+//            } else {
+//                Image(systemName: "chevron.right")
+//                    .font(.system(size: 12, weight: .medium))
+//                    .foregroundColor(.secondary)
+//            }
+//        }
+//        .padding(12)
+//        .background(Color.gray.opacity(0.06))
+//        .clipShape(RoundedRectangle(cornerRadius: 12))
+//        .overlay(
+//            RoundedRectangle(cornerRadius: 12)
+//                .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+//        )
+//    }
+//}
+//
+//// MARK: - Preset Detail View
+//
+//struct PresetDetailView: View {
+//    let preset: Preset
+//    @ObservedObject var presetViewModel: PresetViewModel
+//    @Binding var isPresented: Bool
+//    
+//    @State private var title: String
+//    @State private var modelName: String
+//    @State private var prompt: String
+//    @State private var isSaving = false
+//    @State private var showDeleteConfirmation = false
+//    @State private var showError = false
+//    @State private var errorMessage = ""
+//    @FocusState private var focusedField: Field?
+//    
+//    enum Field {
+//        case title, modelName, prompt
+//    }
+//    
+//    init(preset: Preset, presetViewModel: PresetViewModel, isPresented: Binding<Bool>) {
+//        self.preset = preset
+//        self.presetViewModel = presetViewModel
+//        self._isPresented = isPresented
+//        _title = State(initialValue: preset.title)
+//        _modelName = State(initialValue: preset.modelName ?? "")
+//        _prompt = State(initialValue: preset.prompt ?? "")
+//    }
+//    
+//    var body: some View {
+//        NavigationStack {
+//            ScrollView {
+//                VStack(spacing: 24) {
+//                    // Image preview
+//                    if let imageUrl = preset.imageUrl, let url = URL(string: imageUrl) {
+//                        KFImage(url)
+//                            .placeholder {
+//                                RoundedRectangle(cornerRadius: 12)
+//                                    .fill(Color.gray.opacity(0.2))
+//                                    .overlay(
+//                                        Image(systemName: "photo")
+//                                            .font(.system(size: 40))
+//                                            .foregroundColor(.gray)
+//                                    )
+//                            }
+//                            .resizable()
+//                            .aspectRatio(contentMode: .fit)
+//                            .frame(maxHeight: 300)
+//                            .clipShape(RoundedRectangle(cornerRadius: 12))
+//                            .padding(.horizontal)
+//                    }
+//                    
+//                    // Edit fields
+//                    VStack(alignment: .leading, spacing: 20) {
+//                        // Title field
+//                        VStack(alignment: .leading, spacing: 8) {
+//                            Text("Title")
+//                                .font(.headline)
+//                                .foregroundColor(.primary)
+//                            
+//                            TextField("Preset title", text: $title)
+//                                .textFieldStyle(.roundedBorder)
+//                                .focused($focusedField, equals: .title)
+//                        }
+//                        
+//                        // Model name field
+//                        VStack(alignment: .leading, spacing: 8) {
+//                            Text("Model Name")
+//                                .font(.headline)
+//                                .foregroundColor(.primary)
+//                            
+//                            TextField("Image model", text: $modelName)
+//                                .textFieldStyle(.roundedBorder)
+//                                .focused($focusedField, equals: .modelName)
+//                        }
+//                        
+//                        // Prompt field
+//                        VStack(alignment: .leading, spacing: 8) {
+//                            Text("Prompt")
+//                                .font(.headline)
+//                                .foregroundColor(.primary)
+//                            
+//                            ZStack(alignment: .topLeading) {
+//                                // Hidden text to measure content height
+//                                Text(prompt.isEmpty ? " " : prompt)
+//                                    .font(.system(size: 17))
+//                                    .padding(8)
+//                                    .opacity(0)
+//                                    .fixedSize(horizontal: false, vertical: true)
+//                                    .frame(maxWidth: .infinity, alignment: .leading)
+//                                
+//                                // Actual TextEditor
+//                                TextEditor(text: $prompt)
+//                                    .scrollDisabled(true)
+//                                    .padding(8)
+//                                    .background(Color.gray.opacity(0.1))
+//                                    .focused($focusedField, equals: .prompt)
+//                            }
+//                            .frame(minHeight: 120)
+//                            .fixedSize(horizontal: false, vertical: true)
+//                            .clipShape(RoundedRectangle(cornerRadius: 8))
+//                            .overlay(
+//                                RoundedRectangle(cornerRadius: 8)
+//                                    .stroke(focusedField == .prompt ? Color.blue : Color.gray.opacity(0.3), lineWidth: 1)
+//                            )
+//                        }
+//                    }
+//                    .padding(.horizontal)
+//                    
+//                    // Save button
+//                    Button(action: {
+//                        Task {
+//                            await savePreset()
+//                        }
+//                    }) {
+//                        HStack {
+//                            if isSaving {
+//                                ProgressView()
+//                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
+//                            }
+//                            Text(isSaving ? "Saving..." : "Save Changes")
+//                                .font(.headline)
+//                        }
+//                        .frame(maxWidth: .infinity)
+//                        .padding()
+//                        .background(title.isEmpty ? Color.gray : Color.blue)
+//                        .foregroundColor(.white)
+//                        .clipShape(RoundedRectangle(cornerRadius: 12))
+//                    }
+//                    .disabled(title.isEmpty || isSaving)
+//                    .padding(.horizontal)
+//                    
+//                    // Delete button
+//                    Button(action: {
+//                        showDeleteConfirmation = true
+//                    }) {
+//                        HStack {
+//                            Image(systemName: "trash")
+//                            Text("Delete Preset")
+//                                .font(.headline)
+//                        }
+//                        .frame(maxWidth: .infinity)
+//                        .padding()
+//                        .background(Color.red.opacity(0.1))
+//                        .foregroundColor(.red)
+//                        .clipShape(RoundedRectangle(cornerRadius: 12))
+//                    }
+//                    .padding(.horizontal)
+//                    .padding(.bottom)
+//                }
+//                .padding(.vertical)
+//            }
+//            .navigationTitle("Edit Preset")
+//            .navigationBarTitleDisplayMode(.inline)
+//            .presentationDetents([.large])
+//            .presentationDragIndicator(.visible)
+//            .toolbar {
+//                ToolbarItem(placement: .navigationBarTrailing) {
+//                    Button("Done") {
+//                        isPresented = false
+//                    }
+//                }
+//            }
+//            .alert("Delete Preset", isPresented: $showDeleteConfirmation) {
+//                Button("Cancel", role: .cancel) {}
+//                Button("Delete", role: .destructive) {
+//                    Task {
+//                        await deletePreset()
+//                    }
+//                }
+//            } message: {
+//                Text("Are you sure you want to delete \"\(preset.title)\"? This action cannot be undone.")
+//            }
+//            .alert("Error", isPresented: $showError) {
+//                Button("OK", role: .cancel) {}
+//            } message: {
+//                Text(errorMessage)
+//            }
+//        }
+//    }
+//    
+//    private func savePreset() async {
+//        isSaving = true
+//        
+//        do {
+//            try await presetViewModel.updatePreset(
+//                presetId: preset.id,
+//                title: title.trimmingCharacters(in: .whitespacesAndNewlines),
+//                modelName: modelName.isEmpty ? nil : modelName.trimmingCharacters(in: .whitespacesAndNewlines),
+//                prompt: prompt.isEmpty ? nil : prompt.trimmingCharacters(in: .whitespacesAndNewlines),
+//                imageUrl: preset.imageUrl
+//            )
+//            
+//            await MainActor.run {
+//                isSaving = false
+//                isPresented = false
+//            }
+//        } catch {
+//            await MainActor.run {
+//                isSaving = false
+//                errorMessage = "Failed to update preset: \(error.localizedDescription)"
+//                showError = true
+//            }
+//        }
+//    }
+//    
+//    private func deletePreset() async {
+//        do {
+//            try await presetViewModel.deletePreset(presetId: preset.id)
+//            
+//            await MainActor.run {
+//                isPresented = false
+//            }
+//        } catch {
+//            await MainActor.run {
+//                errorMessage = "Failed to delete preset: \(error.localizedDescription)"
+//                showError = true
+//            }
+//        }
+//    }
+//}
+//
+//// MARK: - Empty Presets View
+//
+//private struct EmptyPresetsView: View {
+//    var body: some View {
+//        VStack(spacing: 16) {
+//            Image(systemName: "slider.horizontal.3")
+//                .font(.system(size: 48))
+//                .foregroundColor(.gray.opacity(0.5))
+//            
+//            VStack(spacing: 8) {
+//                Text("No Presets Yet")
+//                    .font(.headline)
+//                    .foregroundColor(.primary)
+//                
+//                Text("Save presets from your images to quickly reuse your favorite settings")
+//                    .font(.subheadline)
+//                    .foregroundColor(.secondary)
+//                    .multilineTextAlignment(.center)
+//                    .padding(.horizontal, 32)
+//            }
+//        }
+//    }
+//}
 
 // MARK: - URL Identifiable
 

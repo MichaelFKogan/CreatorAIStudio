@@ -659,6 +659,133 @@ class ProfileViewModel: ObservableObject {
         saveCachedImages(for: userId)
     }
     
+    /// Deletes multiple images from the database and storage, then removes them from the local array
+    /// - Parameter imageIds: Array of image IDs to delete
+    func deleteImages(imageIds: [String]) async {
+        guard let userId = userId else { return }
+        
+        for imageId in imageIds {
+            // Find the image to get its details
+            guard let image = userImages.first(where: { $0.id == imageId }) else { continue }
+            
+            let maxRetries = 3
+            var lastError: Error?
+            
+            for attempt in 1...maxRetries {
+                do {
+                    let imageUrl = image.image_url
+                    let isVideo = image.isVideo
+                    
+                    // Delete from database first
+                    try await retryOperation(maxAttempts: 2) {
+                        try await client.database
+                            .from("user_media")
+                            .delete()
+                            .eq("id", value: imageId)
+                            .execute()
+                    }
+                    
+                    // Determine which storage bucket to use
+                    let bucketName = isVideo ? "user-generated-videos" : "user-generated-images"
+                    let bucketPath = isVideo ? "/user-generated-videos/" : "/user-generated-images/"
+                    
+                    // Extract the storage path from the URL
+                    var storagePath: String?
+                    
+                    if let bucketIndex = imageUrl.range(of: bucketPath) {
+                        storagePath = String(imageUrl[bucketIndex.upperBound...])
+                    } else if let publicIndex = imageUrl.range(of: "/public\(bucketPath)") {
+                        storagePath = String(imageUrl[publicIndex.upperBound...])
+                    } else if let url = URL(string: imageUrl) {
+                        let bucketComponent = isVideo ? "user-generated-videos" : "user-generated-images"
+                        if let bucketIdx = url.pathComponents.firstIndex(of: bucketComponent) {
+                            let pathAfterBucket = url.pathComponents.dropFirst(bucketIdx + 1)
+                            storagePath = pathAfterBucket.joined(separator: "/")
+                        }
+                    }
+                    
+                    // Delete thumbnail if it's a video (non-critical)
+                    if isVideo, let thumbnailUrl = image.thumbnail_url {
+                        var thumbnailPath: String?
+                        if let bucketIndex = thumbnailUrl.range(of: "/user-generated-images/") {
+                            thumbnailPath = String(thumbnailUrl[bucketIndex.upperBound...])
+                        }
+                        
+                        if let thumbnailPath = thumbnailPath {
+                            do {
+                                try await retryOperation(maxAttempts: 2) {
+                                    _ = try await client.storage
+                                        .from("user-generated-images")
+                                        .remove(paths: [thumbnailPath])
+                                }
+                            } catch {
+                                print("⚠️ Thumbnail deletion failed (non-critical): \(error)")
+                            }
+                        }
+                    }
+                    
+                    // Delete main storage file (non-critical if this fails)
+                    if let storagePath = storagePath {
+                        do {
+                            try await retryOperation(maxAttempts: 2) {
+                                _ = try await client.storage
+                                    .from(bucketName)
+                                    .remove(paths: [storagePath])
+                            }
+                        } catch {
+                            print("⚠️ Storage deletion failed (non-critical): \(error)")
+                        }
+                    }
+                    
+                    // Success - remove from local array
+                    await MainActor.run {
+                        userImages.removeAll { $0.id == imageId }
+                    }
+                    break // Success, exit retry loop
+                    
+                } catch {
+                    lastError = error
+                    if attempt < maxRetries {
+                        let delaySeconds = Double(attempt) * 0.5
+                        try? await Task.sleep(nanoseconds: UInt64(delaySeconds * 1_000_000_000))
+                    }
+                }
+            }
+            
+            if lastError != nil {
+                print("❌ Failed to delete image \(imageId) after \(maxRetries) attempts")
+            }
+        }
+        
+        // Update cache after all deletions
+        await MainActor.run {
+            saveCachedImages(for: userId)
+        }
+    }
+    
+    // MARK: - Retry Helper
+    
+    private func retryOperation<T>(maxAttempts: Int, operation: () async throws -> T) async throws -> T {
+        var lastError: Error?
+        
+        for attempt in 1...maxAttempts {
+            do {
+                return try await operation()
+            } catch {
+                lastError = error
+                if attempt < maxAttempts {
+                    let delay = 0.3 * Double(attempt)
+                    try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
+                }
+            }
+        }
+        
+        throw lastError ?? NSError(
+            domain: "RetryError", code: -1,
+            userInfo: [NSLocalizedDescriptionKey: "Operation failed after \(maxAttempts) attempts"]
+        )
+    }
+    
     // MARK: - Add Image
     
     /// Adds a new image to the local array and cache

@@ -18,6 +18,9 @@ struct NotificationData: Identifiable, Equatable {
     var state: NotificationState
     var errorMessage: String?
     var taskId: UUID? // Associated task ID for cancellation
+    var modelName: String? // Model name for retry
+    var prompt: String? // Prompt for retry
+    var originalImage: UIImage? // Original image for retry
     
     static func == (lhs: NotificationData, rhs: NotificationData) -> Bool {
         lhs.id == rhs.id
@@ -38,7 +41,10 @@ struct NotificationData: Identifiable, Equatable {
         isActive: Bool = true,
         state: NotificationState = .inProgress,
         errorMessage: String? = nil,
-        taskId: UUID? = nil
+        taskId: UUID? = nil,
+        modelName: String? = nil,
+        prompt: String? = nil,
+        originalImage: UIImage? = nil
     ) {
         self.id = id
         self.title = title
@@ -49,6 +55,9 @@ struct NotificationData: Identifiable, Equatable {
         self.state = state
         self.errorMessage = errorMessage
         self.taskId = taskId
+        self.modelName = modelName
+        self.prompt = prompt
+        self.originalImage = originalImage
     }
 }
 
@@ -62,6 +71,9 @@ struct PlaceholderImage: Identifiable {
     let state: NotificationState
     let errorMessage: String?
     let taskId: UUID? // Associated task ID for cancellation
+    let modelName: String? // Model name for retry
+    let prompt: String? // Prompt for retry
+    let originalImage: UIImage? // Original image for retry
     
     init(from notification: NotificationData) {
         self.id = notification.id
@@ -72,6 +84,9 @@ struct PlaceholderImage: Identifiable {
         self.state = notification.state
         self.errorMessage = notification.errorMessage
         self.taskId = notification.taskId
+        self.modelName = notification.modelName
+        self.prompt = notification.prompt
+        self.originalImage = notification.originalImage
     }
 }
 

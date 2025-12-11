@@ -23,15 +23,15 @@ struct Post: View {
     @State private var selectedImageModel: InfoPacket?
 
     // Presets state
-    @StateObject private var presetViewModel = PresetViewModel()
+//    @StateObject private var presetViewModel = PresetViewModel()
 
-    // Convert presets to InfoPacket format
-    private var presetInfoPackets: [InfoPacket] {
-        let allModels = imageModelsViewModel.filteredAndSortedImageModels
-        return presetViewModel.presets.compactMap { preset in
-            preset.toInfoPacket(allModels: allModels)
-        }
-    }
+//    // Convert presets to InfoPacket format
+//    private var presetInfoPackets: [InfoPacket] {
+//        let allModels = imageModelsViewModel.filteredAndSortedImageModels
+//        return presetViewModel.presets.compactMap { preset in
+//            preset.toInfoPacket(allModels: allModels)
+//        }
+//    }
 
     var body: some View {
         NavigationStack {
@@ -472,23 +472,23 @@ struct Post: View {
                         HStack {
                             Spacer()
                             FilterScrollRow(
-                                presets: presetInfoPackets,
+//                                presets: presetInfoPackets,
                                 imageModels: imageModelsViewModel
                                     .filteredAndSortedImageModels,
                                 filters: filtersViewModel.filters,
                                 selectedFilter: selectedFilter,
                                 selectedImageModel: selectedImageModel,
                                 onSelect: { item in
-                                    // Check if the item is a preset
-                                    if presetInfoPackets.contains(where: {
-                                        $0.id == item.id
-                                    }) {
-                                        // It's a preset - treat as a filter
-                                        selectedFilter = item
-                                        selectedImageModel = nil
-                                    }
+//                                    // Check if the item is a preset
+//                                    if presetInfoPackets.contains(where: {
+//                                        $0.id == item.id
+//                                    }) {
+//                                        // It's a preset - treat as a filter
+//                                        selectedFilter = item
+//                                        selectedImageModel = nil
+//                                    }
                                     // Check if the item is an image model or a filter
-                                    else if imageModelsViewModel
+                                    if imageModelsViewModel
                                         .filteredAndSortedImageModels.contains(
                                             where: { $0.id == item.id })
                                     {
@@ -550,13 +550,13 @@ struct Post: View {
                 // Ensure session is running when view appears
                 cameraService.startSession()
 
-                // Load presets if user is signed in
-                if let userId = authViewModel.user?.id.uuidString {
-                    presetViewModel.userId = userId
-                    Task {
-                        await presetViewModel.fetchPresets()
-                    }
-                }
+//                // Load presets if user is signed in
+//                if let userId = authViewModel.user?.id.uuidString {
+//                    presetViewModel.userId = userId
+//                    Task {
+//                        await presetViewModel.fetchPresets()
+//                    }
+//                }
             }
             .onDisappear {
                 isViewActive = false
@@ -618,15 +618,15 @@ struct Post: View {
                     selectedImageModel: $selectedImageModel,
                     onSelect: { filter in
                         // Check if it's a preset
-                        if presetInfoPackets.contains(where: {
-                            $0.id == filter.id
-                        }) {
-                            selectedFilter = filter
-                            selectedImageModel = nil
-                        } else {
+//                        if presetInfoPackets.contains(where: {
+//                            $0.id == filter.id
+//                        }) {
+//                            selectedFilter = filter
+//                            selectedImageModel = nil
+//                        } else {
                             selectedFilter = filter
                             selectedImageModel = nil  // Clear model when filter is selected
-                        }
+//                        }
                     },
                     onSelectModel: { model in
                         selectedImageModel = model
@@ -646,10 +646,10 @@ struct Post: View {
 
     // Helper function to get category title for an item
     private func categoryTitle(for item: InfoPacket) -> String {
-        // Check if it's a preset first
-        if presetInfoPackets.contains(where: { $0.id == item.id }) {
-            return "Presets"
-        }
+//        // Check if it's a preset first
+//        if presetInfoPackets.contains(where: { $0.id == item.id }) {
+//            return "Presets"
+//        }
 
         // Check if it's an image model
         if imageModelsViewModel.filteredAndSortedImageModels.contains(where: {

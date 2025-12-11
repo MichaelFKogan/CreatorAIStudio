@@ -46,16 +46,16 @@ struct FilterCategorySheet: View {
     let onSelectModel: (InfoPacket) -> Void
 
     @State private var expandedCategories: Set<FilterCategory> = []
-    @StateObject private var presetViewModel = PresetViewModel()
+//    @StateObject private var presetViewModel = PresetViewModel()
     @EnvironmentObject var authViewModel: AuthViewModel
 
-    // Convert presets to InfoPacket format
-    private var presetInfoPackets: [InfoPacket] {
-        let allModels = ImageModelsViewModel.loadImageModels()
-        return presetViewModel.presets.compactMap { preset in
-            preset.toInfoPacket(allModels: allModels)
-        }
-    }
+//    // Convert presets to InfoPacket format
+//    private var presetInfoPackets: [InfoPacket] {
+//        let allModels = ImageModelsViewModel.loadImageModels()
+//        return presetViewModel.presets.compactMap { preset in
+//            preset.toInfoPacket(allModels: allModels)
+//        }
+//    }
 
     // Filter image models to only show those with Image to Image capability
     private var imageToImageModels: [InfoPacket] {
@@ -192,15 +192,15 @@ struct FilterCategorySheet: View {
             //            .preferredColorScheme(.dark)
         }
         .presentationDetents([.medium, .large])
-        .onAppear {
-            // Load presets if user is signed in
-            if let userId = authViewModel.user?.id.uuidString {
-                presetViewModel.userId = userId
-                Task {
-                    await presetViewModel.fetchPresets()
-                }
-            }
-        }
+//        .onAppear {
+//            // Load presets if user is signed in
+//            if let userId = authViewModel.user?.id.uuidString {
+//                presetViewModel.userId = userId
+//                Task {
+//                    await presetViewModel.fetchPresets()
+//                }
+//            }
+//        }
     }
 }
 

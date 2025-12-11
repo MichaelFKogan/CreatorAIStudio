@@ -25,7 +25,10 @@ class NotificationManager: ObservableObject {
         message: String,
         progress: Double = 0.0,
         thumbnailImage: UIImage? = nil,
-        taskId: UUID? = nil
+        taskId: UUID? = nil,
+        modelName: String? = nil,
+        prompt: String? = nil,
+        originalImage: UIImage? = nil
     ) -> UUID {
         let notification = NotificationData(
             title: title,
@@ -33,7 +36,10 @@ class NotificationManager: ObservableObject {
             progress: progress,
             thumbnailImage: thumbnailImage,
             isActive: true,
-            taskId: taskId
+            taskId: taskId,
+            modelName: modelName,
+            prompt: prompt,
+            originalImage: originalImage
         )
         
         withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) {
@@ -159,6 +165,18 @@ class NotificationManager: ObservableObject {
         Task {
             try? await Task.sleep(for: .seconds(2))
             dismissNotification(id: notificationId)
+        }
+    }
+    
+    /// Reset a failed notification to in-progress state for retry
+    @MainActor
+    func resetForRetry(notificationId: UUID) {
+        guard let index = notifications.firstIndex(where: { $0.id == notificationId }) else { return }
+        withAnimation(.easeInOut(duration: 0.3)) {
+            notifications[index].state = .inProgress
+            notifications[index].progress = 0.0
+            notifications[index].errorMessage = nil
+            notifications[index].message = "Retrying generation..."
         }
     }
     

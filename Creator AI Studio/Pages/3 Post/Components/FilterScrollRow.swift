@@ -4,7 +4,7 @@ import SwiftUI
 // MARK: - Filter Scroll Row
 
 struct FilterScrollRow: View {
-    let presets: [InfoPacket]
+    // let presets: [InfoPacket]
     let imageModels: [InfoPacket]
     let filters: [InfoPacket]
     let selectedFilter: InfoPacket?
