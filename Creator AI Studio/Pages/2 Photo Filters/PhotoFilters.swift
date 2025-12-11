@@ -22,6 +22,12 @@ enum FilterCategory: String, CaseIterable, Identifiable {
     }
 
     func matches(_ filter: InfoPacket) -> Bool {
+        // Use the category field if available, otherwise fall back to title matching for backward compatibility
+        if let category = filter.category {
+            return category == rawValue
+        }
+        
+        // Fallback to title matching for filters without category field
         let title = filter.display.title.lowercased()
         switch self {
         case .artistic:

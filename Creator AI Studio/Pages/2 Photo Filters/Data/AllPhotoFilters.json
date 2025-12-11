@@ -39,7 +39,8 @@
     },
     "prompt": "",
     "cost": 0.005,
-    "type": "Photo Filter"
+    "type": "Photo Filter",
+    "category": "Artistic"
   },
   {
     "display": {
@@ -81,7 +82,8 @@
     },
     "prompt": "",
     "cost": 0.005,
-    "type": "Photo Filter"
+    "type": "Photo Filter",
+    "category": "Artistic"
   },
 
   {
@@ -112,7 +114,8 @@
     "prompt": "Transform to Anime style",
     "cost": 0.04,
     "type": "Photo Filter",
-    "capabilities": ["Text to Image", "Image to Image"]
+    "capabilities": ["Text to Image", "Image to Image"],
+    "category": "Artistic"
   },
   {
     "display": {
@@ -142,7 +145,8 @@
     "prompt": "Transform to Anime style",
     "cost": 0.04,
     "type": "Photo Filter",
-    "capabilities": ["Text to Image", "Image to Image"]
+    "capabilities": ["Text to Image", "Image to Image"],
+    "category": "Artistic"
   },
 
   {
@@ -168,7 +172,8 @@
     "prompt": "Transform to Anime style",
     "cost": 0.04,
     "type": "Photo Filter",
-    "capabilities": ["Text to Image", "Image to Image"]
+    "capabilities": ["Text to Image", "Image to Image"],
+    "category": "Artistic"
   },
   {
     "display": {
@@ -193,7 +198,8 @@
     "prompt": "Transform to Anime style",
     "cost": 0.04,
     "type": "Photo Filter",
-    "capabilities": ["Text to Image", "Image to Image"]
+    "capabilities": ["Text to Image", "Image to Image"],
+    "category": "Artistic"
   },
 
   {
@@ -219,7 +225,8 @@
     "prompt": "Transform to Anime style",
     "cost": 0.03,
     "type": "Photo Filter",
-    "capabilities": ["Text to Image", "Image to Image"]
+    "capabilities": ["Text to Image", "Image to Image"],
+    "category": "Artistic"
   },
 
   {
@@ -245,7 +252,8 @@
     "prompt": "Transform to Anime style",
     "cost": 0.03,
     "type": "Photo Filter",
-    "capabilities": ["Text to Image", "Image to Image"]
+    "capabilities": ["Text to Image", "Image to Image"],
+    "category": "Artistic"
   },
 
   {
@@ -271,7 +279,8 @@
     "prompt": "Transform to Japanese Painting style. The person should be wearing traditional Japanese clothing (kimono for women, yukata or hakama for men)",
     "cost": 0.039,
     "type": "Photo Filter",
-    "capabilities": ["Text to Image", "Image to Image"]
+    "capabilities": ["Text to Image", "Image to Image"],
+    "category": "Artistic"
   },
 
   {
@@ -294,15 +303,16 @@
         "imageCompressionQuality": 0.9
       }
     },
-    "prompt": "Generate an image from the uploaded photo. Keep your facial features and skin tone at 100 percent. Keep the look gender neutral. Show you as a painted figure with thick palette knife texture, visible strokes, fresh oil paint, and a heavy textured canvas surface. Place you in a chaotic colorful abstract background with uneven marks and strokes that match the same painted style. Use close camera framing so you fill most of the scene. Keep strong light from the front to show texture and color contrast.",
+    "prompt": "Generate an image from the uploaded photo.\n\nKeep your facial features and skin tone at 100 percent. Keep the look gender neutral.\n\nShow you as a painted figure with thick palette knife texture, visible strokes, fresh oil paint, and a heavy textured canvas surface.\n\nPlace you in a chaotic colorful abstract background with uneven marks and strokes that match the same painted style.\n\nUse close camera framing so you fill most of the scene. Keep strong light from the front to show texture and color contrast.",
     "cost": 0.039,
     "type": "Photo Filter",
-    "capabilities": ["Text to Image", "Image to Image"]
+    "capabilities": ["Text to Image", "Image to Image"],
+    "category": "Artistic"
   },
   {
     "display": {
       "title": "Designer Toy Figure",
-      "imageName": "designertoyfigure-nanobanana",
+      "imageName": "designertoyfigure",
       "imageNameOriginal": "yourphoto",
       "modelName": "Google Gemini Flash 2.5 (Nano Banana)",
       "modelDescription": "",
@@ -319,15 +329,16 @@
         "imageCompressionQuality": 0.9
       }
     },
-    "prompt": "Turn this photo into a character figure. Behind it, place a box with the character's image printed on it,and a computer showing the Blender modeling process on its screen. In frontof the box, add a round plastic base with the character figure standing on it. Set the scene indoors if possible.",
+    "prompt": "Turn this photo into a character figure. Behind it, place a box with the character's image printed on it,and a computer showing the Blender modeling process on its screen. In front of the box, add a round plastic base with the character figure standing on it. Set the scene indoors if possible.",
     "cost": 0.039,
     "type": "Photo Filter",
-    "capabilities": ["Text to Image", "Image to Image"]
+    "capabilities": ["Text to Image", "Image to Image"],
+    "category": "Creative"
   },
   {
     "display": {
       "title": "3D Caricature",
-      "imageName": "3dcaricature-nanobanana",
+      "imageName": "3dcaricature",
       "imageNameOriginal": "yourphoto",
       "modelName": "Google Gemini Flash 2.5 (Nano Banana)",
       "modelDescription": "",
@@ -347,6 +358,7 @@
     "prompt": "Full-body 3D caricature of [Character Name] in Pixar/DreamWorks style, featuring expressive large eyes, slightly oversized head, and subtly exaggerated facial features. Realistic skin with soft subsurface scattering, detailed hair, and a gentle warm smile. Smooth polished surfaces with subtle fabric texture on clothing. Dynamic pose showing personality, with full body visible and balanced proportions. Soft ambient lighting, warm reddish-orange gradient background. Cinematic quality, high detail, vibrant yet natural colors, stylized charm with balanced realism.",
     "cost": 0.039,
     "type": "Photo Filter",
-    "capabilities": ["Text to Image", "Image to Image"]
+    "capabilities": ["Text to Image", "Image to Image"],
+    "category": "Creative"
   }
 ]

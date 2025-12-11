@@ -14,10 +14,11 @@ struct InfoPacket: Codable, Identifiable, Hashable {
     var cost: Decimal?
     var type: String?
     var capabilities: [String]?
+    var category: String?
 
     // Tell the decoder to ignore 'id'
     enum CodingKeys: String, CodingKey {
-        case display, apiConfig, prompt, cost, type, capabilities
+        case display, apiConfig, prompt, cost, type, capabilities, category
         // Notice: 'id' is NOT listed here
     }
 }
