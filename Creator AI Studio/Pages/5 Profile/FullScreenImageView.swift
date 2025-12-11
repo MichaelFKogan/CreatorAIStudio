@@ -66,6 +66,41 @@ struct MetadataCard: View {
     }
 }
 
+struct CreditsDataCard: View {
+    let icon: String
+    let label: String
+    let value: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 4) {
+                Image(systemName: icon)
+                    .font(.caption2)
+                    .foregroundColor(.white.opacity(0.6))
+                Text(label)
+                    .font(.caption2)
+                    .foregroundColor(.gray)
+            }
+
+            HStack(spacing: 4) {
+                Text(value)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .foregroundColor(.white)
+                    .lineLimit(2)
+                Text("credits")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .foregroundColor(.white.opacity(0.7))
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(10)
+        .background(Color.white.opacity(0.05))
+        .cornerRadius(8)
+    }
+}
+
 struct AspectRatioCard: View {
     let aspectRatio: String
 
@@ -151,7 +186,7 @@ struct AspectRatioCard: View {
 
 struct FullScreenImageView: View {
     // MARK: - Properties
-    
+
     let userImage: UserImage
     @Binding var isPresented: Bool
     var viewModel: ProfileViewModel?
@@ -177,7 +212,7 @@ struct FullScreenImageView: View {
     @StateObject private var presetViewModel = PresetViewModel()
 
     // MARK: - Computed Properties
-    
+
     // Cache image models to avoid repeated JSON loading
     static var cachedImageModels: [InfoPacket]?
     private var allImageModels: [InfoPacket] {
@@ -262,7 +297,7 @@ struct FullScreenImageView: View {
     }
 
     // MARK: - Helper Functions
-    
+
     // Helper function to format cost with full precision
     private func formatCost(_ cost: Double) -> String {
         // Use NumberFormatter to show all significant digits
@@ -273,14 +308,14 @@ struct FullScreenImageView: View {
         formatter.minimumFractionDigits = 0  // Don't force trailing zeros
         return formatter.string(from: NSNumber(value: cost)) ?? "$\(cost)"
     }
-    
+
     // Helper function to format credits
     private func formatCredits(_ credits: Int) -> String {
-        return "\(credits) credits"
+        return "\(credits)"
     }
 
     // MARK: - View Components
-    
+
     // MARK: - Immersive Mode Views
 
     @ViewBuilder
@@ -414,7 +449,7 @@ struct FullScreenImageView: View {
     }
 
     // MARK: - Normal Mode Views
-    
+
     @ViewBuilder
     private var normalModeView: some View {
         ScrollView {
@@ -526,7 +561,7 @@ struct FullScreenImageView: View {
     }
 
     // MARK: - Action Buttons
-    
+
     @ViewBuilder
     private var actionButtons: some View {
         HStack(spacing: 36) {
@@ -662,7 +697,7 @@ struct FullScreenImageView: View {
     }
 
     // MARK: - Metadata Views
-    
+
     @ViewBuilder
     private var metadataSection: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -710,7 +745,7 @@ struct FullScreenImageView: View {
     }
 
     // MARK: IF FILTER
-    
+
     @ViewBuilder
     private var filterMetadata: some View {
         if let title = userImage.title, !title.isEmpty {
@@ -740,18 +775,21 @@ struct FullScreenImageView: View {
                 MetadataCard(icon: "tag.fill", label: "Type", value: type)
             }
             if let cost = userImage.cost {
-                MetadataCard(
+                CreditsDataCard(
                     icon: "dollarsign.circle.fill", label: "Credits",
                     value: formatCredits(cost.credits))
             }
             if isWavespeed {
-                MetadataCard(icon: "cpu.fill", label: "Model", value: "WaveSpeed")
+                MetadataCard(
+                    icon: "cpu.fill", label: "Model", value: "WaveSpeed")
             } else if let model = userImage.model, !model.isEmpty {
                 MetadataCard(icon: "cpu.fill", label: "Model", value: model)
             }
             if isWavespeed {
                 AspectRatioCard(aspectRatio: "Auto")
-            } else if let aspectRatio = userImage.aspect_ratio, !aspectRatio.isEmpty {
+            } else if let aspectRatio = userImage.aspect_ratio,
+                !aspectRatio.isEmpty
+            {
                 AspectRatioCard(aspectRatio: aspectRatio)
             }
         }
@@ -761,7 +799,7 @@ struct FullScreenImageView: View {
     }
 
     // MARK: IF MODEL
-    
+
     @ViewBuilder
     private var modelMetadata: some View {
         if let title = userImage.title, !title.isEmpty {
@@ -803,7 +841,7 @@ struct FullScreenImageView: View {
                 MetadataCard(icon: "tag.fill", label: "Type", value: type)
             }
             if let cost = userImage.cost {
-                MetadataCard(
+                CreditsDataCard(
                     icon: "dollarsign.circle.fill", label: "Credits",
                     value: formatCredits(cost.credits))
             }
@@ -879,7 +917,7 @@ struct FullScreenImageView: View {
     }
 
     // MARK: - Body & Lifecycle
-    
+
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
@@ -930,9 +968,13 @@ struct FullScreenImageView: View {
             }
         } message: {
             if let preset = matchingPreset {
-                Text("Are you sure you want to unsave the preset '\(preset.title)'? This action cannot be undone.")
+                Text(
+                    "Are you sure you want to unsave the preset '\(preset.title)'? This action cannot be undone."
+                )
             } else {
-                Text("Are you sure you want to unsave this preset? This action cannot be undone.")
+                Text(
+                    "Are you sure you want to unsave this preset? This action cannot be undone."
+                )
             }
         }
         .onAppear {
@@ -1322,7 +1364,7 @@ struct CreatePresetSheet: View {
     }
 
     // MARK: - Body
-    
+
     var body: some View {
         NavigationView {
             ZStack {
