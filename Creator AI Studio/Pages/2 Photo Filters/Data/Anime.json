@@ -5,9 +5,7 @@
       "imageName": "anime1-boy-ghibli-wavespeed",
       "imageNameOriginal": "yourphoto",
       "description": "",
-      "modelName": "",
-      "modelDescription": "",
-      "modelImageName": "",
+      "modelName": "Wavespeed Ghibli",
       "exampleImages": [
         "anime2",
         "anime3",
@@ -27,18 +25,6 @@
         ["cute"]
       ]
     },
-    "apiConfig": {
-      "provider": "wavespeed",
-      "endpoint": "https://api.wavespeed.ai/api/v3/wavespeed-ai/ghibli",
-      "wavespeedConfig": {
-        "outputFormat": "jpeg",
-        "enableSyncMode": true,
-        "enableBase64Output": false
-      },
-      "aspectRatio": ""
-    },
-    "prompt": "",
-    "cost": 0.005,
     "type": "Photo Filter",
     "category": "Anime"
   },

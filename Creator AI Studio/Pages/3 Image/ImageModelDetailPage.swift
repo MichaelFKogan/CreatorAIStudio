@@ -376,7 +376,10 @@ struct ImageModelDetailPage: View {
         let selectedAspectOption = imageAspectOptions[selectedAspectIndex]
         var modifiedItem = item
         modifiedItem.prompt = prompt
-        modifiedItem.apiConfig.aspectRatio = selectedAspectOption.id
+        // Use resolvedAPIConfig as base, then modify aspectRatio
+        var config = modifiedItem.resolvedAPIConfig
+        config.aspectRatio = selectedAspectOption.id
+        modifiedItem.apiConfig = config
 
         let imageToUse = referenceImages.first ?? createPlaceholderImage()
         guard let userId = authViewModel.user?.id.uuidString.lowercased(),
@@ -445,7 +448,7 @@ struct BannerSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .top, spacing: 16) {
-                Image(item.display.modelImageName ?? "")
+                Image(item.resolvedModelImageName ?? "")
                     .resizable()
                     .aspectRatio(contentMode: .fill)
                     .frame(width: 120, height: 120)
@@ -494,7 +497,7 @@ struct BannerSection: View {
             .frame(height: 120)
 
             // Model Description
-            if let description = item.display.modelDescription, !description.isEmpty {
+            if let description = item.resolvedModelDescription, !description.isEmpty {
                 Text(description)
                     .font(.system(size: 14))
                     .foregroundColor(.secondary)

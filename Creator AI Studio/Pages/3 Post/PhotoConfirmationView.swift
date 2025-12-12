@@ -244,7 +244,7 @@ struct PhotoConfirmationView: View {
                 }
 
                 // MARK: - Size Selector
-                if item.apiConfig.provider == .wavespeed {
+                if item.resolvedAPIConfig.provider == .wavespeed {
                     // For wavespeed, show only "auto" and disable interaction
                     VStack(alignment: .leading, spacing: 6) {
                         Text("Size")
@@ -332,7 +332,10 @@ struct PhotoConfirmationView: View {
                     let selectedAspectOption = imageAspectOptions[
                         selectedAspectIndex]
                     var modifiedItem = item
-                    modifiedItem.apiConfig.aspectRatio = selectedAspectOption.id
+                    // Use resolvedAPIConfig as base, then modify aspectRatio
+                    var config = modifiedItem.resolvedAPIConfig
+                    config.aspectRatio = selectedAspectOption.id
+                    modifiedItem.apiConfig = config
 
                     // Start background generation using ImageGenerationCoordinator
                     Task { @MainActor in

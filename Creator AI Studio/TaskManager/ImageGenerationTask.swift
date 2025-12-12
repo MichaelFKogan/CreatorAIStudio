@@ -38,17 +38,20 @@ class ImageGenerationTask: MediaGenerationTask {
         onProgress: @escaping (TaskProgress) async -> Void,
         onComplete: @escaping (TaskResult) async -> Void
     ) async {
+        // Use resolved API configuration from centralized manager
+        let apiConfig = item.resolvedAPIConfig
+        
         // Helpful debug information printed for each request.
         print("""
         --- Request Info ---
         ------------------------------
-        Provider: \(item.apiConfig.provider)
-        Endpoint: \(item.apiConfig.endpoint)
+        Provider: \(apiConfig.provider)
+        Endpoint: \(apiConfig.endpoint)
         Prompt: \(((item.prompt?.isEmpty) != nil) ? "(no prompt)" : "\(item.prompt)")
-        Aspect Ratio: \(item.apiConfig.aspectRatio ?? "default")
-        Output Format: \(item.apiConfig.wavespeedConfig?.outputFormat)
-        Enable Sync Mode: \(item.apiConfig.wavespeedConfig?.enableSyncMode)
-        Enable Base64 Output: \(item.apiConfig.wavespeedConfig?.enableBase64Output)
+        Aspect Ratio: \(apiConfig.aspectRatio ?? "default")
+        Output Format: \(apiConfig.wavespeedConfig?.outputFormat)
+        Enable Sync Mode: \(apiConfig.wavespeedConfig?.enableSyncMode)
+        Enable Base64 Output: \(apiConfig.wavespeedConfig?.enableBase64Output)
         Cost: $\(NSDecimalNumber(decimal: item.resolvedCost ?? 0).stringValue)
         ------------------------------
         """)
@@ -65,20 +68,20 @@ class ImageGenerationTask: MediaGenerationTask {
             let urlString: String
 
 //            MARK: SEND TO WAVESPEED
-            switch item.apiConfig.provider {
+            switch apiConfig.provider {
             case .wavespeed:
                 // Wrap API request in a 360-second timeout to protect against infinite waits.
                 let response = try await withTimeout(seconds: 360) {
                     try await sendImageToWaveSpeed(
                         image: self.image,
                         prompt: self.item.prompt ?? "",
-                        endpoint: self.item.apiConfig.endpoint,
+                        endpoint: apiConfig.endpoint,
                         
-                        aspectRatio: self.item.apiConfig.aspectRatio,
+                        aspectRatio: apiConfig.aspectRatio,
                         
-                        outputFormat: self.item.apiConfig.wavespeedConfig?.outputFormat ?? "",
-                        enableSyncMode: self.item.apiConfig.wavespeedConfig?.enableSyncMode ?? false,
-                        enableBase64Output: self.item.apiConfig.wavespeedConfig?.enableBase64Output ?? false,
+                        outputFormat: apiConfig.wavespeedConfig?.outputFormat ?? "",
+                        enableSyncMode: apiConfig.wavespeedConfig?.enableSyncMode ?? false,
+                        enableBase64Output: apiConfig.wavespeedConfig?.enableBase64Output ?? false,
                         
                         maxPollingAttempts: 60,
                         userId: self.userId
@@ -98,17 +101,17 @@ class ImageGenerationTask: MediaGenerationTask {
                 
             case .runware:
                 // Get model name from display info or extract from endpoint
-                let modelName = item.display.modelName ?? extractModelFromEndpoint(item.apiConfig.endpoint) ?? ""
+                let modelName = item.display.modelName ?? extractModelFromEndpoint(apiConfig.endpoint) ?? ""
 
                 // Wrap API request in a 360-second timeout to protect against infinite waits.
                 let response = try await withTimeout(seconds: 360) {
                     try await sendImageToRunware(
                         image: isImageToImage ? self.image : nil,
                         prompt: self.item.prompt ?? "",
-                        model: self.item.apiConfig.runwareModel ?? "",
-                        aspectRatio: self.item.apiConfig.aspectRatio,
+                        model: apiConfig.runwareModel ?? "",
+                        aspectRatio: apiConfig.aspectRatio,
                         isImageToImage: isImageToImage,
-                        runwareConfig: self.item.apiConfig.runwareConfig
+                        runwareConfig: apiConfig.runwareConfig
                     )
                 }
 
@@ -137,7 +140,7 @@ class ImageGenerationTask: MediaGenerationTask {
             }
 
             await onProgress(TaskProgress(progress: 0.6, message: "Downloading result..."))
-            print("[\(item.apiConfig.provider == .runware ? "Runware" : "WaveSpeed")] Fetching generated image…")
+            print("[\(apiConfig.provider == .runware ? "Runware" : "WaveSpeed")] Fetching generated image…")
 
             // Download final image with a 30-second timeout window.
             let (imageData, _) = try await withTimeout(seconds: 30) {
@@ -153,7 +156,7 @@ class ImageGenerationTask: MediaGenerationTask {
                 )
             }
 
-            print("[\(item.apiConfig.provider == .runware ? "Runware" : "WaveSpeed")] Generated image loaded successfully.")
+            print("[\(apiConfig.provider == .runware ? "Runware" : "WaveSpeed")] Generated image loaded successfully.")
 
             // MARK: STEP 3 — UPLOAD RESULT TO STORAGE (SUPABASE)
 
@@ -179,10 +182,10 @@ class ImageGenerationTask: MediaGenerationTask {
                 title: item.display.title.isEmpty ? nil : item.display.title,
                 cost: (item.resolvedCost != nil && item.resolvedCost! > 0 ? NSDecimalNumber(decimal: item.resolvedCost!).doubleValue : nil),
                 type: item.type?.isEmpty == false ? item.type : nil,
-                endpoint: item.apiConfig.endpoint.isEmpty ? nil : item.apiConfig.endpoint,
+                endpoint: apiConfig.endpoint.isEmpty ? nil : apiConfig.endpoint,
                 prompt: (item.prompt?.isEmpty == false ? item.prompt : nil),
-                aspectRatio: item.apiConfig.aspectRatio,
-                provider: item.apiConfig.provider.rawValue
+                aspectRatio: apiConfig.aspectRatio,
+                provider: apiConfig.provider.rawValue
             )
 
             print("📝 Saving metadata: title=\(metadata.title ?? "none"), cost=\(metadata.cost ?? 0), type=\(metadata.type ?? "none"), provider=\(metadata.provider ?? "none")")
@@ -259,7 +262,7 @@ class ImageGenerationTask: MediaGenerationTask {
 
         } catch {
             // Catches everything else — JSON errors, decode errors, unexpected exceptions.
-            print("❌ \(item.apiConfig.provider == .runware ? "Runware" : "WaveSpeed") error: \(error)")
+            print("❌ \(apiConfig.provider == .runware ? "Runware" : "WaveSpeed") error: \(error)")
             await onComplete(.failure(error))
         }
     }

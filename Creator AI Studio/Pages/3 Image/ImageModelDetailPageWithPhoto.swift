@@ -278,7 +278,10 @@ struct ImageModelDetailPageWithPhoto: View {
         let selectedAspectOption = imageAspectOptions[selectedAspectIndex]
         var modifiedItem = item
         modifiedItem.prompt = prompt
-        modifiedItem.apiConfig.aspectRatio = selectedAspectOption.id
+        // Use resolvedAPIConfig as base, then modify aspectRatio
+        var config = modifiedItem.resolvedAPIConfig
+        config.aspectRatio = selectedAspectOption.id
+        modifiedItem.apiConfig = config
 
         let imageToUse = referenceImages.first ?? createPlaceholderImage()
         guard let userId = authViewModel.user?.id.uuidString.lowercased(),

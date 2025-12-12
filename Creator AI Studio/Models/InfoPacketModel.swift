@@ -9,7 +9,7 @@ import SwiftUI
 struct InfoPacket: Codable, Identifiable, Hashable {
     var id: UUID = .init()
     var display: DisplayInfo
-    var apiConfig: APIConfiguration
+    var apiConfig: APIConfiguration?  // Now optional - resolved from ModelConfigurationManager based on modelName
     var prompt: String?
     var cost: Decimal?
     var type: String?
@@ -26,6 +26,47 @@ struct InfoPacket: Codable, Identifiable, Hashable {
     /// Falls back to the stored cost property if PricingManager doesn't have a price.
     var resolvedCost: Decimal? {
         return PricingManager.shared.price(for: self) ?? cost
+    }
+    
+    /// Resolved API configuration from centralized ModelConfigurationManager.
+    /// Uses modelName as the source of truth. Falls back to stored apiConfig only if manager doesn't have a configuration.
+    var resolvedAPIConfig: APIConfiguration {
+        // First try to get from centralized manager (modelName is source of truth)
+        if let config = ModelConfigurationManager.shared.apiConfiguration(for: self) {
+            return config
+        }
+        // Fallback to stored apiConfig if available (for backward compatibility during migration)
+        if let storedConfig = apiConfig {
+            return storedConfig
+        }
+        // Last resort: return a default configuration (should not happen if modelName is properly set)
+        // This handles edge cases during migration or for photo filters without modelName
+        return APIConfiguration(
+            provider: .runware,
+            endpoint: "https://api.runware.ai/v1",
+            runwareModel: nil,
+            aspectRatio: nil,
+            wavespeedConfig: nil,
+            runwareConfig: nil
+        )
+    }
+    
+    /// Resolved capabilities from centralized ModelConfigurationManager.
+    /// Falls back to the stored capabilities property if ModelConfigurationManager doesn't have capabilities.
+    var resolvedCapabilities: [String]? {
+        return ModelConfigurationManager.shared.capabilities(for: self) ?? capabilities
+    }
+    
+    /// Resolved model description from centralized ModelConfigurationManager.
+    /// Falls back to the stored display.modelDescription property if ModelConfigurationManager doesn't have a description.
+    var resolvedModelDescription: String? {
+        return ModelConfigurationManager.shared.modelDescription(for: self) ?? display.modelDescription
+    }
+    
+    /// Resolved model image name from centralized ModelConfigurationManager.
+    /// Falls back to the stored display.modelImageName property if ModelConfigurationManager doesn't have an image name.
+    var resolvedModelImageName: String? {
+        return ModelConfigurationManager.shared.modelImageName(for: self) ?? display.modelImageName
     }
 }
 
