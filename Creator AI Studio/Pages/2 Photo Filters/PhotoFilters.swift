@@ -31,6 +31,7 @@ enum FilterCategory: String, CaseIterable, Identifiable {
 @MainActor
 class PhotoFiltersViewModel: ObservableObject {
     @Published var filters: [InfoPacket] = []
+    @Published private var categorizedFiltersDict: [String: [InfoPacket]] = [:]
 
     // Quick filters - returns first N filters from all filters, or all filters if limit is nil
     func quickFilters(limit: Int? = nil) -> [InfoPacket] {
@@ -41,21 +42,9 @@ class PhotoFiltersViewModel: ObservableObject {
         }
     }
 
-    // Categorized filters - dynamically extracted from JSON category field
+    // Categorized filters - loaded from separate JSON files by category
     var categorizedFilters: [String: [InfoPacket]] {
-        var result: [String: [InfoPacket]] = [:]
-        
-        // Group filters by their category field
-        for filter in filters {
-            if let category = filter.category, !category.isEmpty {
-                if result[category] == nil {
-                    result[category] = []
-                }
-                result[category]?.append(filter)
-            }
-        }
-        
-        return result
+        return categorizedFiltersDict
     }
     
     // Get sorted category names for display
@@ -68,18 +57,48 @@ class PhotoFiltersViewModel: ObservableObject {
     }
 
     private func loadFiltersJSON() {
-        guard let url = Bundle.main.url(forResource: "AllPhotoFilters", withExtension: "json") else {
-            print("AllPhotoFilters.json not found in bundle")
-            return
+        // Ordered array of (categoryName, fileName) tuples to guarantee load order
+        // Video Games should be loaded last
+        let categoryFileOrder: [(categoryName: String, fileName: String)] = [
+            ("Anime", "Anime"),
+            ("Art", "Art"),
+            ("Character", "Character"),
+            ("Video Games", "VideoGames"),
+            ("Photobooth", "Photobooth"),
+            ("Spooky", "Spooky")
+        ]
+        
+        var allFilters: [InfoPacket] = []
+        var categorized: [String: [InfoPacket]] = [:]
+        
+        // Load each category file in the specified order
+        for (categoryName, fileName) in categoryFileOrder {
+            // Try loading from Data subdirectory first, then from bundle root
+            var url: URL?
+            if let dataUrl = Bundle.main.url(forResource: fileName, withExtension: "json", subdirectory: "Data") {
+                url = dataUrl
+            } else if let rootUrl = Bundle.main.url(forResource: fileName, withExtension: "json") {
+                url = rootUrl
+            }
+            
+            guard let fileUrl = url else {
+                print("\(fileName).json not found in bundle")
+                continue
+            }
+            
+            do {
+                let data = try Data(contentsOf: fileUrl)
+                let decoded = try JSONDecoder().decode([InfoPacket].self, from: data)
+                categorized[categoryName] = decoded
+                allFilters.append(contentsOf: decoded)
+            } catch {
+                print("Failed to decode \(fileName).json: \(error)")
+            }
         }
-
-        do {
-            let data = try Data(contentsOf: url)
-            let decoded = try JSONDecoder().decode([InfoPacket].self, from: data)
-            filters = decoded
-        } catch {
-            print("Failed to decode AllPhotoFilters.json: \(error)")
-        }
+        
+        // Update published properties
+        categorizedFiltersDict = categorized
+        filters = allFilters
     }
 }
 
@@ -151,31 +170,35 @@ struct PhotoFilters: View {
                         //     }
                         // }
                         
-                        // All Filters section
-                        VStack(alignment: .leading, spacing: 12) {
-                            // HStack {
-                            //     Image(systemName: "square.grid.2x2.fill")
-                            //         .font(.system(size: 16))
-                            //         .foregroundColor(.green)
-                            //     Text("Photo Filters")
-                            //         .font(.system(size: 18, weight: .semibold))
-                            //         .foregroundColor(.primary)
-                            //     Spacer()
-                            // }
-                            // .padding(.horizontal, 16)
-
-//                            .padding(.top, presetInfoPackets.isEmpty ? 16 : 8)
-                            
-                            PhotoFiltersGrid(
-                                filters: viewModel.filters,
-                                selectedFilter: selectedFilter,
-                                onSelect: { filter in
-                                    selectedFilter = filter
-                                    navigationPath.append(filter)
+                        // Category sections - organized by category
+                        ForEach(Array(viewModel.categorizedFilters.keys.sorted()), id: \.self) { categoryName in
+                            if let filters = viewModel.categorizedFilters[categoryName],
+                                !filters.isEmpty
+                            {
+                                PhotoFilterCategorySection(
+                                    title: categoryName,
+                                    icon: iconForCategory(categoryName),
+                                    filters: filters,
+                                    selectedFilter: selectedFilter,
+                                    onSelect: { filter in
+                                        selectedFilter = filter
+                                        navigationPath.append(filter)
+                                    }
+                                )
+                                
+                                if categoryName != viewModel.categorizedFilters.keys.sorted().last {
+                                    Divider()
+                                        .padding(.horizontal, 16)
+                                        .padding(.top, 16)
+                                        .padding(.bottom, 8)
                                 }
-                            )
+                            }
                         }
+
+                    // Bottom spacing
+                    Color.clear.frame(height: 160)
                     }
+                    .padding(.top, 16)
                 }
 
             //   PhotoFiltersBottomBar(
@@ -294,5 +317,68 @@ struct PhotoFilters: View {
 
     private func setDefaultFilter() {
         if selectedFilter == nil { selectedFilter = viewModel.filters.first }
+    }
+    
+    // Helper function to get icon for category name
+    private func iconForCategory(_ categoryName: String) -> String {
+        // Try to match with FilterCategory enum first for known categories
+        if let category = FilterCategory(rawValue: categoryName) {
+            return category.icon
+        }
+        
+        // Default icons for common category names
+        let lowercased = categoryName.lowercased()
+        if lowercased.contains("anime") {
+            return "sparkles.rectangle.stack.fill"
+        } else if lowercased.contains("character") || lowercased.contains("figure") {
+            return "figure.stand"
+        } else if lowercased.contains("art") || lowercased.contains("artistic") {
+            return "paintbrush.fill"
+        } else if lowercased.contains("game") || lowercased.contains("gaming") {
+            return "gamecontroller.fill"
+        } else if lowercased.contains("photo") || lowercased.contains("camera") {
+            return "camera.fill"
+        } else if lowercased.contains("creative") || lowercased.contains("design") {
+            return "sparkles"
+        } else {
+            return "square.grid.2x2.fill" // Default icon
+        }
+    }
+}
+
+// MARK: - Photo Filter Category Section
+
+struct PhotoFilterCategorySection: View {
+    let title: String
+    let icon: String
+    let filters: [InfoPacket]
+    let selectedFilter: InfoPacket?
+    let onSelect: (InfoPacket) -> Void
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            // Category header
+            HStack {
+                Image(systemName: icon)
+                    .font(.system(size: 16))
+                    .foregroundColor(.primary)
+                    .frame(width: 24)
+                
+                Text(title)
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundColor(.primary)
+                
+                Spacer()
+            }
+            .padding(.horizontal, 16)
+            // .padding(.top, 8)
+            
+            // Filters grid
+            PhotoFiltersGrid(
+                filters: filters,
+                selectedFilter: selectedFilter,
+                onSelect: onSelect
+            )
+        }
     }
 }

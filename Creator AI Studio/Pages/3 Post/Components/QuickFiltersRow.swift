@@ -53,7 +53,7 @@ struct QuickFiltersRow: View {
                         title: filter.display.title,
                         imageName: filter.display.imageName,
                         isSelected: selectedFilter?.id == filter.id,
-                        cost: filter.cost
+                        cost: filter.resolvedCost
                     )
                     .onTapGesture {
                         onSelect(filter)

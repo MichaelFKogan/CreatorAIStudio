@@ -855,9 +855,17 @@ struct ModelGallerySection: View {
         isLoading = true
 
         Task {
+            // First, try to load all user images into cache (one-time cost)
+            // This helps populate the cache for future use
+            if viewModel.userImages.isEmpty {
+                await viewModel.fetchUserImages(forceRefresh: false)
+            }
+            
+            // Then fetch model-specific images
+            // Use forceRefresh: false to leverage cache if available
             let images = await viewModel.fetchModelImages(
                 modelName: modelName,
-                limit: 50,
+                limit: 1000, // High limit to get all images
                 forceRefresh: false
             )
 

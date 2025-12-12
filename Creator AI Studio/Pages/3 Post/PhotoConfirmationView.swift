@@ -1,5 +1,5 @@
-import SwiftUI
 import Kingfisher
+import SwiftUI
 
 struct PhotoConfirmationView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
@@ -54,7 +54,9 @@ struct PhotoConfirmationView: View {
 
                 ZStack {
                     Text("Confirm Your Photo")
-                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .font(
+                            .system(size: 28, weight: .bold, design: .rounded)
+                        )
                         .foregroundColor(.primary)
                         .overlay(
                             LinearGradient(
@@ -74,7 +76,10 @@ struct PhotoConfirmationView: View {
                             )
                         )
                         .onAppear {
-                            withAnimation(.linear(duration: 2.0).repeatForever(autoreverses: false)) {
+                            withAnimation(
+                                .linear(duration: 2.0).repeatForever(
+                                    autoreverses: false)
+                            ) {
                                 shimmer.toggle()
                             }
                         }
@@ -84,14 +89,19 @@ struct PhotoConfirmationView: View {
                         .offset(x: -80, y: -10)
                         .scaleEffect(sparklePulse ? 1.2 : 0.8)
                         .opacity(sparklePulse ? 1 : 0.7)
-                        .animation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true), value: sparklePulse)
+                        .animation(
+                            .easeInOut(duration: 1.0).repeatForever(
+                                autoreverses: true), value: sparklePulse)
 
                     Image(systemName: "star.fill")
                         .foregroundColor(.yellow)
                         .offset(x: 80, y: -5)
                         .scaleEffect(sparklePulse ? 0.9 : 0.6)
                         .opacity(sparklePulse ? 0.95 : 0.6)
-                        .animation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true).delay(0.3), value: sparklePulse)
+                        .animation(
+                            .easeInOut(duration: 1.2).repeatForever(
+                                autoreverses: true
+                            ).delay(0.3), value: sparklePulse)
                 }
                 .padding(.top, 20)
                 .onAppear { sparklePulse = true }
@@ -109,8 +119,10 @@ struct PhotoConfirmationView: View {
                         // Right image (example result) - drawn first so it's behind
                         // Check if imageName is a URL (for presets)
                         Group {
-                            if item.display.imageName.hasPrefix("http://") || item.display.imageName.hasPrefix("https://"),
-                               let url = URL(string: item.display.imageName) {
+                            if item.display.imageName.hasPrefix("http://")
+                                || item.display.imageName.hasPrefix("https://"),
+                                let url = URL(string: item.display.imageName)
+                            {
                                 KFImage(url)
                                     .placeholder {
                                         Rectangle()
@@ -119,30 +131,48 @@ struct PhotoConfirmationView: View {
                                     }
                                     .resizable()
                                     .aspectRatio(contentMode: .fill)
-                                    .frame(width: imageWidth, height: imageHeight)
-                                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                                    .frame(
+                                        width: imageWidth, height: imageHeight
+                                    )
+                                    .clipShape(
+                                        RoundedRectangle(cornerRadius: 16)
+                                    )
                                     .overlay(
                                         RoundedRectangle(cornerRadius: 16)
                                             .stroke(
-                                                LinearGradient(colors: [.white, .gray], startPoint: .topLeading, endPoint: .bottomTrailing),
+                                                LinearGradient(
+                                                    colors: [.white, .gray],
+                                                    startPoint: .topLeading,
+                                                    endPoint: .bottomTrailing),
                                                 lineWidth: 2
                                             )
                                     )
-                                    .shadow(color: Color.black.opacity(0.25), radius: 12, x: 4, y: 4)
+                                    .shadow(
+                                        color: Color.black.opacity(0.25),
+                                        radius: 12, x: 4, y: 4)
                             } else {
                                 Image(item.display.imageName)
                                     .resizable()
                                     .aspectRatio(contentMode: .fill)
-                                    .frame(width: imageWidth, height: imageHeight)
-                                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                                    .frame(
+                                        width: imageWidth, height: imageHeight
+                                    )
+                                    .clipShape(
+                                        RoundedRectangle(cornerRadius: 16)
+                                    )
                                     .overlay(
                                         RoundedRectangle(cornerRadius: 16)
                                             .stroke(
-                                                LinearGradient(colors: [.white, .gray], startPoint: .topLeading, endPoint: .bottomTrailing),
+                                                LinearGradient(
+                                                    colors: [.white, .gray],
+                                                    startPoint: .topLeading,
+                                                    endPoint: .bottomTrailing),
                                                 lineWidth: 2
                                             )
                                     )
-                                    .shadow(color: Color.black.opacity(0.25), radius: 12, x: 4, y: 4)
+                                    .shadow(
+                                        color: Color.black.opacity(0.25),
+                                        radius: 12, x: 4, y: 4)
                             }
                         }
                         .rotationEffect(.degrees(8))
@@ -157,11 +187,17 @@ struct PhotoConfirmationView: View {
                             .overlay(
                                 RoundedRectangle(cornerRadius: 16)
                                     .stroke(
-                                        LinearGradient(colors: [.white, .gray], startPoint: .topLeading, endPoint: .bottomTrailing),
+                                        LinearGradient(
+                                            colors: [.white, .gray],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing),
                                         lineWidth: 2
                                     )
                             )
-                            .shadow(color: Color.black.opacity(0.25), radius: 12, x: -4, y: 4)
+                            .shadow(
+                                color: Color.black.opacity(0.25), radius: 12,
+                                x: -4, y: 4
+                            )
                             .rotationEffect(.degrees(-6))
                             .offset(x: -imageWidth * 0.50)
 
@@ -171,7 +207,10 @@ struct PhotoConfirmationView: View {
                             .aspectRatio(contentMode: .fit)
                             .frame(width: 62, height: 62)
                             .rotationEffect(.degrees(arrowWiggle ? 6 : -6))
-                            .animation(.easeInOut(duration: 0.6).repeatForever(autoreverses: true), value: arrowWiggle)
+                            .animation(
+                                .easeInOut(duration: 0.6).repeatForever(
+                                    autoreverses: true), value: arrowWiggle
+                            )
                             .offset(x: 0, y: arrowYOffset)
                     }
                     .onAppear {
@@ -181,7 +220,15 @@ struct PhotoConfirmationView: View {
                 }
                 .frame(height: 260)
                 .padding(.horizontal, 20)
-                .padding(.bottom, 20)
+
+                // Filter Title
+                Text(item.display.title)
+                    .font(
+                        .system(size: 20, weight: .semibold, design: .rounded)
+                    )
+                    .foregroundColor(.primary)
+                    .padding(.top, 8)
+                    .padding(.horizontal)
 
                 if let generated = generatedImage {
                     VStack {
@@ -208,7 +255,9 @@ struct PhotoConfirmationView: View {
                             // Show feedback when tapped
                             sizeButtonTapped = true
                             // Reset after a short delay
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                            DispatchQueue.main.asyncAfter(
+                                deadline: .now() + 2.0
+                            ) {
                                 sizeButtonTapped = false
                             }
                         }) {
@@ -222,31 +271,37 @@ struct PhotoConfirmationView: View {
                                         .padding(4)
                                 }
                                 .frame(width: 40, height: 40)
-                                
+
                                 // Label
                                 Text("Auto")
                                     .font(.subheadline)
                                     .fontWeight(.semibold)
                                     .foregroundColor(.primary)
-                                
+
                                 Spacer()
                             }
                             .padding(.vertical, 8)
                             .padding(.horizontal, 12)
                             .background(Color(UIColor.systemBackground))
                             .clipShape(RoundedRectangle(cornerRadius: 12))
-                            .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.blue.opacity(0.3), lineWidth: 1))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12).stroke(
+                                    Color.blue.opacity(0.3), lineWidth: 1))
                         }
                         .buttonStyle(.plain)
-                        
+
                         // Disclaimer text with info icon
                         HStack(spacing: 4) {
                             Image(systemName: "info.circle")
                                 .font(.caption2)
-                                .foregroundColor(sizeButtonTapped ? .red : .secondary)
-                            Text("This filter does not allow you to change the aspect ratio. The image size will be automatically matched to your uploaded image.")
-                                .font(.caption2)
-                                .foregroundColor(sizeButtonTapped ? .red : .secondary)
+                                .foregroundColor(
+                                    sizeButtonTapped ? .red : .secondary)
+                            Text(
+                                "This filter does not allow you to change the aspect ratio. The image size will be automatically matched to your uploaded image."
+                            )
+                            .font(.caption2)
+                            .foregroundColor(
+                                sizeButtonTapped ? .red : .secondary)
                         }
                         .padding(.top, 4)
                         .padding(.leading, 4)
@@ -263,7 +318,10 @@ struct PhotoConfirmationView: View {
 
                 Button(action: {
                     guard !isLoading else { return }
-                    guard let userId = authViewModel.user?.id.uuidString.lowercased(), !userId.isEmpty else {
+                    guard
+                        let userId = authViewModel.user?.id.uuidString
+                            .lowercased(), !userId.isEmpty
+                    else {
                         isLoading = false
                         return
                     }
@@ -271,39 +329,48 @@ struct PhotoConfirmationView: View {
                     isLoading = true
 
                     // Get selected aspect ratio and update item
-                    let selectedAspectOption = imageAspectOptions[selectedAspectIndex]
+                    let selectedAspectOption = imageAspectOptions[
+                        selectedAspectIndex]
                     var modifiedItem = item
                     modifiedItem.apiConfig.aspectRatio = selectedAspectOption.id
 
                     // Start background generation using ImageGenerationCoordinator
                     Task { @MainActor in
-                        let taskId = ImageGenerationCoordinator.shared.startImageGeneration(
-                            item: modifiedItem,
-                            image: image,
-                            userId: userId,
-                            onImageGenerated: { downloadedImage in
-                                // Update local state when generation completes
-                                generatedImage = downloadedImage
-                                isLoading = false
-                            },
-                            onError: { error in
-                                // Handle error
-                                isLoading = false
-                                print("Image generation failed: \(error.localizedDescription)")
-                            }
-                        )
-                        
+                        let taskId = ImageGenerationCoordinator.shared
+                            .startImageGeneration(
+                                item: modifiedItem,
+                                image: image,
+                                userId: userId,
+                                onImageGenerated: { downloadedImage in
+                                    // Update local state when generation completes
+                                    generatedImage = downloadedImage
+                                    isLoading = false
+                                },
+                                onError: { error in
+                                    // Handle error
+                                    isLoading = false
+                                    print(
+                                        "Image generation failed: \(error.localizedDescription)"
+                                    )
+                                }
+                            )
+
                         currentTaskId = taskId
                     }
                 }) {
                     HStack(spacing: 12) {
                         if isLoading {
                             ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle(tint: .black))
+                                .progressViewStyle(
+                                    CircularProgressViewStyle(tint: .black)
+                                )
                                 .scaleEffect(1.2)
                         }
                         Text(isLoading ? "Generating..." : "Generate")
-                            .font(.system(size: 18, weight: .bold, design: .rounded))
+                            .font(
+                                .system(
+                                    size: 18, weight: .bold, design: .rounded)
+                            )
                             .foregroundColor(.black)
                         if !isLoading {
                             Image(systemName: "photo.on.rectangle")
@@ -321,14 +388,31 @@ struct PhotoConfirmationView: View {
                     .overlay(
                         RoundedRectangle(cornerRadius: 12)
                             .stroke(
-                                LinearGradient(colors: [.clear, .clear], startPoint: .topLeading, endPoint: .bottomTrailing),
+                                LinearGradient(
+                                    colors: [.clear, .clear],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing),
                                 lineWidth: 0
                             )
-                            .animation(.easeInOut(duration: 0.3), value: isLoading)
+                            .animation(
+                                .easeInOut(duration: 0.3), value: isLoading)
                     )
-                    .shadow(color: isLoading ? Color.purple.opacity(0.4) : Color.purple.opacity(0.3), radius: isLoading ? 12 : 8, x: 0, y: 4)
-                    .scaleEffect(isLoading ? 0.98 : (generatePulse ? 1.05 : 1.0))
-                    .animation(isLoading ? .easeInOut(duration: 0.3) : .easeInOut(duration: 1.2).repeatForever(autoreverses: true), value: isLoading ? isLoading : generatePulse)
+                    .shadow(
+                        color: isLoading
+                            ? Color.purple.opacity(0.4)
+                            : Color.purple.opacity(0.3),
+                        radius: isLoading ? 12 : 8, x: 0, y: 4
+                    )
+                    .scaleEffect(
+                        isLoading ? 0.98 : (generatePulse ? 1.05 : 1.0)
+                    )
+                    .animation(
+                        isLoading
+                            ? .easeInOut(duration: 0.3)
+                            : .easeInOut(duration: 1.2).repeatForever(
+                                autoreverses: true),
+                        value: isLoading ? isLoading : generatePulse
+                    )
                     .opacity(isLoading ? 0.85 : 1.0)
                 }
                 .disabled(isLoading)
@@ -342,7 +426,8 @@ struct PhotoConfirmationView: View {
                         rotation += 360
                     }
                     // Then continue spinning every 4 seconds
-                    Timer.scheduledTimer(withTimeInterval: 4.0, repeats: true) { _ in
+                    Timer.scheduledTimer(withTimeInterval: 4.0, repeats: true) {
+                        _ in
                         withAnimation(.easeInOut(duration: 1.0)) {
                             rotation += 360
                         }
@@ -355,11 +440,18 @@ struct PhotoConfirmationView: View {
                     Spacer()
                     Image(systemName: "tag.fill")
                         .foregroundStyle(
-                            LinearGradient(colors: [.blue, .purple], startPoint: .topLeading, endPoint: .bottomTrailing)
+                            LinearGradient(
+                                colors: [.blue, .purple],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing)
                         )
-                    Text("$\(NSDecimalNumber(decimal: item.cost ?? 0).stringValue)")
-                        .font(.system(size: 16, weight: .semibold, design: .rounded))
-                        .foregroundColor(.primary)
+                    Text(
+                        "$\(NSDecimalNumber(decimal: item.resolvedCost ?? 0).stringValue)"
+                    )
+                    .font(
+                        .system(size: 16, weight: .semibold, design: .rounded)
+                    )
+                    .foregroundColor(.primary)
                 }
                 .padding(.horizontal, 24)
 
@@ -369,19 +461,34 @@ struct PhotoConfirmationView: View {
                     HStack(spacing: 8) {
                         Image(systemName: "sparkles")
                             .foregroundStyle(
-                                LinearGradient(colors: [.blue, .purple], startPoint: .topLeading, endPoint: .bottomTrailing)
+                                LinearGradient(
+                                    colors: [.blue, .purple],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing)
                             )
                             .font(.system(size: 16))
                         Text("What to expect")
-                            .font(.system(size: 16, weight: .semibold, design: .rounded))
+                            .font(
+                                .system(
+                                    size: 16, weight: .semibold,
+                                    design: .rounded)
+                            )
                             .foregroundColor(.primary)
                     }
 
                     VStack(alignment: .leading, spacing: 10) {
-                        InfoRow(number: "1", text: "AI will transform your photo")
-                        InfoRow(number: "2", text: "Processing takes 30-60 seconds")
-                        InfoRow(number: "3", text: "Don't close the app until the image has finished generating")
-                        InfoRow(number: "4", text: "You'll get a notification when ready")
+                        InfoRow(
+                            number: "1", text: "AI will transform your photo")
+                        InfoRow(
+                            number: "2", text: "Processing takes 30-60 seconds")
+                        InfoRow(
+                            number: "3",
+                            text:
+                                "Don't close the app until the image has finished generating"
+                        )
+                        InfoRow(
+                            number: "4",
+                            text: "You'll get a notification when ready")
                     }
                     .padding(.horizontal, 24)
                 }
@@ -406,7 +513,11 @@ struct PhotoConfirmationView: View {
                             .font(.system(size: 9))
 
                         Text("250")
-                            .font(.system(size: 16, weight: .semibold, design: .rounded))
+                            .font(
+                                .system(
+                                    size: 16, weight: .semibold,
+                                    design: .rounded)
+                            )
                             .foregroundColor(.primary)
                         Text("credits")
                             .font(.caption2)
@@ -447,7 +558,9 @@ struct InfoRow: View {
                 .foregroundColor(.white)
                 .frame(width: 24, height: 24)
                 .background(
-                    LinearGradient(colors: [.blue, .purple], startPoint: .topLeading, endPoint: .bottomTrailing)
+                    LinearGradient(
+                        colors: [.blue, .purple], startPoint: .topLeading,
+                        endPoint: .bottomTrailing)
                 )
                 .clipShape(Circle())
 

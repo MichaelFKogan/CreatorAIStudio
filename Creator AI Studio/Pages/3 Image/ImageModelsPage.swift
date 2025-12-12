@@ -101,8 +101,8 @@ final class ImageModelsViewModel: ObservableObject {
         }
 
         switch sortOrder {
-        case 1: models.sort { ($0.cost ?? 0) < ($1.cost ?? 0) }
-        case 2: models.sort { ($0.cost ?? 0) > ($1.cost ?? 0) }
+        case 1: models.sort { ($0.resolvedCost ?? 0) < ($1.resolvedCost ?? 0) }
+        case 2: models.sort { ($0.resolvedCost ?? 0) > ($1.resolvedCost ?? 0) }
         default:
             break
         }
@@ -378,7 +378,7 @@ private struct ImageModelGridItem: View {
 
                 Spacer()
 
-                Text("\(item.cost.credits) credits")
+                Text("\(item.resolvedCost.credits) credits")
                     .font(.system(size: 12, weight: .semibold, design: .rounded))
                     .foregroundColor(.blue)
             }
@@ -416,7 +416,7 @@ private struct ImageModelListItem: View {
             Spacer()
 
             VStack(alignment: .trailing) {
-                Text("\(item.cost.credits)")
+                Text("\(item.resolvedCost.credits)")
                     .font(.caption)
                     .foregroundColor(.white)
                     .padding(.horizontal, 8)

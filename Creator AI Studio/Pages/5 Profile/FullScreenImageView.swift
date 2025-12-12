@@ -873,7 +873,10 @@ struct FullScreenImageView: View {
     }
 
     private func promptSection(_ prompt: String) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
+        // Convert literal \n strings to actual line breaks
+        let processedPrompt = prompt.replacingOccurrences(of: "\\n", with: "\n")
+        
+        return VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Image(systemName: "text.alignleft")
                     .font(.caption2)
@@ -903,7 +906,7 @@ struct FullScreenImageView: View {
                 }
             }
             VStack(alignment: .leading, spacing: 4) {
-                Text(prompt)
+                Text(processedPrompt)
                     .font(.system(size: 15, weight: .medium))
                     .foregroundColor(.white)
                     .fixedSize(horizontal: false, vertical: true)

@@ -22,7 +22,7 @@ struct CompactFiltersGrid: View {
                     imageName: filter.display.imageName,
                     isSelected: selectedFilter?.id == filter.id,
                     size: 80,
-                    cost: filter.cost,
+                    cost: filter.resolvedCost,
                     imageUrl: filter.display.imageName.hasPrefix("http")
                         ? filter.display.imageName : nil
                 )
@@ -124,23 +124,23 @@ struct FilterCategorySheet: View {
                                 .padding(.vertical, 8)
                         }
 
-                        // All Filters section (always visible)
-                        CategorySection(
-                            title: "Popular Filters",
-                            icon: "square.grid.2x2.fill",
-                            filters: allFilters,
-                            selectedFilter: selectedFilter,
-                            onSelect: { filter in
-                                onSelect(filter)
-                            },
-                            isExpanded: true,
-                            isAlwaysExpanded: true
-                        )
-                        .padding(.top, imageToImageModels.isEmpty ? 8 : 0)
+                        // // All Filters section (always visible)
+                        // CategorySection(
+                        //     title: "Popular Filters",
+                        //     icon: "square.grid.2x2.fill",
+                        //     filters: allFilters,
+                        //     selectedFilter: selectedFilter,
+                        //     onSelect: { filter in
+                        //         onSelect(filter)
+                        //     },
+                        //     isExpanded: true,
+                        //     isAlwaysExpanded: true
+                        // )
+                        // .padding(.top, imageToImageModels.isEmpty ? 8 : 0)
 
-                        Divider()
-                            .background(Color.white.opacity(0.2))
-                            .padding(.vertical, 8)
+                        // Divider()
+                        //     .background(Color.white.opacity(0.2))
+                        //     .padding(.vertical, 8)
 
                         // Category sections - dynamically generated from JSON
                         ForEach(Array(categorizedFilters.keys.sorted()), id: \.self) { categoryName in

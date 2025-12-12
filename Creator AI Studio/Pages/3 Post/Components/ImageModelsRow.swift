@@ -49,7 +49,7 @@ struct ImageModelsRow: View {
                         title: model.display.title,
                         imageName: model.display.imageName,
                         isSelected: selectedModel?.id == model.id,
-                        cost: model.cost
+                        cost: model.resolvedCost
                     )
                     .onTapGesture {
                         onSelect(model)

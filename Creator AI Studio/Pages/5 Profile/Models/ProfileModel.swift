@@ -135,6 +135,10 @@ class ProfileViewModel: ObservableObject {
     private let pageSize = 50 // Fetch 50 images at a time
     private let cacheStaleInterval: TimeInterval = 5 * 60 // 5 minutes
     
+    // Cache for model-specific images to avoid repeated queries
+    private var modelImagesCache: [String: (images: [UserImage], fetchedAt: Date)] = [:]
+    private let modelCacheStaleInterval: TimeInterval = 10 * 60 // 10 minutes
+    
     // Notification observer for new image saves
     private var imageSavedObserver: NSObjectProtocol?
 
@@ -528,21 +532,39 @@ class ProfileViewModel: ObservableObject {
     /// Fetches user images filtered by a specific model name
     /// - Parameters:
     ///   - modelName: The model name to filter by (from item.display.modelName)
-    ///   - limit: Maximum number of images to fetch (default: 50)
+    ///   - limit: Maximum number of images to fetch (default: 1000, effectively unlimited)
     ///   - forceRefresh: Whether to force a refresh from database
     /// - Returns: Array of UserImage filtered by model
-    func fetchModelImages(modelName: String, limit: Int = 50, forceRefresh: Bool = false) async -> [UserImage] {
+    func fetchModelImages(modelName: String, limit: Int = 1000, forceRefresh: Bool = false) async -> [UserImage] {
         guard let userId = userId else { return [] }
 
-        // First, try to filter from cached images if available and not forcing refresh
-        if !forceRefresh, !userImages.isEmpty {
-            let filtered = userImages.filter { $0.model == modelName }
-            if !filtered.isEmpty {
-                return Array(filtered.prefix(limit))
+        // Check model-specific cache first (if not forcing refresh)
+        if !forceRefresh {
+            if let cached = modelImagesCache[modelName] {
+                let cacheAge = Date().timeIntervalSince(cached.fetchedAt)
+                if cacheAge < modelCacheStaleInterval {
+                    print("✅ Using cached model images for \(modelName): \(cached.images.count) images")
+                    return cached.images
+                } else {
+                    print("⏰ Model cache stale for \(modelName), refreshing...")
+                }
             }
         }
 
-        // If no cached results or force refresh, query database
+        // Try to use main userImages cache if it seems complete (has >= 50 images)
+        // This indicates we likely have a full cache loaded
+        if !forceRefresh, userImages.count >= 50 {
+            let filtered = userImages.filter { $0.model == modelName }
+            if !filtered.isEmpty {
+                print("✅ Using main cache for \(modelName): \(filtered.count) images")
+                // Cache the filtered results for future use
+                modelImagesCache[modelName] = (filtered, Date())
+                return filtered
+            }
+        }
+
+        // Query database - use a high limit to get all images for this model
+        print("📡 Querying database for model images: \(modelName)")
         do {
             let response: PostgrestResponse<[UserImage]> = try await client.database
                 .from("user_media")
@@ -553,11 +575,27 @@ class ProfileViewModel: ObservableObject {
                 .limit(limit)
                 .execute()
 
-            return response.value ?? []
+            let images = response.value ?? []
+            
+            // Cache the results
+            modelImagesCache[modelName] = (images, Date())
+            print("✅ Fetched and cached \(images.count) images for model \(modelName)")
+            
+            return images
         } catch {
             print("❌ Failed to fetch model images for \(modelName): \(error)")
             return []
         }
+    }
+    
+    /// Clears the model-specific cache (useful when new images are created)
+    func clearModelCache() {
+        modelImagesCache.removeAll()
+    }
+    
+    /// Clears cache for a specific model
+    func clearModelCache(for modelName: String) {
+        modelImagesCache.removeValue(forKey: modelName)
     }
 
     // MARK: - Favorites Management
@@ -800,6 +838,12 @@ class ProfileViewModel: ObservableObject {
         
         // Insert at the beginning (newest first)
         userImages.insert(image, at: 0)
+        
+        // Clear model-specific cache for this image's model (if it has one)
+        // This ensures the "Your Creations" section shows the new image
+        if let modelName = image.model, !modelName.isEmpty {
+            clearModelCache(for: modelName)
+        }
         
         // Update cache
         saveCachedImages(for: userId)

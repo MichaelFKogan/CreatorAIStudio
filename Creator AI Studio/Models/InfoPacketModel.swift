@@ -21,6 +21,12 @@ struct InfoPacket: Codable, Identifiable, Hashable {
         case display, apiConfig, prompt, cost, type, capabilities, category
         // Notice: 'id' is NOT listed here
     }
+    
+    /// Resolved cost from centralized PricingManager.
+    /// Falls back to the stored cost property if PricingManager doesn't have a price.
+    var resolvedCost: Decimal? {
+        return PricingManager.shared.price(for: self) ?? cost
+    }
 }
 
 struct DisplayInfo: Codable, Hashable {

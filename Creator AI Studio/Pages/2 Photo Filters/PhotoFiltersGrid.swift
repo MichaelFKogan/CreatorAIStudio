@@ -27,7 +27,7 @@ struct PhotoFiltersGrid: View {
                     imageName: filter.display.imageName,
                     isSelected: selectedFilter?.id == filter.id,
                     size: itemSize,
-                    cost: filter.cost,
+                    cost: filter.resolvedCost,
                     imageUrl: filter.display.imageName.hasPrefix("http") ? filter.display.imageName : nil
                 )
                 .onTapGesture { onSelect(filter) }

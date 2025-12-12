@@ -1,0 +1,290 @@
+[
+  {
+    "display": {
+      "title": "Anime 1",
+      "imageName": "anime1-boy-ghibli-wavespeed",
+      "imageNameOriginal": "yourphoto",
+      "description": "",
+      "modelName": "",
+      "modelDescription": "",
+      "modelImageName": "",
+      "exampleImages": [
+        "anime2",
+        "anime3",
+        "anime4",
+        "anime5",
+        "anime6",
+        "anime7"
+      ],
+      "moreStyles": [
+        ["Caricature"],
+        ["photobooth"],
+        ["halloween"],
+        ["artist"],
+        ["luxury"],
+        ["videogamesItems"],
+        ["chibi"],
+        ["cute"]
+      ]
+    },
+    "apiConfig": {
+      "provider": "wavespeed",
+      "endpoint": "https://api.wavespeed.ai/api/v3/wavespeed-ai/ghibli",
+      "wavespeedConfig": {
+        "outputFormat": "jpeg",
+        "enableSyncMode": true,
+        "enableBase64Output": false
+      },
+      "aspectRatio": ""
+    },
+    "prompt": "",
+    "cost": 0.005,
+    "type": "Photo Filter",
+    "category": "Anime"
+  },
+  {
+    "display": {
+      "title": "Anime 1",
+      "imageName": "anime1-girl-ghibli-wavespeed",
+      "imageNameOriginal": "yourphoto",
+      "description": "",
+      "modelName": "",
+      "modelDescription": "",
+      "modelImageName": "",
+      "exampleImages": [
+        "anime2",
+        "anime3",
+        "anime4",
+        "anime5",
+        "anime6",
+        "anime7"
+      ],
+      "moreStyles": [
+        ["Caricature"],
+        ["photobooth"],
+        ["halloween"],
+        ["artist"],
+        ["luxury"],
+        ["videogamesItems"],
+        ["chibi"],
+        ["cute"]
+      ]
+    },
+    "apiConfig": {
+      "provider": "wavespeed",
+      "endpoint": "https://api.wavespeed.ai/api/v3/wavespeed-ai/ghibli",
+      "wavespeedConfig": {
+        "outputFormat": "jpeg",
+        "enableSyncMode": true,
+        "enableBase64Output": false
+      },
+      "aspectRatio": ""
+    },
+    "prompt": "",
+    "cost": 0.005,
+    "type": "Photo Filter",
+    "category": "Anime"
+  },
+
+  {
+    "display": {
+      "title": "Anime 2",
+      "imageName": "anime2-boy-fluxkontextpro",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "FLUX.1 Kontext [pro]",
+      "modelDescription": "A professional-grade model from Black Forest Labs built for sharp detail, consistent anatomy, accurate lighting, and clean visual structure. Excellent for portraits, branding images, product photography, and polished commercial-quality artwork.",
+      "modelImageName": "fluxkontextpro",
+      "exampleImages": []
+    },
+    "apiConfig": {
+      "provider": "runware",
+      "runwareModel": "bfl:3@1",
+      "endpoint": "https://api.runware.ai/v1",
+      "runwareConfig": {
+        "imageToImageMethod": "referenceImages",
+
+        "requiresDimensions": true,
+        "imageCompressionQuality": 0.85,
+
+        "outputFormat": "JPG",
+        "outputType": "URL",
+        "outputQuality": 85
+      }
+    },
+    "prompt": "Transform to Anime style",
+    "cost": 0.04,
+    "type": "Photo Filter",
+    "capabilities": ["Text to Image", "Image to Image"],
+    "category": "Anime"
+  },
+  {
+    "display": {
+      "title": "Anime 2",
+      "imageName": "anime2-girl-fluxkontextpro",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "FLUX.1 Kontext [pro]",
+      "modelDescription": "A professional-grade model from Black Forest Labs built for sharp detail, consistent anatomy, accurate lighting, and clean visual structure. Excellent for portraits, branding images, product photography, and polished commercial-quality artwork.",
+      "modelImageName": "fluxkontextpro",
+      "exampleImages": []
+    },
+    "apiConfig": {
+      "provider": "runware",
+      "runwareModel": "bfl:3@1",
+      "endpoint": "https://api.runware.ai/v1",
+      "runwareConfig": {
+        "imageToImageMethod": "referenceImages",
+
+        "requiresDimensions": true,
+        "imageCompressionQuality": 0.85,
+
+        "outputFormat": "JPG",
+        "outputType": "URL",
+        "outputQuality": 85
+      }
+    },
+    "prompt": "Transform to Anime style",
+    "cost": 0.04,
+    "type": "Photo Filter",
+    "capabilities": ["Text to Image", "Image to Image"],
+    "category": "Anime"
+  },
+
+  {
+    "display": {
+      "title": "Anime 3",
+      "imageName": "anime3-boy-seedream45",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Seedream 4.5",
+      "modelDescription": "",
+      "modelImageName": "seedream45",
+      "exampleImages": []
+    },
+    "apiConfig": {
+      "provider": "runware",
+      "runwareModel": "bytedance:seedream@4.5",
+      "endpoint": "https://api.runware.ai/v1",
+      "runwareConfig": {
+        "imageToImageMethod": "referenceImages",
+        "requiresDimensions": true,
+        "imageCompressionQuality": 0.9
+      }
+    },
+    "prompt": "Transform to Anime style",
+    "cost": 0.04,
+    "type": "Photo Filter",
+    "capabilities": ["Text to Image", "Image to Image"],
+    "category": "Anime"
+  },
+  {
+    "display": {
+      "title": "Anime 3",
+      "imageName": "anime3-girl-seedream45",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Seedream 4.5",
+      "modelDescription": "",
+      "modelImageName": "seedream45",
+      "exampleImages": []
+    },
+    "apiConfig": {
+      "provider": "runware",
+      "runwareModel": "bytedance:seedream@4.5",
+      "endpoint": "https://api.runware.ai/v1",
+      "runwareConfig": {
+        "imageToImageMethod": "referenceImages",
+        "requiresDimensions": true,
+        "imageCompressionQuality": 0.9
+      }
+    },
+    "prompt": "Transform to Anime style",
+    "cost": 0.04,
+    "type": "Photo Filter",
+    "capabilities": ["Text to Image", "Image to Image"],
+    "category": "Anime"
+  },
+
+  {
+    "display": {
+      "title": "Anime 4",
+      "imageName": "anime4-boy-seedream40",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Seedream 4.0",
+      "modelDescription": "",
+      "modelImageName": "seedream40",
+      "exampleImages": []
+    },
+    "apiConfig": {
+      "provider": "runware",
+      "runwareModel": "bytedance:5@0",
+      "endpoint": "https://api.runware.ai/v1",
+      "runwareConfig": {
+        "imageToImageMethod": "referenceImages",
+        "requiresDimensions": true,
+        "imageCompressionQuality": 0.9
+      }
+    },
+    "prompt": "Transform to Anime style",
+    "cost": 0.03,
+    "type": "Photo Filter",
+    "capabilities": ["Text to Image", "Image to Image"],
+    "category": "Anime"
+  },
+
+  {
+    "display": {
+      "title": "Anime 4",
+      "imageName": "anime4-girl-seedream40",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Seedream 4.0",
+      "modelDescription": "",
+      "modelImageName": "seedream40",
+      "exampleImages": []
+    },
+    "apiConfig": {
+      "provider": "runware",
+      "runwareModel": "bytedance:5@0",
+      "endpoint": "https://api.runware.ai/v1",
+      "runwareConfig": {
+        "imageToImageMethod": "referenceImages",
+        "requiresDimensions": true,
+        "imageCompressionQuality": 0.9
+      }
+    },
+    "prompt": "Transform to Anime style",
+    "cost": 0.03,
+    "type": "Photo Filter",
+    "capabilities": ["Text to Image", "Image to Image"],
+    "category": "Anime"
+  },
+
+  {
+    "display": {
+      "title": "Anime Van Gogh Painting",
+      "imageName": "anime-vangogh-woman-fluxkontextpro",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "FLUX.1 Kontext [pro]",
+      "modelDescription": "A professional-grade model from Black Forest Labs built for sharp detail, consistent anatomy, accurate lighting, and clean visual structure. Excellent for portraits, branding images, product photography, and polished commercial-quality artwork.",
+      "modelImageName": "fluxkontextpro",
+      "exampleImages": []
+    },
+    "apiConfig": {
+      "provider": "runware",
+      "runwareModel": "bfl:3@1",
+      "endpoint": "https://api.runware.ai/v1",
+      "runwareConfig": {
+        "imageToImageMethod": "referenceImages",
+
+        "requiresDimensions": true,
+        "imageCompressionQuality": 0.85,
+
+        "outputFormat": "JPG",
+        "outputType": "URL",
+        "outputQuality": 85
+      }
+    },
+    "prompt": "Transform to an Anime Van Gogh painting similar to Starry Night",
+    "cost": 0.04,
+    "type": "Photo Filter",
+    "capabilities": ["Text to Image", "Image to Image"],
+    "category": "Anime"
+  }
+]

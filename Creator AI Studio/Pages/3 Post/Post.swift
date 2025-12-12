@@ -243,7 +243,7 @@ struct Post: View {
                                             // Cost badge in top right
                                             Group {
                                                 if let cost = displayFilter
-                                                    .cost
+                                                    .resolvedCost
                                                 {
                                                     // Text( "$\(NSDecimalNumber(decimal: cost).stringValue)")
                                                     Text("\(cost.credits)")

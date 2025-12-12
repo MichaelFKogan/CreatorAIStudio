@@ -65,7 +65,7 @@ struct FilterScrollRow: View {
                                     imageName: item.display.imageName,
                                     isSelected: (selectedFilter?.id == item.id)
                                         || (selectedImageModel?.id == item.id),
-                                    cost: item.cost,
+                                    cost: item.resolvedCost,
                                     imageUrl: item.display.imageName.hasPrefix(
                                         "http") ? item.display.imageName : nil
                                 )

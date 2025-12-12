@@ -49,7 +49,7 @@ class ImageGenerationTask: MediaGenerationTask {
         Output Format: \(item.apiConfig.wavespeedConfig?.outputFormat)
         Enable Sync Mode: \(item.apiConfig.wavespeedConfig?.enableSyncMode)
         Enable Base64 Output: \(item.apiConfig.wavespeedConfig?.enableBase64Output)
-        Cost: $\(NSDecimalNumber(decimal: item.cost ?? 0).stringValue)
+        Cost: $\(NSDecimalNumber(decimal: item.resolvedCost ?? 0).stringValue)
         ------------------------------
         """)
 
@@ -177,7 +177,7 @@ class ImageGenerationTask: MediaGenerationTask {
                 imageUrl: supabaseImageURL,
                 model: modelName.isEmpty ? nil : modelName,
                 title: item.display.title.isEmpty ? nil : item.display.title,
-                cost: (item.cost != nil && item.cost! > 0 ? NSDecimalNumber(decimal: item.cost!).doubleValue : nil),
+                cost: (item.resolvedCost != nil && item.resolvedCost! > 0 ? NSDecimalNumber(decimal: item.resolvedCost!).doubleValue : nil),
                 type: item.type?.isEmpty == false ? item.type : nil,
                 endpoint: item.apiConfig.endpoint.isEmpty ? nil : item.apiConfig.endpoint,
                 prompt: (item.prompt?.isEmpty == false ? item.prompt : nil),

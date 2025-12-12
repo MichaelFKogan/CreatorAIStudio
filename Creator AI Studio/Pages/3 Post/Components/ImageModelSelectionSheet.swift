@@ -234,7 +234,7 @@ private struct ImageModelGridItem: View {
                 
                 Spacer()
                 
-                Text("$\(NSDecimalNumber(decimal: item.cost ?? 0).stringValue)")
+                Text("$\(NSDecimalNumber(decimal: item.resolvedCost ?? 0).stringValue)")
                     .font(.system(size: 12, weight: .semibold, design: .rounded))
                     .foregroundColor(.blue)
             }
@@ -265,7 +265,7 @@ private struct ImageModelListItem: View {
             Spacer()
             
             VStack(alignment: .trailing) {
-                Text("$\(NSDecimalNumber(decimal: item.cost ?? 0).stringValue)")
+                Text("$\(NSDecimalNumber(decimal: item.resolvedCost ?? 0).stringValue)")
                     .font(.system(size: 14, weight: .semibold, design: .rounded))
                     .foregroundColor(.blue)
                 Text("per image")
