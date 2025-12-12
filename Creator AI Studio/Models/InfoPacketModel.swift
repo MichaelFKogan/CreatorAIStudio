@@ -29,26 +29,54 @@ struct InfoPacket: Codable, Identifiable, Hashable {
     }
     
     /// Resolved API configuration from centralized ModelConfigurationManager.
-    /// Uses modelName as the source of truth. Falls back to stored apiConfig only if manager doesn't have a configuration.
+    /// Merges manager config with stored apiConfig, prioritizing stored values (especially aspectRatio).
     var resolvedAPIConfig: APIConfiguration {
-        // First try to get from centralized manager (modelName is source of truth)
-        if let config = ModelConfigurationManager.shared.apiConfiguration(for: self) {
-            return config
-        }
-        // Fallback to stored apiConfig if available (for backward compatibility during migration)
-        if let storedConfig = apiConfig {
+        // Get base config from manager (or fallback)
+        let baseConfig: APIConfiguration
+        if let managerConfig = ModelConfigurationManager.shared.apiConfiguration(for: self) {
+            baseConfig = managerConfig
+        } else if let storedConfig = apiConfig {
             return storedConfig
+        } else {
+            // Last resort: return a default configuration
+            baseConfig = APIConfiguration(
+                provider: .runware,
+                endpoint: "https://api.runware.ai/v1",
+                runwareModel: nil,
+                aspectRatio: nil,
+                wavespeedConfig: nil,
+                runwareConfig: nil
+            )
         }
-        // Last resort: return a default configuration (should not happen if modelName is properly set)
-        // This handles edge cases during migration or for photo filters without modelName
-        return APIConfiguration(
-            provider: .runware,
-            endpoint: "https://api.runware.ai/v1",
-            runwareModel: nil,
-            aspectRatio: nil,
-            wavespeedConfig: nil,
-            runwareConfig: nil
-        )
+        
+        // If there's a stored apiConfig, merge it with base config, prioritizing stored values
+        if let storedConfig = apiConfig {
+            var mergedConfig = baseConfig
+            // Prioritize stored aspectRatio if it's set
+            if let storedAspectRatio = storedConfig.aspectRatio, !storedAspectRatio.isEmpty {
+                mergedConfig.aspectRatio = storedAspectRatio
+            }
+            // Merge other stored values if they're set
+            if storedConfig.provider != baseConfig.provider {
+                mergedConfig.provider = storedConfig.provider
+            }
+            if !storedConfig.endpoint.isEmpty && storedConfig.endpoint != baseConfig.endpoint {
+                mergedConfig.endpoint = storedConfig.endpoint
+            }
+            if let storedRunwareModel = storedConfig.runwareModel {
+                mergedConfig.runwareModel = storedRunwareModel
+            }
+            // Merge nested configs if stored config has them
+            if let storedWavespeedConfig = storedConfig.wavespeedConfig {
+                mergedConfig.wavespeedConfig = storedWavespeedConfig
+            }
+            if let storedRunwareConfig = storedConfig.runwareConfig {
+                mergedConfig.runwareConfig = storedRunwareConfig
+            }
+            return mergedConfig
+        }
+        
+        return baseConfig
     }
     
     /// Resolved capabilities from centralized ModelConfigurationManager.
@@ -67,6 +95,24 @@ struct InfoPacket: Codable, Identifiable, Hashable {
     /// Falls back to the stored display.modelImageName property if ModelConfigurationManager doesn't have an image name.
     var resolvedModelImageName: String? {
         return ModelConfigurationManager.shared.modelImageName(for: self) ?? display.modelImageName
+    }
+    
+    /// Resolved example images from centralized CategoryConfigurationManager.
+    /// Falls back to the stored display.exampleImages property if CategoryConfigurationManager doesn't have example images for this category.
+    var resolvedExampleImages: [String]? {
+        guard let category = category else {
+            return display.exampleImages
+        }
+        return CategoryConfigurationManager.shared.exampleImages(for: category) ?? display.exampleImages
+    }
+    
+    /// Resolved more styles from centralized CategoryConfigurationManager.
+    /// Falls back to the stored display.moreStyles property if CategoryConfigurationManager doesn't have more styles for this category.
+    var resolvedMoreStyles: [[String]]? {
+        guard let category = category else {
+            return display.moreStyles
+        }
+        return CategoryConfigurationManager.shared.moreStyles(for: category) ?? display.moreStyles
     }
 }
 

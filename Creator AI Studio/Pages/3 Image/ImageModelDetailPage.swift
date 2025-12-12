@@ -161,7 +161,7 @@ struct ImageModelDetailPage: View {
                                 isProcessingOCR: $isProcessingOCR
                             ))
 
-                        if item.capabilities?.contains("Image to Image") == true {
+                        if ModelConfigurationManager.shared.capabilities(for: item)?.contains("Image to Image") == true {
                             LazyView(
                                 ReferenceImagesSection(
                                     referenceImages: $referenceImages,
@@ -478,7 +478,7 @@ struct BannerSection: View {
                             .secondary)
                     }
 
-                    if let capabilities = item.capabilities,
+                    if let capabilities = ModelConfigurationManager.shared.capabilities(for: item),
                        !capabilities.isEmpty
                     {
                         Text(capabilities.joined(separator: " • "))

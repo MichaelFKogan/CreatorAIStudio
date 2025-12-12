@@ -135,14 +135,14 @@ struct PhotoFilterDetailView: View {
                     .padding(.trailing, 6)
 
                     // Example Images Section
-                    if let exampleImages = item.display.exampleImages,
+                    if let exampleImages = item.resolvedExampleImages,
                         !exampleImages.isEmpty
                     {
                         ExampleImagesSection(images: exampleImages)
                     }
 
                     // MARK: - More Styles
-                    if let moreStyles = item.display.moreStyles,
+                    if let moreStyles = item.resolvedMoreStyles,
                         !moreStyles.isEmpty
                     {
                         VStack {

@@ -30,6 +30,7 @@ struct Profile: View {
                 } else {
                     Text("Loading user…")
                 }
+                Color.clear.frame(height: 160)
             }
 
             // MARK: NAVIGATION BAR
@@ -943,13 +944,14 @@ struct PlaceholderImageCard: View {
                             .foregroundColor(.white)
                             .padding(.horizontal, 12)
                             .padding(.vertical, 6)
-                            .background(
-                                LinearGradient(
-                                    colors: [.blue, .purple],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
-                            )
+                            .background(Color.gray)
+                            // .background(
+                            //     LinearGradient(
+                            //         colors: [.blue, .purple],
+                            //         startPoint: .leading,
+                            //         endPoint: .trailing
+                            //     )
+                            // )
                             .clipShape(Capsule())
                         }
                         .disabled(isRetrying)

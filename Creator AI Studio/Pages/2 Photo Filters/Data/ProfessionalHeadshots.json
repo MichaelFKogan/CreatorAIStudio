@@ -4,25 +4,10 @@
       "title": "",
       "imageName": "",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)",
-      "modelDescription": "",
-      "modelImageName": "geminiflashimage25",
-      "exampleImages": []
-    },
-    "apiConfig": {
-      "provider": "runware",
-      "runwareModel": "google:4@1",
-      "endpoint": "https://api.runware.ai/v1",
-      "runwareConfig": {
-        "imageToImageMethod": "referenceImages",
-        "requiresDimensions": true,
-        "imageCompressionQuality": 0.9
-      }
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
     },
     "prompt": "",
-    "cost": 0.039,
     "type": "Photo Filter",
-    "capabilities": ["Text to Image", "Image to Image"],
     "category": "Photobooth"
   }
 ]

@@ -4,25 +4,10 @@
       "title": "Ghostface 1",
       "imageName": "ghostface1",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)",
-      "modelDescription": "",
-      "modelImageName": "geminiflashimage25",
-      "exampleImages": []
-    },
-    "apiConfig": {
-      "provider": "runware",
-      "runwareModel": "google:4@1",
-      "endpoint": "https://api.runware.ai/v1",
-      "runwareConfig": {
-        "imageToImageMethod": "referenceImages",
-        "requiresDimensions": true,
-        "imageCompressionQuality": 0.9
-      }
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
     },
     "prompt": "Transform the image into a cinematic Y2K photo: A woman lies on a red satin bed, clutching a black, 1990s-era corded telephone, her expression intense and pensive.\n\nA small gold butterfly clip adorns her long hair. She wears layered gold necklaces and a large gold ring.\n\nThe warm glow of a desk lamp softly illuminates a corner of the room, decorated with retro 1990s rock posters.\n\nBeside her are popcorn and vintage magazines.\n\nBehind her, in the doorway of a dark corridor, a figure wearing a ghost face costume stands silently, their silhouette partially hidden in shadow, evoking a sense of suspense and fear.\n\nThe photo has the grainy, low-light look of 1990s film, with warm highlights intertwined with deep shadows to create an eerie, dreamlike atmosphere.",
-    "cost": 0.039,
     "type": "Photo Filter",
-    "capabilities": ["Text to Image", "Image to Image"],
     "category": "Spooky"
   },
 
@@ -31,25 +16,10 @@
       "title": "Ghostface 2",
       "imageName": "ghostface2",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)",
-      "modelDescription": "",
-      "modelImageName": "geminiflashimage25",
-      "exampleImages": []
-    },
-    "apiConfig": {
-      "provider": "runware",
-      "runwareModel": "google:4@1",
-      "endpoint": "https://api.runware.ai/v1",
-      "runwareConfig": {
-        "imageToImageMethod": "referenceImages",
-        "requiresDimensions": true,
-        "imageCompressionQuality": 0.9
-      }
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
     },
     "prompt": "Convert the imaage into a dreamy Y2K photo. The subject is lying on a pink satin bed, clutching a '90s-style corded telephone.\n\nA gold butterfly hairpin accents her flowing hair. She accessorizes with delicate gold necklaces and accessories, including a large gold ring.\n\nThe room behind her is girly, filled with '90s-style posters, creating a dreamy atmosphere. Her makeup is simple and elegant, with brown lipstick and lip liner.\n\nThe photo has a grainy '90s feel, and the light source simulates a table lamp in a dimly lit room at night. Next to her is a bowl of popcorn and some '90s-style magazines.\n\nA figure in a ghost face costume stands behind her, staring at her. His silhouette is dimly lit, standing in the doorway of a dark hallway. The overall dark tone of the image creates an eerie feeling.",
-    "cost": 0.039,
     "type": "Photo Filter",
-    "capabilities": ["Text to Image", "Image to Image"],
     "category": "Spooky"
   },
 
@@ -58,25 +28,10 @@
       "title": "Ghostface Polaroid",
       "imageName": "ghostfacepolaroid",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)",
-      "modelDescription": "",
-      "modelImageName": "geminiflashimage25",
-      "exampleImages": []
-    },
-    "apiConfig": {
-      "provider": "runware",
-      "runwareModel": "google:4@1",
-      "endpoint": "https://api.runware.ai/v1",
-      "runwareConfig": {
-        "imageToImageMethod": "referenceImages",
-        "requiresDimensions": true,
-        "imageCompressionQuality": 0.9
-      }
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
     },
     "prompt": "Take a photo using a Polaroid camera. The photo should look like a normal photo, without any clear subjects or props. The photo should have a slight blur effect, and the light source should be evenly distributed across the frame, such as a flash in a dark room. Replace the background with a simple white curtain.\n\nThe subject is photographed with a person wearing a white ghost mask and a black robe. The ghost mask stands behind the subject, with one hand playfully placed on the subject's neck. The subject looks shocked, creating an eerie yet humorous atmosphere. Do not retouch the face.",
-    "cost": 0.039,
     "type": "Photo Filter",
-    "capabilities": ["Text to Image", "Image to Image"],
     "category": "Spooky"
   },
 
@@ -85,25 +40,10 @@
       "title": "Camp Crystal Lake",
       "imageName": "campcrystallake",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)",
-      "modelDescription": "",
-      "modelImageName": "geminiflashimage25",
-      "exampleImages": []
-    },
-    "apiConfig": {
-      "provider": "runware",
-      "runwareModel": "google:4@1",
-      "endpoint": "https://api.runware.ai/v1",
-      "runwareConfig": {
-        "imageToImageMethod": "referenceImages",
-        "requiresDimensions": true,
-        "imageCompressionQuality": 0.9
-      }
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
     },
     "prompt": "Using reference photo. Do not change my face, facial features, or hair — keep color and length the same.\n\nCreate a dreamy Y2K-style photo of me standing on a forest path with cabins in the far background. My long hair is in a ponytail. I wear dainty silver necklaces, silver accessories, and chunky silver rings. Outfit: short red 70s gym shorts with white trim, a white 'Camp Crystal Lake' ringer sweatshirt with red accents, white knee-high socks with two red stripes, and black-and-white Converse sneakers. Makeup is simple yet glamorous with red gloss and black liner.\n\nThe photo has a grainy 70s vibe, fallen gold, brown, and red leaves around. Ghostface stands dimly lit behind a tree watching. Add tattoos to my arms, hands, and legs.",
-    "cost": 0.039,
     "type": "Photo Filter",
-    "capabilities": ["Text to Image", "Image to Image"],
     "category": "Spooky"
   }
 ]
