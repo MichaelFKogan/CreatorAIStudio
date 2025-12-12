@@ -30,7 +30,6 @@ struct Profile: View {
                 } else {
                     Text("Loading user…")
                 }
-                Color.clear.frame(height: 160)
             }
 
             // MARK: NAVIGATION BAR
@@ -409,6 +408,8 @@ struct ProfileViewContent: View {
             } else {
                 filteredContent
             }
+            
+            Color.clear.frame(height: 160)
         }
     }
 

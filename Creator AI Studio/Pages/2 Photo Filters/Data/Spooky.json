@@ -10,7 +10,6 @@
     "type": "Photo Filter",
     "category": "Spooky"
   },
-
   {
     "display": {
       "title": "Ghostface 2",
@@ -22,7 +21,6 @@
     "type": "Photo Filter",
     "category": "Spooky"
   },
-
   {
     "display": {
       "title": "Ghostface Polaroid",
@@ -34,7 +32,6 @@
     "type": "Photo Filter",
     "category": "Spooky"
   },
-
   {
     "display": {
       "title": "Camp Crystal Lake",
@@ -43,6 +40,72 @@
       "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
     },
     "prompt": "Using reference photo. Do not change my face, facial features, or hair — keep color and length the same.\n\nCreate a dreamy Y2K-style photo of me standing on a forest path with cabins in the far background. My long hair is in a ponytail. I wear dainty silver necklaces, silver accessories, and chunky silver rings. Outfit: short red 70s gym shorts with white trim, a white 'Camp Crystal Lake' ringer sweatshirt with red accents, white knee-high socks with two red stripes, and black-and-white Converse sneakers. Makeup is simple yet glamorous with red gloss and black liner.\n\nThe photo has a grainy 70s vibe, fallen gold, brown, and red leaves around. Ghostface stands dimly lit behind a tree watching. Add tattoos to my arms, hands, and legs.",
+    "type": "Photo Filter",
+    "category": "Spooky"
+  },
+  {
+    "display": {
+      "title": "Chucky Bedroom Neon Scene",
+      "imageName": "chuckyBedroomNeon",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+    },
+    "prompt": "Use my photo to create me with long red hair styled straight and dramatic makeup with subtle Chucky-inspired stitches and scars, laying on a bed facing the front in a zoomed-in chest-up shot that subtly emphasizes her curvy figure and prominent hips. She holds a 1988 magazine and a lollipop while glancing thoughtfully. She wears bright red lipstick with brown lipliner and a sexy Chucky-inspired costume with colorful striped sleeves and embroidered details mimicking Chucky’s outfit.\n\nHer face, chest, and curves are illuminated by neon-colored string lights and a glowing jack-o’-lantern. The bed has luxurious satin sheets reflecting neon light. Chucky sits beside her on the bed, leaning slightly and looking down at her cleavage with a surprised expression. The walls are covered in Chucky posters, with Halloween decorations including cobwebs, hanging bats, and spooky string lights. Bold geometric patterns, a boombox, and a colorful shag carpet complete the background. Ultra-realistic rendering, cinematic lighting, sharp focus, spooky 1988 atmosphere.",
+    "type": "Photo Filter",
+    "category": "Spooky"
+  },
+  {
+    "display": {
+      "title": "Vintage Halloween Kitchen Scene",
+      "imageName": "vintageHalloweenKitchen",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+    },
+    "prompt": "Create a photo of me in a dreamy Y2K style standing in a 70s kitchen decorated with vintage Halloween decor. A retro TV in the back shows Pet Sematary as I hold a 90s orange corded phone, daydreaming. My long loose curls are styled with gold clips. I wear dainty gold necklaces, rings, and accessories.\n\nThe dark wood, avocado green, and orange kitchen is filled with 1980s Halloween decorations. On the counter are a newspaper, pumpkin carving tools, pumpkin guts, and two spooky jack-o’-lanterns. My makeup is soft glam with brown lip liner and gloss. The lighting is grainy and dim like a nighttime lamp. A bowl of popcorn sits nearby.\n\nIn the dark hallway behind me, Ghostface stands in the doorway, dimly lit and watching. Do not change my face or features.",
+    "type": "Photo Filter",
+    "category": "Spooky"
+  },
+  {
+    "display": {
+      "title": "Retro Bathroom Scene",
+      "imageName": "retroBathroomScene",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+    },
+    "prompt": "Create a grungy-style portrait of me standing in front of a retro bathroom mirror, applying black lipstick in a confident, sexy pose. Do not alter my facial features. I wear a black shirt, dark distressed jeans, and an oversized black leather jacket. My long dark brunette hair flows naturally around my face.\n\nI wear dainty silver necklaces, silver accessories, and chunky silver rings. My makeup is dark and glamorous. The photo has a grainy 90s look, with scattered makeup items on the counter. The bathroom walls are covered with scary movie posters. Behind me in the dimly lit doorway stands a man in a Ghostface costume, faintly illuminated. The background is dark and ominous.",
+    "type": "Photo Filter",
+    "category": "Spooky"
+  },
+  {
+    "display": {
+      "title": "Retro Movie Theater Scene",
+      "imageName": "retroMovieTheater",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+    },
+    "prompt": "A young woman in a leopard faux fur coat, black stockings, and red heels sits next to Ghostface in red movie theater seats, both holding popcorn. Above them, a red neon sign glows. Behind them is a silver sequin curtain.\n\nLighting is cinematic and dark. The image is framed like a Polaroid with the date 'DEC 24 ’98'.",
+    "type": "Photo Filter",
+    "category": "Spooky"
+  },
+  {
+    "display": {
+      "title": "Ghostface 3",
+      "imageName": "classicBedroomScene",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+    },
+    "prompt": "A realistic horror photo of a young woman sitting on her bed, holding a vintage landline phone and looking nervous. Behind the slightly open bedroom door stands Ghostface in his black cloak and white mask, partially hidden in the shadows.\n\nCinematic lighting, eerie atmosphere, horror movie still.",
+    "type": "Photo Filter",
+    "category": "Spooky"
+  },
+  {
+    "display": {
+      "title": "1966 Impala Chicano Sunset",
+      "imageName": "impalaChicanoSunset",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+    },
+    "prompt": "Create a realistic image using my face without changing it. Place me sitting inside a 1966 Chevy Impala, black with gold flakes on 26 chrome spokes and white walls. I wear large hoop earrings, old-school makeup, and long wavy red hair. My arm hangs out of the car window.\n\nThe background shows a sunset with palm trees, giving a Chicano-style vibe. Realistic, detailed, old-school aesthetic.",
     "type": "Photo Filter",
     "category": "Spooky"
   }
