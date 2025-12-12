@@ -520,6 +520,7 @@ struct Post: View {
                                 isCaptureEnabled: isFilterOrModelSelected)
                             Spacer()
                         }
+                        .padding(.bottom, 20)
 
                         // MARK: CAPTURE
 
@@ -541,7 +542,7 @@ struct Post: View {
 
                     }
                     .safeAreaInset(edge: .bottom) {
-                        Color.clear.frame(height: 65)
+                        Color.clear.frame(height: 75)
                     }
                 }
             }
