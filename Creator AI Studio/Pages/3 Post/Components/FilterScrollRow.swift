@@ -39,9 +39,9 @@ struct FilterScrollRow: View {
     @State private var hasUserInteracted = false
 
     // Frame dimensions
-    private let frameWidth: CGFloat = 110
-    private let frameHeight: CGFloat = 110
-    private let thumbnailWidth: CGFloat = 100
+    private let frameWidth: CGFloat = 100
+    private let frameHeight: CGFloat = 100
+    private let thumbnailWidth: CGFloat = 90
 
     var body: some View {
         GeometryReader { geometry in
@@ -257,11 +257,11 @@ struct FilterScrollRow: View {
                 hapticGenerator.prepare()
             }
         }
-        .frame(height: 100)
+        .frame(height: 90)
     }
 
     private func checkCenteredFilter(centerX: CGFloat) {
-        // Find the item closest to center
+        // Find the item closest to center (left or right)
         var closestItem: InfoPacket?
         var minDistance: CGFloat = .infinity
 
@@ -275,20 +275,23 @@ struct FilterScrollRow: View {
             }
         }
 
-        // Check if an item is reasonably centered (within 50 points)
-        if let item = closestItem, minDistance < 50 {
+        // Always show the closest item while scrolling, even if it's in a gap
+        // This ensures the large image is always visible during scrolling
+        if let item = closestItem {
             // Trigger haptic if a different item is now centered
             if item.id != currentCenteredFilterId {
                 currentCenteredFilterId = item.id
                 hapticGenerator.impactOccurred(intensity: 0.6)
                 hapticGenerator.prepare()  // Prepare for next haptic
             }
-            // Always notify parent of centered item for real-time title updates
+            // Always notify parent of closest item for real-time title updates
             onCenteredFilterChanged?(item)
-        } else if currentCenteredFilterId != nil {
-            // No item is reasonably centered anymore
-            currentCenteredFilterId = nil
-            onCenteredFilterChanged?(nil)
+        } else {
+            // No items available (shouldn't happen, but handle gracefully)
+            if currentCenteredFilterId != nil {
+                currentCenteredFilterId = nil
+                onCenteredFilterChanged?(nil)
+            }
         }
     }
 
@@ -448,7 +451,7 @@ struct FilterThumbnailCompact: View {
                             }
                             .resizable()
                             .scaledToFill()
-                            .frame(width: 100, height: 100)
+                            .frame(width: 90, height: 90)
                             .clipped()
                             .cornerRadius(12)
                             .padding(0)
@@ -510,7 +513,7 @@ struct FilterThumbnailCompact: View {
                         Image(effectiveImageName)
                             .resizable()
                             .scaledToFill()
-                            .frame(width: 100, height: 100)
+                            .frame(width: 90, height: 90)
                             .clipped()
                             .cornerRadius(12)
                             .padding(0)

@@ -142,11 +142,14 @@ struct Post: View {
                                 // Show larger preview image of the centered/selected filter or model
                                 // Only visible while scrolling, fades out when scrolling stops
                                 // Hide when showing captured image
-                                if !shouldShowCapturedImage,
-                                    let displayFilter = centeredFilter
-                                        ?? selectedFilter
-                                        ?? selectedImageModel
-                                {
+                                // When scrolling, always show the nearest item (left or right) even if over a gap
+                                // When not scrolling, show selected filter/model if available
+                                if !shouldShowCapturedImage {
+                                    let displayFilter: InfoPacket? = isScrollingActive
+                                        ? centeredFilter  // While scrolling, always shows nearest item (left or right of gap)
+                                        : (centeredFilter ?? selectedFilter ?? selectedImageModel)  // When not scrolling, show selected
+                                    
+                                    if let displayFilter = displayFilter {
                                     VStack(spacing: 12) {
 
                                         // Filter title above the image
@@ -293,6 +296,7 @@ struct Post: View {
                                     }
                                     .allowsHitTesting(false)
                                     .padding(.bottom, 24)
+                                    }
                                 }
 
                                 VStack(spacing: 12) {
