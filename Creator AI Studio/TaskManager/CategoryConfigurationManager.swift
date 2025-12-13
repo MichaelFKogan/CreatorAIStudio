@@ -24,7 +24,8 @@ class CategoryConfigurationManager {
         "Photobooth": "Photobooth",
         "Spooky": "Spooky",
         "Professional": "LinkedInHeadshots",
-        "Fashion": "Fashion"
+        "Fashion": "Fashion",
+        "Luxury": "Luxury"
     ]
 
         /// The display order for categories in the UI.
@@ -37,7 +38,8 @@ class CategoryConfigurationManager {
         "Photobooth",
         "Spooky",
         "Professional",
-        "Fashion"
+        "Fashion",
+        "Luxury"
     ]
     
     /// Mapping of category names to their SF Symbol icon names
@@ -49,7 +51,8 @@ class CategoryConfigurationManager {
         "Photobooth": "camera.fill",
         "Spooky": "moon.stars.fill",
         "Professional": "person.crop.circle",
-        "Fashion": "bag.fill"
+        "Fashion": "bag.fill",
+        "Luxury": "gem.fill"
     ]
     
     /// Dictionary mapping category names to example images arrays
