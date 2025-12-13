@@ -1,0 +1,38 @@
+[
+  {
+    "display": {
+      "title": "Magazine Cover",
+      "imageName": "magazinecover",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+    },
+    "prompt": "Convert the uploaded image into a fashion magazine cover.\n\nThe subject is a beautiful woman wearing a pink qipao, with delicate floral accessories in her hair and colorful blossoms woven through.\n\nAround her neck is an elegant white lace collar. One hand gently holds several large butterflies.\n\nPhotography style should emphasize high-definition detail and texture, resembling a professional magazine cover.\n\nThe title “FASHION DESIGN” is placed at the top center of the image. The background is a minimalist light gray to highlight the subject."
+  },
+  {
+    "display": {
+      "title": "Flower Field Portrait",
+      "imageName": "flowerfieldportrait",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+    },
+    "prompt": "Use the uploaded photo as a reference and preserve 100% of the subject’s face and identity.\n\nGenerate a realistic outdoor portrait of the person standing in a dense field of tall white flowers with organic centers. Flowers should reach shoulder and head height, surrounding the subject closely, with some overlapping and blurred in the extreme foreground.\n\nThe subject wears a delicate white dress with lace and relaxed fabric details, standing upright and centered with a calm, serene expression, directly facing the camera.\n\nBackground: tall blooming flowers and a bright blue sky with soft clouds.\n\nLighting: warm golden daylight, soft natural sunlight highlighting textures and gently illuminating the face and hair. Shadows are subtle.\n\nCamera: vertical 4:5 close-to-medium portrait, eye-level perspective, lens 85-105mm full-frame equivalent for soft natural field focus.\n\nThe subject should appear integrated into the flower field, not superimposed. Avoid altering face, adding text/logos, distorting flowers or clothing, or leaving empty backgrounds.\n\nFinal output: ultra-realistic, high-resolution, immersive floral editorial portrait in 4K."
+  },
+  {
+    "display": {
+      "title": "10K Followers",
+      "imageName": "10kfollowerspink",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+    },
+    "prompt": "Transform the uploaded photo into a celebratory social media scene.\n\nThe subject is a young woman with long wavy dark hair sitting cross-legged on a white bed, smiling softly with eyes closed, holding two sparklers.\n\nShe wears a light pink blouse with wide flowy sleeves and black shorts, with pink manicured nails.\n\nSurrounding her are metallic rose-gold and pastel pink balloons. Behind her are giant rose-gold balloons spelling '10K' and a transparent balloon containing smaller pink balloons.\n\nIn front of her is a pink frosted cake on a crystal-decorated cake stand, topped with a '10K' decoration. A small pink tray beside the cake holds a glass pitcher of orange juice and a filled stemmed glass.\n\nLighting: soft, Instagram-style, feminine, festive, and celebratory with pink and rose-gold tones."
+  },
+  {
+    "display": {
+      "title": "Indie Aesthetic",
+      "imageName": "aestheticfridgeshot",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+    },
+    "prompt": "Do not change the subject’s face or hairstyle.\n\nThe person is sitting on the floor in front of an open messy fridge, leaning slightly back with relaxed posture, legs spread casually, confident body language. One hand holds a snack near the mouth, the other rests on the lap holding a snack bag.\n\nExpression: candid indie fashion model look, sharp gaze, lips slightly parted. Outfit: oversized Y2K white shirt with cartoon illustration, oversized jeans.\n\nFridge interior filled with messy food and drinks (watermelon, yogurt cups, milk cartons, soda cans, cheese packs, colorful boxes). Fridge light casts a cool bluish tone, contrasting with warm reds of pants and snack bag.\n\nPhotography style: candid indie, cinematic RAW, high-resolution, soft grain, artsy aesthetic. Warm cinematic film tone, golden highlights, creamy whites, deep reds and oranges.\n\nUltra HD photo with immersive, cozy indie vibe."
+  }
+]

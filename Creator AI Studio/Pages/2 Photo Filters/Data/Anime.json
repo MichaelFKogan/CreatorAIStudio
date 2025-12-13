@@ -5,8 +5,7 @@
       "imageName": "anime1-boy-ghibli-wavespeed",
       "imageNameOriginal": "yourphoto",
       "modelName": "Wavespeed Ghibli"
-    },
-    "type": "Photo Filter"
+    }
   },
   {
     "display": {
@@ -14,8 +13,7 @@
       "imageName": "anime1-girl-ghibli-wavespeed",
       "imageNameOriginal": "yourphoto",
       "modelName": "Wavespeed Ghibli"
-    },
-    "type": "Photo Filter"
+    }
   },
 
   {
@@ -25,8 +23,7 @@
       "imageNameOriginal": "yourphoto",
       "modelName": "FLUX.1 Kontext [pro]"
     },
-    "prompt": "Transform to Anime style",
-    "type": "Photo Filter"
+    "prompt": "Transform to Anime style"
   },
   {
     "display": {
@@ -35,8 +32,7 @@
       "imageNameOriginal": "yourphoto",
       "modelName": "FLUX.1 Kontext [pro]"
     },
-    "prompt": "Transform to Anime style",
-    "type": "Photo Filter"
+    "prompt": "Transform to Anime style"
   },
 
   {
@@ -46,9 +42,7 @@
       "imageNameOriginal": "yourphoto",
       "modelName": "Seedream 4.5"
     },
-    "prompt": "Transform to Anime style",
-    "type": "Photo Filter",
-    "category": "Anime"
+    "prompt": "Transform to Anime style"
   },
   {
     "display": {
@@ -57,8 +51,7 @@
       "imageNameOriginal": "yourphoto",
       "modelName": "Seedream 4.5"
     },
-    "prompt": "Transform to Anime style",
-    "type": "Photo Filter"
+    "prompt": "Transform to Anime style"
   },
 
   {
@@ -68,9 +61,7 @@
       "imageNameOriginal": "yourphoto",
       "modelName": "Seedream 4.0"
     },
-    "prompt": "Transform to Anime style",
-    "type": "Photo Filter",
-    "category": "Anime"
+    "prompt": "Transform to Anime style"
   },
 
   {
@@ -80,8 +71,7 @@
       "imageNameOriginal": "yourphoto",
       "modelName": "Seedream 4.0"
     },
-    "prompt": "Transform to Anime style",
-    "type": "Photo Filter"
+    "prompt": "Transform to Anime style"
   },
 
   {
@@ -91,7 +81,6 @@
       "imageNameOriginal": "yourphoto",
       "modelName": "FLUX.1 Kontext [pro]"
     },
-    "prompt": "Transform to an Anime Van Gogh painting similar to Starry Night",
-    "type": "Photo Filter"
+    "prompt": "Transform to an Anime Van Gogh painting similar to Starry Night"
   }
 ]

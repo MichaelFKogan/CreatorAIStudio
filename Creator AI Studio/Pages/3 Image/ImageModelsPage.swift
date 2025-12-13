@@ -64,7 +64,10 @@ final class ImageModelsViewModel: ObservableObject {
         do {
             let data = try Data(contentsOf: url)
             let decoder = JSONDecoder()
-            return try decoder.decode([InfoPacket].self, from: data)
+            var decoded = try decoder.decode([InfoPacket].self, from: data)
+            // Automatically set type for all items loaded from ImageModelData.json
+            decoded = decoded.map { var item = $0; item.type = "Image Model"; return item }
+            return decoded
         } catch {
             print("Failed to decode JSON:", error)
             return []

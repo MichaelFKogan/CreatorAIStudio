@@ -23,7 +23,8 @@ class CategoryConfigurationManager {
         "Video Games": "VideoGames",
         "Photobooth": "Photobooth",
         "Spooky": "Spooky",
-        "Professional": "LinkedInHeadshots"
+        "Professional": "LinkedInHeadshots",
+        "Fashion": "Fashion"
     ]
 
         /// The display order for categories in the UI.
@@ -35,7 +36,8 @@ class CategoryConfigurationManager {
         "Video Games",
         "Photobooth",
         "Spooky",
-        "Professional"
+        "Professional",
+        "Fashion"
     ]
     
     /// Mapping of category names to their SF Symbol icon names
@@ -46,7 +48,8 @@ class CategoryConfigurationManager {
         "Video Games": "gamecontroller.fill",
         "Photobooth": "camera.fill",
         "Spooky": "moon.stars.fill",
-        "Professional": "person.crop.circle"
+        "Professional": "person.crop.circle",
+        "Fashion": "bag.fill"
     ]
     
     /// Dictionary mapping category names to example images arrays

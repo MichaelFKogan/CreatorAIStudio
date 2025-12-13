@@ -85,8 +85,12 @@ class PhotoFiltersViewModel: ObservableObject {
             do {
                 let data = try Data(contentsOf: fileUrl)
                 var decoded = try JSONDecoder().decode([InfoPacket].self, from: data)
-                // Automatically set category for all items in this file
-                decoded = decoded.map { var item = $0; item.category = categoryName; return item }
+                // Automatically set category and type for all items in this file
+                decoded = decoded.map { var item = $0; 
+                    item.category = categoryName; 
+                    item.type = "Photo Filter"; 
+                    return item 
+                }
                 categorized[categoryName] = decoded
                 allFilters.append(contentsOf: decoded)
             } catch {

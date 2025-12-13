@@ -4,55 +4,48 @@
       "title": "Google Gemini Flash 2.5 (Nano Banana)",
       "imageName": "geminiflashimage25",
       "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
-    },
-    "type": "Image Model"
+    }
   },
   {
     "display": {
       "title": "Seedream 4.5",
       "imageName": "seedream45",
       "modelName": "Seedream 4.5"
-    },
-    "type": "Image Model"
+    }
   },
   {
     "display": {
       "title": "Seedream 4.0",
       "imageName": "seedream40",
       "modelName": "Seedream 4.0"
-    },
-    "type": "Image Model"
+    }
   },
   {
     "display": {
       "title": "FLUX.2 [dev]",
       "imageName": "flux2dev",
       "modelName": "FLUX.2 [dev]"
-    },
-    "type": "Image Model"
+    }
   },
   {
     "display": {
       "title": "FLUX.1 Kontext [pro]",
       "imageName": "fluxkontextpro",
       "modelName": "FLUX.1 Kontext [pro]"
-    },
-    "type": "Image Model"
+    }
   },
   {
     "display": {
       "title": "FLUX.1 Kontext [max]",
       "imageName": "fluxkontextmax",
       "modelName": "FLUX.1 Kontext [max]"
-    },
-    "type": "Image Model"
+    }
   },
   {
     "display": {
       "title": "Z-Image-Turbo",
       "imageName": "zimageturbo",
       "modelName": "Z-Image-Turbo"
-    },
-    "type": "Image Model"
+    }
   }
 ]
