@@ -170,8 +170,8 @@ struct PhotoFilters: View {
                         //     }
                         // }
                         
-                        // Category sections - organized by category
-                        ForEach(Array(viewModel.categorizedFilters.keys.sorted()), id: \.self) { categoryName in
+                        // Category sections - organized by category in specified order
+                        ForEach(viewModel.sortedCategoryNames, id: \.self) { categoryName in
                             if let filters = viewModel.categorizedFilters[categoryName],
                                 !filters.isEmpty
                             {
@@ -186,7 +186,7 @@ struct PhotoFilters: View {
                                     }
                                 )
                                 
-                                if categoryName != viewModel.categorizedFilters.keys.sorted().last {
+                                if categoryName != viewModel.sortedCategoryNames.last {
                                     Divider()
                                         .padding(.horizontal, 16)
                                         .padding(.top, 16)

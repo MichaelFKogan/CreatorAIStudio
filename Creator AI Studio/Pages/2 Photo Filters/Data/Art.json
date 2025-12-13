@@ -57,5 +57,17 @@
     "prompt": "Transform to a Van Gogh painting similar to Starry Night",
     "type": "Photo Filter",
     "category": "Art"
+  },
+
+  {
+    "display": {
+      "title": "Salvador Dali Painting",
+      "imageName": "salvador-dali-painting",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+    },
+    "prompt": "Transform to a Salvador Dali painting",
+    "type": "Photo Filter",
+    "category": "Art"
   }
 ]

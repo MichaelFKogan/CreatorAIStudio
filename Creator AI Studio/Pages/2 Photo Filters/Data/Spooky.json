@@ -1,7 +1,7 @@
 [
   {
     "display": {
-      "title": "Ghostface 1",
+      "title": "Ghostface",
       "imageName": "ghostface1",
       "imageNameOriginal": "yourphoto",
       "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
@@ -12,7 +12,7 @@
   },
   {
     "display": {
-      "title": "Ghostface 2",
+      "title": "Ghostface",
       "imageName": "ghostface2",
       "imageNameOriginal": "yourphoto",
       "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
@@ -89,7 +89,7 @@
   },
   {
     "display": {
-      "title": "Ghostface 3",
+      "title": "Ghostface",
       "imageName": "classicBedroomScene",
       "imageNameOriginal": "yourphoto",
       "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
@@ -98,6 +98,30 @@
     "type": "Photo Filter",
     "category": "Spooky"
   },
+
+  {
+    "display": {
+      "title": "Devil Horns Disposable Party",
+      "imageName": "devilHornsDisposableParty",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+    },
+    "prompt": "Take a candid close-up photo of me with a disposable camera.\n\nI'm coyly looking over my shoulder at a Halloween party in 1992. The background is dark with low ambient lighting, but the photo is taken with flash.\n\nMy costume is a simple red latex full body suit, and I'm wearing a headband with red devil horns.\n\nMy facial features must remain exactly the same. I am not laughing.",
+    "type": "Photo Filter",
+    "category": "Spooky"
+  },
+  {
+    "display": {
+      "title": "Retro Bathroom Ghostface Portrait",
+      "imageName": "retroBathroomGhostfacePortrait",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+    },
+    "prompt": "Create a grungy-style portrait of me bending over in front of a retro bathroom mirror, applying lipstick in a confident, sexy pose.\n\nI wear a red dress and an oversized black leather jacket. My long wavy dark brown hair frames my face with two loose strands in front, styled with gold butterfly clips on each side.\n\nI wear delicate gold jewelry, including dainty necklaces, accessories, and chunky gold rings. My makeup is dark and glamorous.\n\nThe photo has a grainy 90s aesthetic, with makeup scattered around the counter. The bathroom walls are covered with scary movie posters.\n\nBehind me, a man wearing a Ghostface costume stands in the doorway of a dimly lit hallway. His body is faintly illuminated, watching silently.\n\nThe background is dark and ominous. DO NOT CHANGE MY FACE.",
+    "type": "Photo Filter",
+    "category": "Spooky"
+  },
+
   {
     "display": {
       "title": "1966 Impala Chicano Sunset",

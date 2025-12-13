@@ -48,6 +48,25 @@ struct FilterCategorySheet: View {
     @State private var expandedCategories: Set<String> = []
 //    @StateObject private var presetViewModel = PresetViewModel()
     @EnvironmentObject var authViewModel: AuthViewModel
+    
+    // Define the desired display order for categories (must match PhotoFiltersViewModel)
+    // This order will be used for displaying categories in the UI
+    private let categoryDisplayOrder: [String] = [
+        "Anime",
+        "Art",
+        "Character",
+        "Video Games",
+        "Photobooth",
+        "Spooky"
+    ]
+    
+    // Get category names in the specified display order
+    // Categories not in the order list will appear at the end, sorted alphabetically
+    private var sortedCategoryNames: [String] {
+        let orderedCategories = categoryDisplayOrder.filter { categorizedFilters.keys.contains($0) }
+        let unorderedCategories = categorizedFilters.keys.filter { !categoryDisplayOrder.contains($0) }.sorted()
+        return orderedCategories + unorderedCategories
+    }
 
 //    // Convert presets to InfoPacket format
 //    private var presetInfoPackets: [InfoPacket] {
@@ -166,7 +185,7 @@ struct FilterCategorySheet: View {
                                     }
                                 )
 
-                                if categoryName != categorizedFilters.keys.sorted().last {
+                                if categoryName != sortedCategoryNames.last {
                                     Divider()
                                         .background(Color.white.opacity(0.2))
                                         .padding(.vertical, 4)
