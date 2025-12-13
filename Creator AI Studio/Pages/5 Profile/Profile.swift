@@ -877,6 +877,7 @@ struct PlaceholderImageCard: View {
     @State private var pulseAnimation = false
     @StateObject private var notificationManager = NotificationManager.shared
     @State private var isRetrying = false
+    @State private var showCopiedConfirmation = false
 
     var body: some View {
         ZStack {
@@ -986,6 +987,26 @@ struct PlaceholderImageCard: View {
                         }
                         .disabled(isRetrying)
                         .padding(.top, 4)
+                        
+                        // Copy Prompt button (only show if prompt exists)
+                        if let prompt = placeholder.prompt, !prompt.isEmpty {
+                            Button(action: {
+                                copyPrompt(prompt)
+                            }) {
+                                HStack(spacing: 4) {
+                                    Image(systemName: showCopiedConfirmation ? "checkmark" : "doc.on.doc")
+                                        .font(.system(size: 10, weight: .semibold))
+                                    Text(showCopiedConfirmation ? "Copied!" : "Copy Prompt")
+                                        .font(.custom("Nunito-Bold", size: 10))
+                                }
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 6)
+                                .background(showCopiedConfirmation ? Color.green : Color.blue)
+                                .clipShape(Capsule())
+                            }
+                            .padding(.top, 2)
+                        }
                     }
                 } else {
                     VStack(spacing: 4) {
@@ -1130,6 +1151,16 @@ struct PlaceholderImageCard: View {
             if !success {
                 isRetrying = false
             }
+        }
+    }
+    
+    private func copyPrompt(_ prompt: String) {
+        UIPasteboard.general.string = prompt
+        showCopiedConfirmation = true
+        
+        // Reset confirmation after 2 seconds
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+            showCopiedConfirmation = false
         }
     }
 }

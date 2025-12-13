@@ -63,5 +63,15 @@
       "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
     },
     "prompt": "Transform the subject of the uploaded photo into a Q-style 3D C4D-rendered chibi character while preserving facial identity, hair color, hairstyle, and body shape.\n\nStylize the character with cute, long-legged chibi proportions. Recreate the original clothing, accessories, colors, and hairstyle exactly from the photo and adapt them into the chibi style.\n\nSubtly integrate profession-inspired accessories related to the specified profession without changing the outfit itself.\n\nLayout includes top text reading “OOTD,” a full-body chibi character on the left, and individual outfit and accessory items displayed on the right. Use a solid background color that complements the outfit."
+  },
+
+  {
+    "display": {
+      "title": "Chibi Sticker Sheet",
+      "imageName": "chibi_sticker_sheet",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+    },
+    "prompt": "Transform the subject of the uploaded photo into a sheet of six chibi-style stickers while preserving the subject’s exact facial identity, hair color, hairstyle, and body shape.\n\nRender the character in a kawaii chibi style with bold outlines, flat colors, and simplified proportions while keeping facial features recognizable.\n\nEach sticker shows a different expression or outfit: happy, angry, tired, excited, thinking, and laughing.\n\nPlace all stickers on a plain background with clean white sticker borders."
   }
 ]

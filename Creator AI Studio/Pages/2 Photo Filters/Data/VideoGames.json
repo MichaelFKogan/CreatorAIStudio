@@ -1,6 +1,16 @@
 [
   {
     "display": {
+      "title": "16-Bit Adventure",
+      "imageName": "16bit_adventure",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+    },
+    "prompt": "Transform the subject of the uploaded photo into a 16-bit retro video game character while preserving the subject’s facial identity, hair color, hairstyle, and body shape in pixel-art form.\n\nRecreate the subject as a detailed 16-bit sprite with clear facial cues, hairstyle silhouette, and recognizable proportions adapted to classic pixel limitations.\n\nPlace the character inside a 2D side-scrolling platformer level featuring pixelated terrain, platforms, and retro environmental details.\n\nUse a vibrant, nostalgic color palette inspired by classic 16-bit console games. Clean pixel edges, no text, authentic retro game aesthetic."
+  },
+
+  {
+    "display": {
       "title": "Video Game Character",
       "imageName": "videogamecharacter",
       "imageNameOriginal": "yourphoto",
@@ -47,6 +57,26 @@
       "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
     },
     "prompt": "Transform the subject of the uploaded photo into a cute Japanese-style two-panel vertical manga while preserving facial identity, hair color, hairstyle, body shape, and outfit.\n\nRender the subject as a moe-style anime character with expressive emotions and a cartoony aesthetic. Panel one conveys a happy mood inspired by the theme [Journey]. Panel two shows a state of fatigue.\n\nUse colorful, energetic visuals with cute handwritten-style fonts, intentional white space, and expressive poses. Keep all visual details clearly tied to the original photo."
+  },
+
+  {
+    "display": {
+      "title": "GTA V Character",
+      "imageName": "gta_v_character",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+    },
+    "prompt": "Transform the subject of the uploaded photo into a Grand Theft Auto V–style character illustration while strictly preserving the subject’s exact facial identity, hair color, hairstyle, and body shape.\n\nRender the subject in the iconic GTA V loading-screen aesthetic with bold outlines, semi-realistic proportions, and stylized realism. Keep facial features clearly recognizable and faithful to the reference photo.\n\nUse dramatic, high-contrast lighting and saturated colors typical of GTA promotional artwork. Pose the subject confidently in a casual stance.\n\nBackground should feel urban and cinematic, inspired by Los Santos, but simplified and illustrative. No text or logos. Clean, polished game-art finish."
+  },
+
+  {
+    "display": {
+      "title": "GTA V Action Mode",
+      "imageName": "gta_v_action_mode",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+    },
+    "prompt": "Transform the subject of the uploaded photo into GTA V promotional-style action artwork while preserving the subject’s exact facial identity, hair color, hairstyle, and body shape.\n\nDepict the subject in a cinematic action pose with dynamic body language, maintaining realistic anatomy and recognizable facial structure.\n\nUse bold colors, dramatic lighting, and strong contrast consistent with Grand Theft Auto poster art. Incorporate a Los Santos–inspired city backdrop with depth and motion.\n\nOverall composition should feel like official game key art—cinematic, energetic, and polished. No text or logos."
   },
 
   {

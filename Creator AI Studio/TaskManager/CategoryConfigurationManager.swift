@@ -27,12 +27,14 @@ class CategoryConfigurationManager {
         "Fashion": "Fashion",
         "Luxury": "Luxury",
         "Chibi": "Chibi",
-        "Just For Fun": "Fun",
+        "Just For Fun": "JustForFun",
         "Instagram": "Instagram",
         "Photobooth": "Photobooth",
         "Social Media": "Social Media",
         "Fitness": "Fitness",
         "Travel": "Travel",
+        "Back In Time": "Back In Time",
+        "Men's": "Mens",
     ]
 
         /// The display order for categories in the UI.
@@ -53,7 +55,9 @@ class CategoryConfigurationManager {
         "Photobooth",
         "Social Media",
         "Fitness",
-        "Travel"
+        "Travel",
+        "Back In Time",
+        "Men's",
     ]
     
     /// Mapping of category names to their SF Symbol icon names
@@ -74,6 +78,8 @@ class CategoryConfigurationManager {
         "Social Media": "person.2.fill",
         "Fitness": "figure.walk.motion",
         "Travel": "globe.americas.fill",
+        "Back In Time": "back.in.time.fill",
+        "Men's": "person",
     ]
     
     /// Dictionary mapping category names to example images arrays

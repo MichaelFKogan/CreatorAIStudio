@@ -26,5 +26,23 @@
       "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
     },
     "prompt": "Transform the subject of the uploaded photo into the same retro Y2K comic-style as the other characters in the scene, preserving the subject’s facial identity, hair color, hairstyle, and body shape. Integrate the subject seamlessly into the collage of street-fashion characters with strong expressions and bold, dynamic postures, blending comic-style energy with a raw punk temperament.\n\nUse a dense, high-impact layout with high-saturation color collisions and layered visual elements, matching the style, line work, and energy of the surrounding characters. Cover parts of the composition with bold Japanese and English typography in a way that harmonizes the subject with the overall magazine-poster aesthetic.\n\nThe final image should feel energetic, rebellious, and stylish, capturing the spirit of early-2000s Tokyo street fashion while maintaining the subject’s exact likeness and body proportions."
+  },
+  {
+    "display": {
+      "title": "Anime Poster Portrait",
+      "imageName": "anime_poster_portrait",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+    },
+    "prompt": "Transform the subject of the uploaded photo into a Japanese anime poster–style character while preserving the subject’s exact facial identity, hair color, hairstyle, and body shape.\n\nAdapt the subject into an anime style using bold colors, clean cel shading, and expressive line work without altering recognizable features.\n\nPlace the character in front of a dramatic nighttime city skyline with glowing lights.\n\nUse a dynamic pose and cinematic composition. Do not include any text."
+  },
+  {
+    "display": {
+      "title": "Y2K Retro Fashion",
+      "imageName": "y2k_retro_fashion",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+    },
+    "prompt": "Transform the subject of the uploaded photo into a Y2K-era digital fashion illustration while preserving the subject’s exact facial identity, hair color, hairstyle, and body shape.\n\nStyle the subject in futuristic early-2000s fashion featuring glossy materials, metallic textures, and neon accents. Maintain recognizable facial features and proportions.\n\nUse a clean, stylized illustration approach with bold colors, smooth gradients, and a fashion-forward pose.\n\nBackground should feel minimal and graphic, inspired by Y2K digital design. Overall mood is trendy, futuristic, and nostalgic. No text or logos."
   }
 ]

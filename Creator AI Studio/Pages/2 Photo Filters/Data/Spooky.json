@@ -102,11 +102,11 @@
 
   {
     "display": {
-      "title": "1966 Impala Chicano Sunset",
-      "imageName": "impalaChicanoSunset",
+      "title": "80s VHS Horror Cover",
+      "imageName": "vhs_horror_cover",
       "imageNameOriginal": "yourphoto",
       "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
     },
-    "prompt": "Create a realistic image using my face without changing it. Place me sitting inside a 1966 Chevy Impala, black with gold flakes on 26 chrome spokes and white walls. I wear large hoop earrings, old-school makeup, and long wavy red hair. My arm hangs out of the car window.\n\nThe background shows a sunset with palm trees, giving a Chicano-style vibe. Realistic, detailed, old-school aesthetic."
+    "prompt": "Transform the subject of the uploaded photo into an image styled like a 1980s VHS horror movie cover while preserving the subject’s exact facial identity, hair color, hairstyle, and body shape.\n\nDepict the subject as the main character, looking over their shoulder with a tense, uneasy expression.\n\nSet the background in a dark forest with faint silhouettes and atmospheric fog.\n\nApply grainy texture, slightly faded colors, and simple graphic shapes to evoke vintage VHS cover art. No gore."
   }
 ]

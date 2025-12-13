@@ -56,5 +56,14 @@
       "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
     },
     "prompt": "Transform the subject of the uploaded photo into a Funko Pop–style figure while preserving facial identity, hair color, hairstyle, and recognizable body proportions.\n\nCreate a standing Funko Pop figure inside a branded packaging box shown from an isometric angle, with a matching loose figure displayed beside the box.\n\nRecreate the subject’s outfit, accessories, and expression in Funko Pop style, maintaining clear likeness and identity. Use clean lighting and polished, collectible presentation."
+  },
+  {
+    "display": {
+      "title": "3D Action Figure",
+      "imageName": "action_figure_3d",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+    },
+    "prompt": "Transform the subject of the uploaded photo into a stylized 3D action figure while preserving the subject’s exact facial identity, hair color, hairstyle, and body shape.\n\nRender the character as a collectible plastic toy with a glossy finish, slightly oversized eyes, and simplified but recognizable facial features.\n\nPlace the figure on a toy store–style shelf with softly blurred packaging boxes in the background.\n\nUse clean studio lighting, shallow depth of field, and realistic plastic textures while keeping the subject clearly identifiable."
   }
 ]
