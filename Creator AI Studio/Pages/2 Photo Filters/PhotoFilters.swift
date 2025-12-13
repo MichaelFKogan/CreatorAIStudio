@@ -33,16 +33,8 @@ class PhotoFiltersViewModel: ObservableObject {
     @Published var filters: [InfoPacket] = []
     @Published private var categorizedFiltersDict: [String: [InfoPacket]] = [:]
     
-    // Define the desired display order for categories
-    // This order will be used for displaying categories in the UI
-    private let categoryDisplayOrder: [String] = [
-        "Anime",
-        "Art",
-        "Character",
-        "Video Games",
-        "Photobooth",
-        "Spooky"
-    ]
+    // Use centralized category configuration manager
+    private let categoryManager = CategoryConfigurationManager.shared
 
     // Quick filters - returns first N filters from all filters, or all filters if limit is nil
     func quickFilters(limit: Int? = nil) -> [InfoPacket] {
@@ -61,9 +53,7 @@ class PhotoFiltersViewModel: ObservableObject {
     // Get category names in the specified display order
     // Categories not in the order list will appear at the end, sorted alphabetically
     var sortedCategoryNames: [String] {
-        let orderedCategories = categoryDisplayOrder.filter { categorizedFilters.keys.contains($0) }
-        let unorderedCategories = categorizedFilters.keys.filter { !categoryDisplayOrder.contains($0) }.sorted()
-        return orderedCategories + unorderedCategories
+        return categoryManager.sortedCategoryNames(from: Set(categorizedFilters.keys))
     }
 
     init() {
@@ -71,16 +61,8 @@ class PhotoFiltersViewModel: ObservableObject {
     }
 
     private func loadFiltersJSON() {
-        // Ordered array of (categoryName, fileName) tuples to guarantee load order
-        // Video Games should be loaded last
-        let categoryFileOrder: [(categoryName: String, fileName: String)] = [
-            ("Anime", "Anime"),
-            ("Art", "Art"),
-            ("Character", "Character"),
-            ("Video Games", "VideoGames"),
-            ("Photobooth", "Photobooth"),
-            ("Spooky", "Spooky")
-        ]
+        // Get ordered array of (categoryName, fileName) tuples from centralized manager
+        let categoryFileOrder = categoryManager.categoryFileOrder()
         
         var allFilters: [InfoPacket] = []
         var categorized: [String: [InfoPacket]] = [:]
@@ -340,23 +322,8 @@ struct PhotoFilters: View {
             return category.icon
         }
         
-        // Default icons for common category names
-        let lowercased = categoryName.lowercased()
-        if lowercased.contains("anime") {
-            return "sparkles.rectangle.stack.fill"
-        } else if lowercased.contains("character") || lowercased.contains("figure") {
-            return "figure.stand"
-        } else if lowercased.contains("art") || lowercased.contains("artistic") {
-            return "paintbrush.fill"
-        } else if lowercased.contains("game") || lowercased.contains("gaming") {
-            return "gamecontroller.fill"
-        } else if lowercased.contains("photo") || lowercased.contains("camera") {
-            return "camera.fill"
-        } else if lowercased.contains("creative") || lowercased.contains("design") {
-            return "sparkles"
-        } else {
-            return "square.grid.2x2.fill" // Default icon
-        }
+        // Use centralized category manager for icon lookup
+        return CategoryConfigurationManager.shared.icon(for: categoryName)
     }
 }
 

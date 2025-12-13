@@ -49,23 +49,13 @@ struct FilterCategorySheet: View {
 //    @StateObject private var presetViewModel = PresetViewModel()
     @EnvironmentObject var authViewModel: AuthViewModel
     
-    // Define the desired display order for categories (must match PhotoFiltersViewModel)
-    // This order will be used for displaying categories in the UI
-    private let categoryDisplayOrder: [String] = [
-        "Anime",
-        "Art",
-        "Character",
-        "Video Games",
-        "Photobooth",
-        "Spooky"
-    ]
+    // Use centralized category configuration manager
+    private let categoryManager = CategoryConfigurationManager.shared
     
     // Get category names in the specified display order
     // Categories not in the order list will appear at the end, sorted alphabetically
     private var sortedCategoryNames: [String] {
-        let orderedCategories = categoryDisplayOrder.filter { categorizedFilters.keys.contains($0) }
-        let unorderedCategories = categorizedFilters.keys.filter { !categoryDisplayOrder.contains($0) }.sorted()
-        return orderedCategories + unorderedCategories
+        return categoryManager.sortedCategoryNames(from: Set(categorizedFilters.keys))
     }
     
     // Get category names that actually have filters (for divider logic)
@@ -235,23 +225,8 @@ struct FilterCategorySheet: View {
             return category.icon
         }
         
-        // Default icons for common category names
-        let lowercased = categoryName.lowercased()
-        if lowercased.contains("anime") {
-            return "sparkles.rectangle.stack.fill"
-        } else if lowercased.contains("character") || lowercased.contains("figure") {
-            return "figure.stand"
-        } else if lowercased.contains("art") || lowercased.contains("artistic") {
-            return "paintbrush.fill"
-        } else if lowercased.contains("game") || lowercased.contains("gaming") {
-            return "gamecontroller.fill"
-        } else if lowercased.contains("photo") || lowercased.contains("camera") {
-            return "camera.fill"
-        } else if lowercased.contains("creative") || lowercased.contains("design") {
-            return "sparkles"
-        } else {
-            return "square.grid.2x2.fill" // Default icon
-        }
+        // Use centralized category manager for icon lookup
+        return categoryManager.icon(for: categoryName)
     }
 }
 

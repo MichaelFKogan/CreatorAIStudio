@@ -1,11 +1,53 @@
 import Foundation
 
 /// Centralized configuration manager for category-specific data.
-/// Maps categories to their exampleImages and moreStyles, eliminating the need
-/// to duplicate this data in hundreds of JSON files.
+/// This is the SINGLE SOURCE OF TRUTH for all category configuration including:
+/// - Display order
+/// - File names (for loading JSON files)
+/// - Icons
+/// - Example images
+/// - More styles
+///
+/// To add a new category, update the arrays below in this file only.
 class CategoryConfigurationManager {
     /// Singleton instance
     static let shared = CategoryConfigurationManager()
+    
+    // MARK: - Category Configuration (Single Source of Truth)
+    
+    /// Mapping of category display names to their JSON file names (without .json extension)
+    let categoryFileNames: [String: String] = [
+        "Anime": "Anime",
+        "Art": "Art",
+        "Character": "Character",
+        "Video Games": "VideoGames",
+        "Photobooth": "Photobooth",
+        "Spooky": "Spooky",
+        "Professional": "Professional"
+    ]
+
+        /// The display order for categories in the UI.
+    /// Categories will appear in this order. Categories not in this list will appear at the end, sorted alphabetically.
+    let categoryDisplayOrder: [String] = [
+        "Anime",
+        "Art",
+        "Character",
+        "Video Games",
+        "Photobooth",
+        "Spooky",
+        "Professional"
+    ]
+    
+    /// Mapping of category names to their SF Symbol icon names
+    let categoryIcons: [String: String] = [
+        "Anime": "sparkles.rectangle.stack.fill",
+        "Art": "paintbrush.fill",
+        "Character": "figure.stand",
+        "Video Games": "gamecontroller.fill",
+        "Photobooth": "camera.fill",
+        "Spooky": "ghost.fill",
+        "Professional": "person.crop.circle.badge.exclamationmark"
+    ]
     
     /// Dictionary mapping category names to example images arrays
     private let exampleImagesByCategory: [String: [String]]
@@ -45,6 +87,53 @@ class CategoryConfigurationManager {
         ]
     }
     
+    // MARK: - Public Methods
+    
+    /// Returns the display order for categories.
+    /// Categories not in the order list will appear at the end, sorted alphabetically.
+    func sortedCategoryNames(from availableCategories: Set<String>) -> [String] {
+        let orderedCategories = categoryDisplayOrder.filter { availableCategories.contains($0) }
+        let unorderedCategories = availableCategories.filter { !categoryDisplayOrder.contains($0) }.sorted()
+        return orderedCategories + unorderedCategories
+    }
+    
+    /// Returns the file name (without .json extension) for a given category.
+    ///
+    /// - Parameter category: The category display name
+    /// - Returns: The file name, or the category name itself if not found
+    func fileName(for category: String) -> String {
+        return categoryFileNames[category] ?? category
+    }
+    
+    /// Returns the icon name (SF Symbol) for a given category.
+    ///
+    /// - Parameter category: The category name to look up
+    /// - Returns: The icon name, or a default icon if not found
+    func icon(for category: String) -> String {
+        // First, try exact match
+        if let icon = categoryIcons[category] {
+            return icon
+        }
+        
+        // Then, try case-insensitive partial match
+        let lowercased = category.lowercased()
+        if lowercased.contains("anime") {
+            return "sparkles.rectangle.stack.fill"
+        } else if lowercased.contains("character") || lowercased.contains("figure") {
+            return "figure.stand"
+        } else if lowercased.contains("art") || lowercased.contains("artistic") {
+            return "paintbrush.fill"
+        } else if lowercased.contains("game") || lowercased.contains("gaming") {
+            return "gamecontroller.fill"
+        } else if lowercased.contains("photo") || lowercased.contains("camera") {
+            return "camera.fill"
+        } else if lowercased.contains("creative") || lowercased.contains("design") {
+            return "sparkles"
+        } else {
+            return "square.grid.2x2.fill" // Default icon
+        }
+    }
+    
     /// Returns the example images array for a given category.
     ///
     /// - Parameter category: The category name to look up
@@ -59,5 +148,14 @@ class CategoryConfigurationManager {
     /// - Returns: The more styles array, or nil if not found
     func moreStyles(for category: String) -> [[String]]? {
         return moreStylesByCategory[category]
+    }
+    
+    /// Returns the category file order as an array of tuples (categoryName, fileName)
+    /// for loading JSON files in the correct order.
+    func categoryFileOrder() -> [(categoryName: String, fileName: String)] {
+        return categoryDisplayOrder.compactMap { categoryName in
+            guard let fileName = categoryFileNames[categoryName] else { return nil }
+            return (categoryName: categoryName, fileName: fileName)
+        }
     }
 }
