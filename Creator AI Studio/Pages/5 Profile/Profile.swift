@@ -408,8 +408,6 @@ struct ProfileViewContent: View {
             } else {
                 filteredContent
             }
-            
-            Color.clear.frame(height: 160)
         }
     }
 
