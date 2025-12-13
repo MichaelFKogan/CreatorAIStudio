@@ -45,6 +45,15 @@
     },
     "prompt": "Transform the subject of this photo into a high-fashion beauty editorial portrait. The subject's skin is flawless with professional retouching, featuring bold, artistic makeup accents and statement jewelry. The lighting is a classic three-point softbox setup, creating a clean, shadowless look against a solid gray or pastel backdrop. Shot with a Hasselblad medium format camera for incredible detail. Minimalist magazine layout elements, like clean typography (e.g., 'BEAUTY') overlaid in a corner. The overall vibe is polished, luxurious, and print-ready."
   },
+  {
+    "display": {
+      "title": "Editorial Beauty Portrait",
+      "imageName": "editorial_beauty_portrait",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+    },
+    "prompt": "Transform the subject of the uploaded photo into an editorial-style beauty portrait while preserving the subject’s facial identity, hair color, hairstyle, and body shape.\n\nThe background is a clean, solid color chosen to complement the subject’s skin tone. The framing focuses on the face and upper shoulders.\n\nLighting is soft yet directional, highlighting cheekbones and facial structure with clear catchlights in the eyes.\n\nThe style is high-end magazine beauty photography with sharp, clean details."
+  },
 
   {
     "display": {
@@ -54,5 +63,14 @@
       "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
     },
     "prompt": "Transform the subject of this photo into a high-fashion, avant-garde portrait in the style of a Met Gala feature by Annie Leibovitz. The subject is wearing abstract, sculptural couture. The background is an artistic, painterly canvas with dramatic textures. The lighting is theatrical and unconventional, using a single, hard light source to create sharp, defined shadows and a powerful silhouette. The pose is non-traditional and expressive. The final image is a work of art, pushing the boundaries of portraiture with a bold, conceptual, and editorial feel."
+  },
+  {
+    "display": {
+      "title": "Urban Culture Magazine Cover",
+      "imageName": "urban_mag_cover",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+    },
+    "prompt": "Transform the subject of the uploaded photo into the main cover model of a lifestyle and urban culture magazine while preserving facial identity, hair color, hairstyle, and body shape.\n\nTheme: streetwear model in Rome. Use vibrant colors with neon accents, bold typography, and a collage-inspired layout with playful sketches and stickers.\n\nInclude headlines such as “Style Remix,” “Street Art Meets AI,” and “Secrets of the Colosseum,” along with a LIMITED EDITION callout. Maintain a high-fashion editorial look with dynamic energy."
   }
 ]

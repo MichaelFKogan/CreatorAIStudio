@@ -66,5 +66,14 @@
       "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
     },
     "prompt": "Transform the subject of the uploaded photo into a realistic mirror selfie scene while preserving the subject’s facial identity, hair color, hairstyle, and body shape.\n\nThe subject is a young woman playfully biting the straw of an iced green drink. She has long straight brown hair falling over her shoulders, natural sunkissed makeup, glowing skin, and nude glossy lips. She wears a white ribbed knit cami top with a dainty bow at the neckline and light wash blue relaxed denim jeans with a visible button fly.\n\nAccessories include an olive green baseball cap with white NY logo embroidery, silver over-ear headphones worn over the cap, large gold hoop earrings, thin gold chain with cross pendant, mixed gold bangles and bracelets, and multiple gold rings. She holds a smartphone with a white case and pink floral pattern in one hand and the iced matcha latte with a green straw in the other.\n\nPose and composition: waist-up, eye-level mirror reflection, subject positioned on the right side of the frame. Lighting is soft natural daylight, indoor casual bedroom setting. Background includes a bright bedroom with a white wall, bed with white textured duvet, black woven shoulder bag, leopard print throw pillow, distressed white vintage nightstand, and a modern bedside lamp with a white shade.\n\nStyle: clean, social-media realism, sharp focus, cozy and casual atmosphere. Maintain accurate proportions, facial features, hair, and body shape.\n\nExclude: cartoon, CGI, AI artifacts, over-smoothing, plastic skin, motion blur, warped anatomy, extra fingers, disfigured hands, text, or clutter."
+  },
+  {
+    "display": {
+      "title": "Festival Party Portrait",
+      "imageName": "festival_party_portrait",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+    },
+    "prompt": "Transform the subject of the uploaded photo into a vibrant festival-style portrait while preserving the subject’s facial identity, hair color, hairstyle, and body shape.\n\nThe subject wears playful glitter makeup and is framed from the shoulders up. The expression is energetic and candid.\n\nThe background includes colorful lights, lens flares, and a softly blurred crowd. Lighting is dynamic and high-energy.\n\nUse high saturation and bokeh effects while keeping the subject’s likeness intact."
   }
 ]

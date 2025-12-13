@@ -1,0 +1,20 @@
+[
+  {
+    "display": {
+      "title": "Stylized Body Variant",
+      "imageName": "stylized_body_variant",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+    },
+    "prompt": "Transform the subject of the uploaded photo into a realistic variation with a target body type while strictly preserving the subject’s facial identity, hair color, hairstyle, and overall likeness.\n\nKeep the same face, expression, hairstyle, and clothing from the original photo. Adjust only the body type in a natural and believable way, maintaining realistic anatomy and proportions.\n\nEnsure photorealistic detailing, natural lighting, and lifelike textures. Avoid exaggeration, distortion, or changes to identity."
+  },
+  {
+    "display": {
+      "title": "Fitness Progress Portrait",
+      "imageName": "fitness_progress_portrait",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+    },
+    "prompt": "Transform the subject of the uploaded photo into a fitness magazine–style portrait while preserving the subject’s facial identity, hair color, hairstyle, and body shape.\n\nThe subject is captured mid-workout in a gym setting, with realistic athletic posture and movement. The body proportions remain natural and believable.\n\nLighting is dramatic side lighting that enhances muscle definition against a darker background. The style is realistic, high-contrast, and crisp.\n\nAvoid exaggerated muscle growth, artificial smoothing, or unrealistic anatomy."
+  }
+]

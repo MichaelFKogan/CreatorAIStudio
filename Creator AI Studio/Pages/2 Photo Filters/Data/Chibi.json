@@ -45,5 +45,23 @@
       "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
     },
     "prompt": "A delicate snow globe crystal ball rests quietly on a warm, softly lit tabletop by the window. The background is blurred and hazy, with warm-toned sunlight gently passing through the crystal ball, refracting specks of golden light that softly illuminate the dim surroundings.\n\nInside the crystal ball, a miniature three-dimensional world themed around the provided image, is naturally displayed — a finely detailed, dreamlike 3D scene. All characters and objects are rendered in adorable chibi style, exquisitely crafted and visually charming, with vivid emotional interactions between them.\n\nThe overall atmosphere is rich with fantasy elements, full of intricate details and a surreal magical realism texture. The entire scene feels poetic and dreamy, luxurious yet elegant, radiating a gentle, comforting glow — as if imbued with life through the warm play of light and shadow."
+  },
+  {
+    "display": {
+      "title": "Chibi Capsule Collectible",
+      "imageName": "chibi_capsule_collectible",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+    },
+    "prompt": "Transform the subject of the uploaded photo into a compact, cute gashapon-style capsule figure while preserving the subject’s facial identity, hair color, hairstyle, and body shape.\n\nStylize the subject as a chibi collectible with simplified proportions, a larger head, and a smaller body, while keeping recognizable facial features, hair, and a simplified version of the original outfit.\n\nPlace the figure inside a transparent capsule with a softly colored base that complements the character. Add small decorative motifs relevant to the subject’s personality or style.\n\nLighting should be soft and warm with photorealistic textures, subtle reflections on the capsule, and shallow depth of field to create a premium miniature collectible look."
+  },
+  {
+    "display": {
+      "title": "OOTD Chibi Breakdown",
+      "imageName": "ootd_chibi_breakdown",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+    },
+    "prompt": "Transform the subject of the uploaded photo into a Q-style 3D C4D-rendered chibi character while preserving facial identity, hair color, hairstyle, and body shape.\n\nStylize the character with cute, long-legged chibi proportions. Recreate the original clothing, accessories, colors, and hairstyle exactly from the photo and adapt them into the chibi style.\n\nSubtly integrate profession-inspired accessories related to the specified profession without changing the outfit itself.\n\nLayout includes top text reading “OOTD,” a full-body chibi character on the left, and individual outfit and accessory items displayed on the right. Use a solid background color that complements the outfit."
   }
 ]

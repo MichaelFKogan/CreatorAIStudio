@@ -1,0 +1,11 @@
+[
+  {
+    "display": {
+      "title": "Social Frame Chibi",
+      "imageName": "social_frame_chibi",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+    },
+    "prompt": "Transform the subject of the uploaded photo into a 3D chibi-style character while preserving facial identity, hair color, hairstyle, and body shape.\n\nThe chibi character accurately reflects the subject’s facial features and outfit and is making a finger heart with the left hand, with a small red heart floating above the fingers.\n\nPlace the character playfully perched on the edge of a giant Instagram-style frame, legs dangling. Display the username at the top of the frame and surround the scene with floating like, comment, and share icons, plus playful emojis.\n\nUse bright, cheerful lighting and a lively, social-media-inspired atmosphere."
+  }
+]

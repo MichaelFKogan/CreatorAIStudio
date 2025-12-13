@@ -1,0 +1,11 @@
+[
+  {
+    "display": {
+      "title": "Travel Explorer Sunrise",
+      "imageName": "travel_explorer_sunrise",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+    },
+    "prompt": "Transform the subject of the uploaded photo into a cinematic travel explorer scene while preserving the subject’s facial identity, hair color, hairstyle, and body shape.\n\nThe subject stands at a mountain viewpoint during sunrise, wearing a hiking jacket and backpack. Clouds fill the valley below.\n\nGolden morning light softly illuminates the face, creating a warm, adventurous mood. The composition uses a wide-angle perspective.\n\nThe style is cinematic landscape photography with rich colors and an Instagram-ready aesthetic."
+  }
+]

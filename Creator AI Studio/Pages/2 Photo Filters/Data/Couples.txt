@@ -1,0 +1,20 @@
+
+17. Sunset Beach Portrait
+Nano Banana Prompt Output
+Turn this couples photo into a romantic sunset beach scene. Pose: couple holding hands, walking near the water. Lighting: warm golden sun low on the horizon. Style: cinematic, soft focus on background, realistic skin tones. Constraints: no added text or props. 
+
+18. Pre-Wedding Garden Shoot
+Nano Banana Prompt Output
+Transform this couple’s photo into an elegant pre-wedding portrait. Setting: garden with fairy lights and flowers. Outfits: semi-formal, flowing dress and blazer. Style: soft, dreamy, slightly desaturated, shallow depth of field. 
+
+19. Minimalist Studio Portrait
+Nano Banana Prompt Output
+Create a minimalist studio portrait of a couple seated on a simple chair. Background: solid beige or light grey. Lighting: soft studio light, no harsh shadows. Style: modern, clean, suitable for framed wall print. 
+
+20. Polaroid Collage
+Nano Banana Prompt Output
+Turn these couple selfies into a collage of 4 Polaroid-style photos. Each frame: slightly different pose or expression. Background: neutral table with a few dried flowers. Style: realistic photos inside white Polaroid borders, soft warm tones. 
+
+21. Travel Postcard
+Nano Banana Prompt Output
+Create an image of this couple standing in front of a famous landmark. Choose: Eiffel Tower (or another location). Style: vibrant travel postcard, wide-angle composition. Constraints: keep facial features accurate, no added text. 

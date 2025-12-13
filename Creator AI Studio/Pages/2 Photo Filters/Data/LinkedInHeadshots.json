@@ -19,6 +19,24 @@
   },
   {
     "display": {
+      "title": "LinkedIn Headshot",
+      "imageName": "clean_linkedin_headshot-boy",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+    },
+    "prompt": "Transform the subject of the uploaded photo into a professional LinkedIn-style headshot while preserving the subject’s facial identity, hair color, hairstyle, and body shape.\n\nThe subject is framed from the chest up against a softly blurred modern office background with large windows. The expression is calm, confident, and approachable.\n\nLighting is soft, natural daylight coming from the front, evenly illuminating the face with gentle shadows. The style is clean and realistic with subtle retouching only.\n\nAvoid heavy filters, exaggerated effects, text, logos, or stylization. Keep the result suitable for professional and corporate use."
+  },
+  {
+    "display": {
+      "title": "LinkedIn Headshot",
+      "imageName": "clean_linkedin_headshot-girl",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+    },
+    "prompt": "Transform the subject of the uploaded photo into a professional LinkedIn-style headshot while preserving the subject’s facial identity, hair color, hairstyle, and body shape.\n\nThe subject is framed from the chest up against a softly blurred modern office background with large windows. The expression is calm, confident, and approachable.\n\nLighting is soft, natural daylight coming from the front, evenly illuminating the face with gentle shadows. The style is clean and realistic with subtle retouching only.\n\nAvoid heavy filters, exaggerated effects, text, logos, or stylization. Keep the result suitable for professional and corporate use."
+  },
+  {
+    "display": {
       "title": "Professional Headshot",
       "imageName": "headshot1",
       "imageNameOriginal": "yourphoto",
@@ -52,5 +70,23 @@
       "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
     },
     "prompt": "Create a professional corporate headshot using the uploaded image.\n\nApply soft, evenly balanced studio lighting to avoid harsh shadows.\n\nRetouch the skin naturally while preserving realistic detail and texture.\n\nEnhance facial clarity without over-processing.\n\nDress the subject in a fitted white business shirt.\n\nUse a clean, neutral background in light grey or a soft gradient.\n\nThe final image should feel confident, polished, and appropriate for LinkedIn or corporate profiles."
+  },
+  {
+    "display": {
+      "title": "Formal Blazer Portrait",
+      "imageName": "formal_blazer_portrait-male",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+    },
+    "prompt": "Transform the subject of the uploaded photo into a polished studio portrait while preserving the subject’s facial identity, hair color, hairstyle, and body shape.\n\nThe subject wears a dark blazer layered over a plain T-shirt. The pose is relaxed but confident, suitable for a professional website or About page.\n\nThe background is a neutral grey gradient. Lighting uses softbox-style portrait lighting with gentle shadows and sharp, clean detail.\n\nMaintain a realistic, professional appearance without stylization or visual effects."
+  },
+  {
+    "display": {
+      "title": "Formal Blazer Portrait",
+      "imageName": "formal_blazer_portrait-female",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+    },
+    "prompt": "Transform the subject of the uploaded photo into a polished studio portrait while preserving the subject’s facial identity, hair color, hairstyle, and body shape.\n\nThe subject wears a dark blazer layered over a plain T-shirt. The pose is relaxed but confident, suitable for a professional website or About page.\n\nThe background is a neutral grey gradient. Lighting uses softbox-style portrait lighting with gentle shadows and sharp, clean detail.\n\nMaintain a realistic, professional appearance without stylization or visual effects."
   }
 ]

@@ -1,0 +1,52 @@
+Prompt:
+Keep this person’s face and features EXACTLY the same, but place them in 5 different time periods:
+
+1) 1920s Great Gatsby era: flapper dress or tailored suit, finger waves or slicked hair, art deco interior.
+2) 1950s American diner: poodle skirt or greaser style, chrome diner seats, classic car outside.
+3) 1980s mall: bold neon colors, big hair, vintage arcade or mall background.
+4) 1990s grunge: flannel shirt, Doc Martens, slightly gritty urban street.
+5) 2020s minimalist style: clean, neutral outfit, modern interior with soft natural lighting.
+
+Make each scene historically accurate in clothing, hair, props, and color grading. Maintain the same facial structure and key features across all eras. Output 5 separate portrait images at high resolution.
+
+Nano Banana “XYZ” Prompts: Trendy, Experimental & Just for Fun
+
+27. 3D Action Figure Version of You
+Turn this portrait into a stylized 3D action figure of this person. Style: plastic toy with glossy finish, big eyes, simplified features. Background: toy store-style shelf with blurred boxes. Constraints: keep main facial characteristics recognizable. 
+
+28. Retro Mall Studio Photo (90s)
+Transform this selfie into a retro 1990s mall photo studio portrait. Background: neon gradient backdrop with stars and shapes. Outfit: vintage 90s fashion, slightly oversized jacket. Style: slightly soft focus, cheesy but charming studio lighting. 
+
+29. Anime Poster
+Turn this person into an anime character on a poster. Background: dramatic city skyline at night with glowing lights. Style: Japanese anime key visual, bold colors, cel shading, dynamic pose. Constraints: no text; just the character and environment. 
+
+30. VHS Horror Cover
+Create an image in the style of a 1980s VHS horror movie cover. Subject: this person as the main character, looking over their shoulder. Background: dark forest with faint silhouettes. Style: grainy, slightly faded, with simple graphic shapes. Constraints: no gore, just spooky atmosphere. 
+
+31. Chibi Sticker Sheet
+Turn this portrait into a sheet of 6 chibi-style stickers of the same person. Each sticker: different outfit or expression (happy, angry, tired, excited, thinking, laughing). Style: kawaii, bold outlines, flat colors, white sticker border. Background: plain. 
+
+
+
+
+Couples
+
+17. Sunset Beach Portrait
+Nano Banana Prompt Output
+Turn this couples photo into a romantic sunset beach scene. Pose: couple holding hands, walking near the water. Lighting: warm golden sun low on the horizon. Style: cinematic, soft focus on background, realistic skin tones. Constraints: no added text or props. 
+
+18. Pre-Wedding Garden Shoot
+Nano Banana Prompt Output
+Transform this couple’s photo into an elegant pre-wedding portrait. Setting: garden with fairy lights and flowers. Outfits: semi-formal, flowing dress and blazer. Style: soft, dreamy, slightly desaturated, shallow depth of field. 
+
+19. Minimalist Studio Portrait
+Nano Banana Prompt Output
+Create a minimalist studio portrait of a couple seated on a simple chair. Background: solid beige or light grey. Lighting: soft studio light, no harsh shadows. Style: modern, clean, suitable for framed wall print. 
+
+20. Polaroid Collage
+Nano Banana Prompt Output
+Turn these couple selfies into a collage of 4 Polaroid-style photos. Each frame: slightly different pose or expression. Background: neutral table with a few dried flowers. Style: realistic photos inside white Polaroid borders, soft warm tones. 
+
+21. Travel Postcard
+Nano Banana Prompt Output
+Create an image of this couple standing in front of a famous landmark. Choose: Eiffel Tower (or another location). Style: vibrant travel postcard, wide-angle composition. Constraints: keep facial features accurate, no added text. 

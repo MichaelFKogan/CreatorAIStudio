@@ -21,14 +21,18 @@ class CategoryConfigurationManager {
         "Art": "Art",
         "Character": "Character",
         "Video Games": "VideoGames",
-        "Photobooth": "Photobooth",
+        "Photography": "Photography",
         "Spooky": "Spooky",
         "Professional": "LinkedInHeadshots",
         "Fashion": "Fashion",
         "Luxury": "Luxury",
         "Chibi": "Chibi",
-        "Fun": "Fun",
-        "Instagram": "Instagram"
+        "Just For Fun": "Fun",
+        "Instagram": "Instagram",
+        "Photobooth": "Photobooth",
+        "Social Media": "Social Media",
+        "Fitness": "Fitness",
+        "Travel": "Travel",
     ]
 
         /// The display order for categories in the UI.
@@ -38,14 +42,18 @@ class CategoryConfigurationManager {
         "Art",
         "Character",
         "Video Games",
-        "Photobooth",
+        "Photography",
         "Spooky",
         "Professional",
         "Fashion",
         "Luxury",
         "Chibi",
-        "Fun",
-        "Instagram"
+        "Just For Fun",
+        "Instagram",
+        "Photobooth",
+        "Social Media",
+        "Fitness",
+        "Travel"
     ]
     
     /// Mapping of category names to their SF Symbol icon names
@@ -54,14 +62,18 @@ class CategoryConfigurationManager {
         "Art": "paintbrush.fill",
         "Character": "figure.stand",
         "Video Games": "gamecontroller.fill",
-        "Photobooth": "camera.fill",
+        "Photography": "camera.fill",
         "Spooky": "moon.stars.fill",
         "Professional": "person.crop.circle",
         "Fashion": "bag.fill",
         "Luxury": "diamond.fill",
         "Chibi": "face.smiling.inverse",
-        "Fun": "face.smiling.inverse",
-        "Instagram": "camera.fill"
+        "Just For Fun": "face.smiling.inverse",
+        "Instagram": "camera.fill",
+        "Photobooth": "camera.fill",
+        "Social Media": "person.2.fill",
+        "Fitness": "figure.walk.motion",
+        "Travel": "globe.americas.fill",
     ]
     
     /// Dictionary mapping category names to example images arrays

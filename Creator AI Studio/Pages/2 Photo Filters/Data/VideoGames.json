@@ -41,6 +41,16 @@
 
   {
     "display": {
+      "title": "Two-Panel Manga Moment",
+      "imageName": "two_panel_manga",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+    },
+    "prompt": "Transform the subject of the uploaded photo into a cute Japanese-style two-panel vertical manga while preserving facial identity, hair color, hairstyle, body shape, and outfit.\n\nRender the subject as a moe-style anime character with expressive emotions and a cartoony aesthetic. Panel one conveys a happy mood inspired by the theme [Journey]. Panel two shows a state of fatigue.\n\nUse colorful, energetic visuals with cute handwritten-style fonts, intentional white space, and expressive poses. Keep all visual details clearly tied to the original photo."
+  },
+
+  {
+    "display": {
       "title": "Persona5 Graffiti Pop Art",
       "imageName": "Persona5-graffitipopart-man",
       "imageNameOriginal": "yourphoto",
