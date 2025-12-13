@@ -27,7 +27,8 @@ class CategoryConfigurationManager {
         "Fashion": "Fashion",
         "Luxury": "Luxury",
         "Chibi": "Chibi",
-        "Fun": "Fun"
+        "Fun": "Fun",
+        "Instagram": "Instagram"
     ]
 
         /// The display order for categories in the UI.
@@ -43,7 +44,8 @@ class CategoryConfigurationManager {
         "Fashion",
         "Luxury",
         "Chibi",
-        "Fun"
+        "Fun",
+        "Instagram"
     ]
     
     /// Mapping of category names to their SF Symbol icon names
@@ -58,7 +60,8 @@ class CategoryConfigurationManager {
         "Fashion": "bag.fill",
         "Luxury": "diamond.fill",
         "Chibi": "face.smiling.inverse",
-        "Fun": "face.smiling.inverse"
+        "Fun": "face.smiling.inverse",
+        "Instagram": "camera.fill"
     ]
     
     /// Dictionary mapping category names to example images arrays

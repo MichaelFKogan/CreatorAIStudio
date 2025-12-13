@@ -76,11 +76,41 @@
 
   {
     "display": {
+      "title": "Anime Goth",
+      "imageName": "anime-goth-male",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "FLUX.1 Kontext [pro]"
+    },
+    "prompt": "Transform to Anime Goth character"
+  },
+
+  {
+    "display": {
+      "title": "Anime Goth",
+      "imageName": "anime-goth-female",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "FLUX.1 Kontext [pro]"
+    },
+    "prompt": "Transform to an Anime Goth character"
+  },
+
+  {
+    "display": {
       "title": "Anime Van Gogh Painting",
       "imageName": "anime-vangogh-woman-fluxkontextpro",
       "imageNameOriginal": "yourphoto",
       "modelName": "FLUX.1 Kontext [pro]"
     },
     "prompt": "Transform to an Anime Van Gogh painting similar to Starry Night"
+  },
+
+  {
+    "display": {
+      "title": "Soft Pastel Anime",
+      "imageName": "softpastelanime",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+    },
+    "prompt": "Transform the subject of the uploaded photo into a Studio Ghibli-style illustration. Preserve the subject’s facial identity, hair color, hairstyle, and body shape.\n\nUse soft pastel colors, warm natural lighting, and a gentle glow. Render in a hand-painted anime style with big expressive eyes (if a person).\n\nBackground: dreamy environment with lush greenery and soft sunlight filtering through leaves or clouds with golden-hour sky. Maintain a whimsical and nostalgic atmosphere with subtle watercolor-style textures.\n\nProportions: slightly exaggerated but gentle, delicate outlines, magical and cozy mood, reminiscent of Hayao Miyazaki's studio paintings.\n\nStyle: Studio Ghibli-inspired hand-painted anime, soft textures, and warm, inviting lighting."
   }
 ]

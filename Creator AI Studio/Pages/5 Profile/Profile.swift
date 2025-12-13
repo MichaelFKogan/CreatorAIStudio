@@ -129,13 +129,44 @@ struct ProfileViewContent: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 16) {
-                    filterSection
+            ScrollViewReader { proxy in
+                ZStack {
+                    ScrollView {
+                        VStack(spacing: 16) {
+                            filterSection
 
-                    contentSection
+                            contentSection
+                        }
+                        .padding(.top, 10)
+                        .id("scrollTop")
+                    }
+                    
+                    // Scroll to top button overlay
+                    VStack {
+                        Spacer()
+                        HStack {
+                            Spacer()
+                            Button(action: {
+                                withAnimation(.easeInOut(duration: 0.5)) {
+                                    proxy.scrollTo("scrollTop", anchor: .top)
+                                }
+                            }) {
+                                ZStack {
+                                    Circle()
+                                        .fill(Color.blue)
+                                        .frame(width: 50, height: 50)
+                                        .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
+                                    
+                                    Image(systemName: "arrow.up")
+                                        .font(.system(size: 20, weight: .semibold))
+                                        .foregroundColor(.white)
+                                }
+                            }
+                            .padding(.trailing, 16)
+                            .padding(.bottom, 75)
+                        }
+                    }
                 }
-                .padding(.top, 10)
                 //                .navigationTitle("Profile")
                 .toolbar {
                     ToolbarItem(placement: .navigationBarTrailing) {
