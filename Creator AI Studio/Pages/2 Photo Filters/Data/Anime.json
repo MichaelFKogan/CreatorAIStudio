@@ -6,8 +6,7 @@
       "imageNameOriginal": "yourphoto",
       "modelName": "Wavespeed Ghibli"
     },
-    "type": "Photo Filter",
-    "category": "Anime"
+    "type": "Photo Filter"
   },
   {
     "display": {
@@ -16,8 +15,7 @@
       "imageNameOriginal": "yourphoto",
       "modelName": "Wavespeed Ghibli"
     },
-    "type": "Photo Filter",
-    "category": "Anime"
+    "type": "Photo Filter"
   },
 
   {
@@ -28,8 +26,7 @@
       "modelName": "FLUX.1 Kontext [pro]"
     },
     "prompt": "Transform to Anime style",
-    "type": "Photo Filter",
-    "category": "Anime"
+    "type": "Photo Filter"
   },
   {
     "display": {
@@ -39,8 +36,7 @@
       "modelName": "FLUX.1 Kontext [pro]"
     },
     "prompt": "Transform to Anime style",
-    "type": "Photo Filter",
-    "category": "Anime"
+    "type": "Photo Filter"
   },
 
   {
@@ -62,8 +58,7 @@
       "modelName": "Seedream 4.5"
     },
     "prompt": "Transform to Anime style",
-    "type": "Photo Filter",
-    "category": "Anime"
+    "type": "Photo Filter"
   },
 
   {
@@ -86,8 +81,7 @@
       "modelName": "Seedream 4.0"
     },
     "prompt": "Transform to Anime style",
-    "type": "Photo Filter",
-    "category": "Anime"
+    "type": "Photo Filter"
   },
 
   {
@@ -98,7 +92,6 @@
       "modelName": "FLUX.1 Kontext [pro]"
     },
     "prompt": "Transform to an Anime Van Gogh painting similar to Starry Night",
-    "type": "Photo Filter",
-    "category": "Anime"
+    "type": "Photo Filter"
   }
 ]

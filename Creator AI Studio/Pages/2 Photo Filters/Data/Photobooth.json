@@ -7,7 +7,6 @@
       "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
     },
     "prompt": "Flash Photography with Grain\n\nRender the image as if it were an authentic 90s Polaroid snapshot taken indoors. Apply the look of a harsh on-camera flash, resulting in bright highlights, deep, dark shadows, and a slight red-eye effect. The photograph must exhibit noticeable film grain and the characteristic blue-green tint often found in instant film. Enclose the photo in a clean, white Polaroid 600-style frame with a slight vignette effect within the image area.",
-    "type": "Photo Filter",
-    "category": "Photobooth"
+    "type": "Photo Filter"
   }
 ]

@@ -7,8 +7,7 @@
       "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
     },
     "prompt": "Transform to Japanese Painting style.\n\nThe person should be wearing traditional Japanese clothing (kimono for women, yukata or hakama for men)",
-    "type": "Photo Filter",
-    "category": "Art"
+    "type": "Photo Filter"
   },
 
   {
@@ -19,8 +18,7 @@
       "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
     },
     "prompt": "Transform to Japanese Painting style.\n\nThe person should be wearing traditional Japanese clothing (kimono for women, yukata or hakama for men)",
-    "type": "Photo Filter",
-    "category": "Art"
+    "type": "Photo Filter"
   },
 
   {
@@ -31,8 +29,7 @@
       "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
     },
     "prompt": "Generate an image from the uploaded photo.\n\nKeep your facial features and skin tone at 100 percent. Keep the look gender neutral.\n\nShow you as a painted figure with thick palette knife texture, visible strokes, fresh oil paint, and a heavy textured canvas surface.\n\nPlace you in a chaotic colorful abstract background with uneven marks and strokes that match the same painted style.\n\nUse close camera framing so you fill most of the scene. Keep strong light from the front to show texture and color contrast.",
-    "type": "Photo Filter",
-    "category": "Art"
+    "type": "Photo Filter"
   },
 
   {
@@ -43,8 +40,7 @@
       "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
     },
     "prompt": "Generate an image from the uploaded photo.\n\nKeep your facial features and skin tone at 100 percent. Keep the look gender neutral.\n\nShow you as a painted figure with thick palette knife texture, visible strokes, fresh oil paint, and a heavy textured canvas surface.\n\nPlace you in a chaotic colorful abstract background with uneven marks and strokes that match the same painted style.\n\nUse close camera framing so you fill most of the scene. Keep strong light from the front to show texture and color contrast.",
-    "type": "Photo Filter",
-    "category": "Art"
+    "type": "Photo Filter"
   },
 
   {
@@ -55,8 +51,7 @@
       "modelName": "FLUX.1 Kontext [pro]"
     },
     "prompt": "Transform to a Van Gogh painting similar to Starry Night",
-    "type": "Photo Filter",
-    "category": "Art"
+    "type": "Photo Filter"
   },
 
   {
@@ -67,7 +62,6 @@
       "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
     },
     "prompt": "Transform to a Salvador Dali painting",
-    "type": "Photo Filter",
-    "category": "Art"
+    "type": "Photo Filter"
   }
 ]

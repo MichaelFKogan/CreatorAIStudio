@@ -23,7 +23,7 @@ class CategoryConfigurationManager {
         "Video Games": "VideoGames",
         "Photobooth": "Photobooth",
         "Spooky": "Spooky",
-        "Professional": "Professional"
+        "Professional": "LinkedInHeadshots"
     ]
 
         /// The display order for categories in the UI.
@@ -45,8 +45,8 @@ class CategoryConfigurationManager {
         "Character": "figure.stand",
         "Video Games": "gamecontroller.fill",
         "Photobooth": "camera.fill",
-        "Spooky": "ghost.fill",
-        "Professional": "person.crop.circle.badge.exclamationmark"
+        "Spooky": "moon.stars.fill",
+        "Professional": "person.crop.circle"
     ]
     
     /// Dictionary mapping category names to example images arrays
