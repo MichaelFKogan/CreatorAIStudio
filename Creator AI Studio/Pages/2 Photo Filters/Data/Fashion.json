@@ -34,5 +34,25 @@
       "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
     },
     "prompt": "Do not change the subject’s face or hairstyle.\n\nThe person is sitting on the floor in front of an open messy fridge, leaning slightly back with relaxed posture, legs spread casually, confident body language. One hand holds a snack near the mouth, the other rests on the lap holding a snack bag.\n\nExpression: candid indie fashion model look, sharp gaze, lips slightly parted. Outfit: oversized Y2K white shirt with cartoon illustration, oversized jeans.\n\nFridge interior filled with messy food and drinks (watermelon, yogurt cups, milk cartons, soda cans, cheese packs, colorful boxes). Fridge light casts a cool bluish tone, contrasting with warm reds of pants and snack bag.\n\nPhotography style: candid indie, cinematic RAW, high-resolution, soft grain, artsy aesthetic. Warm cinematic film tone, golden highlights, creamy whites, deep reds and oranges.\n\nUltra HD photo with immersive, cozy indie vibe."
+  },
+
+  {
+    "display": {
+      "title": "Beauty Editorial",
+      "imageName": "beautyeditorial",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+    },
+    "prompt": "Transform the subject of this photo into a high-fashion beauty editorial portrait. The subject's skin is flawless with professional retouching, featuring bold, artistic makeup accents and statement jewelry. The lighting is a classic three-point softbox setup, creating a clean, shadowless look against a solid gray or pastel backdrop. Shot with a Hasselblad medium format camera for incredible detail. Minimalist magazine layout elements, like clean typography (e.g., 'BEAUTY') overlaid in a corner. The overall vibe is polished, luxurious, and print-ready."
+  },
+
+  {
+    "display": {
+      "title": "Met Gala",
+      "imageName": "metgala",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+    },
+    "prompt": "Transform the subject of this photo into a high-fashion, avant-garde portrait in the style of a Met Gala feature by Annie Leibovitz. The subject is wearing abstract, sculptural couture. The background is an artistic, painterly canvas with dramatic textures. The lighting is theatrical and unconventional, using a single, hard light source to create sharp, defined shadows and a powerful silhouette. The pose is non-traditional and expressive. The final image is a work of art, pushing the boundaries of portraiture with a bold, conceptual, and editorial feel."
   }
 ]

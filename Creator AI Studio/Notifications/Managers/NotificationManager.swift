@@ -10,9 +10,11 @@ class NotificationManager: ObservableObject {
     @Published var isNotificationBarVisible: Bool = true
     
     /// Computed property to get active placeholders for Profile page
+    /// Returns placeholders in reverse order (newest first) so the most recent transformation appears in the first slot
     var activePlaceholders: [PlaceholderImage] {
         notifications
             .filter { $0.isActive && $0.state != .completed }
+            .reversed()
             .map { PlaceholderImage(from: $0) }
     }
     
