@@ -11,22 +11,32 @@
 
   {
     "display": {
+      "title": "Superhero Comic Cover",
+      "imageName": "superherocomiccover",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+    },
+    "prompt": "Transform the subject of the uploaded photo into a dramatic superhero comic book cover. Preserve the subject’s facial identity, hairstyle, and body shape while adapting them into a dynamic comic illustration.\n\nPosition the subject in an iconic, heroic pose that conveys power, confidence, or mystery. Use cinematic camera angles, exaggerated perspective, and bold foreshortening for dramatic effect.\n\nCreate a striking background with visually symbolic or thematic elements, such as a futuristic cityscape, swirling energy, abstract patterns, or bold lighting effects. Use high-contrast, saturated colors with rim lighting or glow effects to make the cover visually impactful.\n\nKeep the composition clean, with a clear focal point on the subject. Optional space for a comic title or logo can be included. Avoid extra characters unless essential for visual storytelling. The final image should feel like a finished comic book cover, ready to grab attention on a shelf."
+  },
+
+  {
+    "display": {
       "title": "Superhero 3-Frame Comic",
       "imageName": "superhero3framecomic",
       "imageNameOriginal": "yourphoto",
       "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
     },
-    "prompt": "Transform the subject of the uploaded photo into a 3-frame superhero comic. Preserve the subject’s facial identity, hair color, hairstyle, and body shape while converting them into a dynamic Marvel-style comic character.\n\nFrame 1: The subject discovers their powers in a visually dramatic moment, with expressive poses, bold inked outlines, and vibrant Marvel-style colors.\n\nFrame 2: Training and preparation montage condensed into one dynamic scene, showing the subject practicing powers and building strength with energetic panel composition.\n\nFrame 3: Climactic battle and victory moment in a futuristic city: the subject confronts a villain, protects civilians, and strikes a heroic victory pose. Include readable English text if desired.\n\nEnsure consistent art style, bold color palette, and inked comic outlines across all frames. Keep facial identity, body, and hair accurate while applying dynamic superhero comic stylization."
+    "prompt": "Transform the subject of the uploaded photo into a 3-frame superhero comic. Preserve the subject’s facial identity, hair color, hairstyle, and body shape while converting them into a dynamic Marvel-style comic character.\n\nAllow the AI to determine the narrative and events for each frame. Include expressive poses, cinematic angles, and bold inked outlines with vibrant Marvel-style colors. Ensure the composition conveys action, emotion, and storytelling appropriate for a superhero comic.\n\nMaintain consistent art style, bold color palette, and inked outlines across all frames. Keep facial identity, body, and hair accurate while applying dynamic superhero comic stylization. Include readable English text if desired, but allow the AI to generate dialogue, action effects, and story beats for each frame."
   },
 
   {
     "display": {
-      "title": "Comic Story Frame",
-      "imageName": "comicstoryframe",
+      "title": "Manga 3-Frame Comic",
+      "imageName": "manga3framecomic",
       "imageNameOriginal": "yourphoto",
       "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
     },
-    "prompt": "Transform the subject of the uploaded photo into a single, cohesive comic-style story scene.\n\nAutomatically determine the genre, tone, setting, and visual style based on the subject’s appearance, mood, and environment in the image.\n\nPreserve the subject’s facial identity, hairstyle, clothing, and overall likeness while adapting them into a polished comic illustration. Establish a consistent color palette, line style, proportions, lighting, and art direction across the entire image.\n\nCompose the image as a complete narrative moment, like a key frame or cover panel from a comic, using expressive poses, cinematic camera angles, and clear visual storytelling.\n\nInclude subtle environmental details and visual cues that imply a larger story without additional panels. Avoid extra characters unless they are clearly story-relevant.\n\nUse clean, readable composition, expressive linework, and balanced lighting. The final image should feel like a finished comic scene with strong storytelling impact, not a collage or multi-page layout."
+    "prompt": "Transform the subject of the uploaded photo into a 3-frame manga comic. Preserve the subject’s facial identity, hair color, hairstyle, and body shape while adapting them into a dynamic manga-style character.\n\nAllow the AI to determine the narrative and events in each frame. Include expressive poses, dramatic manga-style panel composition, and bold black-and-white inked outlines with screentone shading and dynamic action lines.\n\nUse cinematic angles and exaggerated expressions typical of manga storytelling. Ensure that facial identity, hair, and body proportions remain accurate across all frames.\n\nInclude readable text in English if desired, but allow the AI to choose dialogue, onomatopoeia, and story beats. The final result should feel like a self-contained 3-frame manga story featuring the subject in a compelling and visually engaging way."
   },
 
   {
