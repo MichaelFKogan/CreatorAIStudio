@@ -32,6 +32,17 @@ enum FilterCategory: String, CaseIterable, Identifiable {
 class PhotoFiltersViewModel: ObservableObject {
     @Published var filters: [InfoPacket] = []
     @Published private var categorizedFiltersDict: [String: [InfoPacket]] = [:]
+    
+    // Define the desired display order for categories
+    // This order will be used for displaying categories in the UI
+    private let categoryDisplayOrder: [String] = [
+        "Anime",
+        "Art",
+        "Character",
+        "Video Games",
+        "Photobooth",
+        "Spooky"
+    ]
 
     // Quick filters - returns first N filters from all filters, or all filters if limit is nil
     func quickFilters(limit: Int? = nil) -> [InfoPacket] {
@@ -47,9 +58,12 @@ class PhotoFiltersViewModel: ObservableObject {
         return categorizedFiltersDict
     }
     
-    // Get sorted category names for display
+    // Get category names in the specified display order
+    // Categories not in the order list will appear at the end, sorted alphabetically
     var sortedCategoryNames: [String] {
-        categorizedFilters.keys.sorted()
+        let orderedCategories = categoryDisplayOrder.filter { categorizedFilters.keys.contains($0) }
+        let unorderedCategories = categorizedFilters.keys.filter { !categoryDisplayOrder.contains($0) }.sorted()
+        return orderedCategories + unorderedCategories
     }
 
     init() {

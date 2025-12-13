@@ -67,6 +67,14 @@ struct FilterCategorySheet: View {
         let unorderedCategories = categorizedFilters.keys.filter { !categoryDisplayOrder.contains($0) }.sorted()
         return orderedCategories + unorderedCategories
     }
+    
+    // Get category names that actually have filters (for divider logic)
+    private var sortedCategoryNamesWithFilters: [String] {
+        sortedCategoryNames.filter { 
+            guard let filters = categorizedFilters[$0] else { return false }
+            return !filters.isEmpty
+        }
+    }
 
 //    // Convert presets to InfoPacket format
 //    private var presetInfoPackets: [InfoPacket] {
@@ -161,8 +169,8 @@ struct FilterCategorySheet: View {
                         //     .background(Color.white.opacity(0.2))
                         //     .padding(.vertical, 8)
 
-                        // Category sections - dynamically generated from JSON
-                        ForEach(Array(categorizedFilters.keys.sorted()), id: \.self) { categoryName in
+                        // Category sections - dynamically generated from JSON in specified order
+                        ForEach(sortedCategoryNames, id: \.self) { categoryName in
                             if let filters = categorizedFilters[categoryName],
                                 !filters.isEmpty
                             {
@@ -185,7 +193,7 @@ struct FilterCategorySheet: View {
                                     }
                                 )
 
-                                if categoryName != sortedCategoryNames.last {
+                                if categoryName != sortedCategoryNamesWithFilters.last {
                                     Divider()
                                         .background(Color.white.opacity(0.2))
                                         .padding(.vertical, 4)
