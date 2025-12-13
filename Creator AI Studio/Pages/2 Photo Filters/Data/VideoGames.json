@@ -1,6 +1,36 @@
 [
   {
     "display": {
+      "title": "Video Game Character",
+      "imageName": "videogamecharacter",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+    },
+    "prompt": "Transform the subject in the uploaded photo into a 16-bit video game character inside a classic 2D platformer level. Outfit: current outfit of the subject in the photo. Background: floating pixel platforms with retro clouds and mountains. Style: pixel art, bright arcade colors, cartoonish proportions, crisp sharp outlines."
+  },
+
+  {
+    "display": {
+      "title": "Superhero 3-Frame Comic",
+      "imageName": "superhero3framecomic",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+    },
+    "prompt": "Transform the subject of the uploaded photo into a 3-frame superhero comic. Preserve the subject’s facial identity, hair color, hairstyle, and body shape while converting them into a dynamic Marvel-style comic character.\n\nFrame 1: The subject discovers their powers in a visually dramatic moment, with expressive poses, bold inked outlines, and vibrant Marvel-style colors.\n\nFrame 2: Training and preparation montage condensed into one dynamic scene, showing the subject practicing powers and building strength with energetic panel composition.\n\nFrame 3: Climactic battle and victory moment in a futuristic city: the subject confronts a villain, protects civilians, and strikes a heroic victory pose. Include readable English text if desired.\n\nEnsure consistent art style, bold color palette, and inked comic outlines across all frames. Keep facial identity, body, and hair accurate while applying dynamic superhero comic stylization."
+  },
+
+  {
+    "display": {
+      "title": "Comic Story Frame",
+      "imageName": "comicstoryframe",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+    },
+    "prompt": "Transform the subject of the uploaded photo into a single, cohesive comic-style story scene.\n\nAutomatically determine the genre, tone, setting, and visual style based on the subject’s appearance, mood, and environment in the image.\n\nPreserve the subject’s facial identity, hairstyle, clothing, and overall likeness while adapting them into a polished comic illustration. Establish a consistent color palette, line style, proportions, lighting, and art direction across the entire image.\n\nCompose the image as a complete narrative moment, like a key frame or cover panel from a comic, using expressive poses, cinematic camera angles, and clear visual storytelling.\n\nInclude subtle environmental details and visual cues that imply a larger story without additional panels. Avoid extra characters unless they are clearly story-relevant.\n\nUse clean, readable composition, expressive linework, and balanced lighting. The final image should feel like a finished comic scene with strong storytelling impact, not a collage or multi-page layout."
+  },
+
+  {
+    "display": {
       "title": "Persona5 Graffiti Pop Art",
       "imageName": "Persona5-graffitipopart-man",
       "imageNameOriginal": "yourphoto",

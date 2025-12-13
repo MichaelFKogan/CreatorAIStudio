@@ -20,6 +20,16 @@
 
   {
     "display": {
+      "title": "Gallery Doppelgänger",
+      "imageName": "gallerydoppelganger",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+    },
+    "prompt": "Transform the subject of the uploaded photo into a realistic scene where the person stands next to a large figure of herself inside a bright, modern art gallery.\n\nThe gallery features smooth polished floors, clean white walls, ceiling-mounted track lights, and geometric sculptures displayed throughout the space.\n\nThe figure beside her is a statue version of herself with the same hairstyle and outfit, designed to look adorable and toy-like with a round face, big cute eyes, a soft smile, an oversized head, and a small body. Use a soft matte or vinyl-toy texture to enhance the cuteness.\n\nThe real person is making a natural gesture while standing close to the statue, which is slightly taller and positioned nearby.\n\nCarefully match lighting, perspective, and shadows between the person and the statue so they exist naturally in the same environment. Add ambient lighting, clean reflections on the floor, and realistic contact shadows.\n\nHigh detail, soft lighting, no harsh edges, no extra people."
+  },
+
+  {
+    "display": {
       "title": "Knitted Doll",
       "imageName": "knitteddoll",
       "imageNameOriginal": "yourphoto",
