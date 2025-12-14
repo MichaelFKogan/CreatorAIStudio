@@ -20,10 +20,32 @@ struct PhotoFilterDetailView: View {
     @State private var navigateToConfirmation: Bool = false
 
     func allMoreStyles(for packet: InfoPacket) -> [InfoPacket] {
-        // moreStyles is currently [[String]]? and doesn't contain InfoPacket objects
-        // Return empty array until this feature is fully implemented
-        // TODO: Implement lookup mechanism to convert moreStyles identifiers to InfoPacket objects
-        return []
+        guard let moreStyles = packet.resolvedMoreStyles, !moreStyles.isEmpty else {
+            return []
+        }
+        
+        let viewModel = PhotoFiltersViewModel.shared
+        var result: [InfoPacket] = []
+        
+        // Iterate through each style group (each inner array contains category names)
+        for styleGroup in moreStyles {
+            // Each styleGroup is [String] - typically contains one category name
+            // Handle both single category ["Anime"] and multiple categories ["Art", "Character"]
+            for categoryName in styleGroup {
+                // Get all filters from this category
+                let categoryFilters = viewModel.filters(for: categoryName)
+                
+                // Add filters from this category, excluding the current item
+                for filter in categoryFilters {
+                    // Avoid duplicates and exclude the current item
+                    if filter.id != packet.id && !result.contains(where: { $0.id == filter.id }) {
+                        result.append(filter)
+                    }
+                }
+            }
+        }
+        
+        return result
     }
 
     private var creditsDisplayView: some View {
@@ -145,7 +167,7 @@ struct PhotoFilterDetailView: View {
                                 Image(systemName: "paintbrush")
                                     .foregroundColor(.blue)
                                 Text("More Styles")
-                                    .font(.custom("Nunito-Bold", size: 22))
+                                    .font(.system(size: 22, weight: .bold, design: .rounded))
                                 Spacer()
                             }
 

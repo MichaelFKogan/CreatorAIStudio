@@ -35,6 +35,9 @@ class PhotoFiltersViewModel: ObservableObject {
     
     // Use centralized category configuration manager
     private let categoryManager = CategoryConfigurationManager.shared
+    
+    // Shared instance for accessing filters from anywhere
+    static let shared = PhotoFiltersViewModel()
 
     // Quick filters - returns first N filters from all filters, or all filters if limit is nil
     func quickFilters(limit: Int? = nil) -> [InfoPacket] {
@@ -48,6 +51,11 @@ class PhotoFiltersViewModel: ObservableObject {
     // Categorized filters - loaded from separate JSON files by category
     var categorizedFilters: [String: [InfoPacket]] {
         return categorizedFiltersDict
+    }
+    
+    // Get filters by category name
+    func filters(for category: String) -> [InfoPacket] {
+        return categorizedFiltersDict[category] ?? []
     }
     
     // Get category names in the specified display order

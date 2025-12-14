@@ -115,6 +115,8 @@ class CategoryConfigurationManager {
     
     private init() {
         // Initialize example images by category
+        // COMMENTED OUT - Not currently being used
+        /*
         exampleImagesByCategory = [
             "Anime": [
                 "anime2",
@@ -127,22 +129,49 @@ class CategoryConfigurationManager {
             // Add other categories as needed
             // Categories without exampleImages will return nil (fallback to display.exampleImages)
         ]
+        */
+        exampleImagesByCategory = [:]
         
         // Initialize more styles by category
         moreStylesByCategory = [
-            "Anime": [
-                ["Anime"],
-                ["Art"],
-                ["Character"],
-                ["Video Games"],
-                ["Photography"],
-                ["Spooky"],
-                ["Professional"],
-                ["Fashion"],
-                ["Luxury"],
-                ["Chibi"],
-                ["Just For Fun"],
-            ],
+            "Anime": [["Anime"], ["Video Games"], ["Chibi"], ["Just For Fun"], ["Art"], ["Character"],],
+
+            "Art": [["Art"], ["Anime"], ["Video Games"], ["Chibi"], ["Just For Fun"], ["Character"],],
+
+            "Character": [["Character"], ["Anime"], ["Video Games"], ["Chibi"], ["Just For Fun"], ["Art"],],
+
+            "Video Games": [["Video Games"], ["Anime"], ["Chibi"], ["Just For Fun"], ["Art"], ["Character"],],
+
+            "Photography": [["Photography"], ["Instagram"], ["Photobooth"], ["Fashion"], ["Spooky"], ["Luxury"], ["Professional"], ["Chibi"], ["Just For Fun"], ["Social Media"], ["Fitness"], ["Travel"], ["Back In Time"], ["Men's"],],
+
+            "Instagram": [["Instagram"], ["Photography"], ["Photobooth"], ["Fashion"], ["Spooky"], ["Luxury"], ["Professional"], ["Chibi"], ["Just For Fun"], ["Social Media"], ["Fitness"], ["Travel"], ["Back In Time"], ["Men's"],],
+
+            "Photobooth": [["Photobooth"], ["Fashion"], ["Photography"], ["Instagram"], ["Spooky"], ["Luxury"], ["Professional"], ["Chibi"], ["Just For Fun"], ["Social Media"], ["Fitness"], ["Travel"], ["Back In Time"], ["Men's"],],
+
+            "Fashion": [["Fashion"], ["Photography"], ["Instagram"], ["Photobooth"], ["Spooky"], ["Luxury"], ["Professional"], ["Chibi"], ["Just For Fun"], ["Social Media"], ["Fitness"], ["Travel"], ["Back In Time"], ["Men's"],],
+
+            "Spooky": [["Spooky"], ["Photography"], ["Instagram"], ["Photobooth"], ["Fashion"], ["Luxury"], ["Professional"], ["Chibi"], ["Just For Fun"], ["Social Media"], ["Fitness"], ["Travel"], ["Back In Time"], ["Men's"],],
+
+            "Luxury": [["Luxury"], ["Men's"], ["Photography"], ["Instagram"], ["Photobooth"], ["Fashion"], ["Spooky"], ["Professional"], ["Chibi"], ["Just For Fun"], ["Social Media"], ["Fitness"], ["Travel"], ["Back In Time"],],
+
+            "Professional": [["Professional"], ["Men's"], ["Photography"], ["Instagram"], ["Photobooth"], ["Fashion"], ["Spooky"], ["Luxury"], ["Chibi"], ["Just For Fun"], ["Social Media"], ["Fitness"], ["Travel"], ["Back In Time"],],
+
+            "Chibi": [["Chibi"], ["Just For Fun"], ["Back In Time"], ["Social Media"], ["Fitness"], ["Travel"], ["Anime"], ["Art"], ["Character"], ["Video Games"], ["Photography"], ["Instagram"], ["Photobooth"], ["Fashion"], ["Spooky"], ["Luxury"], ["Professional"],],
+
+            "Just For Fun": [["Just For Fun"], ["Back In Time"], ["Social Media"], ["Fitness"], ["Travel"], ["Anime"], ["Art"], ["Character"], ["Video Games"], ["Photography"], ["Instagram"], ["Photobooth"], ["Fashion"], ["Spooky"], ["Luxury"], ["Professional"],],
+
+            "Social Media": [["Social Media"], ["Fitness"], ["Travel"], ["Anime"], ["Art"], ["Character"], ["Video Games"], ["Photography"], ["Instagram"], ["Photobooth"], ["Fashion"], ["Spooky"], ["Luxury"], ["Professional"], ["Chibi"], ["Just For Fun"],],
+
+            "Fitness": [["Fitness"], ["Travel"], ["Anime"], ["Art"], ["Character"], ["Video Games"], ["Photography"], ["Instagram"], ["Photobooth"], ["Fashion"], ["Spooky"], ["Luxury"], ["Professional"], ["Chibi"], ["Just For Fun"],],
+
+            "Travel": [["Travel"], ["Back In Time"], ["Social Media"], ["Fitness"], ["Anime"], ["Art"], ["Character"], ["Video Games"], ["Photography"], ["Instagram"], ["Photobooth"], ["Fashion"], ["Spooky"], ["Luxury"], ["Professional"], ["Chibi"], ["Just For Fun"],],
+
+            "Back In Time": [["Back In Time"], ["Social Media"], ["Fitness"], ["Travel"], ["Anime"], ["Art"], ["Character"], ["Video Games"], ["Photography"], ["Instagram"], ["Photobooth"], ["Fashion"], ["Spooky"], ["Luxury"], ["Professional"], ["Chibi"], ["Just For Fun"],],
+
+            "Men's": [["Men's"], ["Professional"], ["Travel"], ["Anime"], ["Art"], ["Character"], ["Video Games"], ["Photography"], ["Instagram"], ["Photobooth"], ["Fashion"], ["Spooky"], ["Luxury"], ["Chibi"], ["Just For Fun"], ["Social Media"], ["Fitness"],],
+
+// All Categories: 
+// [["Anime"], ["Art"], ["Character"], ["Video Games"], ["Photography"], ["Instagram"], ["Photobooth"], ["Fashion"], ["Spooky"], ["Luxury"], ["Professional"], ["Chibi"], ["Just For Fun"], ["Social Media"], ["Fitness"], ["Travel"], ["Back In Time"], ["Men's"],]
             // Add other categories as needed
             // Categories without moreStyles will return nil (fallback to display.moreStyles)
         ]

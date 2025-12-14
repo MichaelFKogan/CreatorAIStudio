@@ -681,7 +681,7 @@ private struct VideoFilterSection: View {
                     VideoFilterPill(title: "Text to Video", isSelected: viewModel.videoFilterIndex == 1) {
                         viewModel.videoFilterIndex = 1
                     }
-                    VideoFilterPill(title: "Video to Video", isSelected: viewModel.videoFilterIndex == 2) {
+                    VideoFilterPill(title: "Image to Video", isSelected: viewModel.videoFilterIndex == 2) {
                         viewModel.videoFilterIndex = 2
                     }
                     VideoFilterPill(title: "Audio", isSelected: viewModel.videoFilterIndex == 3) {

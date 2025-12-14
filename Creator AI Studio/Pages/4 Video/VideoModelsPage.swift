@@ -91,7 +91,7 @@ final class VideoModelsViewModel: ObservableObject {
         case 1:
             models = models.filter { $0.capabilities?.contains("Text to Video") == true }
         case 2:
-            models = models.filter { $0.capabilities?.contains("Video to Video") == true }
+            models = models.filter { $0.capabilities?.contains("Image to Video") == true }
         case 3:
             models = models.filter { $0.capabilities?.contains("Audio") == true }
         default:
@@ -149,7 +149,7 @@ final class VideoModelsViewModel: ObservableObject {
 //        case 1:
 //            models = models.filter { $0.capabilities.contains("Text to Video") }
 //        case 2:
-//            models = models.filter { $0.capabilities.contains("Video to Video") }
+//            models = models.filter { $0.capabilities.contains("Image to Video") }
 //        case 3:
 //            models = models.filter { $0.capabilities.contains("Audio") }
 //        default:
@@ -210,7 +210,7 @@ private struct FilterSection: View {
                     FilterPill(title: "Text to Video", isSelected: viewModel.videoFilterIndex == 1) {
                         viewModel.videoFilterIndex = 1
                     }
-                    FilterPill(title: "Video to Video", isSelected: viewModel.videoFilterIndex == 2) {
+                    FilterPill(title: "Image to Video", isSelected: viewModel.videoFilterIndex == 2) {
                         viewModel.videoFilterIndex = 2
                     }
                     FilterPill(title: "Audio", isSelected: viewModel.videoFilterIndex == 3)
