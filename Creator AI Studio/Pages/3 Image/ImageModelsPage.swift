@@ -49,7 +49,7 @@ struct ImageModelsPage: View {
                 }
 
                 // Trailing credits
-                CreditsToolbar()
+                CreditsToolbarImage()
             }
         }
     }
@@ -557,7 +557,7 @@ private struct ImageModelListItem: View {
 
 // MARK: TOOLBAR
 
-private struct CreditsToolbar: ToolbarContent {
+private struct CreditsToolbarImage: ToolbarContent {
     var body: some ToolbarContent {
         ToolbarItem(placement: .navigationBarTrailing) {
             HStack(spacing: 6) {

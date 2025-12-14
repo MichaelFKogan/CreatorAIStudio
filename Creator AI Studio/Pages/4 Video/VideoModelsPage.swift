@@ -29,7 +29,7 @@ struct VideoModelsPage: View {
                 }
 
                 // Trailing credits
-                CreditsToolbar()
+                CreditsToolbarVideo()
             }
         }
     }
@@ -425,7 +425,7 @@ private struct VideoModelListItem: View {
 
 // MARK: TOOLBAR
 
-private struct CreditsToolbar: ToolbarContent {
+private struct CreditsToolbarVideo: ToolbarContent {
     var body: some ToolbarContent {
         ToolbarItem(placement: .navigationBarTrailing) {
             HStack(spacing: 6) {
@@ -439,13 +439,13 @@ private struct CreditsToolbar: ToolbarContent {
                         )
                     )
 
-                Text("$5.00")
+                Text("250")
                     .font(
                         .system(size: 14, weight: .semibold, design: .rounded)
                     )
                     .foregroundColor(.white)
 
-                Text("credits left")
+                Text("credits")
                     .font(.caption2)
                     .foregroundColor(.white.opacity(0.9))
             }
