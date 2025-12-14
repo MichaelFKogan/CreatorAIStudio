@@ -5,27 +5,46 @@ import SwiftUI
 // MARK: MAIN CONTENT
 
 struct ImageModelsPage: View {
-    // @StateObject private var viewModel = ImageModelsViewModel(models: imageModelData)
-    @StateObject private var viewModel = ImageModelsViewModel()
+    @State private var selectedModelType: Int = 0 // 0 = Image, 1 = Video
+    @StateObject private var imageViewModel = ImageModelsViewModel()
+    @StateObject private var videoViewModel = VideoModelsViewModel()
     @AppStorage("imageModelsIsGridView") private var isGridView = true
+    @AppStorage("videoModelsIsGridView") private var videoIsGridView = true
 
     var body: some View {
         NavigationView {
-            ScrollView {
-                MainContent(viewModel: viewModel, isGridView: $isGridView)
-                    .padding(.bottom) // space for toolbar if needed
-                Color.clear.frame(height: 130) // bottom padding for floating button
+            ZStack {
+                // Content
+                ScrollView {
+                    Group {
+                        if selectedModelType == 0 {
+                            ImageMainContent(viewModel: imageViewModel, isGridView: $isGridView)
+                        } else {
+                            VideoMainContent(viewModel: videoViewModel, isGridView: $videoIsGridView)
+                        }
+                    }
+                    .padding(.bottom, 100) // Space for tab switcher and navbar
+                }
+                
+                // Tab Switcher at bottom (above navbar)
+                VStack {
+                    Spacer()
+                    ModelTypeTabSwitcher(selectedType: $selectedModelType)
+                        .padding(.bottom, 0) // No padding - background extends to navbar
+                }
             }
             .navigationTitle("")
             .toolbar {
                 // Leading title
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Text("Image Models")
+                    Text(selectedModelType == 0 ? "Image Models" : "Video Models")
                         .font(.system(size: 28, weight: .bold, design: .rounded))
                         .foregroundStyle(
-                            LinearGradient(colors: [.blue, .cyan],
-                                           startPoint: .leading,
-                                           endPoint: .trailing)
+                            LinearGradient(
+                                colors: selectedModelType == 0 ? [.blue, .cyan] : [.purple, .pink],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
                         )
                 }
 
@@ -180,7 +199,7 @@ final class ImageModelsViewModel: ObservableObject {
 
 // MARK: - MainContent (small body)
 
-private struct MainContent: View {
+private struct ImageMainContent: View {
     @ObservedObject var viewModel: ImageModelsViewModel
     @Binding var isGridView: Bool
 
@@ -195,6 +214,91 @@ private struct MainContent: View {
 
             ContentList(viewModel: viewModel, isGridView: isGridView)
         }
+    }
+}
+
+// MARK: - Video MainContent
+
+private struct VideoMainContent: View {
+    @ObservedObject var viewModel: VideoModelsViewModel
+    @Binding var isGridView: Bool
+
+    var body: some View {
+        VStack(spacing: 12) {
+            VideoFilterSection(viewModel: viewModel)
+                .padding(.horizontal)
+                .padding(.top, 8)
+
+            VideoSortAndViewToggle(viewModel: viewModel, isGridView: $isGridView)
+                .padding(.horizontal)
+
+            VideoContentList(viewModel: viewModel, isGridView: isGridView)
+        }
+    }
+}
+
+// MARK: - Model Type Tab Switcher
+
+private struct ModelTypeTabSwitcher: View {
+    @Binding var selectedType: Int
+    
+    var body: some View {
+        HStack(spacing: 0) {
+            // Image Models button
+            Button(action: { 
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    selectedType = 0
+                }
+            }) {
+                HStack(spacing: 6) {
+                    Image(systemName: "photo.fill")
+                        .font(.system(size: 12))
+                    Text("Image Models")
+                        .fontWeight(.medium)
+                }
+                .frame(maxWidth: .infinity)
+            }
+            .tabButtonStyle(isSelected: selectedType == 0)
+            
+            // Video Models button
+            Button(action: { 
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    selectedType = 1
+                }
+            }) {
+                HStack(spacing: 6) {
+                    Image(systemName: "video.fill")
+                        .font(.system(size: 12))
+                    Text("Video Models")
+                        .fontWeight(.medium)
+                }
+                .frame(maxWidth: .infinity)
+            }
+            .tabButtonStyle(isSelected: selectedType == 1)
+        }
+        .background(Color(UIColor.secondarySystemBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .overlay(
+            RoundedRectangle(cornerRadius: 10).stroke(
+                Color.gray.opacity(0.3), lineWidth: 1
+            )
+        )
+        .padding(.horizontal, 20)
+        .padding(.top, 8)
+        .padding(.bottom, 68) // Extend padding to match navbar height (55 + 8 + 5)
+        .background(
+            Color.black
+                .ignoresSafeArea(edges: .bottom)
+        )
+        .overlay(
+            // Top border to separate from content
+            VStack {
+                Rectangle()
+                    .fill(Color.gray.opacity(0.3))
+                    .frame(height: 0.5)
+                Spacer()
+            }
+        )
     }
 }
 
@@ -548,5 +652,254 @@ extension Optional where Wrapped == Decimal {
     var credits: Int {
         guard let value = self else { return 0 }
         return value.credits
+    }
+}
+
+// MARK: - Video Components
+
+private struct VideoFilterSection: View {
+    @ObservedObject var viewModel: VideoModelsViewModel
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Text("Filter:")
+                .font(.caption)
+                .fontWeight(.semibold)
+                .foregroundColor(.secondary)
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 6) {
+                    VideoFilterPill(title: "All", isSelected: viewModel.videoFilterIndex == 0) {
+                        viewModel.videoFilterIndex = 0
+                    }
+                    VideoFilterPill(title: "Text to Video", isSelected: viewModel.videoFilterIndex == 1) {
+                        viewModel.videoFilterIndex = 1
+                    }
+                    VideoFilterPill(title: "Video to Video", isSelected: viewModel.videoFilterIndex == 2) {
+                        viewModel.videoFilterIndex = 2
+                    }
+                    VideoFilterPill(title: "Audio", isSelected: viewModel.videoFilterIndex == 3) {
+                        viewModel.videoFilterIndex = 3
+                    }
+                }
+                .padding(.vertical, 2)
+            }
+
+            if viewModel.hasActiveFilters {
+                Button(action: viewModel.clearFilters) {
+                    Text("Clear")
+                        .font(.caption)
+                        .fontWeight(.medium)
+                        .foregroundColor(.purple)
+                }
+            }
+        }
+    }
+}
+
+private struct VideoSortAndViewToggle: View {
+    @ObservedObject var viewModel: VideoModelsViewModel
+    @Binding var isGridView: Bool
+
+    var body: some View {
+        HStack {
+            Spacer()
+
+            Button {
+                isGridView.toggle()
+            } label: {
+                HStack {
+                    Image(systemName: isGridView ? "square.grid.2x2" : "line.3.horizontal")
+                        .font(.system(size: 14))
+                        .fontWeight(.semibold)
+                    Text(isGridView ? "Grid View" : "List View")
+                        .font(.system(size: 14))
+                        .fontWeight(.semibold)
+                }
+                .foregroundColor(.white).opacity(0.9)
+            }
+
+            Text(" | ")
+                .font(.system(size: 14))
+                .fontWeight(.semibold)
+                .foregroundColor(.white).opacity(0.9)
+
+            Button {
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    viewModel.sortOrder = (viewModel.sortOrder + 1) % 3
+                }
+            } label: {
+                HStack(spacing: 4) {
+                    Text("Price")
+                        .font(.system(size: 14))
+                        .fontWeight(.semibold)
+                    if viewModel.sortOrder == 1 {
+                        Image(systemName: "arrow.down").font(.system(size: 10))
+                    } else if viewModel.sortOrder == 2 {
+                        Image(systemName: "arrow.up").font(.system(size: 10))
+                    } else {
+                        Image(systemName: "arrow.up.arrow.down").font(.system(size: 10))
+                    }
+                }
+                .foregroundColor(.white).opacity(0.9)
+            }
+        }
+    }
+}
+
+private struct VideoContentList: View {
+    @ObservedObject var viewModel: VideoModelsViewModel
+    let isGridView: Bool
+
+    private let gridColumns = [GridItem(.flexible()), GridItem(.flexible())]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            if viewModel.filteredAndSortedVideoModels.isEmpty {
+                EmptyStateView(icon: "video.slash", message: "No video models found")
+            } else {
+                if isGridView {
+                    LazyVGrid(columns: gridColumns, spacing: 16) {
+                        ForEach(viewModel.filteredAndSortedVideoModels) { item in
+                            NavigationLink(destination: EmptyView()) {
+                                VideoModelGridItem(item: item)
+                            }
+                        }
+                    }
+                    .padding(.horizontal)
+                } else {
+                    VStack(spacing: 12) {
+                        ForEach(viewModel.filteredAndSortedVideoModels) { item in
+                            NavigationLink(destination: EmptyView()) {
+                                VideoModelListItem(item: item)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .padding(.horizontal)
+                }
+            }
+        }
+    }
+}
+
+private struct VideoModelGridItem: View {
+    let item: InfoPacket
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            ZStack(alignment: .bottom) {
+                Image(item.display.imageName)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(height: 180)
+                    .clipped()
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+
+                LinearGradient(
+                    colors: [Color.black.opacity(0.6), Color.clear],
+                    startPoint: .bottom,
+                    endPoint: .center
+                )
+                .frame(height: 80)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+            }
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+            )
+
+            HStack(alignment: .top) {
+                Text(item.display.title)
+                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .foregroundColor(.primary)
+                    .lineLimit(1)
+
+                Spacer()
+
+                Text("$\(NSDecimalNumber(decimal: item.cost ?? 0).stringValue)")
+                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+                    .foregroundColor(.purple)
+            }
+        }
+    }
+}
+
+private struct VideoModelListItem: View {
+    let item: InfoPacket
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(item.display.imageName)
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+                .frame(width: 70, height: 70)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+
+            Text(item.display.title)
+                .font(.system(size: 16, weight: .bold, design: .rounded))
+                .foregroundColor(.primary)
+                .lineLimit(1)
+
+            Spacer()
+
+            VStack(alignment: .trailing) {
+                Text("$\(NSDecimalNumber(decimal: item.cost ?? 0).stringValue)")
+                    .font(.system(size: 15, weight: .semibold, design: .rounded))
+                    .foregroundColor(.purple)
+                Text("per video")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+            }
+
+            Image(systemName: "chevron.right")
+                .font(.system(size: 14))
+                .foregroundColor(.secondary)
+        }
+        .padding(12)
+        .background(Color.gray.opacity(0.06))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+        )
+    }
+}
+
+private struct VideoFilterPill: View {
+    let title: String
+    let isSelected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .font(.caption)
+                .fontWeight(.semibold)
+                .padding(.vertical, 6)
+                .padding(.horizontal, 10)
+                .background(isSelected ? .purple : .purple.opacity(0.12))
+                .foregroundColor(isSelected ? .white : .purple)
+                .overlay(
+                    Capsule()
+                        .stroke(isSelected ? Color.clear : .purple.opacity(0.6), lineWidth: 1)
+                )
+                .clipShape(Capsule())
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+// MARK: - Tab Button Style Extension
+
+extension View {
+    func tabButtonStyle(isSelected: Bool) -> some View {
+        font(.caption)
+            .fontWeight(.medium)
+            .foregroundColor(isSelected ? .white : .secondary)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 10)
+            .background(isSelected ? Color.gray.opacity(0.15) : Color.clear)
+            .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 }

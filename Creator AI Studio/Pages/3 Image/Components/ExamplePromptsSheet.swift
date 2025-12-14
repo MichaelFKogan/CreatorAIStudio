@@ -115,13 +115,13 @@ struct TabSwitcher: View {
     }
 }
 
-extension View {
-    func tabButtonStyle(isSelected: Bool) -> some View {
-        font(.caption).fontWeight(.medium)
-            .foregroundColor(isSelected ? .white : .secondary)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 10)
-            .background(isSelected ? Color.gray.opacity(0.15) : Color.clear)
-            .clipShape(RoundedRectangle(cornerRadius: 8))
-    }
-}
+// extension View {
+//     func tabButtonStyle(isSelected: Bool) -> some View {
+//         font(.caption).fontWeight(.medium)
+//             .foregroundColor(isSelected ? .white : .secondary)
+//             .frame(maxWidth: .infinity)
+//             .padding(.vertical, 10)
+//             .background(isSelected ? Color.gray.opacity(0.15) : Color.clear)
+//             .clipShape(RoundedRectangle(cornerRadius: 8))
+//     }
+// }
