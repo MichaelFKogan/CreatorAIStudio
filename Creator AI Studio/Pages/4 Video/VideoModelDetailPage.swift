@@ -36,10 +36,44 @@ struct VideoModelDetailPage: View {
 
     @State private var selectedAspectIndex: Int = 0
     @State private var selectedGenerationMode: Int = 0
+    @State private var selectedDurationIndex: Int = 0
 
     @EnvironmentObject var authViewModel: AuthViewModel
 
     // MARK: Constants
+
+    private let videoDurationOptions: [DurationOption] = [
+        DurationOption(
+            id: "5",
+            label: "5 seconds",
+            duration: 5.0,
+            description: "Standard duration"
+        ),
+        DurationOption(
+            id: "10",
+            label: "10 seconds",
+            duration: 10.0,
+            description: "Extended duration"
+        ),
+        DurationOption(
+            id: "3",
+            label: "3 seconds",
+            duration: 3.0,
+            description: "Quick clip"
+        ),
+        DurationOption(
+            id: "8",
+            label: "8 seconds",
+            duration: 8.0,
+            description: "Medium duration"
+        ),
+        DurationOption(
+            id: "12",
+            label: "12 seconds",
+            duration: 12.0,
+            description: "Maximum duration"
+        )
+    ]
 
     private let videoAspectOptions: [AspectRatioOption] = [
         AspectRatioOption(
@@ -208,6 +242,14 @@ struct VideoModelDetailPage: View {
 
                         Divider().padding(.horizontal)
 
+                        LazyView(
+                            DurationSectionVideo(
+                                options: videoDurationOptions,
+                                selectedIndex: $selectedDurationIndex
+                            ))
+
+                        Divider().padding(.horizontal)
+
                         // Example Gallery Section - Only show if model name exists
                         if let modelName = item.display.modelName, !modelName.isEmpty {
                             LazyView(
@@ -311,6 +353,7 @@ struct VideoModelDetailPage: View {
 
         isGenerating = true
         let selectedAspectOption = videoAspectOptions[selectedAspectIndex]
+        let selectedDurationOption = videoDurationOptions[selectedDurationIndex]
         var modifiedItem = item
         modifiedItem.prompt = prompt
         // Use resolvedAPIConfig as base, then modify aspectRatio
@@ -318,7 +361,7 @@ struct VideoModelDetailPage: View {
         config.aspectRatio = selectedAspectOption.id
         modifiedItem.apiConfig = config
 
-        let imageToUse = referenceImages.first ?? createPlaceholderImage()
+        let imageToUse = referenceImages.first
         guard let userId = authViewModel.user?.id.uuidString.lowercased(),
               !userId.isEmpty
         else {
@@ -327,10 +370,20 @@ struct VideoModelDetailPage: View {
         }
 
         Task { @MainActor in
-            // TODO: Implement video generation coordinator
-            // For now, just set isGenerating to false
-            isGenerating = false
-            print("Video generation not yet implemented for \(modifiedItem.display.title)")
+            _ = VideoGenerationCoordinator.shared.startVideoGeneration(
+                item: modifiedItem,
+                image: imageToUse,
+                userId: userId,
+                duration: selectedDurationOption.duration,
+                aspectRatio: selectedAspectOption.id,
+                onVideoGenerated: { _ in
+                    isGenerating = false
+                },
+                onError: { error in
+                    isGenerating = false
+                    print("Video generation failed: \(error.localizedDescription)")
+                }
+            )
         }
     }
 
@@ -556,6 +609,25 @@ private struct AspectRatioSectionVideo: View {
                 .foregroundColor(.secondary)
                 .padding(.top, -6)
             AspectRatioSelector(
+                options: options, selectedIndex: $selectedIndex, color: .purple
+            )
+        }
+        .padding(.horizontal)
+    }
+}
+
+// MARK: DURATION
+
+private struct DurationSectionVideo: View {
+    let options: [DurationOption]
+    @Binding var selectedIndex: Int
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Duration")
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .padding(.top, -6)
+            DurationSelector(
                 options: options, selectedIndex: $selectedIndex, color: .purple
             )
         }

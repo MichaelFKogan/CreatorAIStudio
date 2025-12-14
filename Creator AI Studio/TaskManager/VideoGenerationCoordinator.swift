@@ -1,96 +1,180 @@
-//import SwiftUI
-//
-//@MainActor
-//class VideoGenerationCoordinator: ObservableObject {
-//    static let shared = VideoGenerationCoordinator()
-//
-//    @Published var generationTasks: [UUID: GenerationTaskInfo] = [:]
-//    var backgroundTasks: [UUID: Task<Void, Never>] = [:]
-//
-//    private init() {}
-//
-//    func startVideoGeneration(
-//        item: InfoPacket,
-//        image: UIImage,
-//        userId: String,
-//        onVideoGenerated: @escaping (String) -> Void = { _ in }
-//    ) -> UUID {
-//        let taskId = UUID()
-//
-//        let notificationId = NotificationManager.shared.showNotification(
-//            title: "Creating Your Video",
-//            message: "Generating your \(item.display.title)...",
-//            progress: 0.0,
-//            thumbnailImage: image
-//        )
-//
-//        generationTasks[taskId] = GenerationTaskInfo(
-//            taskId: taskId,
-//            notificationId: notificationId,
-//            generatedImage: nil
-//        )
-//
-//        let task = VideoGenerationTask(item: item, image: image, userId: userId)
-//
-//        let backgroundTask = Task.detached { [weak self] in
-//            await task.execute(
-//                notificationId: notificationId,
-//                onProgress: { progress in
-//                    await NotificationManager.shared.updateProgress(progress.progress, for: notificationId)
-//                    await NotificationManager.shared.updateMessage(progress.message, for: notificationId)
-//                },
-//                onComplete: { result in
-//                    await self?.handleCompletion(
-//                        taskId: taskId,
-//                        notificationId: notificationId,
-//                        result: result,
-//                        onVideoGenerated: onVideoGenerated
-//                    )
-//                }
-//            )
-//        }
-//
-//        backgroundTasks[taskId] = backgroundTask
-//        return taskId
-//    }
-//
-//    private func handleCompletion(
-//        taskId: UUID,
-//        notificationId: UUID,
-//        result: TaskResult,
-//        onVideoGenerated: @escaping (String) -> Void
-//    ) {
-//        switch result {
-//        case let .videoSuccess(videoUrl):
-//            onVideoGenerated(videoUrl)
-//            NotificationManager.shared.markAsCompleted(
-//                id: notificationId,
-//                message: "✅ Video created successfully!"
-//            )
-//            Task {
-//                try? await Task.sleep(for: .seconds(5))
-//                await NotificationManager.shared.dismissNotification(id: notificationId)
-//                cleanupTask(taskId: taskId)
-//            }
-//
-//        case let .failure(error):
-//            NotificationManager.shared.markAsFailed(
-//                id: notificationId,
-//                errorMessage: "Generation failed: \(error.localizedDescription)"
-//            )
-//            cleanupTask(taskId: taskId)
-//
-//        default: break
-//        }
-//    }
-//
-//    func cancelTask(taskId: UUID) {
-//        backgroundTasks[taskId]?.cancel()
-//        cleanupTask(taskId: taskId)
-//    }
-//
-//    private func cleanupTask(taskId: UUID) {
-//        generationTasks.removeValue(forKey: taskId)
-//        backgroundTasks.removeValue(forKey: taskId)
-//    }
-//}
+import SwiftUI
+
+// MARK: - Coordinator that manages all video generation tasks.
+
+// This acts as a central controller for starting tasks, tracking progress,
+// updating notifications, handling results, and cleaning up.
+@MainActor
+class VideoGenerationCoordinator: ObservableObject {
+    // Singleton instance so the entire app uses one shared coordinator.
+    static let shared = VideoGenerationCoordinator()
+
+    // Stores metadata about each task (notification ID, generated video, etc.)
+    // Used for UI state or worker tracking.
+    @Published var generationTasks: [UUID: GenerationTaskInfo] = [:]
+    
+    // Stores the actual Swift concurrency background tasks so they can be cancelled.
+    var backgroundTasks: [UUID: Task<Void, Never>] = [:]
+
+    // Private so outside code cannot create additional coordinators.
+    private init() {}
+
+    // MARK: - Starts a video generation request.
+
+    // Creates an ID, shows a notification, runs the generation task in the background,
+    // and wires up all callbacks and progress handlers.
+    func startVideoGeneration(
+        item: InfoPacket,
+        image: UIImage?,
+        userId: String,
+        duration: Double,
+        aspectRatio: String,
+        onVideoGenerated: @escaping (String) -> Void = { _ in },
+        onError: @escaping (Error) -> Void = { _ in }
+    ) -> UUID {
+        // A unique identifier for this generation job.
+        let taskId = UUID()
+
+        // Get model name for notification (use modelName if available, otherwise use title)
+        let modelName = item.display.modelName ?? item.display.title
+        
+        // Use the provided image or create a placeholder
+        let thumbnailImage = image ?? createPlaceholderImage()
+        
+        // Create a notification to show progress to the user.
+        let notificationId = NotificationManager.shared.showNotification(
+            title: "Creating Your Video",
+            message: "Generating your \(item.display.title)...",
+            progress: 0.0,
+            thumbnailImage: thumbnailImage,
+            taskId: taskId,
+            modelName: modelName,
+            prompt: item.prompt,
+            originalImage: thumbnailImage
+        )
+
+        // Save initial task state before the process begins (including retry info).
+        generationTasks[taskId] = GenerationTaskInfo(
+            taskId: taskId,
+            notificationId: notificationId,
+            generatedImage: nil,
+            item: item,
+            originalImage: thumbnailImage,
+            userId: userId
+        )
+
+        // Create the worker that actually performs the API call / processing.
+        let task = VideoGenerationTask(
+            item: item,
+            image: image,
+            userId: userId,
+            duration: duration,
+            aspectRatio: aspectRatio
+        )
+
+        // MARK: Run the worker on a background thread using Swift concurrency.
+
+        // This ensures the UI stays smooth and doesn't block.
+        let backgroundTask = Task.detached { [weak self] in
+            await task.execute(
+                notificationId: notificationId,
+
+                // Called repeatedly while progress updates occur.
+                onProgress: { progress in
+                    await NotificationManager.shared.updateProgress(progress.progress, for: notificationId)
+                    await NotificationManager.shared.updateMessage(progress.message, for: notificationId)
+                },
+
+                // Called once the task returns a success or failure.
+                onComplete: { result in
+                    await self?.handleCompletion(
+                        taskId: taskId,
+                        notificationId: notificationId,
+                        result: result,
+                        onVideoGenerated: onVideoGenerated,
+                        onError: onError
+                    )
+                }
+            )
+        }
+
+        // Store a reference so we can cancel it later if needed.
+        backgroundTasks[taskId] = backgroundTask
+        return taskId
+    }
+
+    // MARK: - Handles the final result of the generation task.
+
+    // Updates state, calls completion handlers, updates the notification,
+    // and schedules cleanup.
+    private func handleCompletion(
+        taskId: UUID,
+        notificationId: UUID,
+        result: TaskResult,
+        onVideoGenerated: @escaping (String) -> Void,
+        onError: @escaping (Error) -> Void
+    ) {
+        switch result {
+        // MARK: SUCCESS CASE — Video was generated successfully.
+
+        case let .videoSuccess(videoUrl):
+            // Send the completed video URL back to the caller.
+            onVideoGenerated(videoUrl)
+
+            // Update the notification to show completion.
+            NotificationManager.shared.markAsCompleted(id: notificationId)
+
+            // Remove the notification after a few seconds, then clean up.
+            Task {
+                try? await Task.sleep(for: .seconds(5))
+                await NotificationManager.shared.dismissNotification(id: notificationId)
+                cleanupTask(taskId: taskId)
+            }
+
+        // MARK: FAILURE CASE — Task failed.
+
+        case let .failure(error):
+            // Notify UI or parent caller of the error.
+            onError(error)
+
+            // Show failure message in the notification UI.
+            NotificationManager.shared.markAsFailed(
+                id: notificationId,
+                errorMessage: "Generation failed: \(error.localizedDescription)"
+            )
+
+            // Don't cleanup task info on failure - keep it for retry functionality
+            // Only remove the background task reference
+            backgroundTasks.removeValue(forKey: taskId)
+
+        // Other result types (if added later) are simply ignored here.
+        default:
+            break
+        }
+    }
+
+    // MARK: - Cancels a running task.
+
+    // Cancels the background work and removes associated tracking data.
+    func cancelTask(taskId: UUID) {
+        backgroundTasks[taskId]?.cancel()
+        cleanupTask(taskId: taskId)
+    }
+
+    // MARK: - Removes all tracking for a given task.
+
+    // Ensures memory stays clean and nothing leaks.
+    private func cleanupTask(taskId: UUID) {
+        generationTasks.removeValue(forKey: taskId)
+        backgroundTasks.removeValue(forKey: taskId)
+    }
+    
+    // MARK: - Helper
+    
+    private func createPlaceholderImage() -> UIImage {
+        let size = CGSize(width: 1, height: 1)
+        UIGraphicsBeginImageContextWithOptions(size, false, 1.0)
+        defer { UIGraphicsEndImageContext() }
+        return UIGraphicsGetImageFromCurrentImageContext() ?? UIImage()
+    }
+}

@@ -1,6 +1,13 @@
 [
   {
     "display": {
+      "title": "Seedance 1.0 Pro Fast",
+      "imageName": "seedance10profast",
+      "modelName": "Seedance 1.0 Pro Fast"
+    }
+  },
+  {
+    "display": {
       "title": "Sora 2",
       "imageName": "sora2",
       "modelName": "Sora 2"

@@ -93,6 +93,20 @@ private let riverflow2Sizes: [String: (Int, Int)] = [
     "auto": (0, 0),
 ]
 
+// Seedance 1.0 Pro Fast - Video model dimensions
+// Supports multiple resolutions: 480p, 720p, 1080p
+// Using 1080p dimensions as default (highest quality)
+private let seedanceProFastSizes: [String: (Int, Int)] = [
+    "1:1": (1440, 1440),      // 1080p
+    "4:3": (1664, 1248),      // 1080p
+    "3:4": (1248, 1664),      // 1080p
+    "16:9": (1920, 1088),     // 1080p
+    "9:16": (1088, 1920),     // 1080p
+    "21:9": (2176, 928),      // 1080p
+    "9:21": (928, 2176),      // 1080p
+    "auto": (0, 0),
+]
+
 // MARK: - Model to Size Set Mapping
 
 /// Returns the appropriate allowed sizes dictionary for a given model identifier.
@@ -134,6 +148,9 @@ func getAllowedSizes(for model: String) -> [String: (Int, Int)] {
     if modelLower.contains("sourceful:2@1") { return riverflow2Sizes }
     // Riverflow 2 Max
     if modelLower.contains("sourceful:2@3") { return riverflow2Sizes }
+
+    // Seedance 1.0 Pro Fast
+    if modelLower.contains("bytedance:2@2") { return seedanceProFastSizes }
 
     // Default fallback to Google Nano Banana sizes
     print("[Runware] Model '\(model)' not found in size mapping, using default (Google Nano Banana) sizes")

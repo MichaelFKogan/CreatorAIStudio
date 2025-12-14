@@ -192,15 +192,43 @@ class ModelConfigurationManager {
             // ),
             "Wan 2.5": APIConfiguration(
                 provider: .runware,
-                endpoint: "https://api.wavespeed.ai/api/v3/google/nano-banana/edit",
-                runwareModel: nil,
+                endpoint: "https://api.runware.ai/v1",
+                runwareModel: "runware:201@1",
                 aspectRatio: nil,
-                wavespeedConfig: WaveSpeedConfig(
-                    outputFormat: "jpeg",
-                    enableSyncMode: false,
-                    enableBase64Output: false
-                ),
-                runwareConfig: nil
+                wavespeedConfig: nil,
+                runwareConfig: RunwareConfig(
+                    imageToImageMethod: "frameImages",
+                    strength: nil,
+                    additionalTaskParams: [
+                        "taskType": "videoInference",
+                        "deliveryMethod": "async"
+                    ],
+                    requiresDimensions: true,
+                    imageCompressionQuality: 0.9,
+                    outputFormat: "MP4",
+                    outputType: "URL",
+                    outputQuality: 85
+                )
+            ),
+            "Seedance 1.0 Pro Fast": APIConfiguration(
+                provider: .runware,
+                endpoint: "https://api.runware.ai/v1",
+                runwareModel: "bytedance:2@2",
+                aspectRatio: nil,
+                wavespeedConfig: nil,
+                runwareConfig: RunwareConfig(
+                    imageToImageMethod: "frameImages",
+                    strength: nil,
+                    additionalTaskParams: [
+                        "taskType": "videoInference",
+                        "deliveryMethod": "async"
+                    ],
+                    requiresDimensions: true,
+                    imageCompressionQuality: 0.9,
+                    outputFormat: "MP4",
+                    outputType: "URL",
+                    outputQuality: 85
+                )
             )
         ]
         
@@ -218,7 +246,8 @@ class ModelConfigurationManager {
             "Sora 2": ["Text to Video", "Image to Video", "Audio"],
             "Google Veo 3": ["Text to Video", "Image to Video", "Audio"],
             "Kling AI": ["Text to Video", "Image to Video"],
-            "Wan 2.5": ["Text to Video", "Image to Video", "Audio"]
+            "Wan 2.5": ["Text to Video", "Image to Video", "Audio"],
+            "Seedance 1.0 Pro Fast": ["Text to Video", "Image to Video"]
         ]
         
         // Initialize model descriptions mapping
@@ -239,7 +268,8 @@ class ModelConfigurationManager {
             "Sora 2": "Sora 2 is designed for cinematic-quality video generation with extremely stable motion, improved physics accuracy, expressive character animation, and rich scene detail. Perfect for storytelling, ads, and high-impact creative content.",
             "Google Veo 3": "Veo 3 focuses on clarity, smooth motion, and natural lighting. It excels at dynamic environments, realistic textures, and clean camera transitions—ideal for lifestyle clips, outdoor scenes, product demos, and fast-paced creative content.",
             "Kling AI": "Kling AI specializes in hyper-realistic motion and high-speed action scenes. With sharp detail and stable, precise frame-to-frame movement, it's a strong choice for sports, sci-fi shots, fast motion, and large sweeping environments.",
-            "Wan 2.5": "Wan 2.5 delivers dramatic cinematic visuals, advanced character performance, atmospheric effects, and stylized world-building. It shines in fantasy, anime, surreal scenes, and richly creative storytelling."
+            "Wan 2.5": "Wan 2.5 delivers dramatic cinematic visuals, advanced character performance, atmospheric effects, and stylized world-building. It shines in fantasy, anime, surreal scenes, and richly creative storytelling.",
+            "Seedance 1.0 Pro Fast": "Seedance 1.0 Pro Fast delivers accelerated video generation while maintaining the high visual quality and cinematic capabilities of Seedance 1.0 Pro. Optimized for faster iteration and production workflows, it supports dynamic camera movements, multiple aspect ratios, and resolutions up to 1080p. Perfect for rapid prototyping, quick content creation, and efficient video production."
         ]
         
         // Initialize model image names mapping
@@ -255,7 +285,8 @@ class ModelConfigurationManager {
             "Sora 2": "sora2",
             "Google Veo 3": "veo3",
             "Kling AI": "klingai",
-            "Wan 2.5": "wan"
+            "Wan 2.5": "wan25",
+            "Seedance 1.0 Pro Fast": "seedance10profast"
         ]
     }
     

@@ -139,8 +139,9 @@ class ProfileViewModel: ObservableObject {
     private var modelImagesCache: [String: (images: [UserImage], fetchedAt: Date)] = [:]
     private let modelCacheStaleInterval: TimeInterval = 10 * 60 // 10 minutes
     
-    // Notification observer for new image saves
+    // Notification observers for new media saves
     private var imageSavedObserver: NSObjectProtocol?
+    private var videoSavedObserver: NSObjectProtocol?
 
     var userId: String? {
         didSet {
@@ -162,11 +163,15 @@ class ProfileViewModel: ObservableObject {
     init() {
         decodeCacheStore()
         setupImageSavedNotification()
+        setupVideoSavedNotification()
     }
     
     deinit {
-        // Remove notification observer when view model is deallocated
+        // Remove notification observers when view model is deallocated
         if let observer = imageSavedObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
+        if let observer = videoSavedObserver {
             NotificationCenter.default.removeObserver(observer)
         }
     }
@@ -187,7 +192,21 @@ class ProfileViewModel: ObservableObject {
         print("✅ ProfileViewModel: Notification observer set up successfully")
     }
     
-    /// Handles the notification when a new image is saved to the database
+    /// Sets up notification observer for when new videos are saved to the database
+    private func setupVideoSavedNotification() {
+        print("📢 ProfileViewModel: Setting up VideoSavedToDatabase notification observer")
+        videoSavedObserver = NotificationCenter.default.addObserver(
+            forName: NSNotification.Name("VideoSavedToDatabase"),
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            print("📢 ProfileViewModel: Video notification received in observer closure")
+            self?.handleImageSavedNotification(notification) // Reuse same handler
+        }
+        print("✅ ProfileViewModel: Video notification observer set up successfully")
+    }
+    
+    /// Handles the notification when a new image or video is saved to the database
     /// Fetches the latest image immediately so it appears on the Profile page
     private func handleImageSavedNotification(_ notification: Notification) {
         print("📢 ProfileViewModel received ImageSavedToDatabase notification")
@@ -202,13 +221,15 @@ class ProfileViewModel: ObservableObject {
             return
         }
         
-        guard let imageUrl = userInfo["imageUrl"] as? String else {
-            print("⚠️ Notification missing imageUrl")
+        // Support both imageUrl and videoUrl (videos use videoUrl key)
+        let mediaUrl = (userInfo["imageUrl"] as? String) ?? (userInfo["videoUrl"] as? String)
+        guard let mediaUrl = mediaUrl else {
+            print("⚠️ Notification missing imageUrl or videoUrl")
             return
         }
         
         let imageId = userInfo["imageId"] as? String
-        print("📢 Notification details - savedUserId: \(savedUserId), imageId: \(imageId ?? "nil"), imageUrl: \(imageUrl)")
+        print("📢 Notification details - savedUserId: \(savedUserId), imageId: \(imageId ?? "nil"), mediaUrl: \(mediaUrl)")
         print("📢 Current ProfileViewModel userId: \(userId ?? "nil")")
         
         // If userId is not set yet, we'll check again after a short delay
@@ -259,9 +280,9 @@ class ProfileViewModel: ObservableObject {
             }
             
             // Priority 2: Try fetching by URL
-            await fetchAndAddImage(imageUrl: imageUrl)
+            await fetchAndAddImage(imageUrl: mediaUrl)
             let imageWasAdded = await MainActor.run {
-                return userImages.contains(where: { $0.image_url == imageUrl })
+                return userImages.contains(where: { $0.image_url == mediaUrl })
             }
             
             // Priority 3: Fall back to fetching the latest image

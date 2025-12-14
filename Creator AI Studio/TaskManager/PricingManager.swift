@@ -22,6 +22,7 @@ class PricingManager {
             "Z-Image-Turbo": 0.003,
             "Wavespeed Ghibli": 0.005,
             // Video Models
+            "Seedance 1.0 Pro Fast": 0.15,
             "Sora 2": 0.8,
             "Google Veo 3": 1.2,
             "Kling AI": 0.8,

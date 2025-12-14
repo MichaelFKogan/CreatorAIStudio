@@ -425,6 +425,311 @@ func sendImageToRunware(
     return runwareResponse
 }
 
+// MARK: - Send Video to Runware
+
+func sendVideoToRunware(
+    image: UIImage?,
+    prompt: String,
+    model: String,
+    aspectRatio: String? = nil,
+    duration: Double = 5.0,
+    isImageToVideo: Bool = false,
+    runwareConfig: RunwareConfig? = nil,
+    onPollingProgress: ((Int, Int) -> Void)? = nil
+) async throws -> RunwareResponse {
+    print("[Runware] Preparing video request…")
+    print("[Runware] Model: \(model)")
+    print("[Runware] Prompt: \(prompt)")
+    print("[Runware] Duration: \(duration) seconds")
+    print("[Runware] Mode: \(isImageToVideo ? "Image-to-Video" : "Text-to-Video")")
+    if let config = runwareConfig {
+        print("[Runware] Runware Config: \(config)")
+    }
+
+    // MARK: - Determine width/height
+
+    // Get model-specific allowed sizes
+    let allowedSizes = getAllowedSizes(for: model)
+
+    var width = 1920
+    var height = 1088
+    if let ratio = aspectRatio?.trimmingCharacters(in: .whitespacesAndNewlines),
+       let (w, h) = allowedSizes[ratio]
+    {
+        width = w
+        height = h
+        print("[Runware] Aspect ratio: \(ratio) -> \(width)x\(height)")
+    } else {
+        print("[Runware] Using default 1920x1088")
+    }
+
+    // MARK: - Build task body
+
+    var task: [String: Any] = [
+        "taskType": "videoInference",
+        "taskUUID": UUID().uuidString,
+        "model": model,
+        "positivePrompt": prompt,
+        "duration": duration,
+        "width": width,
+        "height": height,
+        "includeCost": true,
+    ]
+
+    // MARK: - Image-to-video: handle frame images
+
+    if isImageToVideo, let seedImage = image {
+        // Seedance 1.0 Pro Fast uses frameImages with first frame only
+        let method = runwareConfig?.imageToImageMethod ?? "frameImages"
+        
+        if method == "frameImages" {
+            let orientedImage = seedImage.fixedOrientation()
+            let compressionQuality = runwareConfig?.imageCompressionQuality ?? 0.9
+
+            guard let jpegData = orientedImage.jpegData(compressionQuality: compressionQuality) else {
+                throw NSError(
+                    domain: "RunwareAPI", code: -1,
+                    userInfo: [
+                        NSLocalizedDescriptionKey: "Failed to convert image to JPEG",
+                    ]
+                )
+            }
+            let base64 = jpegData.base64EncodedString()
+            let dataURI = "data:image/jpeg;base64,\(base64)"
+
+            // Upload image first to get UUID (required for frameImages)
+            let imageUUID = try await uploadImageToRunware(image: seedImage)
+            
+            task["frameImages"] = [
+                [
+                    "inputImage": imageUUID,
+                    "frame": "first"
+                ]
+            ]
+            print("[Runware] Image-to-video enabled with frameImages (first frame): \(imageUUID)")
+        }
+    }
+
+    // MARK: - Add output format parameters
+
+    // Add output format if specified
+    if let outputFormat = runwareConfig?.outputFormat {
+        task["outputFormat"] = outputFormat
+        print("[Runware] Output format: \(outputFormat)")
+    }
+
+    // Add output type(s) if specified
+    if let outputType = runwareConfig?.outputType {
+        task["outputType"] = outputType
+        print("[Runware] Output type: \(outputType)")
+    }
+
+    // Add any additional model-specific parameters
+    if let additionalParams = runwareConfig?.additionalTaskParams {
+        for (key, value) in additionalParams {
+            // Don't override taskType if it's already set
+            if key != "taskType" {
+                task[key] = value
+            }
+        }
+        print("[Runware] Added \(additionalParams.count) additional task parameters")
+    }
+
+    // MARK: - Provider-specific settings for ByteDance models
+
+    // Seedance 1.0 Pro Fast supports cameraFixed parameter
+    if model.lowercased().contains("bytedance:2@2") {
+        var providerSettings: [String: Any] = [:]
+        var bytedanceSettings: [String: Any] = [:]
+        // cameraFixed defaults to false (allows camera movement)
+        // Can be set to true if needed for static shots
+        bytedanceSettings["cameraFixed"] = false
+        providerSettings["bytedance"] = bytedanceSettings
+        task["providerSettings"] = providerSettings
+        print("[Runware] Added ByteDance provider settings")
+    }
+
+    // MARK: - Wrap task in authentication array (required!)
+
+    let requestBody: [[String: Any]] = [
+        ["taskType": "authentication", "apiKey": runwareApiKey],
+        task,
+    ]
+
+    let url = URL(string: "https://api.runware.ai/v1")!
+    var request = URLRequest(url: url)
+    request.httpMethod = "POST"
+    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+    request.httpBody = try JSONSerialization.data(withJSONObject: requestBody)
+
+    // MARK: - Send request
+
+    let (data, response) = try await URLSession.shared.data(for: request)
+
+    guard let http = response as? HTTPURLResponse,
+          (200 ... 299).contains(http.statusCode)
+    else {
+        print(
+            "[Runware] HTTP error: \((response as? HTTPURLResponse)?.statusCode ?? -1)"
+        )
+        throw NSError(
+            domain: "RunwareAPI",
+            code: (response as? HTTPURLResponse)?.statusCode ?? -1,
+            userInfo: [
+                NSLocalizedDescriptionKey:
+                    "Runware returned HTTP \((response as? HTTPURLResponse)?.statusCode ?? -1)",
+            ]
+        )
+    }
+
+    // Debug: print raw response
+    if let jsonString = String(data: data, encoding: .utf8) {
+        print("[Runware] Video response (first 1000 chars): \(String(jsonString.prefix(1000)))")
+    }
+    
+    let decoder = JSONDecoder()
+    decoder.keyDecodingStrategy = .convertFromSnakeCase
+    let runwareResponse = try decoder.decode(RunwareResponse.self, from: data)
+    
+    // Check if this is an async task that needs polling
+    let isAsync = runwareConfig?.additionalTaskParams?["deliveryMethod"] as? String == "async"
+    let taskUUID = task["taskUUID"] as? String
+    
+    // If async and no URL yet, poll for completion
+    if isAsync, let taskUUID = taskUUID, runwareResponse.data.first?.imageURL == nil {
+        print("[Runware] Async task detected, polling for completion...")
+        print("[Runware] Task UUID: \(taskUUID)")
+        
+        // Poll for the result
+        let maxPollingAttempts = 120 // 10 minutes max (120 * 5 seconds)
+        let pollInterval: UInt64 = 5_000_000_000 // 5 seconds
+        
+        // Initial delay before first poll (videos take time to start processing)
+        print("[Runware] Waiting 10 seconds before first poll...")
+        try await Task.sleep(nanoseconds: 10_000_000_000) // 10 seconds
+        
+        for attempt in 0..<maxPollingAttempts {
+            let attemptNumber = attempt + 1
+            print("[Runware] Polling attempt \(attemptNumber)/\(maxPollingAttempts)...")
+            
+            // Report polling progress
+            onPollingProgress?(attemptNumber, maxPollingAttempts)
+            
+            // Poll using the task UUID
+            let pollResponse = try await pollRunwareTaskStatus(taskUUID: taskUUID)
+            
+            // Check if we have a video URL in the response
+            if let first = pollResponse.data.first, let urlStr = first.imageURL {
+                print("[Runware] Video URL received after polling: \(urlStr)")
+                return pollResponse
+            }
+            
+            // Check for error in response
+            if let error = pollResponse.error, !error.isEmpty {
+                throw NSError(
+                    domain: "RunwareAPI", code: -1,
+                    userInfo: [NSLocalizedDescriptionKey: "Video generation failed: \(error)"]
+                )
+            }
+            
+            // Check status - might be in the data array or top-level
+            if let status = pollResponse.status {
+                let statusLower = status.lowercased()
+                if statusLower == "failed" || statusLower == "error" {
+                    throw NSError(
+                        domain: "RunwareAPI", code: -1,
+                        userInfo: [NSLocalizedDescriptionKey: pollResponse.error ?? "Video generation failed"]
+                    )
+                }
+                if statusLower == "success" || statusLower == "completed" {
+                    // If status is success but no URL yet, continue polling
+                    print("[Runware] Status: \(status), but no URL yet, continuing to poll...")
+                } else {
+                    print("[Runware] Status: \(status), continuing to poll...")
+                }
+            } else {
+                // No status field, assume still processing if no URL
+                print("[Runware] No status field, continuing to poll...")
+            }
+            
+            // Sleep before next poll (except on last attempt)
+            if attempt < maxPollingAttempts - 1 {
+                try await Task.sleep(nanoseconds: pollInterval)
+            }
+        }
+        
+        throw NSError(
+            domain: "RunwareAPI", code: -1,
+            userInfo: [NSLocalizedDescriptionKey: "Timed out waiting for video generation after \(maxPollingAttempts * 5) seconds"]
+        )
+    }
+
+    // For sync requests, expect URL immediately
+    guard let first = runwareResponse.data.first,
+          let urlStr = first.imageURL
+    else {
+        // If async wasn't detected but no URL, provide more helpful error
+        let errorMsg = isAsync 
+            ? "Async task started but polling failed. Task UUID: \(taskUUID ?? "unknown")"
+            : "No video URL returned. Response status: \(runwareResponse.status ?? "unknown"), Error: \(runwareResponse.error ?? "none")"
+        throw NSError(
+            domain: "RunwareAPI", code: -1,
+            userInfo: [NSLocalizedDescriptionKey: errorMsg]
+        )
+    }
+
+    print("[Runware] Video URL: \(urlStr)")
+    return runwareResponse
+}
+
+// MARK: - Poll Runware Task Status
+
+func pollRunwareTaskStatus(taskUUID: String) async throws -> RunwareResponse {
+    // Use getResponse task type to poll for async task status
+    let task: [String: Any] = [
+        "taskType": "getResponse",
+        "taskUUID": taskUUID
+    ]
+    
+    let requestBody: [[String: Any]] = [
+        ["taskType": "authentication", "apiKey": runwareApiKey],
+        task,
+    ]
+    
+    let url = URL(string: "https://api.runware.ai/v1")!
+    var request = URLRequest(url: url)
+    request.httpMethod = "POST"
+    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+    request.httpBody = try JSONSerialization.data(withJSONObject: requestBody)
+    
+    let (data, response) = try await URLSession.shared.data(for: request)
+    
+    guard let http = response as? HTTPURLResponse,
+          (200 ... 299).contains(http.statusCode)
+    else {
+        // Log the error response for debugging
+        if let errorData = String(data: data, encoding: .utf8) {
+            print("[Runware] Polling error response: \(errorData)")
+        }
+        throw NSError(
+            domain: "RunwareAPI",
+            code: (response as? HTTPURLResponse)?.statusCode ?? -1,
+            userInfo: [
+                NSLocalizedDescriptionKey: "Runware polling returned HTTP \((response as? HTTPURLResponse)?.statusCode ?? -1)",
+            ]
+        )
+    }
+    
+    // Debug: print raw response
+    if let jsonString = String(data: data, encoding: .utf8) {
+        print("[Runware] Polling response: \(String(jsonString.prefix(500)))")
+    }
+    
+    let decoder = JSONDecoder()
+    decoder.keyDecodingStrategy = .convertFromSnakeCase
+    return try decoder.decode(RunwareResponse.self, from: data)
+}
+
 // MARK: - UIImage Extension
 
 extension UIImage {
