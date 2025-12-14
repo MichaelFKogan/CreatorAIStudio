@@ -133,21 +133,38 @@ struct PhotoFilterDetailView: View {
                     // MARK: - Cost Section
                     HStack {
                         Spacer()
-                        HStack {
-                            Image(systemName: "tag.fill")
-                                .font(.system(size: 13, weight: .semibold))
+                        HStack(spacing: 6) {
+                            Image(systemName: "diamond.fill")
                                 .foregroundStyle(
                                     LinearGradient(
                                         colors: [.blue, .purple],
                                         startPoint: .topLeading,
-                                        endPoint: .bottomTrailing))
+                                        endPoint: .bottomTrailing)
+                                )
+                                .font(.system(size: 12))
 
-                            Text("Cost: $\(NSDecimalNumber(decimal: item.resolvedCost ?? 0).stringValue)")
+                            Text("\(item.resolvedCost.credits)")
                                 .font(.system(size: 16, weight: .semibold, design: .rounded))
                                 .foregroundColor(.primary)
+                            Text("credits")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
                         }
                         .padding(.horizontal, 12)
                         .padding(.vertical, 6)
+                        .background(
+                            RoundedRectangle(cornerRadius: 20)
+                                .fill(Color.secondary.opacity(0.1))
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 20)
+                                .strokeBorder(
+                                    LinearGradient(
+                                        colors: [.blue, .purple],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing)
+                                )
+                        )
                     }
                     .padding(.trailing, 6)
 
