@@ -8,3 +8,283 @@ Prompt #27: Add Character to Scene
 
 Add a realistic-looking homeless man into this image. He has long brown hair and a long messy beard, and looks like he hasn't washed for months. He's wearing ripped tracksuit bottoms, boots, a checked shirt and a brown jacket. He has just walked into the bedroom and is carrying a small plastic bag with random belongings inside.
 
+
+
+
+I finally cracked an img2img prompt that actually keeps your face intact (multi-style test)
+
+https://www.reddit.com/r/ChatGPT_Gemini/comments/1pl2zo7/i_finally_cracked_an_img2img_prompt_that_actually/
+
+
+{ "image_generation_task": { "task_type": "img2img", "input_source": "uploaded_user_image", "constraint": "preserve_full_likeness",
+
+"base_configuration": { "medium": { "substrate": "digital animation frame", "type": "finished studio rendering", "quality": "cinematic still" }, "rendering": { "resolution": "4K", "detail_level": "ultra-high", "lighting": "studio specific cinematic lighting" } },
+
+"composition_elements": { "framing": "portrait or medium shot focusing on the subject from input", "focus": "high fidelity character translation into target style", "background": "detailed scenic background appropriate to the chosen animation style" },
+
+"style_variations": [ { "id": "variant_01_ghibli_studio", "studio_style": "Studio Ghibli / Hayao Miyazaki", "key_visual_elements": [ "hand-painted watercolor backgrounds", "soft, naturalistic color palette", "gentle line art", "nostalgic and whimsical atmosphere", "beautiful pastoral or fantasy setting", "warm, gentle lighting" ] }, { "id": "variant_02_disney_renaissance", "studio_style": "Classic Disney 2D Animation (Renaissance Era)", "key_visual_elements": [ "fluid hand-drawn animation style", "expressive character design with clean lines", "vibrant and magical color palette", "fairytale kingdom atmosphere", "detailed painted background with depth", "theatrical lighting with magical glow" ] }, { "id": "variant_03_pixar_3d", "studio_style": "Pixar Animation Studios CGI", "key_visual_elements": [ "high-end 3D CGI render", "photorealistic textures (skin, fabric, hair)", "stylized yet believable character proportions", "volumetric lighting and cinematic depth of field", "rich, deep color grading", "emotive and tactile feel" ] }, { "id": "variant_04_japanese_anime_modern", "studio_style": "Modern Japanese TV Anime (General)", "key_visual_elements": [ "sharp, clean line art", "vibrant cel-shading", "dynamic and energetic atmosphere", "highly stylized large expressive eyes", "detailed modern urban or high-fantasy background", "dramatic lighting with lens flares or effects" ] } ]
+
+} }
+
+
+
+
+----------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------
+
+
+
+
+{
+  "Objective": "Generate a hyper-realistic 8K chiaroscuro-style portrait of a woman based on the provided reference image.",
+  
+  "Identity_Safety": "Maintain facial features, hairstyle, and general appearance consistent with the provided reference image without altering identity.",
+
+  "Subject": {
+    "Gender": "Female",
+    "Appearance": {
+      "Hair": "Straight hair falling naturally across her forehead",
+      "Pose": "Gazing slightly upward and to the side",
+      "Expression": "Soft, calm, and introspective",
+      "Lips": "Glossy, slightly parted, catching subtle highlights"
+    }
+  },
+
+  "Lighting": {
+    "Style": "Chiaroscuro dramatic contrast",
+    "Key_Effects": [
+      "A thin ray of sunlight illuminating her eyes and upper cheek",
+      "Deep, rich shadows covering the background and lower half of her face",
+      "Strong separation between light and dark regions",
+      "High emotional and visual depth"
+    ]
+  },
+
+  "Scene": {
+    "Background": "Minimal, falling into dark shadow",
+    "Atmosphere": "Intimate, dramatic, painterly, cinematic"
+  },
+
+  "Visual_Style": {
+    "Resolution": "8K hyper-realistic",
+    "Aesthetic": [
+      "Ultra-detailed skin texture",
+      "Natural highlights on lips and eyes",
+      "Soft hair detailing",
+      "Fine contrast control typical of chiaroscuro portraiture"
+    ],
+    "Color_Profile": "Warm natural skin tones against deep shadow background"
+  },
+
+  "Output_Requirements": {
+    "Format": "Image",
+    "Orientation": "Portrait",
+    "Quality": "High-end cinematic and photographic realism"
+  }
+}
+
+
+
+
+{
+  "meta_data": {
+    "calculated_aspect_ratio": "--ar {argument name="aspect ratio" default="4:5"}",
+    "crop_tightness": "Waist-up portrait, subject seated",
+    "image_fidelity": "Moderate grain visible in shadow areas, soft focus typical of front-facing smartphone camera indoors"
+  },
+  "subject_mapping": {
+    "biometric_anchors": {
+      "apparent_age_precise": "{argument name="age" default="Late teens to early 20s"}",
+      "ethnicity_specifics": "Fair to light tan skin tone with warm undertones; freckling present on nose bridge and cheeks",
+      "body_mass_distribution": "Slender build, prominent clavicles visible, soft tissue distribution on upper arms consistent with relaxed posture"
+    },
+    "face_inventory": {
+      "asymmetry_notes": "Subject's head tilted slightly to their right. Subject's right eyebrow (viewer's left) appears slightly lower than the left. Upper lip peak slightly sharper on subject's right side.",
+      "dermatological_map": [
+        "Cluster of light freckles across the bridge of the nose and extending to upper cheeks",
+        "Slight redness/flushing on cheeks and nose tip",
+        "Smooth texture on forehead with high reflectivity"
+      ],
+      "eye_details_precise": "Light green/hazel irises. Catchlights present in the upper-right quadrant (viewer's perspective) of both pupils. Dark, defined lash line, possibly mascara.",
+      "mouth_state_precise": "Lips parted approximately 3-5mm. Upper central incisors visible. Lower lip full with glossy finish reflecting light centrally."
+    },
+    "hair_strand_analysis": {
+      "root_status": "Uniform dark brown/black at roots, consistent with ends (no visible regrowth line).",
+      "chaos_inventory": "Micro-bangs (baby bangs) cut bluntly above eyebrows. Several stray hairs (flyaways) projecting from the crown against the beige wall. Strands curving inward to touch the jawline on both sides.",
+      "contact_points": "Hair rests on the back of the neck and drapes over the top of the couch cushions behind the head."
+    },
+    "torso_mechanics": {
+      "posture_gravity_effect": "Subject is leaning back into a soft surface (couch), causing slight rounding of shoulders forward. Neck slightly compressed due to backward lean.",
+      "chest_topography": "Fabric stretched taut across the bust line. Soft gradient shadows indicate contour. No deep cleavage visible due to high crew-neck cut.",
+      "skin_surface_inventory": "Prominent suprasternal notch (hollow of throat). Smooth skin texture on exposed arms and chest."
+    }
+  },
+  "attire_inventory_and_physics": {
+    "layer_1_top": {
+      "item_identity": "White 'baby tee' (cropped t-shirt) with text",
+      "material_weave": "Cotton or cotton-blend jersey, lightweight, slightly semi-sheer",
+      "stress_and_fold_mapping": [
+        "Horizontal tension wrinkles pulling from armpits across the upper chest",
+        "Diagonal folding on the subject's right side torso due to arm movement/pointing",
+        "Fabric bunching s
+]
+}
+}
+
+
+
+
+
+
+
+
+
+A joyful celebration portrait of a woman tossing colorful confetti into the air, captured mid-motion. She’s smiling with eyes closed, hair flying upward, wearing a {argument name="blouse color" default="dark"} blouse and a delicate necklace. Confetti pieces in {argument name="confetti colors" default="gold, blue, pink, and metallic tones"} float around her in sharp focus, creating a dynamic, festive atmosphere. Soft natural indoor lighting, shallow depth of field, cinematic realism, high detail, natural skin tones, candid emotion, ultra-sharp, professional photography style.
+
+
+
+
+{
+  "scene": {
+    "type": "enchanted studio_photoshoot",
+    "background": {
+      "color": "dreamy gradient of lavender mist fading into cotton-candy pink with tiny floating sparkles",
+      "texture": "velvety seamless backdrop with subtle iridescent sheen",
+      "style": "whimsical, ethereal, high-fashion fairy tale"
+    }
+  },
+  "subject": {
+    "type": "female model",
+    "pose": "gracefully lying on stomach, propped on elbows like a mischievous fairy queen, head tilted with playful charm toward camera",
+    "expression": "soft mischievous smile, twinkling eyes, subtle magical confidence",
+    "hair": {
+      "style": "long flowing waves with delicate pastel rainbow highlights",
+      "finish": "silky, glowing, as if dusted with pixie shimmer"
+    },
+    "wardrobe": {
+      "outfit_type": "sparkling fairy-princess bodysuit",
+      "color": "iridescent blend of soft lilac, mint, and rose quartz that shifts in the light",
+      "material": "glistening stretch tulle layered over matte satin with scattered micro-crystals",
+      "fit": "form-fitting yet floaty, magical, modern fantasy"
+    },
+    "accessories": {
+      "glasses": "none",
+      "jewelry": "delicate crystal ear cuffs and a tiny glowing necklace"
+    }
+  },
+  "product": {
+    "type": "magical fairy wand",
+    "model": "slender crystal wand with glowing star tip",
+    "color": "translucent rose-quartz crystal shaft with soft pastel rainbow glow and gold filigree",
+    "details": "gentle inner light, floating micro-sparkles inside the crystal, delicate starburst at the tip that emits tiny holographic sparkles",
+    "finish": "ethereal, luminous, looks like it actually works"
+  },
+  "interaction": {
+    "action": "model delicately holding the glowing fairy wand in both hands, tip pointed playfully toward camera as if about to cast a spell",
+    "grip": "light and elegant, fingers wrapped gently around the crystal shaft",
+    "focus": "wand clearly visible, glowing, unobstructed, stealing the spotlight"
+  },
+  "lighting": {
+    "setup": "soft enchanted studio lighting with fairy-dust rim light",
+    "key_light": "large diffused softbox with faint pastel pink-lavender tint from front-left",
+    "fill_light": "gentle mint fill from right plus subtle rim light that makes hair and wand sparkle",
+    "shadows": "ultra-soft, dreamy, almost none",
+    "skin_tone": "dewy, luminous, sprinkled with magic"
+  },
+  "camera": {
+    "lens": "50mm prime",
+    "aperture": "f/2.0",
+    "angle": "slightly low eye-level, looking up at her like she’s about to grant a wish",
+    "depth_of_field": "buttery shallow, background melts into fairy mist, subject and wand tack-sharp"
+  },
+  "style": [
+    "ultra photorealistic yet undeniably magical",
+    "high-end fantasy fashion editorial",
+    "whimsical commercial enchantment",
+    "dewy natural skin with subtle glow",
+    "floating sparkles and soft bokeh orbs",
+    "accurate glowing wand proportions"
+  ],
+  "resolution": {
+ "}
+
+
+
+
+
+
+
+
+
+ {
+  "prompt": "Hyper-realistic 8K portrait of a futuristic fashion model in neon-lit cyberpunk Tokyo street at night. She wears a sleek metallic silver bodysuit with glowing pink neon accents, high-slit skirt, and holographic accessories. Dynamic pose: leaning against a rainy pink coupe car, hair in wet wavy balayage (pink-cyan highlights), confident gaze over shoulder. Lighting: dramatic golden hour neon reflections on wet asphalt, bokeh crowd blur. Style: high-fashion editorial, cinematic, shallow DoF, warm-cool contrast.",
+  "style": ["Cyberpunk Fashion", "Neon Glow", "2026 Trend"],
+  "resolution": "2160x3840 (9:16 vertical)",
+  "negative": "blurry, low-res, cartoonish"
+}
+
+
+
+
+
+
+
+
+{
+  "source_image_analysis": {
+    "subject": {
+      "demographics": "Young woman, pale skin tone",
+      "hair": {
+        "color": "Platinum blonde / Silver",
+        "style": "Long, straight, draped over shoulders"
+      },
+      "facial_features": {
+        "eyewear": "Thin, round wire-rimmed glasses (silver or gold frame)",
+        "expression": "Playful aggressive 'hissing' face, teeth bared, nose slightly scrunched",
+        "makeup": "Natural look, soft pink lip"
+      }
+    },
+    "apparel": {
+      "headwear": "Pink fuzzy cat ear headband",
+      "clothing": {
+        "type": "Chunky knit sweater / Jumper",
+        "color": "Beige/Cream base",
+        "pattern": "Nordic or Fair Isle style geometric zigzag stripes in navy blue, brown, and grey"
+      }
+    },
+    "pose_and_action": {
+      "type": "Mirror selfie",
+      "hands": {
+        "left_hand": "Holding a white smartphone (iPhone model with dual cameras)",
+        "right_hand": "Raised in a playful 'claw' or 'scratch' gesture near face"
+      },
+      "body_language": "Casual, energetic, playful"
+    },
+    "environment": {
+      "setting": "Bedroom / Dorm room",
+      "background_elements": [
+        "White walls decorated with various posters and photos",
+        "Warm white LED fairy lights draped along the wall (creating soft bokeh)",
+        "Bed with pink and floral bedding visible in background",
+        "Doorway or mirror frame on the right"
+      ]
+    },
+    "camera_and_technical": {
+      "camera_model": "Simulated Shot on iPhone 15 Pro Max or Fujifilm X100V",
+      "lens_specs": "24mm wide-angle lens, f/1.8 aperture",
+      "lighting_setup": {
+        "type": "Mixed lighting",
+        "key_light": "Soft diffuse daylight from window (simulated)",
+        "ambient": "Warm tungsten glow from background fairy lights",
+        "effect": "Soft highlights on hair, gentle shadows on face"
+      },
+      "film_emulation": "Kodak Portra 400",
+      "visual_fidelity": {
+        "resolution": "8k, photorealistic",
+        "details": "High texture fidelity on knit sweater and hair strands",
+        "artifacts": "Slight film grain, subtle bloom on fairy lights, natural lens flare"
+      },
+      "color_grading": "Soft pastel palette, low contrast, desaturated shadows, warm cozy tones",
+      "composition": "Eye-level shot, rule of thirds, mirror reflection perspective"
+    }
+
