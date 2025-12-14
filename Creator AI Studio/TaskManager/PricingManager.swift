@@ -1,6 +1,6 @@
 import Foundation
 
-/// Centralized pricing manager for image generation models.
+/// Centralized pricing manager for image and video generation models.
 /// Maps model names to their current prices, eliminating the need to update
 /// prices in hundreds of JSON files when pricing changes.
 class PricingManager {
@@ -21,6 +21,11 @@ class PricingManager {
             "FLUX.1 Kontext [max]": 0.08,
             "Z-Image-Turbo": 0.003,
             "Wavespeed Ghibli": 0.005,
+            // Video Models
+            "Sora 2": 0.8,
+            "Google Veo 3": 1.2,
+            "Kling AI": 0.8,
+            "Wan 2.5": 1.0,
         ]
     }
     

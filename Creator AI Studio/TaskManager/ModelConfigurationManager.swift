@@ -1,6 +1,6 @@
 import Foundation
 
-/// Centralized configuration manager for image generation models.
+/// Centralized configuration manager for image and video generation models.
 /// Maps model names to their API configurations and capabilities, eliminating the need
 /// to update hundreds of JSON files when API endpoints, models, or capabilities change.
 class ModelConfigurationManager {
@@ -152,6 +152,55 @@ class ModelConfigurationManager {
                     enableBase64Output: false
                 ),
                 runwareConfig: nil
+            ),
+            // Video Models
+            // "Sora 2": APIConfiguration(
+            //     provider: .runware,
+            //     endpoint: "https://api.wavespeed.ai/api/v3/google/nano-banana/edit",
+            //     runwareModel: nil,
+            //     aspectRatio: nil,
+            //     wavespeedConfig: WaveSpeedConfig(
+            //         outputFormat: "jpeg",
+            //         enableSyncMode: false,
+            //         enableBase64Output: false
+            //     ),
+            //     runwareConfig: nil
+            // ),
+            // "Google Veo 3": APIConfiguration(
+            //     provider: .runware,
+            //     endpoint: "https://api.wavespeed.ai/api/v3/google/nano-banana/edit",
+            //     runwareModel: nil,
+            //     aspectRatio: nil,
+            //     wavespeedConfig: WaveSpeedConfig(
+            //         outputFormat: "jpeg",
+            //         enableSyncMode: false,
+            //         enableBase64Output: false
+            //     ),
+            //     runwareConfig: nil
+            // ),
+            // "Kling AI": APIConfiguration(
+            //     provider: .runware,
+            //     endpoint: "https://api.wavespeed.ai/api/v3/google/nano-banana/edit",
+            //     runwareModel: nil,
+            //     aspectRatio: nil,
+            //     wavespeedConfig: WaveSpeedConfig(
+            //         outputFormat: "jpeg",
+            //         enableSyncMode: false,
+            //         enableBase64Output: false
+            //     ),
+            //     runwareConfig: nil
+            // ),
+            "Wan 2.5": APIConfiguration(
+                provider: .runware,
+                endpoint: "https://api.wavespeed.ai/api/v3/google/nano-banana/edit",
+                runwareModel: nil,
+                aspectRatio: nil,
+                wavespeedConfig: WaveSpeedConfig(
+                    outputFormat: "jpeg",
+                    enableSyncMode: false,
+                    enableBase64Output: false
+                ),
+                runwareConfig: nil
             )
         ]
         
@@ -164,7 +213,12 @@ class ModelConfigurationManager {
             "FLUX.1 Kontext [pro]": ["Text to Image", "Image to Image"],
             "FLUX.1 Kontext [max]": ["Text to Image", "Image to Image"],
             "Z-Image-Turbo": ["Text to Image"],
-            "Wavespeed Ghibli": ["Image to Image"]
+            "Wavespeed Ghibli": ["Image to Image"],
+            // Video Models
+            "Sora 2": ["Text to Video", "Image to Video", "Audio"],
+            "Google Veo 3": ["Text to Video", "Image to Video", "Audio"],
+            "Kling AI": ["Text to Video", "Image to Video"],
+            "Wan 2.5": ["Text to Video", "Image to Video", "Audio"]
         ]
         
         // Initialize model descriptions mapping
@@ -180,7 +234,12 @@ class ModelConfigurationManager {
             "FLUX.1 Kontext [pro]": "A professional-grade model from Black Forest Labs built for sharp detail, consistent anatomy, accurate lighting, and clean visual structure. Excellent for portraits, branding images, product photography, and polished commercial-quality artwork.",
             "FLUX.1 Kontext [max]": "The highest-performing model in the Kontext family—built for complex scenes, rich textures, dramatic lighting, and maximum realism. Ideal for cinematic artwork, large compositions, and high-impact creative visuals.",
 
-            "Z-Image-Turbo": "Z-Image-Turbo is an ultra-fast image generation model developed by Tongyi-MAI, Alibaba's advanced AI research division. Built using modern distillation techniques, it's designed to deliver high-quality results at exceptional speed and low cost. Ideal for quick creative iterations, high-volume workflows, and fast drafts without sacrificing clarity."
+            "Z-Image-Turbo": "Z-Image-Turbo is an ultra-fast image generation model developed by Tongyi-MAI, Alibaba's advanced AI research division. Built using modern distillation techniques, it's designed to deliver high-quality results at exceptional speed and low cost. Ideal for quick creative iterations, high-volume workflows, and fast drafts without sacrificing clarity.",
+            // Video Models
+            "Sora 2": "Sora 2 is designed for cinematic-quality video generation with extremely stable motion, improved physics accuracy, expressive character animation, and rich scene detail. Perfect for storytelling, ads, and high-impact creative content.",
+            "Google Veo 3": "Veo 3 focuses on clarity, smooth motion, and natural lighting. It excels at dynamic environments, realistic textures, and clean camera transitions—ideal for lifestyle clips, outdoor scenes, product demos, and fast-paced creative content.",
+            "Kling AI": "Kling AI specializes in hyper-realistic motion and high-speed action scenes. With sharp detail and stable, precise frame-to-frame movement, it's a strong choice for sports, sci-fi shots, fast motion, and large sweeping environments.",
+            "Wan 2.5": "Wan 2.5 delivers dramatic cinematic visuals, advanced character performance, atmospheric effects, and stylized world-building. It shines in fantasy, anime, surreal scenes, and richly creative storytelling."
         ]
         
         // Initialize model image names mapping
@@ -191,7 +250,12 @@ class ModelConfigurationManager {
             "FLUX.2 [dev]": "flux2dev",
             "FLUX.1 Kontext [pro]": "fluxkontextpro",
             "FLUX.1 Kontext [max]": "fluxkontextmax",
-            "Z-Image-Turbo": "zimageturbo"
+            "Z-Image-Turbo": "zimageturbo",
+            // Video Models
+            "Sora 2": "sora2",
+            "Google Veo 3": "veo3",
+            "Kling AI": "klingai",
+            "Wan 2.5": "wan"
         ]
     }
     

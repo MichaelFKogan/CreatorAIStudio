@@ -2,7 +2,7 @@ import PhotosUI
 import SwiftUI
 import Combine
 
-// MARK: - Filter Category
+// MARK: - FILTER CATEGORY
 
 enum FilterCategory: String, CaseIterable, Identifiable {
     case art = "Art"
@@ -111,6 +111,8 @@ class PhotoFiltersViewModel: ObservableObject {
         filters = allFilters
     }
 }
+
+// MARK: - PHOTO FILTERS VIEW
 
 struct PhotoFilters: View {
     @StateObject private var viewModel = PhotoFiltersViewModel()
@@ -241,6 +243,7 @@ struct PhotoFilters: View {
             //   )
             }
 
+// MARK: TOOLBAR
             .background(Color(.systemGroupedBackground))
             .navigationTitle("")
             .toolbar {
@@ -445,7 +448,7 @@ struct CategoryTabButton: View {
     }
 }
 
-// MARK: - Photo Filter Category Section
+// MARK: - PHOTO FILTER CATEGORY SECTION
 
 struct PhotoFilterCategorySection: View {
     let title: String
