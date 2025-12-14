@@ -114,11 +114,11 @@ final class ImageModelsViewModel: ObservableObject {
         case 1:
             // Text to Image Only - models that have Text to Image but NOT Image to Image
             models = models.filter {
-                let caps = $0.capabilities ?? []
+                let caps = $0.resolvedCapabilities ?? []
                 return caps.contains("Text to Image") && !caps.contains("Image to Image")
             }
         case 2:
-            models = models.filter { $0.capabilities?.contains("Image to Image") == true }
+            models = models.filter { $0.resolvedCapabilities?.contains("Image to Image") == true }
         default: break
         }
 
@@ -456,7 +456,7 @@ private struct ImageModelGridItem: View {
                     .clipped()
                     .clipShape(RoundedRectangle(cornerRadius: 12))
 
-                if let capabilities = item.capabilities, !capabilities.isEmpty {
+                if let capabilities = item.resolvedCapabilities, !capabilities.isEmpty {
                     VStack {
                         Spacer()
                         LinearGradient(
@@ -519,7 +519,7 @@ private struct ImageModelListItem: View {
                     .foregroundColor(.primary)
                     .lineLimit(2)
 
-                if viewModel.hasActiveFilters, let capabilities = item.capabilities, !capabilities.isEmpty {
+                if viewModel.hasActiveFilters, let capabilities = item.resolvedCapabilities, !capabilities.isEmpty {
                     Text(capabilities.joined(separator: " • "))
                         .font(.system(size: 12, weight: .medium, design: .rounded))
                         .foregroundColor(.blue)

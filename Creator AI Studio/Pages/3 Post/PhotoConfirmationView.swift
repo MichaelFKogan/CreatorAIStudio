@@ -449,7 +449,7 @@ struct PhotoConfirmationView: View {
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing)
                             )
-                            .font(.system(size: 12))
+                            .font(.system(size: 11))
 
                         Text("\(item.resolvedCost.credits)")
                             .font(
