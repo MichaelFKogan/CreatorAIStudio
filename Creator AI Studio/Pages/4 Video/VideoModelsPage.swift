@@ -93,7 +93,10 @@ final class VideoModelsViewModel: ObservableObject {
         do {
             let data = try Data(contentsOf: url)
             let decoder = JSONDecoder()
-            return try decoder.decode([InfoPacket].self, from: data)
+            var decoded = try decoder.decode([InfoPacket].self, from: data)
+            // Automatically set type for all items loaded from VideoModelData.json
+            decoded = decoded.map { var item = $0; item.type = "Video Model"; return item }
+            return decoded
         } catch {
             print("Failed to decode JSON:", error)
             return []
@@ -130,8 +133,8 @@ final class VideoModelsViewModel: ObservableObject {
 
         // Sort
         switch sortOrder {
-        case 1: models.sort { ($0.cost ?? 0) < ($1.cost ?? 0) }
-        case 2: models.sort { ($0.cost ?? 0) > ($1.cost ?? 0) }
+        case 1: models.sort { ($0.resolvedCost ?? 0) < ($1.resolvedCost ?? 0) }
+        case 2: models.sort { ($0.resolvedCost ?? 0) > ($1.resolvedCost ?? 0) }
         default:
             break
         }
@@ -337,7 +340,7 @@ private struct ContentList: View {
                     LazyVGrid(columns: gridColumns, spacing: 16) {
                         ForEach(viewModel.filteredAndSortedVideoModels) {
                             item in
-                            NavigationLink(destination: EmptyView()) {
+                            NavigationLink(destination: VideoModelDetailPage(item: item)) {
                                 VideoModelGridItem(item: item)
                             }
                         }
@@ -347,8 +350,8 @@ private struct ContentList: View {
                     VStack(spacing: 12) {
                         ForEach(viewModel.filteredAndSortedVideoModels) {
                             item in
-                            NavigationLink(destination: EmptyView()) {
-                                VideoModelListItem(item: item)
+                            NavigationLink(destination: VideoModelDetailPage(item: item)) {
+                                VideoModelListItem(item: item, viewModel: viewModel)
                             }
                             .buttonStyle(.plain)
                         }
@@ -375,13 +378,28 @@ private struct VideoModelGridItem: View {
                     .clipped()
                     .clipShape(RoundedRectangle(cornerRadius: 12))
 
-                LinearGradient(
-                    colors: [Color.black.opacity(0.6), Color.clear],
-                    startPoint: .bottom,
-                    endPoint: .center
-                )
-                .frame(height: 80)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+                if let capabilities = item.resolvedCapabilities, !capabilities.isEmpty {
+                    VStack {
+                        Spacer()
+                        LinearGradient(
+                            colors: [Color.black.opacity(0.9), Color.black.opacity(0)],
+                            startPoint: .bottom,
+                            endPoint: .top
+                        )
+                        .frame(height: 30)
+                    }
+
+                    HStack {
+                        Text(capabilities.joined(separator: " • "))
+                            .font(.system(size: 11, weight: .medium, design: .rounded))
+                            .foregroundColor(.white)
+                            .multilineTextAlignment(.leading)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 8)
+                            .padding(.bottom, 8)
+                        Spacer()
+                    }
+                }
             }
             .overlay(
                 RoundedRectangle(cornerRadius: 12)
@@ -398,7 +416,7 @@ private struct VideoModelGridItem: View {
 
                 Spacer()
 
-                Text("$\(NSDecimalNumber(decimal: item.cost ?? 0).stringValue)")
+                Text("\(item.resolvedCost.credits) credits")
                     .font(
                         .system(size: 12, weight: .semibold, design: .rounded)
                     )
@@ -412,6 +430,7 @@ private struct VideoModelGridItem: View {
 
 private struct VideoModelListItem: View {
     let item: InfoPacket
+    @ObservedObject var viewModel: VideoModelsViewModel
 
     var body: some View {
         HStack(spacing: 12) {
@@ -421,19 +440,29 @@ private struct VideoModelListItem: View {
                 .frame(width: 70, height: 70)
                 .clipShape(RoundedRectangle(cornerRadius: 8))
 
-            Text(item.display.title)
-                .font(.system(size: 16, weight: .bold, design: .rounded))
-                .foregroundColor(.primary)
-                .lineLimit(1)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(item.display.title)
+                    .font(.system(size: 15, weight: .bold, design: .rounded))
+                    .foregroundColor(.primary)
+                    .lineLimit(2)
+
+                if viewModel.hasActiveFilters, let capabilities = item.resolvedCapabilities, !capabilities.isEmpty {
+                    Text(capabilities.joined(separator: " • "))
+                        .font(.system(size: 12, weight: .medium, design: .rounded))
+                        .foregroundColor(.purple)
+                }
+            }
 
             Spacer()
 
             VStack(alignment: .trailing) {
-                Text("$\(NSDecimalNumber(decimal: item.cost ?? 0).stringValue)")
-                    .font(
-                        .system(size: 15, weight: .semibold, design: .rounded)
-                    )
-                    .foregroundColor(.purple)
+                Text("\(item.resolvedCost.credits)")
+                    .font(.caption)
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color.secondary.opacity(0.4))
+                    .clipShape(Capsule())
                 Text("per video")
                     .font(.caption2)
                     .foregroundColor(.secondary)
@@ -537,5 +566,22 @@ private struct EmptyStateView: View {
                 .foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity, minHeight: 120)
+    }
+}
+
+// MARK: - Credit Conversion Helper
+extension Decimal {
+    /// Converts dollar amount to credits (1 credit = $0.01)
+    var credits: Int {
+        let dollars = NSDecimalNumber(decimal: self).doubleValue
+        return Int((dollars * 100).rounded())
+    }
+}
+
+extension Optional where Wrapped == Decimal {
+    /// Converts dollar amount to credits, returns 0 if nil
+    var credits: Int {
+        guard let value = self else { return 0 }
+        return value.credits
     }
 }

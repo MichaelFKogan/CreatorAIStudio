@@ -570,22 +570,22 @@ private struct EmptyStateView: View {
     }
 }
 
-// MARK: - Credit Conversion Helper
-extension Decimal {
-    /// Converts dollar amount to credits (1 credit = $0.01)
-    var credits: Int {
-        let dollars = NSDecimalNumber(decimal: self).doubleValue
-        return Int((dollars * 100).rounded())
-    }
-}
+// // MARK: - Credit Conversion Helper
+// extension Decimal {
+//     /// Converts dollar amount to credits (1 credit = $0.01)
+//     var credits: Int {
+//         let dollars = NSDecimalNumber(decimal: self).doubleValue
+//         return Int((dollars * 100).rounded())
+//     }
+// }
 
-extension Optional where Wrapped == Decimal {
-    /// Converts dollar amount to credits, returns 0 if nil
-    var credits: Int {
-        guard let value = self else { return 0 }
-        return value.credits
-    }
-}
+// extension Optional where Wrapped == Decimal {
+//     /// Converts dollar amount to credits, returns 0 if nil
+//     var credits: Int {
+//         guard let value = self else { return 0 }
+//         return value.credits
+//     }
+// }
 
 
 // MARK: - Tab Button Style Extension

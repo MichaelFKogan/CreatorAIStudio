@@ -1,5 +1,5 @@
 //
-//  ImageModelDetailPage.swift
+//  VideoModelDetailPage.swift
 //  Creator AI Studio
 //
 //  Created by Mike K on 11/25/25.
@@ -9,13 +9,13 @@ import Kingfisher
 import PhotosUI
 import SwiftUI
 
-struct LazyView<Content: View>: View {
-    let build: () -> Content
-    init(_ build: @autoclosure @escaping () -> Content) { self.build = build }
-    var body: some View { build() }
-}
+//struct LazyView<Content: View>: View {
+//    let build: () -> Content
+//    init(_ build: @autoclosure @escaping () -> Content) { self.build = build }
+//    var body: some View { build() }
+//}
 
-struct ImageModelDetailPage: View {
+struct VideoModelDetailPage: View {
     @State var item: InfoPacket
 
     @State private var prompt: String = ""
@@ -41,7 +41,7 @@ struct ImageModelDetailPage: View {
 
     // MARK: Constants
 
-    private let imageAspectOptions: [AspectRatioOption] = [
+    private let videoAspectOptions: [AspectRatioOption] = [
         AspectRatioOption(
             id: "3:4", label: "3:4", width: 3, height: 4,
             platforms: ["Portrait"]
@@ -126,7 +126,11 @@ struct ImageModelDetailPage: View {
     ]
 
     private var costString: String {
-        NSDecimalNumber(decimal: item.cost ?? 0).stringValue
+        NSDecimalNumber(decimal: item.resolvedCost ?? 0).stringValue
+    }
+
+    private var creditsString: String {
+        "\(item.resolvedCost.credits)"
     }
 
     private var isMidjourney: Bool {
@@ -141,14 +145,12 @@ struct ImageModelDetailPage: View {
                 ScrollView {
                     VStack(spacing: 24) {
                         LazyView(
-                            BannerSection(item: item, costString: costString))
+                            BannerSectionVideo(item: item, creditsString: creditsString))
 
                         Divider().padding(.horizontal)
 
-                        //                        LazyView(TabSwitcher(selectedMode: $selectedGenerationMode))
-
                         LazyView(
-                            PromptSection(
+                            PromptSectionVideo(
                                 prompt: $prompt,
                                 isFocused: $isPromptFocused,
                                 isExamplePromptsPresented:
@@ -161,13 +163,13 @@ struct ImageModelDetailPage: View {
                                 isProcessingOCR: $isProcessingOCR
                             ))
 
-                        if ModelConfigurationManager.shared.capabilities(for: item)?.contains("Image to Image") == true {
+                        if ModelConfigurationManager.shared.capabilities(for: item)?.contains("Image to Video") == true {
                             LazyView(
                                 ReferenceImagesSection(
                                     referenceImages: $referenceImages,
                                     selectedPhotoItems: $selectedPhotoItems,
                                     showCameraSheet: $showCameraSheet,
-                                    color: .blue
+                                    color: .purple
                                 ))
                         }
 
@@ -177,7 +179,7 @@ struct ImageModelDetailPage: View {
                                     .font(.caption)
                                     .foregroundColor(.red)
                                 Text(
-                                    "Midjourney creates 4 images by default: Total cost: $0.10"
+                                    "Midjourney creates 4 videos by default: Total cost: \(item.resolvedCost.credits * 4) credits"
                                 )
                                 .font(.caption)
                                 .foregroundColor(.red)
@@ -188,88 +190,23 @@ struct ImageModelDetailPage: View {
                         }
 
                         LazyView(
-                            GenerateButton(
+                            GenerateButtonVideo(
                                 prompt: prompt,
                                 isGenerating: $isGenerating,
                                 keyboardHeight: $keyboardHeight,
-                                costString: costString,
+                                creditsString: creditsString,
                                 action: generate
                             ))
 
                         Divider().padding(.horizontal)
 
-                        //                        VStack {
-                        //                            Button {
-                        //                                //                            showActionSheet = true
-                        //                            } label: {
-                        //                                HStack(spacing: 8) {
-                        //                                    Image(systemName: "camera")
-                        //                                        .font(.system(size: 14))
-                        //                                        .foregroundColor(.blue)
-                        //                                    Text("Add Image")
-                        //                                        .font(.subheadline)
-                        //                                        .fontWeight(.semibold)
-                        //                                        .foregroundColor(.secondary)
-                        //                                    Text("(Optional)")
-                        //                                        .font(.caption)
-                        //                                        .foregroundColor(
-                        //                                            .secondary.opacity(0.7))
-                        //                                    Spacer()
-                        //                                    //                                Image(systemName: "chevron.right")
-                        //                                    //                                    .font(.system(size: 12))
-                        //                                    //                                    .foregroundColor(.secondary.opacity(0.6))
-                        //                                }
-                        //                                //                                .padding(.horizontal, 12)
-                        //                                //                                .padding(.vertical, 10)
-                        //                                .padding()
-                        //                                .background(Color.gray.opacity(0.06))
-                        //                                .clipShape(RoundedRectangle(cornerRadius: 8))
-                        //                                .overlay(
-                        //                                    RoundedRectangle(cornerRadius: 8)
-                        //                                        //                                         .stroke(Color.blue.opacity(0.3), lineWidth: 1)
-                        //                                        .strokeBorder(
-                        //                                            style: StrokeStyle(
-                        //                                                lineWidth: 3.5, dash: [6, 4]
-                        //                                            )
-                        //                                        )
-                        //                                        .foregroundColor(.gray.opacity(0.4))
-                        //                                )
-                        //                            }
-                        //                            .buttonStyle(PlainButtonStyle())
-                        //                            .padding(.horizontal)
-                        //                            //                        .confirmationDialog("Add Image", isPresented: $showActionSheet, titleVisibility: .visible) {
-                        //                            //                            Button {
-                        //                            //                                showCameraSheet = true
-                        //                            //                            } label: {
-                        //                            //                                Label("Take Photo", systemImage: "camera.fill")
-                        //                            //                            }
-                        //                            //
-                        //                            //                            Button {
-                        //                            //                                showPhotosPicker = true
-                        //                            //                            } label: {
-                        //                            //                                Label("Choose from Library", systemImage: "photo.on.rectangle")
-                        //                            //                            }
-                        //                            //
-                        //                            //                            Button("Cancel", role: .cancel) {}
-                        //                            //                        }
-                        //                            //                        .photosPicker(isPresented: $showPhotosPicker, selection: $selectedPhotoItems, maxSelectionCount: 10, matching: .images)
-                        //
-                        //                            // Text("Upload an image to transform it, or use as reference with your prompt")
-                        //                            //     .font(.caption)
-                        //                            //     .foregroundColor(.secondary.opacity(0.8))
-                        //                            //     .fixedSize(horizontal: false, vertical: true)
-                        //                            //     .padding(.bottom, 4)
-                        //                        }
-
                         LazyView(
-                            AspectRatioSection(
-                                options: imageAspectOptions,
+                            AspectRatioSectionVideo(
+                                options: videoAspectOptions,
                                 selectedIndex: $selectedAspectIndex
                             ))
 
                         Divider().padding(.horizontal)
-
-                        // LazyView(CostCardSection(costString: costString))
 
                         // Example Gallery Section - Only show if model name exists
                         if let modelName = item.display.modelName, !modelName.isEmpty {
@@ -307,11 +244,11 @@ struct ImageModelDetailPage: View {
         .toolbar {
             // Leading title
             ToolbarItem(placement: .navigationBarLeading) {
-                Text("Image Models")
+                Text("Video Models")
                     .font(.system(size: 28, weight: .bold, design: .rounded))
                     .foregroundStyle(
                         LinearGradient(
-                            colors: [.blue, .cyan],
+                            colors: [.purple, .pink],
                             startPoint: .leading,
                             endPoint: .trailing
                         )
@@ -322,7 +259,7 @@ struct ImageModelDetailPage: View {
                 Button("Done") { isPromptFocused = false }
             }
             ToolbarItem(placement: .navigationBarTrailing) {
-                CreditsView()
+                CreditsViewVideo()
             }
         }
         .onReceive(
@@ -344,7 +281,7 @@ struct ImageModelDetailPage: View {
         .alert("Prompt Required", isPresented: $showEmptyPromptAlert) {
             Button("OK", role: .cancel) {}
         } message: {
-            Text("Please enter a prompt to generate an image.")
+            Text("Please enter a prompt to generate a video.")
         }
         .sheet(isPresented: $showCameraSheet) {
             SimpleCameraPicker(isPresented: $showCameraSheet) { capturedImage in
@@ -373,7 +310,7 @@ struct ImageModelDetailPage: View {
         guard !isGenerating else { return }
 
         isGenerating = true
-        let selectedAspectOption = imageAspectOptions[selectedAspectIndex]
+        let selectedAspectOption = videoAspectOptions[selectedAspectIndex]
         var modifiedItem = item
         modifiedItem.prompt = prompt
         // Use resolvedAPIConfig as base, then modify aspectRatio
@@ -390,18 +327,10 @@ struct ImageModelDetailPage: View {
         }
 
         Task { @MainActor in
-            _ = ImageGenerationCoordinator.shared.startImageGeneration(
-                item: modifiedItem,
-                image: imageToUse,
-                userId: userId,
-                onImageGenerated: { _ in isGenerating = false },
-                onError: { error in
-                    isGenerating = false
-                    print(
-                        "Image generation failed: \(error.localizedDescription)"
-                    )
-                }
-            )
+            // TODO: Implement video generation coordinator
+            // For now, just set isGenerating to false
+            isGenerating = false
+            print("Video generation not yet implemented for \(modifiedItem.display.title)")
         }
     }
 
@@ -441,9 +370,9 @@ struct ImageModelDetailPage: View {
 
 // MARK: BANNER SECTION
 
-struct BannerSection: View {
+private struct BannerSectionVideo: View {
     let item: InfoPacket
-    let costString: String
+    let creditsString: String
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -462,19 +391,19 @@ struct BannerSection: View {
                         .fixedSize(horizontal: false, vertical: true)
 
                     HStack(spacing: 6) {
-                        Image(systemName: "photo.on.rectangle.angled").font(
+                        Image(systemName: "video.fill").font(
                             .caption)
-                        Text("Image Generation Model").font(.caption)
+                        Text("Video Generation Model").font(.caption)
                     }
                     .foregroundColor(.white)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 5)
-                    .background(Capsule().fill(Color.blue.opacity(0.8)))
+                    .background(Capsule().fill(Color.purple.opacity(0.8)))
 
                     HStack(spacing: 4) {
-                        Text("$\(costString)").font(.title3).fontWeight(.bold)
-                            .foregroundColor(.blue)
-                        Text("per image").font(.caption).foregroundColor(
+                        Text("\(creditsString) credits").font(.title3).fontWeight(.bold)
+                            .foregroundColor(.purple)
+                        Text("per video").font(.caption).foregroundColor(
                             .secondary)
                     }
 
@@ -487,7 +416,7 @@ struct BannerSection: View {
                                     size: 12, weight: .medium, design: .rounded
                                 )
                             )
-                            .foregroundColor(.blue)
+                            .foregroundColor(.purple)
                     }
 
                     Spacer()
@@ -513,7 +442,7 @@ struct BannerSection: View {
 
 // MARK: PROMPT SECTION
 
-struct PromptSection: View {
+private struct PromptSectionVideo: View {
     @Binding var prompt: String
     @FocusState.Binding var isFocused: Bool
     @Binding var isExamplePromptsPresented: Bool
@@ -525,7 +454,7 @@ struct PromptSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 6) {
-                Image(systemName: "text.alignleft").foregroundColor(.blue)
+                Image(systemName: "text.alignleft").foregroundColor(.purple)
                 Text("Prompt").font(.subheadline).fontWeight(.semibold)
                     .foregroundColor(.secondary)
                 Spacer()
@@ -548,12 +477,12 @@ struct PromptSection: View {
                         Group {
                             if isProcessingOCR {
                                 ProgressView()
-                                    .progressViewStyle(CircularProgressViewStyle(tint: .blue))
+                                    .progressViewStyle(CircularProgressViewStyle(tint: .purple))
                                     .scaleEffect(0.8)
                             } else {
                                 Image(systemName: "viewfinder")
                                 .font(.system(size: 22))
-                                .foregroundColor(.blue)
+                                .foregroundColor(.purple)
                             }
                         }
                     }
@@ -572,14 +501,14 @@ struct PromptSection: View {
                     RoundedRectangle(cornerRadius: 12)
                         .stroke(
                             isFocused
-                                ? Color.blue.opacity(0.5)
+                                ? Color.purple.opacity(0.5)
                                 : Color.gray.opacity(0.3),
                             lineWidth: isFocused ? 2 : 1
                         )
                 )
                 .overlay(alignment: .topLeading) {
                     if prompt.isEmpty {
-                        Text("Describe the image you want to generate...")
+                        Text("Describe the video you want to generate...")
                             .font(.system(size: 14))
                             .foregroundColor(.gray.opacity(0.5))
                             .padding(.horizontal, 12)
@@ -592,7 +521,7 @@ struct PromptSection: View {
 
             Button(action: { isExamplePromptsPresented = true }) {
                 HStack {
-                    Image(systemName: "lightbulb.fill").foregroundColor(.blue)
+                    Image(systemName: "lightbulb.fill").foregroundColor(.purple)
                         .font(.caption)
                     Text("Example Prompts").font(.caption).fontWeight(.semibold)
                         .foregroundColor(.secondary)
@@ -606,7 +535,7 @@ struct PromptSection: View {
                 .clipShape(RoundedRectangle(cornerRadius: 8))
                 .overlay(
                     RoundedRectangle(cornerRadius: 8).stroke(
-                        Color.blue.opacity(0.3), lineWidth: 1
+                        Color.purple.opacity(0.3), lineWidth: 1
                     ))
             }
             .buttonStyle(PlainButtonStyle())
@@ -617,74 +546,34 @@ struct PromptSection: View {
 
 // MARK: ASPECT RATIO
 
-struct AspectRatioSection: View {
+private struct AspectRatioSectionVideo: View {
     let options: [AspectRatioOption]
     @Binding var selectedIndex: Int
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            //            HStack(spacing: 6) {
-            //                Image(systemName: "slider.horizontal.3").foregroundColor(.blue)
             Text("Size")
                 .font(.caption)
                 .foregroundColor(.secondary)
                 .padding(.top, -6)
-            //            }
             AspectRatioSelector(
-                options: options, selectedIndex: $selectedIndex, color: .blue
+                options: options, selectedIndex: $selectedIndex, color: .purple
             )
         }
-        .padding(.horizontal)
-    }
-}
-
-// MARK: COST CARD
-
-struct CostCardSection: View {
-    let costString: String
-    var body: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Generation Cost").font(.caption).foregroundColor(
-                    .secondary)
-                HStack(spacing: 4) {
-                    Text("1 image").font(.subheadline).foregroundColor(.primary)
-                    Text("×").font(.caption).foregroundColor(.secondary)
-                    Text("$\(costString)").font(.subheadline).fontWeight(
-                        .semibold
-                    ).foregroundColor(.blue)
-                }
-            }
-            Spacer()
-            Text("$\(costString)").font(.title3).fontWeight(.bold)
-                .foregroundColor(.blue)
-        }
-        .padding()
-        .background(Color.blue.opacity(0.08))
-        .cornerRadius(12)
-        .overlay(
-            RoundedRectangle(cornerRadius: 12).stroke(
-                Color.blue.opacity(0.2), lineWidth: 1
-            )
-        )
         .padding(.horizontal)
     }
 }
 
 // MARK: GENERATE BUTTON
 
-struct GenerateButton: View {
+private struct GenerateButtonVideo: View {
     let prompt: String
     @Binding var isGenerating: Bool
     @Binding var keyboardHeight: CGFloat
-    let costString: String
+    let creditsString: String
     let action: () -> Void
 
     var body: some View {
         VStack(spacing: 0) {
-            // LinearGradient(colors: [Color(UIColor.systemBackground).opacity(0), Color(UIColor.systemBackground)],
-            //                startPoint: .top, endPoint: .bottom)
-            //     .frame(height: 20)
-
             Button(action: action) {
                 HStack {
                     if isGenerating {
@@ -692,12 +581,12 @@ struct GenerateButton: View {
                             CircularProgressViewStyle(tint: .white)
                         ).scaleEffect(0.8)
                     } else {
-                        Image(systemName: "photo.on.rectangle")
+                        Image(systemName: "video.fill")
                     }
                     Text(
                         isGenerating
                             ? "Generating..."
-                            : "Generate Image - $\(costString)"
+                            : "Generate Video - \(creditsString) credits"
                     ).fontWeight(.semibold)
                 }
                 .frame(maxWidth: .infinity)
@@ -709,14 +598,14 @@ struct GenerateButton: View {
                             startPoint: .leading, endPoint: .trailing
                         )
                         : LinearGradient(
-                            colors: [Color.blue.opacity(0.8), Color.cyan],
+                            colors: [Color.purple.opacity(0.8), Color.pink],
                             startPoint: .leading, endPoint: .trailing
                         )
                 )
                 .foregroundColor(.white)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
                 .shadow(
-                    color: isGenerating ? Color.clear : Color.blue.opacity(0.4),
+                    color: isGenerating ? Color.clear : Color.purple.opacity(0.4),
                     radius: 8, x: 0, y: 4
                 )
             }
@@ -724,7 +613,6 @@ struct GenerateButton: View {
             .animation(.easeInOut(duration: 0.2), value: isGenerating)
             .disabled(isGenerating)
             .padding(.horizontal)
-            // .padding(.bottom, keyboardHeight > 0 ? 24 : 80)
             .background(Color(UIColor.systemBackground))
         }
         .animation(.easeOut(duration: 0.25), value: keyboardHeight)
@@ -733,13 +621,13 @@ struct GenerateButton: View {
 
 // MARK: CREDITS VIEW
 
-struct CreditsView: View {
+private struct CreditsViewVideo: View {
     var body: some View {
         HStack(spacing: 6) {
             Image(systemName: "diamond.fill")
                 .foregroundStyle(
                     LinearGradient(
-                        colors: [.blue, .cyan], startPoint: .topLeading,
+                        colors: [.purple, .pink], startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
                 )
@@ -752,241 +640,32 @@ struct CreditsView: View {
         .padding(.horizontal, 12)
         .padding(.vertical, 6)
         .background(
-            RoundedRectangle(cornerRadius: 20).fill(Color.blue.opacity(0.1))
+            RoundedRectangle(cornerRadius: 20).fill(Color.purple.opacity(0.1))
                 .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 20).strokeBorder(
                 LinearGradient(
-                    colors: [.blue, .cyan], startPoint: .leading,
+                    colors: [.purple, .pink], startPoint: .leading,
                     endPoint: .trailing
                 ), lineWidth: 1.5
             ))
     }
 }
 
-// MARK: MODEL GALLERY SECTION
+// // MARK: - Credit Conversion Helper
+// extension Decimal {
+//     /// Converts dollar amount to credits (1 credit = $0.01)
+//     var credits: Int {
+//         let dollars = NSDecimalNumber(decimal: self).doubleValue
+//         return Int((dollars * 100).rounded())
+//     }
+// }
 
-struct ModelGallerySection: View {
-    let modelName: String?
-    let userId: String?
-
-    @StateObject private var viewModel = ProfileViewModel()
-    @EnvironmentObject var authViewModel: AuthViewModel
-    @State private var modelImages: [UserImage] = []
-    @State private var isLoading = false
-    @State private var hasLoaded = false
-    @State private var selectedUserImage: UserImage? = nil
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 6) {
-                Image(systemName: "photo.on.rectangle.angled")
-                    .foregroundColor(.blue)
-                    .font(.subheadline)
-                Text("Your Creations With This Model")
-                    .font(.subheadline)
-                    .fontWeight(.semibold)
-                    .foregroundColor(.secondary)
-            }
-            .padding(.horizontal)
-
-            if isLoading {
-                HStack {
-                    Spacer()
-                    ProgressView()
-                        .padding()
-                    Spacer()
-                }
-            } else if modelImages.isEmpty && hasLoaded {
-                HStack {
-                    Spacer()
-                    VStack(spacing: 8) {
-                        Image(systemName: "photo.on.rectangle")
-                            .font(.title2)
-                            .foregroundColor(.gray.opacity(0.5))
-                        Text("No images yet")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                        Text("Create your first image with this model!")
-                            .font(.caption2)
-                            .foregroundColor(.secondary.opacity(0.7))
-                    }
-                    .padding(.vertical, 32)
-                    Spacer()
-                }
-            } else if !modelImages.isEmpty {
-                ModelGalleryGridView(
-                    userImages: modelImages,
-                    onSelect: { userImage in
-                        selectedUserImage = userImage
-                    }
-                )
-            }
-        }
-        .padding(.vertical, 8)
-        .onAppear {
-            loadModelImages()
-        }
-        .sheet(item: $selectedUserImage) { userImage in
-            FullScreenImageView(
-                userImage: userImage,
-                isPresented: Binding(
-                    get: { selectedUserImage != nil },
-                    set: { if !$0 { selectedUserImage = nil } }
-                )
-            )
-            .environmentObject(authViewModel)
-            .presentationDetents([.large])
-            .presentationDragIndicator(.visible)
-            .ignoresSafeArea()
-        }
-    }
-
-    private func loadModelImages() {
-        guard let modelName = modelName, !modelName.isEmpty,
-              let userId = userId, !userId.isEmpty,
-              !hasLoaded
-        else {
-            // If no model name or user ID, mark as loaded to prevent retries
-            hasLoaded = true
-            return
-        }
-
-        hasLoaded = true
-        viewModel.userId = userId
-        isLoading = true
-
-        Task {
-            // First, try to load all user images into cache (one-time cost)
-            // This helps populate the cache for future use
-            if viewModel.userImages.isEmpty {
-                await viewModel.fetchUserImages(forceRefresh: false)
-            }
-            
-            // Then fetch model-specific images
-            // Use forceRefresh: false to leverage cache if available
-            let images = await viewModel.fetchModelImages(
-                modelName: modelName,
-                limit: 1000, // High limit to get all images
-                forceRefresh: false
-            )
-
-            await MainActor.run {
-                modelImages = images
-                isLoading = false
-            }
-        }
-    }
-}
-
-// MARK: MODEL GALLERY GRID VIEW
-
-struct ModelGalleryGridView: View {
-    let userImages: [UserImage]
-    var onSelect: (UserImage) -> Void
-
-    private let spacing: CGFloat = 2
-    private let gridColumns: [GridItem] = Array(
-        repeating: GridItem(.flexible(), spacing: 2),
-        count: 3
-    )
-
-    var body: some View {
-        GeometryReader { proxy in
-            let horizontalPadding: CGFloat = 16
-            let totalHorizontalSpacing = spacing * 2  // 2 gaps between 3 columns
-            let availableWidth = proxy.size.width - (horizontalPadding * 2) - totalHorizontalSpacing
-            let itemWidth = max(44, availableWidth / 3)
-            let itemHeight = itemWidth * 1.4
-
-            LazyVGrid(columns: gridColumns, spacing: spacing) {
-                ForEach(userImages) { userImage in
-                    if let displayUrl = userImage.isVideo
-                        ? userImage.thumbnail_url : userImage.image_url,
-                        let url = URL(string: displayUrl)
-                    {
-                        Button {
-                            onSelect(userImage)
-                        } label: {
-                            ZStack {
-                                KFImage(url)
-                                    .placeholder {
-                                        Rectangle()
-                                            .fill(Color.gray.opacity(0.2))
-                                            .overlay(ProgressView())
-                                    }
-                                    .resizable()
-                                    .scaledToFill()
-                                    .frame(width: itemWidth, height: itemHeight)
-                                    .clipped()
-                                    .cornerRadius(0)
-
-                                // Video play icon overlay
-                                if userImage.isVideo {
-                                    ZStack {
-                                        Circle()
-                                            .fill(Color.black.opacity(0.6))
-                                            .frame(width: 32, height: 32)
-
-                                        Image(systemName: "play.fill")
-                                            .font(.system(size: 14))
-                                            .foregroundColor(.white)
-                                    }
-                                }
-                            }
-                        }
-                        .buttonStyle(.plain)
-                    } else if let url = URL(string: userImage.image_url) {
-                        // Fallback for videos without thumbnails
-                        Button {
-                            onSelect(userImage)
-                        } label: {
-                            ZStack {
-                                KFImage(url)
-                                    .placeholder {
-                                        Rectangle()
-                                            .fill(Color.gray.opacity(0.2))
-                                            .overlay(
-                                                Image(systemName: "video.fill")
-                                                    .font(.title3)
-                                                    .foregroundColor(.gray)
-                                            )
-                                    }
-                                    .resizable()
-                                    .scaledToFill()
-                                    .frame(width: itemWidth, height: itemHeight)
-                                    .clipped()
-                                    .cornerRadius(0)
-
-                                if userImage.isVideo {
-                                    ZStack {
-                                        Circle()
-                                            .fill(Color.black.opacity(0.6))
-                                            .frame(width: 32, height: 32)
-
-                                        Image(systemName: "play.fill")
-                                            .font(.system(size: 14))
-                                            .foregroundColor(.white)
-                                    }
-                                }
-                            }
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-            }
-            .padding(.horizontal, 16)
-        }
-        .frame(height: calculateHeight(for: userImages.count))
-    }
-
-    private func calculateHeight(for count: Int) -> CGFloat {
-        let rows = ceil(Double(count) / 3.0)
-        let horizontalPadding: CGFloat = 16
-        let totalHorizontalSpacing = spacing * 2
-        let availableWidth = UIScreen.main.bounds.width - (horizontalPadding * 2) - totalHorizontalSpacing
-        let itemWidth = availableWidth / 3
-        return CGFloat(rows) * (itemWidth * 1.4 + spacing)
-    }
-}
+// extension Optional where Wrapped == Decimal {
+//     /// Converts dollar amount to credits, returns 0 if nil
+//     var credits: Int {
+//         guard let value = self else { return 0 }
+//         return value.credits
+//     }
+// }
