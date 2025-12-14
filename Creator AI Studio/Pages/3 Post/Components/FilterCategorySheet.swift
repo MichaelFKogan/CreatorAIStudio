@@ -125,7 +125,7 @@ struct FilterCategorySheet: View {
                         if !imageToImageModels.isEmpty {
                             CategorySection(
                                 title: "AI Models",
-                                icon: "cpu",
+                                emoji: "🤖",
                                 filters: imageToImageModels,
                                 selectedFilter: selectedImageModel,
                                 onSelect: { model in
@@ -166,7 +166,7 @@ struct FilterCategorySheet: View {
                             {
                                 CategorySection(
                                     title: categoryName,
-                                    icon: iconForCategory(categoryName),
+                                    emoji: emojiForCategory(categoryName),
                                     filters: filters,
                                     selectedFilter: selectedFilter,
                                     onSelect: { filter in
@@ -228,13 +228,19 @@ struct FilterCategorySheet: View {
         // Use centralized category manager for icon lookup
         return categoryManager.icon(for: categoryName)
     }
+    
+    // Helper function to get emoji for category name
+    private func emojiForCategory(_ categoryName: String) -> String {
+        return categoryManager.emoji(for: categoryName)
+    }
 }
 
 // MARK: - Category Section
 
 struct CategorySection: View {
     let title: String
-    let icon: String
+    var emoji: String? = nil
+    var icon: String? = nil
     let filters: [InfoPacket]
     let selectedFilter: InfoPacket?
     let onSelect: (InfoPacket) -> Void
@@ -251,10 +257,16 @@ struct CategorySection: View {
                 }
             } label: {
                 HStack {
-                    Image(systemName: icon)
-                        .font(.system(size: 16))
-                        .foregroundColor(.white)
-                        .frame(width: 24)
+                    if let emoji = emoji {
+                        Text(emoji)
+                            .font(.system(size: 20))
+                            .frame(width: 28)
+                    } else if let icon = icon {
+                        Image(systemName: icon)
+                            .font(.system(size: 16))
+                            .foregroundColor(.white)
+                            .frame(width: 24)
+                    }
 
                     Text(title)
                         .font(.system(size: 16, weight: .semibold))

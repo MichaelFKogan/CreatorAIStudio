@@ -30,10 +30,10 @@ class CategoryConfigurationManager {
         "Just For Fun": "JustForFun",
         "Instagram": "Instagram",
         "Photobooth": "Photobooth",
-        "Social Media": "Social Media",
+        "Social Media": "SocialMedia",
         "Fitness": "Fitness",
         "Travel": "Travel",
-        "Back In Time": "Back In Time",
+        "Back In Time": "BackInTime",
         "Men's": "Mens",
     ]
 
@@ -44,15 +44,18 @@ class CategoryConfigurationManager {
         "Art",
         "Character",
         "Video Games",
+
         "Photography",
-        "Spooky",
-        "Professional",
-        "Fashion",
-        "Luxury",
-        "Chibi",
-        "Just For Fun",
         "Instagram",
         "Photobooth",
+        "Fashion",
+        "Spooky",
+        
+        "Luxury",
+        "Professional",
+
+        "Chibi",
+        "Just For Fun",
         "Social Media",
         "Fitness",
         "Travel",
@@ -80,6 +83,28 @@ class CategoryConfigurationManager {
         "Travel": "globe.americas.fill",
         "Back In Time": "back.in.time.fill",
         "Men's": "person",
+    ]
+    
+    /// Mapping of category names to their emoji icons
+    let categoryEmojis: [String: String] = [
+        "Anime": "✨",
+        "Art": "🎨",
+        "Character": "👤",
+        "Video Games": "🎮",
+        "Photography": "📸",
+        "Spooky": "👻",
+        "Professional": "💼",
+        "Fashion": "👗",
+        "Luxury": "💎",
+        "Chibi": "😊",
+        "Just For Fun": "🎉",
+        "Instagram": "📷",
+        "Photobooth": "📸",
+        "Social Media": "📱",
+        "Fitness": "💪",
+        "Travel": "✈️",
+        "Back In Time": "⏰",
+        "Men's": "👔",
     ]
     
     /// Dictionary mapping category names to example images arrays
@@ -164,6 +189,51 @@ class CategoryConfigurationManager {
             return "sparkles"
         } else {
             return "square.grid.2x2.fill" // Default icon
+        }
+    }
+    
+    /// Returns the emoji icon for a given category.
+    ///
+    /// - Parameter category: The category name to look up
+    /// - Returns: The emoji, or a default emoji if not found
+    func emoji(for category: String) -> String {
+        // First, try exact match
+        if let emoji = categoryEmojis[category] {
+            return emoji
+        }
+        
+        // Then, try case-insensitive partial match
+        let lowercased = category.lowercased()
+        if lowercased.contains("anime") {
+            return "✨"
+        } else if lowercased.contains("character") || lowercased.contains("figure") {
+            return "👤"
+        } else if lowercased.contains("art") || lowercased.contains("artistic") {
+            return "🎨"
+        } else if lowercased.contains("game") || lowercased.contains("gaming") {
+            return "🎮"
+        } else if lowercased.contains("photo") || lowercased.contains("camera") {
+            return "📸"
+        } else if lowercased.contains("spooky") || lowercased.contains("halloween") {
+            return "👻"
+        } else if lowercased.contains("professional") || lowercased.contains("business") {
+            return "💼"
+        } else if lowercased.contains("fashion") {
+            return "👗"
+        } else if lowercased.contains("luxury") {
+            return "💎"
+        } else if lowercased.contains("chibi") {
+            return "😊"
+        } else if lowercased.contains("fun") {
+            return "🎉"
+        } else if lowercased.contains("fitness") || lowercased.contains("workout") {
+            return "💪"
+        } else if lowercased.contains("travel") {
+            return "✈️"
+        } else if lowercased.contains("time") || lowercased.contains("vintage") {
+            return "⏰"
+        } else {
+            return "📋" // Default emoji
         }
     }
     

@@ -115,6 +115,7 @@ struct PhotoFilters: View {
     @State private var showPhotoPicker: Bool = false
     @State private var prompt: String = ""
     @State private var navigationPath = NavigationPath()
+    @State private var selectedCategoryTab: String? = nil
     
     // // Convert presets to InfoPacket format
     // private var presetInfoPackets: [InfoPacket] {
@@ -139,68 +140,90 @@ struct PhotoFilters: View {
     var body: some View {
         NavigationStack(path: $navigationPath) {
             VStack(spacing: 0) {
-                ScrollView {
-                    VStack(spacing: 0) {
-                        
-                        // // Presets section (if any exist)
-                        // if !presetInfoPackets.isEmpty {
-                        //     VStack(alignment: .leading, spacing: 0) {
-                        //         HStack {
-                        //             Image(systemName: "bookmark.fill")
-                        //                 .font(.system(size: 16))
-                        //                 .foregroundColor(.blue)
-                        //             Text("My Presets")
-                        //                 .font(.system(size: 18, weight: .semibold))
-                        //                 .foregroundColor(.primary)
-                        //             Spacer()
-                        //         }
-                        //         .padding(.horizontal, 16)
-                        //         .padding(.top, 16)
-                                
-                        //         PhotoFiltersGrid(
-                        //             filters: presetInfoPackets,
-                        //             selectedFilter: selectedFilter,
-                        //             onSelect: { filter in
-                        //                 selectedFilter = filter
-                        //                 navigationPath.append(filter)
-                        //             }
-                        //         )
-                                
-                        //         Divider()
-                        //             .padding(.horizontal, 16)
-                        //             .padding(.top, 8)
-                        //     }
-                        // }
-                        
-                        // Category sections - organized by category in specified order
-                        ForEach(viewModel.sortedCategoryNames, id: \.self) { categoryName in
-                            if let filters = viewModel.categorizedFilters[categoryName],
-                                !filters.isEmpty
-                            {
-                                PhotoFilterCategorySection(
-                                    title: categoryName,
-                                    icon: iconForCategory(categoryName),
-                                    filters: filters,
-                                    selectedFilter: selectedFilter,
-                                    onSelect: { filter in
-                                        selectedFilter = filter
-                                        navigationPath.append(filter)
+                // Horizontal scrollable category tab bar
+                CategoryTabBar(
+                    categories: viewModel.sortedCategoryNames,
+                    selectedCategory: $selectedCategoryTab,
+                    emojiForCategory: emojiForCategory,
+                    onCategorySelected: { categoryName in
+                        selectedCategoryTab = categoryName
+                    }
+                )
+                .background(Color(.systemGroupedBackground))
+                
+                // Main content with ScrollViewReader
+                ScrollViewReader { proxy in
+                    ScrollView {
+                        VStack(spacing: 0) {
+                            
+                            // // Presets section (if any exist)
+                            // if !presetInfoPackets.isEmpty {
+                            //     VStack(alignment: .leading, spacing: 0) {
+                            //         HStack {
+                            //             Image(systemName: "bookmark.fill")
+                            //                 .font(.system(size: 16))
+                            //                 .foregroundColor(.blue)
+                            //             Text("My Presets")
+                            //                 .font(.system(size: 18, weight: .semibold))
+                            //                 .foregroundColor(.primary)
+                            //             Spacer()
+                            //         }
+                            //         .padding(.horizontal, 16)
+                            //         .padding(.top, 16)
+                                    
+                            //         PhotoFiltersGrid(
+                            //             filters: presetInfoPackets,
+                            //             selectedFilter: selectedFilter,
+                            //             onSelect: { filter in
+                            //                 selectedFilter = filter
+                            //                 navigationPath.append(filter)
+                            //             }
+                            //         )
+                                    
+                            //         Divider()
+                            //             .padding(.horizontal, 16)
+                            //             .padding(.top, 8)
+                            //     }
+                            // }
+                            
+                            // Category sections - organized by category in specified order
+                            ForEach(viewModel.sortedCategoryNames, id: \.self) { categoryName in
+                                if let filters = viewModel.categorizedFilters[categoryName],
+                                    !filters.isEmpty
+                                {
+                                    PhotoFilterCategorySection(
+                                        title: categoryName,
+                                        emoji: emojiForCategory(categoryName),
+                                        filters: filters,
+                                        selectedFilter: selectedFilter,
+                                        onSelect: { filter in
+                                            selectedFilter = filter
+                                            navigationPath.append(filter)
+                                        }
+                                    )
+                                    .id("category_\(categoryName)")
+                                    
+                                    if categoryName != viewModel.sortedCategoryNames.last {
+                                        Divider()
+                                            .padding(.horizontal, 16)
+                                            .padding(.top, 16)
+                                            .padding(.bottom, 8)
                                     }
-                                )
-                                
-                                if categoryName != viewModel.sortedCategoryNames.last {
-                                    Divider()
-                                        .padding(.horizontal, 16)
-                                        .padding(.top, 16)
-                                        .padding(.bottom, 8)
                                 }
                             }
-                        }
 
-                    // Bottom spacing
-                    Color.clear.frame(height: 160)
+                        // Bottom spacing
+                        Color.clear.frame(height: 160)
+                        }
+                        .padding(.top, 16)
                     }
-                    .padding(.top, 16)
+                    .onChange(of: selectedCategoryTab) { newCategory in
+                        if let category = newCategory {
+                            withAnimation(.easeInOut(duration: 0.3)) {
+                                proxy.scrollTo("category_\(category)", anchor: .top)
+                            }
+                        }
+                    }
                 }
 
             //   PhotoFiltersBottomBar(
@@ -331,13 +354,94 @@ struct PhotoFilters: View {
         // Use centralized category manager for icon lookup
         return CategoryConfigurationManager.shared.icon(for: categoryName)
     }
+    
+    // Helper function to get emoji for category name
+    private func emojiForCategory(_ categoryName: String) -> String {
+        return CategoryConfigurationManager.shared.emoji(for: categoryName)
+    }
+}
+
+// MARK: - Category Tab Bar
+
+struct CategoryTabBar: View {
+    let categories: [String]
+    @Binding var selectedCategory: String?
+    let emojiForCategory: (String) -> String
+    let onCategorySelected: (String) -> Void
+    
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 12) {
+                ForEach(categories, id: \.self) { categoryName in
+                    CategoryTabButton(
+                        categoryName: categoryName,
+                        emoji: emojiForCategory(categoryName),
+                        isSelected: selectedCategory == categoryName,
+                        onTap: {
+                            onCategorySelected(categoryName)
+                        }
+                    )
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+        }
+        .background(Color(.systemGroupedBackground))
+    }
+}
+
+struct CategoryTabButton: View {
+    let categoryName: String
+    let emoji: String
+    let isSelected: Bool
+    let onTap: () -> Void
+    
+    var body: some View {
+        Button(action: onTap) {
+            HStack(spacing: 6) {
+                Text(emoji)
+                    .font(.system(size: 16))
+                
+                Text(categoryName)
+                    .font(.system(size: 14, weight: isSelected ? .semibold : .medium, design: .rounded))
+            }
+            .foregroundColor(isSelected ? .white : .primary)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
+            .background(
+                Group {
+                    if isSelected {
+                        RoundedRectangle(cornerRadius: 20)
+                            .fill(
+                                LinearGradient(
+                                    colors: [.green, .teal],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                    } else {
+                        RoundedRectangle(cornerRadius: 20)
+                            .fill(Color(.secondarySystemBackground))
+                    }
+                }
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 20)
+                    .strokeBorder(
+                        isSelected ? Color.clear : Color(.separator).opacity(0.3),
+                        lineWidth: isSelected ? 0 : 1
+                    )
+            )
+        }
+        .buttonStyle(PlainButtonStyle())
+    }
 }
 
 // MARK: - Photo Filter Category Section
 
 struct PhotoFilterCategorySection: View {
     let title: String
-    let icon: String
+    let emoji: String
     let filters: [InfoPacket]
     let selectedFilter: InfoPacket?
     let onSelect: (InfoPacket) -> Void
@@ -346,10 +450,9 @@ struct PhotoFilterCategorySection: View {
         VStack(alignment: .leading, spacing: 0) {
             // Category header
             HStack {
-                Image(systemName: icon)
-                    .font(.system(size: 16))
-                    .foregroundColor(.primary)
-                    .frame(width: 24)
+                Text(emoji)
+                    .font(.system(size: 20))
+                    .frame(width: 28)
                 
                 Text(title)
                     .font(.system(size: 18, weight: .semibold))

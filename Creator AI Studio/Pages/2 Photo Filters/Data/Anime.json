@@ -2,7 +2,7 @@
   {
     "display": {
       "title": "Anime 1",
-      "imageName": "anime1-boy-ghibli-wavespeed",
+      "imageName": "anime1-boy",
       "imageNameOriginal": "yourphoto",
       "modelName": "Wavespeed Ghibli"
     }
@@ -10,7 +10,7 @@
   {
     "display": {
       "title": "Anime 1",
-      "imageName": "anime1-girl-ghibli-wavespeed",
+      "imageName": "anime1-girl",
       "imageNameOriginal": "yourphoto",
       "modelName": "Wavespeed Ghibli"
     }
@@ -19,16 +19,36 @@
   {
     "display": {
       "title": "Anime 2",
-      "imageName": "anime2-boy-fluxkontextpro",
+      "imageName": "anime2-boy",
       "imageNameOriginal": "yourphoto",
-      "modelName": "FLUX.1 Kontext [pro]"
+      "modelName": "Seedream 4.0"
     },
     "prompt": "Transform to Anime style"
   },
+
   {
     "display": {
       "title": "Anime 2",
-      "imageName": "anime2-girl-fluxkontextpro",
+      "imageName": "anime2-girl",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Seedream 4.0"
+    },
+    "prompt": "Transform to Anime style"
+  },
+
+  {
+    "display": {
+      "title": "Anime 3",
+      "imageName": "anime3-boy",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "FLUX.1 Kontext [pro]"
+    },
+    "prompt": "Transform to Anime style"
+  },
+  {
+    "display": {
+      "title": "Anime 3",
+      "imageName": "anime3-girl",
       "imageNameOriginal": "yourphoto",
       "modelName": "FLUX.1 Kontext [pro]"
     },
@@ -37,41 +57,22 @@
 
   {
     "display": {
-      "title": "Anime 3",
-      "imageName": "anime3-boy-seedream45",
+      "title": "Manga",
+      "imageName": "manga-man",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Seedream 4.5"
+      "modelName": "FLUX.1 Kontext [pro]"
     },
-    "prompt": "Transform to Anime style"
-  },
-  {
-    "display": {
-      "title": "Anime 3",
-      "imageName": "anime3-girl-seedream45",
-      "imageNameOriginal": "yourphoto",
-      "modelName": "Seedream 4.5"
-    },
-    "prompt": "Transform to Anime style"
+    "prompt": "Transform to Manga style."
   },
 
   {
     "display": {
-      "title": "Anime 4",
-      "imageName": "anime4-boy-seedream40",
+      "title": "Colorful Manga",
+      "imageName": "colorful-manga-woman",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Seedream 4.0"
+      "modelName": "FLUX.1 Kontext [pro]"
     },
-    "prompt": "Transform to Anime style"
-  },
-
-  {
-    "display": {
-      "title": "Anime 4",
-      "imageName": "anime4-girl-seedream40",
-      "imageNameOriginal": "yourphoto",
-      "modelName": "Seedream 4.0"
-    },
-    "prompt": "Transform to Anime style"
+    "prompt": "Transform to Manga style. Saturated colors."
   },
 
   {
