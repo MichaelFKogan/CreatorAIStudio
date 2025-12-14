@@ -213,6 +213,8 @@ private struct ImageMainContent: View {
                 .padding(.horizontal)
 
             ContentList(viewModel: viewModel, isGridView: isGridView)
+
+            Color.clear.frame(height: 160)
         }
     }
 }
@@ -233,6 +235,8 @@ private struct VideoMainContent: View {
                 .padding(.horizontal)
 
             VideoContentList(viewModel: viewModel, isGridView: isGridView)
+
+            Color.clear.frame(height: 160)
         }
     }
 }
@@ -258,7 +262,7 @@ private struct ModelTypeTabSwitcher: View {
                 }
                 .frame(maxWidth: .infinity)
             }
-            .tabButtonStyle(isSelected: selectedType == 0)
+            .filterPillTabStyle(isSelected: selectedType == 0, color: .blue)
             
             // Video Models button
             Button(action: { 
@@ -274,9 +278,11 @@ private struct ModelTypeTabSwitcher: View {
                 }
                 .frame(maxWidth: .infinity)
             }
-            .tabButtonStyle(isSelected: selectedType == 1)
+            .filterPillTabStyle(isSelected: selectedType == 1, color: .purple)
         }
-        .background(Color(UIColor.secondarySystemBackground))
+        .padding(.horizontal, 4)
+        .padding(.vertical, 4)
+        .background(Color.black)
         .clipShape(RoundedRectangle(cornerRadius: 10))
         .overlay(
             RoundedRectangle(cornerRadius: 10).stroke(
@@ -900,6 +906,34 @@ extension View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 10)
             .background(isSelected ? Color.gray.opacity(0.15) : Color.clear)
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+    }
+    
+    func filterPillTabStyle(isSelected: Bool, color: Color) -> some View {
+        font(.caption)
+            .fontWeight(.medium)
+            .foregroundColor(isSelected ? color : .secondary)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 10)
+            .background(isSelected ? color.opacity(0.12) : Color.clear)
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(isSelected ? color.opacity(0.6) : Color.clear, lineWidth: 1)
+            )
+    }
+    
+    func modelTabButtonStyle(isSelected: Bool, selectedColor: Color, unselectedColor: Color) -> some View {
+        font(.caption)
+            .fontWeight(.medium)
+            .foregroundColor(isSelected ? .white : selectedColor)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 10)
+            .background(isSelected ? selectedColor : Color.clear)
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(isSelected ? Color.clear : unselectedColor, lineWidth: 1)
+            )
             .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 }

@@ -50,7 +50,7 @@ class CategoryConfigurationManager {
         "Photobooth",
         "Fashion",
         "Spooky",
-        
+
         "Luxury",
         "Professional",
 
@@ -131,14 +131,17 @@ class CategoryConfigurationManager {
         // Initialize more styles by category
         moreStylesByCategory = [
             "Anime": [
-                ["Caricature"],
-                ["photobooth"],
-                ["halloween"],
-                ["artist"],
-                ["luxury"],
-                ["videogamesItems"],
-                ["chibi"],
-                ["cute"]
+                ["Anime"],
+                ["Art"],
+                ["Character"],
+                ["Video Games"],
+                ["Photography"],
+                ["Spooky"],
+                ["Professional"],
+                ["Fashion"],
+                ["Luxury"],
+                ["Chibi"],
+                ["Just For Fun"],
             ],
             // Add other categories as needed
             // Categories without moreStyles will return nil (fallback to display.moreStyles)

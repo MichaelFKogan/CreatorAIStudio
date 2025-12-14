@@ -13,9 +13,9 @@ struct PhotoFilterDetailView: View {
     @State private var prompt: String = ""
     @State private var isGenerating: Bool = false
     @State private var selectedImage: UIImage?
-    @State private var selectedPhotoItem: PhotosPickerItem?
+    @State private var selectedPhotoItems: [PhotosPickerItem] = []
     @State private var showCamera: Bool = false
-    @State private var showPhotoPicker: Bool = false  // <-- new state
+    @State private var showActionSheet: Bool = false
     @State private var createArrowMove: Bool = false
     @State private var navigateToConfirmation: Bool = false
 
@@ -101,12 +101,7 @@ struct PhotoFilterDetailView: View {
 
                     HStack(alignment: .center, spacing: 16) {
 
-                        SpinningPlusButton(showPhotoPicker: $showPhotoPicker)
-                            .photosPicker(
-                                isPresented: $showPhotoPicker,
-                                selection: $selectedPhotoItem,
-                                matching: .images
-                            )
+                        SpinningPlusButton(showActionSheet: $showActionSheet)
                     }
                     .padding(.horizontal, 16)
                     .cornerRadius(16)
@@ -192,29 +187,20 @@ struct PhotoFilterDetailView: View {
         .sheet(isPresented: $showCamera) {
             ImagePicker(sourceType: .camera, selectedImage: $selectedImage)
         }
-        // Replace the existing .onChange(of: selectedPhotoItem) modifier with this:
-
-        .onChange(of: selectedPhotoItem) { newItem in
-            Task {
-                // Wait for the image to load first
-                guard
-                    let data = try? await newItem?.loadTransferable(
-                        type: Data.self),
-                    let uiImage = UIImage(data: data)
-                else {
-                    return
-                }
-
-                // Update state on the main actor - but do it in the right order
-                await MainActor.run {
-                    selectedImage = uiImage  // Set the image FIRST
-                }
-
+        .sheet(isPresented: $showActionSheet) {
+            ImageSourceSelectionSheetForSingleImage(
+                showCameraSheet: $showCamera,
+                selectedPhotoItems: $selectedPhotoItems,
+                showActionSheet: $showActionSheet,
+                selectedImage: $selectedImage,
+                navigateToConfirmation: $navigateToConfirmation
+            )
+        }
+        .onChange(of: selectedImage) { newImage in
+            if newImage != nil {
                 // Small delay to ensure state is fully updated before navigation
-                try? await Task.sleep(nanoseconds: 100_000_000)  // 0.1 seconds
-
-                await MainActor.run {
-                    navigateToConfirmation = true  // Then trigger navigation
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    navigateToConfirmation = true
                 }
             }
         }
@@ -369,14 +355,14 @@ struct DiagonalOverlappingImages: View {
 }
 
 struct SpinningPlusButton: View {
-    @Binding var showPhotoPicker: Bool
+    @Binding var showActionSheet: Bool
     @State private var rotation: Double = 0
     @State private var shine = false
     @State private var isAnimating = false
 
     var body: some View {
         Button(action: {
-            showPhotoPicker = true
+            showActionSheet = true
         }) {
             HStack {
                 Image(systemName: "arrow.right")
@@ -699,5 +685,96 @@ struct MoreStylesImageSection: View {
                 }
             }
         }
+    }
+}
+
+// MARK: - Image Source Selection Sheet for Single Image
+struct ImageSourceSelectionSheetForSingleImage: View {
+    @Binding var showCameraSheet: Bool
+    @Binding var selectedPhotoItems: [PhotosPickerItem]
+    @Binding var showActionSheet: Bool
+    @Binding var selectedImage: UIImage?
+    @Binding var navigateToConfirmation: Bool
+
+    var body: some View {
+        NavigationView {
+            VStack(spacing: 20) {
+                Button {
+                    showActionSheet = false
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                        showCameraSheet = true
+                    }
+                } label: {
+                    HStack(spacing: 16) {
+                        Image(systemName: "camera.fill")
+                            .font(.system(size: 24))
+                            .foregroundColor(.blue)
+                            .frame(width: 40)
+                        Text("Camera")
+                            .font(.headline)
+                            .foregroundColor(.primary)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding()
+                    .background(Color.gray.opacity(0.1))
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                }
+                .buttonStyle(PlainButtonStyle())
+
+                PhotosPicker(
+                    selection: $selectedPhotoItems,
+                    maxSelectionCount: 1,
+                    matching: .images
+                ) {
+                    HStack(spacing: 16) {
+                        Image(systemName: "photo.on.rectangle")
+                            .font(.system(size: 24))
+                            .foregroundColor(.blue)
+                            .frame(width: 40)
+                        Text("Gallery")
+                            .font(.headline)
+                            .foregroundColor(.primary)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding()
+                    .background(Color.gray.opacity(0.1))
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                }
+                .buttonStyle(PlainButtonStyle())
+                .onChange(of: selectedPhotoItems) { newItems in
+                    if !newItems.isEmpty, let item = newItems.first {
+                        Task {
+                            if let data = try? await item.loadTransferable(type: Data.self),
+                               let image = UIImage(data: data) {
+                                await MainActor.run {
+                                    selectedImage = image
+                                    selectedPhotoItems.removeAll()
+                                    showActionSheet = false
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Spacer()
+            }
+            .padding()
+            .navigationTitle("Add Photo")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Cancel") {
+                        showActionSheet = false
+                    }
+                }
+            }
+        }
+        .presentationDetents([.height(250)])
     }
 }

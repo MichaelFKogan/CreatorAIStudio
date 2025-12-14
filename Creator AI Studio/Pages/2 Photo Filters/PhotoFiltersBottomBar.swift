@@ -23,7 +23,7 @@ struct PhotoFiltersBottomBar: View {
                 CostBadge(cost: cost)
                     .padding(.horizontal, 16)
 
-                SpinningPlusButton(showPhotoPicker: $showPhotoPicker)
+                SpinningPlusButton(showActionSheet: $showPhotoPicker)
                     .photosPicker(
                         isPresented: $showPhotoPicker,
                         selection: $selectedPhotoItem,

@@ -64,7 +64,7 @@
       "title": "Origami Art",
       "imageName": "origami_art-man",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "FLUX.1 Kontext [pro]"
     },
     "prompt": "Transform this image into realistic origami art. The subject should appear crafted entirely from folded paper with visible creases and edges. White and pastel paper colors. Soft shadows."
   },
@@ -73,7 +73,7 @@
       "title": "Origami Art",
       "imageName": "origami_art-woman",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "FLUX.1 Kontext [pro]"
     },
     "prompt": "Transform this image into realistic origami art. The subject should appear crafted entirely from folded paper with visible creases and edges. White and pastel paper colors. Soft shadows."
   },
