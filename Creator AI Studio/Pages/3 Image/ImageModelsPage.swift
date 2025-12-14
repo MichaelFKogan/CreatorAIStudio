@@ -42,27 +42,29 @@ struct ImageModelsPageContent: View {
     @AppStorage("imageModelsIsGridView") private var isGridView = true
 
     var body: some View {
-        ScrollView {
-            ImageMainContent(viewModel: viewModel, isGridView: $isGridView)
-                .padding(.bottom, 100) // Space for tab switcher
-        }
-        .navigationTitle("")
-        .toolbar {
-            // Leading title
-            ToolbarItem(placement: .navigationBarLeading) {
-                Text("Image Models")
-                    .font(.system(size: 28, weight: .bold, design: .rounded))
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [.blue, .cyan],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
+        NavigationView {
+            ScrollView {
+                ImageMainContent(viewModel: viewModel, isGridView: $isGridView)
+                    .padding(.bottom, 100) // Space for tab switcher
             }
+            .navigationTitle("")
+            .toolbar {
+                // Leading title
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Text("Image Models")
+                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [.blue, .cyan],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                }
 
-            // Trailing credits - CreditsToolbarImage is ToolbarContent so use directly
-            CreditsToolbarImage()
+                // Trailing credits - CreditsToolbarImage is ToolbarContent so use directly
+                CreditsToolbarImage()
+            }
         }
     }
 }

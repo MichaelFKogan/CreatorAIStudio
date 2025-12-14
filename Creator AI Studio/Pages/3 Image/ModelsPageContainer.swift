@@ -7,39 +7,37 @@ struct ModelsPageContainer: View {
     @State private var previousModelType: Int = 0 // Track previous selection for animation direction
     
     var body: some View {
-        NavigationView {
-            ZStack {
-                // Content - use content-only versions with transitions
-                Group {
-                    if selectedModelType == 0 {
-                        ImageModelsPageContent()
-                            .id("image") // Force view identity for proper state management
-                            .transition(
-                                .asymmetric(
-                                    insertion: .move(edge: .leading).combined(with: .opacity),
-                                    removal: .move(edge: .leading).combined(with: .opacity)
-                                )
+        ZStack {
+            // Content - use content-only versions with transitions
+            // Each content view now has its own NavigationView so toolbar transitions too
+            Group {
+                if selectedModelType == 0 {
+                    ImageModelsPageContent()
+                        .id("image") // Force view identity for proper state management
+                        .transition(
+                            .asymmetric(
+                                insertion: .move(edge: .leading).combined(with: .opacity),
+                                removal: .move(edge: .leading).combined(with: .opacity)
                             )
-                    } else {
-                        VideoModelsPageContent()
-                            .id("video") // Force view identity for proper state management
-                            .transition(
-                                .asymmetric(
-                                    insertion: .move(edge: .trailing).combined(with: .opacity),
-                                    removal: .move(edge: .trailing).combined(with: .opacity)
-                                )
+                        )
+                } else {
+                    VideoModelsPageContent()
+                        .id("video") // Force view identity for proper state management
+                        .transition(
+                            .asymmetric(
+                                insertion: .move(edge: .trailing).combined(with: .opacity),
+                                removal: .move(edge: .trailing).combined(with: .opacity)
                             )
-                    }
-                }
-                
-                // Tab Switcher at bottom (above navbar)
-                VStack {
-                    Spacer()
-                    ModelTypeTabSwitcher(selectedType: $selectedModelType, previousType: $previousModelType)
-                        .padding(.bottom, 0) // No padding - background extends to navbar
+                        )
                 }
             }
-            .navigationTitle("")
+            
+            // Tab Switcher at bottom (above navbar)
+            VStack {
+                Spacer()
+                ModelTypeTabSwitcher(selectedType: $selectedModelType, previousType: $previousModelType)
+                    .padding(.bottom, 0) // No padding - background extends to navbar
+            }
         }
     }
 }
