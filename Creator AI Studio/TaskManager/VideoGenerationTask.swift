@@ -104,7 +104,9 @@ class VideoGenerationTask: MediaGenerationTask {
             
             // MARK: STEP 2 — DOWNLOAD GENERATED VIDEO
             
-            guard let urlString = response.data.first?.imageURL,
+            // Check for videoURL first (for videos), then fallback to imageURL
+            let urlString = response.data.first?.videoURL ?? response.data.first?.imageURL
+            guard let urlString = urlString,
                   let url = URL(string: urlString) else {
                 throw NSError(
                     domain: "APIError",

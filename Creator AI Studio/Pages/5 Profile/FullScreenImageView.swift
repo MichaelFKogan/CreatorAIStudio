@@ -334,17 +334,13 @@ struct FullScreenImageView: View {
 
     @ViewBuilder
     private var immersiveVideoPlayer: some View {
-        if let url = mediaURL {
+        if let player = player {
             VideoPlayer(player: player)
                 .aspectRatio(contentMode: .fit)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .onAppear {
-                    player = AVPlayer(url: url)
-                    player?.play()
-                }
-                .onDisappear {
-                    player?.pause()
-                    player = nil
+                    // Ensure video plays when entering immersive mode
+                    player.play()
                 }
                 .onTapGesture {
                     withAnimation {
@@ -482,17 +478,15 @@ struct FullScreenImageView: View {
 
     @ViewBuilder
     private var normalVideoPlayer: some View {
-        if let url = mediaURL {
+        if let player = player {
             VideoPlayer(player: player)
                 .aspectRatio(contentMode: .fit)
                 .frame(maxWidth: .infinity)
                 .onAppear {
-                    player = AVPlayer(url: url)
-                    player?.play()
-                }
-                .onDisappear {
-                    player?.pause()
-                    player = nil
+                    // Resume playing when returning to normal mode
+                    if player.timeControlStatus != .playing {
+                        player.play()
+                    }
                 }
         }
     }
@@ -998,6 +992,12 @@ struct FullScreenImageView: View {
         .onAppear {
             // Initialize favorite state from userImage
             isFavorited = userImage.is_favorite ?? false
+            
+            // Initialize video player once if it's a video
+            if isVideo, let url = mediaURL, player == nil {
+                player = AVPlayer(url: url)
+                player?.play()
+            }
 
 //            // Load presets if user is signed in
 //            if let userId = authViewModel.user?.id.uuidString {
@@ -1006,6 +1006,23 @@ struct FullScreenImageView: View {
 //                    await presetViewModel.fetchPresets()
 //                }
 //            }
+        }
+        .onDisappear {
+            // Clean up video player when view is dismissed
+            if isVideo {
+                player?.pause()
+                player = nil
+            }
+        }
+        .onChange(of: isImmersiveMode) { _, newValue in
+            // Handle play/pause when switching modes
+            if isVideo, let player = player {
+                if newValue {
+                    // Entering immersive mode - ensure it plays
+                    player.play()
+                }
+                // When exiting immersive mode, let normalVideoPlayer's onAppear handle playback
+            }
         }
         .onChange(of: userImage.is_favorite) { _, newValue in
             // Update favorite state if userImage changes

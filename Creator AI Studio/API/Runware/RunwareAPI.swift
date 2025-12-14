@@ -5,11 +5,24 @@ import SwiftUI
 struct RunwareResponse: Decodable {
     struct DataItem: Decodable {
         let imageURL: String?
+        let videoURL: String?
+        let status: String?
+        let taskUUID: String?
+        let taskType: String?
 
         enum CodingKeys: String, CodingKey {
             case imageURL
             case imageUrl
             case image_url
+            case videoURL
+            case videoUrl
+            case video_url
+            case status
+            case taskUUID
+            case taskUuid
+            case task_uuid
+            case taskType
+            case task_type
         }
 
         init(from decoder: Decoder) throws {
@@ -18,6 +31,18 @@ struct RunwareResponse: Decodable {
                 (try? container.decode(String.self, forKey: .imageURL))
                     ?? (try? container.decode(String.self, forKey: .imageUrl))
                     ?? (try? container.decode(String.self, forKey: .image_url))
+            videoURL =
+                (try? container.decode(String.self, forKey: .videoURL))
+                    ?? (try? container.decode(String.self, forKey: .videoUrl))
+                    ?? (try? container.decode(String.self, forKey: .video_url))
+            status = try? container.decode(String.self, forKey: .status)
+            taskUUID =
+                (try? container.decode(String.self, forKey: .taskUUID))
+                    ?? (try? container.decode(String.self, forKey: .taskUuid))
+                    ?? (try? container.decode(String.self, forKey: .task_uuid))
+            taskType =
+                (try? container.decode(String.self, forKey: .taskType))
+                    ?? (try? container.decode(String.self, forKey: .task_type))
         }
     }
 
@@ -556,6 +581,18 @@ func sendVideoToRunware(
         task,
     ]
 
+    // Debug: print request body (without API key for security)
+    if let requestJSON = try? JSONSerialization.data(withJSONObject: requestBody),
+       let requestString = String(data: requestJSON, encoding: .utf8) {
+        // Mask API key in log
+        let maskedRequest = requestString.replacingOccurrences(
+            of: "\"apiKey\":\"[^\"]+\"",
+            with: "\"apiKey\":\"***\"",
+            options: .regularExpression
+        )
+        print("[Runware] Video request body: \(maskedRequest)")
+    }
+
     let url = URL(string: "https://api.runware.ai/v1")!
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
@@ -563,21 +600,30 @@ func sendVideoToRunware(
     request.httpBody = try JSONSerialization.data(withJSONObject: requestBody)
 
     // MARK: - Send request
+    
+    print("[Runware] Sending video request to: \(url.absoluteString)")
 
     let (data, response) = try await URLSession.shared.data(for: request)
+    
+    let statusCode = (response as? HTTPURLResponse)?.statusCode ?? -1
+    print("[Runware] Video response status code: \(statusCode)")
 
     guard let http = response as? HTTPURLResponse,
           (200 ... 299).contains(http.statusCode)
     else {
+        // Log error response body
+        if let errorString = String(data: data, encoding: .utf8) {
+            print("[Runware] Error response body: \(errorString)")
+        }
         print(
-            "[Runware] HTTP error: \((response as? HTTPURLResponse)?.statusCode ?? -1)"
+            "[Runware] HTTP error: \(statusCode)"
         )
         throw NSError(
             domain: "RunwareAPI",
-            code: (response as? HTTPURLResponse)?.statusCode ?? -1,
+            code: statusCode,
             userInfo: [
                 NSLocalizedDescriptionKey:
-                    "Runware returned HTTP \((response as? HTTPURLResponse)?.statusCode ?? -1)",
+                    "Runware returned HTTP \(statusCode)",
             ]
         )
     }
@@ -596,7 +642,9 @@ func sendVideoToRunware(
     let taskUUID = task["taskUUID"] as? String
     
     // If async and no URL yet, poll for completion
-    if isAsync, let taskUUID = taskUUID, runwareResponse.data.first?.imageURL == nil {
+    // Check for both videoURL and imageURL
+    let hasURL = runwareResponse.data.first?.videoURL != nil || runwareResponse.data.first?.imageURL != nil
+    if isAsync, let taskUUID = taskUUID, !hasURL {
         print("[Runware] Async task detected, polling for completion...")
         print("[Runware] Task UUID: \(taskUUID)")
         
@@ -618,22 +666,30 @@ func sendVideoToRunware(
             // Poll using the task UUID
             let pollResponse = try await pollRunwareTaskStatus(taskUUID: taskUUID)
             
-            // Check if we have a video URL in the response
-            if let first = pollResponse.data.first, let urlStr = first.imageURL {
+            // Check the data item for status and URL
+            guard let first = pollResponse.data.first else {
+                print("[Runware] No data in polling response, continuing to poll...")
+                if attempt < maxPollingAttempts - 1 {
+                    try await Task.sleep(nanoseconds: pollInterval)
+                }
+                continue
+            }
+            
+            // Check for video URL (prefer videoURL, fallback to imageURL)
+            if let urlStr = first.videoURL ?? first.imageURL {
                 print("[Runware] Video URL received after polling: \(urlStr)")
+                // Create a response with the URL in imageURL field for compatibility
+                var responseWithURL = pollResponse
+                if responseWithURL.data.first?.imageURL == nil {
+                    // We need to create a new data item with imageURL set
+                    // Since DataItem is a struct, we'll need to reconstruct
+                    // For now, return the response as-is since we'll check for videoURL in VideoGenerationTask
+                }
                 return pollResponse
             }
             
-            // Check for error in response
-            if let error = pollResponse.error, !error.isEmpty {
-                throw NSError(
-                    domain: "RunwareAPI", code: -1,
-                    userInfo: [NSLocalizedDescriptionKey: "Video generation failed: \(error)"]
-                )
-            }
-            
-            // Check status - might be in the data array or top-level
-            if let status = pollResponse.status {
+            // Check status from data item (not top-level)
+            if let status = first.status {
                 let statusLower = status.lowercased()
                 if statusLower == "failed" || statusLower == "error" {
                     throw NSError(
@@ -642,14 +698,36 @@ func sendVideoToRunware(
                     )
                 }
                 if statusLower == "success" || statusLower == "completed" {
-                    // If status is success but no URL yet, continue polling
+                    // If status is success but no URL yet, continue polling (might be delayed)
                     print("[Runware] Status: \(status), but no URL yet, continuing to poll...")
+                } else if statusLower == "processing" {
+                    print("[Runware] Status: \(status), continuing to poll...")
                 } else {
                     print("[Runware] Status: \(status), continuing to poll...")
                 }
             } else {
-                // No status field, assume still processing if no URL
-                print("[Runware] No status field, continuing to poll...")
+                // Check top-level status as fallback
+                if let status = pollResponse.status {
+                    let statusLower = status.lowercased()
+                    if statusLower == "failed" || statusLower == "error" {
+                        throw NSError(
+                            domain: "RunwareAPI", code: -1,
+                            userInfo: [NSLocalizedDescriptionKey: pollResponse.error ?? "Video generation failed"]
+                        )
+                    }
+                    print("[Runware] Top-level status: \(status), continuing to poll...")
+                } else {
+                    // No status field, assume still processing if no URL
+                    print("[Runware] No status field, continuing to poll...")
+                }
+            }
+            
+            // Check for error in response
+            if let error = pollResponse.error, !error.isEmpty {
+                throw NSError(
+                    domain: "RunwareAPI", code: -1,
+                    userInfo: [NSLocalizedDescriptionKey: "Video generation failed: \(error)"]
+                )
             }
             
             // Sleep before next poll (except on last attempt)
