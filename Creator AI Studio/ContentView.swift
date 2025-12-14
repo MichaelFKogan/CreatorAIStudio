@@ -55,7 +55,7 @@ struct ContentView: View {
                                             ? .trailing : .leading))
                             ))
                 case 3:
-                    LazyView(ImageModelsPage())
+                    LazyView(ModelsPageContainer())
                         .transition(
                             .asymmetric(
                                 insertion: .opacity.combined(

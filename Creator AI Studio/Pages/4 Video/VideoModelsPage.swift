@@ -5,7 +5,6 @@ import SwiftUI
 // MARK: MAIN CONTENT
 
 struct VideoModelsPage: View {
-    //    @StateObject private var viewModel = VideoModelsViewModel(models: videoModelData)
     @StateObject private var viewModel = VideoModelsViewModel()
     @AppStorage("videoModelsIsGridView") private var isGridView = true
 
@@ -31,6 +30,35 @@ struct VideoModelsPage: View {
                 // Trailing credits
                 CreditsToolbarVideo()
             }
+        }
+    }
+}
+
+// Content-only version for use in container
+struct VideoModelsPageContent: View {
+    @StateObject private var viewModel = VideoModelsViewModel()
+    @AppStorage("videoModelsIsGridView") private var isGridView = true
+
+    var body: some View {
+        ScrollView {
+            MainContent(viewModel: viewModel, isGridView: $isGridView)
+                .padding(.bottom, 100) // Space for tab switcher
+        }
+        .navigationTitle("")
+        .toolbar {
+            // Leading title
+            ToolbarItem(placement: .navigationBarLeading) {
+                Text("Video Models")
+                    .font(.system(size: 28, weight: .bold, design: .rounded))
+                    .foregroundStyle(
+                        LinearGradient(colors: [.purple, .pink],
+                            startPoint: .leading,
+                            endPoint: .trailing)
+                    )
+            }
+
+            // Trailing credits - CreditsToolbarVideo is ToolbarContent so use directly
+            CreditsToolbarVideo()
         }
     }
 }
