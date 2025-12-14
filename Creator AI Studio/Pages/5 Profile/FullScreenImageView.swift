@@ -568,10 +568,10 @@ struct FullScreenImageView: View {
     private var actionButtons: some View {
         HStack(spacing: 36) {
             likeButton
+            saveButton
             if mediaURL != nil {
                 shareButton
             }
-            saveButton
             // presetButton
             deleteButton
         }
@@ -1714,22 +1714,22 @@ struct FullScreenImageView: View {
 //    }
 //}
 
-// MARK: - Share Sheet
+// // MARK: - Share Sheet
 
-struct ShareSheet: UIViewControllerRepresentable {
-    let activityItems: [Any]
-    let applicationActivities: [UIActivity]? = nil
+// struct ShareSheet: UIViewControllerRepresentable {
+//     let activityItems: [Any]
+//     let applicationActivities: [UIActivity]? = nil
 
-    func makeUIViewController(context: Context) -> UIActivityViewController {
-        let controller = UIActivityViewController(
-            activityItems: activityItems,
-            applicationActivities: applicationActivities
-        )
-        return controller
-    }
+//     func makeUIViewController(context: Context) -> UIActivityViewController {
+//         let controller = UIActivityViewController(
+//             activityItems: activityItems,
+//             applicationActivities: applicationActivities
+//         )
+//         return controller
+//     }
 
-    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
-}
+//     func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
+// }
 
 // MARK: - Credit Conversion Helper
 extension Double {

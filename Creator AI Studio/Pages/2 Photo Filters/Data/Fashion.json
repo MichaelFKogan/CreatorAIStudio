@@ -72,5 +72,15 @@
       "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
     },
     "prompt": "Transform the subject of the uploaded photo into the main cover model of a lifestyle and urban culture magazine while preserving facial identity, hair color, hairstyle, and body shape.\n\nTheme: streetwear model in Rome. Use vibrant colors with neon accents, bold typography, and a collage-inspired layout with playful sketches and stickers.\n\nInclude headlines such as “Style Remix,” “Street Art Meets AI,” and “Secrets of the Colosseum,” along with a LIMITED EDITION callout. Maintain a high-fashion editorial look with dynamic energy."
+  },
+
+  {
+    "display": {
+      "title": "OOTD Breakdown",
+      "imageName": "ootd_breakdown",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+    },
+    "prompt": "Transform the subject of the uploaded photo into a Q-style 3D C4D-rendered character while preserving facial identity, hair color, hairstyle, and body shape.\n\nRecreate the original clothing, accessories, colors, and hairstyle exactly from the photo style.\n\nSubtly integrate profession-inspired accessories related to the specified profession without changing the outfit itself.\n\nLayout includes top text reading “OOTD,” a full-body character on the left, and individual outfit and accessory items displayed on the right. Use a solid background color that complements the outfit."
   }
 ]

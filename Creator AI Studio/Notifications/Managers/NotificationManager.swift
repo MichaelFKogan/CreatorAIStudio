@@ -172,11 +172,7 @@ class NotificationManager: ObservableObject {
             notifications[index].message = "❌ Cancelled"
         }
         
-        // Auto-dismiss after 2 seconds
-        Task {
-            try? await Task.sleep(for: .seconds(2))
-            dismissNotification(id: notificationId)
-        }
+        // Note: Placeholder remains on screen so user can manually dismiss with X button
     }
     
     /// Reset a failed notification to in-progress state for retry

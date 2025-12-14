@@ -70,6 +70,12 @@ struct ProfileViewContent: View {
     @State private var selectedImageIds: Set<String> = []
     @State private var isDeleting: Bool = false
     @State private var showDeleteConfirmation: Bool = false
+    @State private var isSaving: Bool = false
+    @State private var isSharing: Bool = false
+    @State private var shareItems: [URL] = []
+    @State private var showShareSheet: Bool = false
+    @State private var showNoSelectionAlert: Bool = false
+    @State private var noSelectionAlertMessage: String = ""
 
     // Load model data to get images - cache at static level to avoid repeated loading
     private static var cachedImageModels: [InfoPacket]?
@@ -153,8 +159,12 @@ struct ProfileViewContent: View {
                             }) {
                                 ZStack {
                                     Circle()
-                                        .fill(Color.blue)
+                                        .fill(Color.black)
                                         .frame(width: 50, height: 50)
+                                        .overlay(
+                                            Circle()
+                                                .stroke(Color.white, lineWidth: 2)
+                                        )
                                         .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
                                     
                                     Image(systemName: "arrow.up")
@@ -172,16 +182,69 @@ struct ProfileViewContent: View {
                     ToolbarItem(placement: .navigationBarTrailing) {
                         if isSelectionMode {
                             HStack(spacing: 16) {
-                                if !selectedImageIds.isEmpty {
-                                    Button(action: {
+                                // Save button
+                                Button(action: {
+                                    if selectedImageIds.isEmpty {
+                                        noSelectionAlertMessage = "Please select at least one image to save."
+                                        showNoSelectionAlert = true
+                                    } else {
+                                        Task {
+                                            await saveSelectedImages()
+                                        }
+                                    }
+                                }) {
+                                    VStack(spacing: 2) {
+                                        Image(systemName: "arrow.down.circle")
+                                            .font(.headline)
+                                            .foregroundColor(.blue)
+                                        Text("Save")
+                                            .font(.caption2)
+                                            .foregroundColor(.blue)
+                                    }
+                                }
+                                .disabled(isSaving || isDeleting)
+                                
+                                // Share button
+                                Button(action: {
+                                    if selectedImageIds.isEmpty {
+                                        noSelectionAlertMessage = "Please select at least one image to share."
+                                        showNoSelectionAlert = true
+                                    } else {
+                                        Task {
+                                            await shareSelectedImages()
+                                        }
+                                    }
+                                }) {
+                                    VStack(spacing: 2) {
+                                        Image(systemName: "square.and.arrow.up")
+                                            .font(.headline)
+                                            .foregroundColor(.blue)
+                                        Text("Share")
+                                            .font(.caption2)
+                                            .foregroundColor(.blue)
+                                    }
+                                }
+                                .disabled(isSharing || isDeleting)
+                                
+                                // Delete button
+                                Button(action: {
+                                    if selectedImageIds.isEmpty {
+                                        noSelectionAlertMessage = "Please select at least one image to delete."
+                                        showNoSelectionAlert = true
+                                    } else {
                                         showDeleteConfirmation = true
-                                    }) {
+                                    }
+                                }) {
+                                    VStack(spacing: 2) {
                                         Image(systemName: "trash")
                                             .font(.headline)
                                             .foregroundColor(.red)
+                                        Text("Delete")
+                                            .font(.caption2)
+                                            .foregroundColor(.red)
                                     }
-                                    .disabled(isDeleting)
                                 }
+                                .disabled(isDeleting)
                                 
                                 Button(action: {
                                     isSelectionMode = false
@@ -197,7 +260,7 @@ struct ProfileViewContent: View {
                                 Button(action: {
                                     isSelectionMode = true
                                 }) {
-                                    Text("Edit")
+                                    Text("Select")
                                         .font(.headline)
                                         .foregroundColor(.gray)
                                 }
@@ -257,6 +320,14 @@ struct ProfileViewContent: View {
                 }
             } message: {
                 Text("This will permanently delete \(selectedImageIds.count) image\(selectedImageIds.count == 1 ? "" : "s"). This action cannot be undone.")
+            }
+            .alert("No Images Selected", isPresented: $showNoSelectionAlert) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(noSelectionAlertMessage)
+            }
+            .sheet(isPresented: $showShareSheet) {
+                ShareSheet(activityItems: shareItems)
             }
         }
     }
@@ -504,6 +575,139 @@ struct ProfileViewContent: View {
             selectedImageIds.removeAll()
             isSelectionMode = false
             isDeleting = false
+        }
+    }
+    
+    private func saveSelectedImages() async {
+        guard !selectedImageIds.isEmpty else { return }
+        
+        await MainActor.run {
+            isSaving = true
+        }
+        
+        // Get selected images
+        let selectedImages = viewModel.userImages.filter { selectedImageIds.contains($0.id) }
+        
+        // Request photo library permission
+        let status = await PHPhotoLibrary.requestAuthorization(for: .addOnly)
+        
+        guard status == .authorized || status == .limited else {
+            await MainActor.run {
+                isSaving = false
+            }
+            return
+        }
+        
+        var savedCount = 0
+        var failedCount = 0
+        
+        // Save each image
+        for userImage in selectedImages {
+            do {
+                guard let url = URL(string: userImage.image_url) else {
+                    failedCount += 1
+                    continue
+                }
+                
+                // Download the media data
+                let (data, _) = try await URLSession.shared.data(from: url)
+                
+                if userImage.isVideo {
+                    // Save video to photo library
+                    let tempURL = FileManager.default.temporaryDirectory
+                        .appendingPathComponent(UUID().uuidString)
+                        .appendingPathExtension(userImage.file_extension ?? "mp4")
+                    
+                    try data.write(to: tempURL)
+                    
+                    try await PHPhotoLibrary.shared().performChanges {
+                        PHAssetCreationRequest.creationRequestForAssetFromVideo(atFileURL: tempURL)
+                    }
+                    
+                    // Clean up temp file
+                    try? FileManager.default.removeItem(at: tempURL)
+                } else {
+                    // Save image to photo library
+                    guard let image = UIImage(data: data) else {
+                        failedCount += 1
+                        continue
+                    }
+                    
+                    try await PHPhotoLibrary.shared().performChanges {
+                        PHAssetCreationRequest.creationRequestForAsset(from: image)
+                    }
+                }
+                
+                savedCount += 1
+            } catch {
+                print("❌ Failed to save image \(userImage.id): \(error)")
+                failedCount += 1
+            }
+        }
+        
+        await MainActor.run {
+            isSaving = false
+            if savedCount > 0 {
+                // Optionally show success message
+                print("✅ Saved \(savedCount) image(s) to photo library")
+            }
+            if failedCount > 0 {
+                print("⚠️ Failed to save \(failedCount) image(s)")
+            }
+        }
+    }
+    
+    private func shareSelectedImages() async {
+        guard !selectedImageIds.isEmpty else { return }
+        
+        await MainActor.run {
+            isSharing = true
+            shareItems.removeAll()
+        }
+        
+        // Get selected images
+        let selectedImages = viewModel.userImages.filter { selectedImageIds.contains($0.id) }
+        
+        var tempURLs: [URL] = []
+        
+        // Download and create temporary files for each image
+        for userImage in selectedImages {
+            do {
+                guard let url = URL(string: userImage.image_url) else {
+                    continue
+                }
+                
+                // Download the media data
+                let (data, _) = try await URLSession.shared.data(from: url)
+                
+                // Create a temporary file
+                let fileExtension = userImage.isVideo ? (userImage.file_extension ?? "mp4") : (userImage.file_extension ?? "jpg")
+                let tempURL = FileManager.default.temporaryDirectory
+                    .appendingPathComponent(UUID().uuidString)
+                    .appendingPathExtension(fileExtension)
+                
+                // Write data to temporary file
+                try data.write(to: tempURL)
+                tempURLs.append(tempURL)
+            } catch {
+                print("❌ Failed to prepare image \(userImage.id) for sharing: \(error)")
+            }
+        }
+        
+        await MainActor.run {
+            isSharing = false
+            shareItems = tempURLs
+            if !shareItems.isEmpty {
+                showShareSheet = true
+            }
+        }
+        
+        // Clean up temporary files after a delay (to allow sharing to complete)
+        Task {
+            try? await Task.sleep(nanoseconds: 60_000_000_000) // 60 seconds
+            for tempURL in tempURLs {
+                try? FileManager.default.removeItem(at: tempURL)
+            }
         }
     }
 }
@@ -993,17 +1197,19 @@ struct PlaceholderImageCard: View {
                             Button(action: {
                                 copyPrompt(prompt)
                             }) {
-                                HStack(spacing: 4) {
+                                HStack(spacing: 3) {
                                     Image(systemName: showCopiedConfirmation ? "checkmark" : "doc.on.doc")
-                                        .font(.system(size: 10, weight: .semibold))
+                                        .font(.system(size: 9, weight: .semibold))
                                     Text(showCopiedConfirmation ? "Copied!" : "Copy Prompt")
-                                        .font(.custom("Nunito-Bold", size: 10))
+                                        .font(.custom("Nunito-Bold", size: 9))
                                 }
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 6)
-                                .background(showCopiedConfirmation ? Color.green : Color.blue)
-                                .clipShape(Capsule())
+                                .foregroundColor(showCopiedConfirmation ? .green : .blue)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .overlay(
+                                    Capsule()
+                                        .stroke(showCopiedConfirmation ? Color.green : Color.blue, lineWidth: 1.5)
+                                )
                             }
                             .padding(.top, 2)
                         }
@@ -1875,4 +2081,21 @@ struct ImageModelsSheet: View {
 
 extension URL: Identifiable {
     public var id: String { absoluteString }
+}
+
+// MARK: - Share Sheet
+
+struct ShareSheet: UIViewControllerRepresentable {
+    let activityItems: [Any]
+    let applicationActivities: [UIActivity]? = nil
+
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        let controller = UIActivityViewController(
+            activityItems: activityItems,
+            applicationActivities: applicationActivities
+        )
+        return controller
+    }
+
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
