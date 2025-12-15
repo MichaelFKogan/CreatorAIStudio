@@ -7,9 +7,11 @@
 
 import PhotosUI
 import SwiftUI
+import Kingfisher
 
 struct PhotoFilterDetailView: View {
     let item: InfoPacket
+    let additionalFilters: [InfoPacket]? // Additional filters for multi-select (if 2+ selected)
     @State private var prompt: String = ""
     @State private var isGenerating: Bool = false
     @State private var selectedImage: UIImage?
@@ -18,6 +20,11 @@ struct PhotoFilterDetailView: View {
     @State private var showActionSheet: Bool = false
     @State private var createArrowMove: Bool = false
     @State private var navigateToConfirmation: Bool = false
+    
+    init(item: InfoPacket, additionalFilters: [InfoPacket]? = nil) {
+        self.item = item
+        self.additionalFilters = additionalFilters
+    }
 
     func allMoreStyles(for packet: InfoPacket) -> [InfoPacket] {
         guard let moreStyles = packet.resolvedMoreStyles, !moreStyles.isEmpty else {
@@ -48,6 +55,15 @@ struct PhotoFilterDetailView: View {
         return result
     }
 
+    // Calculate total credits (item + additional filters)
+    private var totalCredits: Int {
+        let itemCredits = item.resolvedCost?.credits ?? 0
+        let additionalCredits = additionalFilters?.reduce(0) { total, filter in
+            total + (filter.resolvedCost?.credits ?? 0)
+        } ?? 0
+        return itemCredits + additionalCredits
+    }
+    
     private var creditsDisplayView: some View {
         HStack(spacing: 12) {
             // Credits Display
@@ -56,7 +72,7 @@ struct PhotoFilterDetailView: View {
                     .foregroundStyle(diamondGradient)
                     .font(.system(size: 9))
 
-                Text("250")
+                Text("\(totalCredits)")
                     .font(
                         .system(size: 16, weight: .semibold, design: .rounded)
                     )
@@ -98,6 +114,73 @@ struct PhotoFilterDetailView: View {
                         ?? item.display.imageName,
                     rightImageName: item.display.imageName
                 )
+                
+                // Additional selected filters (if multi-select with 2+ filters)
+                if let additionalFilters = additionalFilters, !additionalFilters.isEmpty {
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundColor(.blue)
+                            Text("Additional Selected Filters")
+                                .font(.system(size: 18, weight: .semibold, design: .rounded))
+                            Spacer()
+                        }
+                        
+                        // Grid of additional filter images (2 columns = 50% width each, square)
+                        LazyVGrid(
+                            columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: 2),
+                            spacing: 12
+                        ) {
+                            ForEach(additionalFilters) { filter in
+                                GeometryReader { geometry in
+                                    Group {
+                                        if let urlString = filter.display.imageName.hasPrefix("http") ? filter.display.imageName : nil,
+                                           let url = URL(string: urlString) {
+                                            KFImage(url)
+                                                .placeholder {
+                                                    Rectangle()
+                                                        .fill(Color.gray.opacity(0.2))
+                                                        .overlay(ProgressView())
+                                                }
+                                                .resizable()
+                                                .scaledToFill()
+                                                .frame(width: geometry.size.width, height: geometry.size.width)
+                                                .clipped()
+                                                .cornerRadius(12)
+                                        } else {
+                                            Image(filter.display.imageName)
+                                                .resizable()
+                                                .scaledToFill()
+                                                .frame(width: geometry.size.width, height: geometry.size.width)
+                                                .clipped()
+                                                .cornerRadius(12)
+                                        }
+                                    }
+                                    .overlay(
+                                        VStack {
+                                            Spacer()
+                                            Text(filter.display.title)
+                                                .font(.caption2)
+                                                .fontWeight(.semibold)
+                                                .foregroundColor(.white)
+                                                .lineLimit(1)
+                                                .truncationMode(.tail)
+                                                .padding(.horizontal, 8)
+                                                .padding(.vertical, 4)
+                                                .background(
+                                                    Capsule()
+                                                        .fill(Color.black.opacity(0.6))
+                                                )
+                                                .padding(8)
+                                        }
+                                    )
+                                    .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
+                                }
+                                .aspectRatio(1, contentMode: .fit)
+                            }
+                        }
+                    }
+                }
 
                 // Card 1: Photo Upload Section
                 VStack(alignment: .leading) {
@@ -143,7 +226,7 @@ struct PhotoFilterDetailView: View {
                                 )
                                 .font(.system(size: 11))
 
-                            Text("\(item.resolvedCost.credits)")
+                            Text("\(totalCredits)")
                                 .font(.system(size: 16, weight: .semibold, design: .rounded))
                                 .foregroundColor(.primary)
                             Text("credits")

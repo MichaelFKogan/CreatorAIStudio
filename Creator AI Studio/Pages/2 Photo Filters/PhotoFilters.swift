@@ -313,11 +313,9 @@ struct PhotoFilters: View {
                         }
                         
                         // Confirm button (on the right)
-                        Button(action: {
-                            // Navigation will be implemented later
-                        }) {
+                        NavigationLink(destination: destinationView) {
                             HStack(spacing: 6) {
-                                Text("Confirm")
+                                Text("Next")
                                     .font(.system(size: 15, weight: .semibold))
                                 Image(systemName: "arrow.right")
                                     .font(.system(size: 13, weight: .semibold))
@@ -343,7 +341,7 @@ struct PhotoFilters: View {
                         Color(.systemGroupedBackground)
                             .shadow(color: Color.black.opacity(0.15), radius: 8, y: -2)
                     )
-                    .padding(.bottom, 70) // Account for bottom navbar (50-60px) + some extra padding
+                    .padding(.bottom, 60) // Account for bottom navbar (50-60px) + some extra padding
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                     .animation(.spring(response: 0.3, dampingFraction: 0.7), value: selectedFilterIds.isEmpty)
                 }
@@ -451,14 +449,14 @@ struct PhotoFilters: View {
         }
     }
 
-    @ViewBuilder
-    private var destinationView: some View {
-        if let image = selectedImage, let filter = selectedFilter {
-            EmptyView() // Replace w/ PhotoConfirmationView
-        } else {
-            EmptyView()
-        }
-    }
+    // @ViewBuilder
+    // private var destinationView: some View {
+    //     if let image = selectedImage, let filter = selectedFilter {
+    //         EmptyView() // Replace w/ PhotoConfirmationView
+    //     } else {
+    //         EmptyView()
+    //     }
+    // }
 
     private func loadPhoto(_ item: PhotosPickerItem?) {
         Task {
@@ -495,6 +493,22 @@ struct PhotoFilters: View {
     // Get selected filters based on selectedFilterIds
     private var selectedFilters: [InfoPacket] {
         viewModel.filters.filter { selectedFilterIds.contains($0.id) }
+    }
+    
+    // Destination view for navigation based on number of selected filters
+    @ViewBuilder
+    private var destinationView: some View {
+        if selectedFilters.count == 1, let firstFilter = selectedFilters.first {
+            // Single filter - pass normally
+            PhotoFilterDetailView(item: firstFilter)
+        } else if let firstFilter = selectedFilters.first {
+            // Multiple filters - pass first as item, rest as additionalFilters
+            let additionalFilters = Array(selectedFilters.dropFirst())
+            PhotoFilterDetailView(item: firstFilter, additionalFilters: additionalFilters)
+        } else {
+            // Fallback (shouldn't happen)
+            EmptyView()
+        }
     }
 }
 
