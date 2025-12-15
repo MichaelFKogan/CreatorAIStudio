@@ -488,6 +488,23 @@ struct FullScreenImageView: View {
                         player.play()
                     }
                 }
+        } else {
+            // Show placeholder while video is loading
+            ZStack {
+                if let thumbnailURL = thumbnailURL {
+                    KFImage(thumbnailURL)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(maxWidth: .infinity)
+                } else {
+                    Rectangle()
+                        .fill(Color.black.opacity(0.3))
+                        .overlay(
+                            ProgressView()
+                                .tint(.white)
+                        )
+                }
+            }
         }
     }
 
@@ -997,14 +1014,48 @@ struct FullScreenImageView: View {
             if isVideo, let url = mediaURL, player == nil {
                 // ✅ Use cached video URL
                 Task {
+                    let videoURL: URL
                     if let cachedURL = await VideoCacheManager.shared.getCachedVideoURL(for: url) {
-                        await MainActor.run {
-                            player = AVPlayer(url: cachedURL)
-                        }
+                        videoURL = cachedURL
+                        print("🎬 Using cached video: \(cachedURL.lastPathComponent)")
                     } else {
                         // Fallback to remote URL if caching fails
-                        await MainActor.run {
-                            player = AVPlayer(url: url)
+                        videoURL = url
+                        print("🎬 Using remote video: \(url.lastPathComponent)")
+                    }
+                    
+                    await MainActor.run {
+                        // Verify the file exists before creating player
+                        if videoURL.isFileURL {
+                            guard FileManager.default.fileExists(atPath: videoURL.path) else {
+                                print("❌ Cached video file not found: \(videoURL.path)")
+                                // Fallback to remote URL
+                                player = AVPlayer(url: url)
+                                player?.play()
+                                return
+                            }
+                            
+                            // Check file size
+                            if let attributes = try? FileManager.default.attributesOfItem(atPath: videoURL.path),
+                               let fileSize = attributes[.size] as? Int64,
+                               fileSize < 1024 {
+                                print("❌ Cached video file too small: \(fileSize) bytes")
+                                // Fallback to remote URL
+                                player = AVPlayer(url: url)
+                                player?.play()
+                                return
+                            }
+                        }
+                        
+                        let newPlayer = AVPlayer(url: videoURL)
+                        player = newPlayer
+                        
+                        // Start playing automatically after a brief delay to ensure player is ready
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                            if newPlayer.timeControlStatus != .playing {
+                                newPlayer.play()
+                                print("▶️ Video player started for: \(videoURL.lastPathComponent)")
+                            }
                         }
                     }
                 }

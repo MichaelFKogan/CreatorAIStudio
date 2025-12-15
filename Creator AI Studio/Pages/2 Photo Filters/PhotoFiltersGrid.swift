@@ -3,7 +3,23 @@ import SwiftUI
 struct PhotoFiltersGrid: View {
     let filters: [InfoPacket]
     let selectedFilter: InfoPacket?
+    let isMultiSelectMode: Bool
+    @Binding var selectedFilterIds: Set<UUID>
     let onSelect: (InfoPacket) -> Void
+    
+    init(
+        filters: [InfoPacket],
+        selectedFilter: InfoPacket?,
+        isMultiSelectMode: Bool = false,
+        selectedFilterIds: Binding<Set<UUID>> = .constant([]),
+        onSelect: @escaping (InfoPacket) -> Void
+    ) {
+        self.filters = filters
+        self.selectedFilter = selectedFilter
+        self.isMultiSelectMode = isMultiSelectMode
+        self._selectedFilterIds = selectedFilterIds
+        self.onSelect = onSelect
+    }
     
     private let columns = 4
     private let spacing: CGFloat = 8
@@ -28,7 +44,9 @@ struct PhotoFiltersGrid: View {
                     isSelected: selectedFilter?.id == filter.id,
                     size: itemSize,
                     cost: filter.resolvedCost,
-                    imageUrl: filter.display.imageName.hasPrefix("http") ? filter.display.imageName : nil
+                    imageUrl: filter.display.imageName.hasPrefix("http") ? filter.display.imageName : nil,
+                    isMultiSelectMode: isMultiSelectMode,
+                    isMultiSelected: selectedFilterIds.contains(filter.id)
                 )
                 .onTapGesture { onSelect(filter) }
             }

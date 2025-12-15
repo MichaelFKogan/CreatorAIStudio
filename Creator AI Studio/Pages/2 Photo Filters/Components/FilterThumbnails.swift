@@ -10,10 +10,13 @@ struct FilterThumbnail: View {
     let size: CGFloat
     let cost: Decimal?
     let imageUrl: String?  // Optional URL for user-generated images (presets)
+    let isMultiSelectMode: Bool
+    let isMultiSelected: Bool
 
     init(
         title: String, imageName: String, isSelected: Bool, size: CGFloat,
-        cost: Decimal?, imageUrl: String? = nil
+        cost: Decimal?, imageUrl: String? = nil, isMultiSelectMode: Bool = false,
+        isMultiSelected: Bool = false
     ) {
         self.title = title
         self.imageName = imageName
@@ -21,6 +24,8 @@ struct FilterThumbnail: View {
         self.size = size
         self.cost = cost
         self.imageUrl = imageUrl
+        self.isMultiSelectMode = isMultiSelectMode
+        self.isMultiSelected = isMultiSelected
     }
 
     // Check if imageName is a URL
@@ -56,32 +61,35 @@ struct FilterThumbnail: View {
                             .frame(width: size, height: size)
                             .clipped()
                             .cornerRadius(8)
-                            // .overlay(
-                            //     RoundedRectangle(cornerRadius: 8)
-                            //         .stroke(
-                            //             isSelected ? Color.pink : Color.clear,
-                            //             lineWidth: 3)
-                            // )
+                            .overlay(
+                                // Selection overlay (darkens when selected in multi-select mode)
+                                Group {
+                                    if isMultiSelectMode {
+                                        Rectangle()
+                                            .fill(Color.black.opacity(isMultiSelected ? 0.3 : 0))
+                                    }
+                                }
+                            )
                             .overlay(
                                 VStack(alignment: .trailing, spacing: 4) {
-                                    // // Checkmark (shown when selected, below price)
-                                    // if isSelected {
-                                    //     Image(systemName: "checkmark.circle.fill")
-                                    //         .font(.system(size: 16))
-                                    //         .foregroundStyle(.white)
-                                    //         .background(
-                                    //             Circle()
-                                    //                 .fill(
-                                    //                     LinearGradient(
-                                    //                         colors: [.pink, .pink],
-                                    //                         startPoint: .topLeading,
-                                    //                         endPoint: .bottomTrailing
-                                    //                     )
-                                    //                 )
-                                    //                 .frame(width: 20, height: 20)
-                                    //         )
-                                    //         .transition(.scale.combined(with: .opacity))
-                                    // }
+                                    // Multi-select circle (top right)
+                                    if isMultiSelectMode {
+                                        ZStack {
+                                            Circle()
+                                                .fill(isMultiSelected ? Color.blue : Color.gray.opacity(0.7))
+                                                .frame(width: 16, height: 16)
+                                                .overlay(
+                                                    Circle()
+                                                        .strokeBorder(Color.white, lineWidth: 1.5)
+                                                )
+                                            if isMultiSelected {
+                                                Image(systemName: "checkmark")
+                                                    .font(.system(size: 8, weight: .bold))
+                                                    .foregroundColor(.white)
+                                            }
+                                        }
+                                        .padding(1)
+                                    }
 
                                     Spacer()
 
@@ -118,32 +126,35 @@ struct FilterThumbnail: View {
                             .frame(width: size, height: size)
                             .clipped()
                             .cornerRadius(8)
-                            // .overlay(
-                            //     RoundedRectangle(cornerRadius: 8)
-                            //         .stroke(
-                            //             isSelected ? Color.pink : Color.clear,
-                            //             lineWidth: 3)
-                            // )
+                            .overlay(
+                                // Selection overlay (darkens when selected in multi-select mode)
+                                Group {
+                                    if isMultiSelectMode {
+                                        Rectangle()
+                                            .fill(Color.black.opacity(isMultiSelected ? 0.3 : 0))
+                                    }
+                                }
+                            )
                             .overlay(
                                 VStack(alignment: .trailing, spacing: 4) {
-                                    // // Checkmark (shown when selected, below price)
-                                    // if isSelected {
-                                    //     Image(systemName: "checkmark.circle.fill")
-                                    //         .font(.system(size: 16))
-                                    //         .foregroundStyle(.white)
-                                    //         .background(
-                                    //             Circle()
-                                    //                 .fill(
-                                    //                     LinearGradient(
-                                    //                         colors: [.pink, .pink],
-                                    //                         startPoint: .topLeading,
-                                    //                         endPoint: .bottomTrailing
-                                    //                     )
-                                    //                 )
-                                    //                 .frame(width: 20, height: 20)
-                                    //         )
-                                    //         .transition(.scale.combined(with: .opacity))
-                                    // }
+                                    // Multi-select circle (top right)
+                                    if isMultiSelectMode {
+                                        ZStack {
+                                            Circle()
+                                                .fill(isMultiSelected ? Color.blue : Color.gray.opacity(0.7))
+                                                .frame(width: 16, height: 16)
+                                                .overlay(
+                                                    Circle()
+                                                        .strokeBorder(Color.white, lineWidth: 1.5)
+                                                )
+                                            if isMultiSelected {
+                                                Image(systemName: "checkmark")
+                                                    .font(.system(size: 8, weight: .bold))
+                                                    .foregroundColor(.white)
+                                            }
+                                        }
+                                        .padding(1)
+                                    }
 
                                     Spacer()
 

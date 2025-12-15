@@ -14,21 +14,55 @@ class VideoCacheManager {
         // Create cache directory if it doesn't exist
         try? FileManager.default.createDirectory(at: cacheDirectory, withIntermediateDirectories: true)
         
-        // Clean old cache on init
+        // Clean old cache files (without extensions) and manage cache size
         Task {
+            await cleanOldCacheFiles()
             await cleanCacheIfNeeded()
+        }
+    }
+    
+    /// Removes old cache files that don't have proper extensions (from previous version)
+    private func cleanOldCacheFiles() async {
+        guard let files = try? FileManager.default.contentsOfDirectory(at: cacheDirectory, includingPropertiesForKeys: nil) else { return }
+        
+        for file in files {
+            // Remove files without video extensions
+            let ext = file.pathExtension.lowercased()
+            if ext.isEmpty || !["mp4", "webm", "mov", "m4v"].contains(ext) {
+                try? FileManager.default.removeItem(at: file)
+                print("🗑️ Removed old cache file without extension: \(file.lastPathComponent)")
+            }
         }
     }
     
     /// Returns a cached URL if available, otherwise downloads and caches the video
     func getCachedVideoURL(for remoteURL: URL) async -> URL? {
-        let cacheKey = remoteURL.absoluteString.data(using: .utf8)?.base64EncodedString() ?? remoteURL.lastPathComponent
-        let cachedFileURL = cacheDirectory.appendingPathComponent(cacheKey)
+        // Create cache key from URL, preserving file extension
+        let urlString = remoteURL.absoluteString
+        let fileExtension = remoteURL.pathExtension.isEmpty ? "mp4" : remoteURL.pathExtension
         
-        // Check if file exists in cache
+        // Create a safe cache key (base64 but replace invalid filename characters)
+        let cacheKeyBase = urlString.data(using: .utf8)?.base64EncodedString() ?? remoteURL.lastPathComponent
+        let cacheKey = cacheKeyBase
+            .replacingOccurrences(of: "/", with: "_")
+            .replacingOccurrences(of: "+", with: "-")
+            .replacingOccurrences(of: "=", with: "")
+        
+        let cachedFileURL = cacheDirectory.appendingPathComponent(cacheKey).appendingPathExtension(fileExtension)
+        
+        // Check if file exists in cache and is valid
         if FileManager.default.fileExists(atPath: cachedFileURL.path) {
-            print("✅ Video cache hit: \(remoteURL.lastPathComponent)")
-            return cachedFileURL
+            // Verify file size is reasonable (at least 1KB)
+            if let attributes = try? FileManager.default.attributesOfItem(atPath: cachedFileURL.path),
+               let fileSize = attributes[.size] as? Int64,
+               fileSize > 1024 {
+                print("✅ Video cache hit: \(remoteURL.lastPathComponent) (\(Double(fileSize) / 1_000_000) MB)")
+                return cachedFileURL
+            } else {
+                // Invalid cached file, remove it
+                print("⚠️ Invalid cached file, removing: \(cachedFileURL.lastPathComponent)")
+                try? FileManager.default.removeItem(at: cachedFileURL)
+            }
         }
         
         // Download and cache
@@ -36,7 +70,13 @@ class VideoCacheManager {
         do {
             let (data, _) = try await URLSession.shared.data(from: remoteURL)
             try data.write(to: cachedFileURL)
-            print("✅ Video cached: \(remoteURL.lastPathComponent)")
+            print("✅ Video cached: \(remoteURL.lastPathComponent) (\(Double(data.count) / 1_000_000) MB)")
+            
+            // Verify the file was written correctly
+            guard FileManager.default.fileExists(atPath: cachedFileURL.path) else {
+                print("❌ Cached file not found after write")
+                return nil
+            }
             
             // Clean cache if needed
             await cleanCacheIfNeeded()

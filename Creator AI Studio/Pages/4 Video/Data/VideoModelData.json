@@ -5,33 +5,5 @@
       "imageName": "seedance10profast",
       "modelName": "Seedance 1.0 Pro Fast"
     }
-  },
-  {
-    "display": {
-      "title": "Sora 2",
-      "imageName": "sora2",
-      "modelName": "Sora 2"
-    }
-  },
-  {
-    "display": {
-      "title": "Google Veo 3",
-      "imageName": "veo3",
-      "modelName": "Google Veo 3"
-    }
-  },
-  {
-    "display": {
-      "title": "Kling AI",
-      "imageName": "klingai",
-      "modelName": "Kling AI"
-    }
-  },
-  {
-    "display": {
-      "title": "Wan 2.5",
-      "imageName": "wan25",
-      "modelName": "Wan 2.5"
-    }
   }
 ]

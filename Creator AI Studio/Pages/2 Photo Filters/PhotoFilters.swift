@@ -1,6 +1,7 @@
 import PhotosUI
 import SwiftUI
 import Combine
+import Kingfisher
 
 // MARK: - FILTER CATEGORY
 
@@ -126,6 +127,8 @@ struct PhotoFilters: View {
     @State private var prompt: String = ""
     @State private var navigationPath = NavigationPath()
     @State private var selectedCategoryTab: String? = nil
+    @State private var isMultiSelectMode: Bool = false
+    @State private var selectedFilterIds: Set<UUID> = []
     
     // // Convert presets to InfoPacket format
     // private var presetInfoPackets: [InfoPacket] {
@@ -206,9 +209,22 @@ struct PhotoFilters: View {
                                         emoji: emojiForCategory(categoryName),
                                         filters: filters,
                                         selectedFilter: selectedFilter,
+                                        isMultiSelectMode: isMultiSelectMode,
+                                        selectedFilterIds: $selectedFilterIds,
                                         onSelect: { filter in
-                                            selectedFilter = filter
-                                            navigationPath.append(filter)
+                                            if isMultiSelectMode {
+                                                if selectedFilterIds.contains(filter.id) {
+                                                    selectedFilterIds.remove(filter.id)
+                                                } else {
+                                                    // Limit to maximum 5 selections
+                                                    if selectedFilterIds.count < 5 {
+                                                        selectedFilterIds.insert(filter.id)
+                                                    }
+                                                }
+                                            } else {
+                                                selectedFilter = filter
+                                                navigationPath.append(filter)
+                                            }
                                         }
                                     )
                                     .id("category_\(categoryName)")
@@ -242,6 +258,96 @@ struct PhotoFilters: View {
             //       cost: (selectedFilter?.cost as NSDecimalNumber?)?.doubleValue ?? 0.04
             //   )
             }
+            .overlay(alignment: .bottom) {
+                // Integrated single bar with preview thumbnails and confirm button
+                if isMultiSelectMode && !selectedFilterIds.isEmpty {
+                    HStack(spacing: 12) {
+                        // Preview thumbnails (scrollable on the left)
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 12) {
+                                ForEach(selectedFilters) { filter in
+                                    ZStack(alignment: .topTrailing) {
+                                        // Filter thumbnail
+                                        Group {
+                                            if let urlString = filter.display.imageName.hasPrefix("http") ? filter.display.imageName : nil,
+                                               let url = URL(string: urlString) {
+                                                KFImage(url)
+                                                    .placeholder {
+                                                        Rectangle()
+                                                            .fill(Color.gray.opacity(0.2))
+                                                            .overlay(ProgressView())
+                                                    }
+                                                    .resizable()
+                                                    .scaledToFill()
+                                                    .frame(width: 50, height: 50)
+                                                    .clipped()
+                                                    .cornerRadius(8)
+                                            } else {
+                                                Image(filter.display.imageName)
+                                                    .resizable()
+                                                    .scaledToFill()
+                                                    .frame(width: 50, height: 50)
+                                                    .clipped()
+                                                    .cornerRadius(8)
+                                            }
+                                        }
+                                        
+                                        // Remove button
+                                        Button(action: {
+                                            selectedFilterIds.remove(filter.id)
+                                        }) {
+                                            Image(systemName: "xmark.circle.fill")
+                                                .font(.system(size: 16))
+                                                .foregroundColor(.white)
+                                                .background(
+                                                    Circle()
+                                                        .fill(Color.black.opacity(0.6))
+                                                )
+                                        }
+                                        .offset(x: 4, y: -4)
+                                    }
+                                }
+                            }
+                            .padding(.leading, 16)
+                            .padding(.vertical, 8)
+                        }
+                        
+                        // Confirm button (on the right)
+                        Button(action: {
+                            // Navigation will be implemented later
+                        }) {
+                            HStack(spacing: 6) {
+                                Text("Confirm")
+                                    .font(.system(size: 15, weight: .semibold))
+                                Image(systemName: "arrow.right")
+                                    .font(.system(size: 13, weight: .semibold))
+                            }
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 18)
+                            .padding(.vertical, 10)
+                            .background(
+                                RoundedRectangle(cornerRadius: 20)
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [.green, .teal],
+                                            startPoint: .leading,
+                                            endPoint: .trailing
+                                        )
+                                    )
+                            )
+                        }
+                        .padding(.trailing, 16)
+                    }
+                    .frame(height: 70)
+                    .background(
+                        Color(.systemGroupedBackground)
+                            .shadow(color: Color.black.opacity(0.15), radius: 8, y: -2)
+                    )
+                    .padding(.bottom, 70) // Account for bottom navbar (50-60px) + some extra padding
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .animation(.spring(response: 0.3, dampingFraction: 0.7), value: selectedFilterIds.isEmpty)
+                }
+            }
 
 // MARK: TOOLBAR
             .background(Color(.systemGroupedBackground))
@@ -262,49 +368,64 @@ struct PhotoFilters: View {
                 }
 
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    HStack(spacing: 6) {
-                        Image(systemName: "diamond.fill")
-                            .foregroundStyle(
-                                LinearGradient(
-                                    colors: [.teal, .teal],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
+                    HStack(spacing: 16) {
+                        // Multi-select toggle button
+                        Button(action: {
+                            isMultiSelectMode.toggle()
+                            if !isMultiSelectMode {
+                                selectedFilterIds.removeAll()
+                            }
+                        }) {
+                            Text(isMultiSelectMode ? "Cancel" : "Select")
+                                .font(.headline)
+                                .foregroundColor(isMultiSelectMode ? .blue : .gray)
+                        }
+                        
+                        // Credits display
+                        HStack(spacing: 6) {
+                            Image(systemName: "diamond.fill")
+                                .foregroundStyle(
+                                    LinearGradient(
+                                        colors: [.teal, .teal],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
                                 )
-                            )
-                            .font(.system(size: 8))
-                        Text("250")
-                            .font(
-                                .system(
-                                    size: 14, weight: .semibold,
-                                    design: .rounded
+                                .font(.system(size: 8))
+                            Text("250")
+                                .font(
+                                    .system(
+                                        size: 14, weight: .semibold,
+                                        design: .rounded
+                                    )
                                 )
-                            )
-                            .foregroundColor(.white)
-                        Text("credits")
-                            .font(.caption2)
-                            .foregroundColor(.white.opacity(0.9))
+                                .foregroundColor(.white)
+                            Text("credits")
+                                .font(.caption2)
+                                .foregroundColor(.white.opacity(0.9))
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(
+                            RoundedRectangle(cornerRadius: 20)
+                                .fill(Color.secondary.opacity(0.1))
+                                .shadow(
+                                    color: Color.black.opacity(0.2), radius: 4,
+                                    x: 0, y: 2
+                                )
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 20)
+                                .strokeBorder(
+                                    LinearGradient(
+                                        colors: [.mint, .mint],
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    ),
+                                    lineWidth: 1.5
+                                )
+                        )
                     }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(
-                        RoundedRectangle(cornerRadius: 20)
-                            .fill(Color.secondary.opacity(0.1))
-                            .shadow(
-                                color: Color.black.opacity(0.2), radius: 4,
-                                x: 0, y: 2
-                            )
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 20)
-                            .strokeBorder(
-                                LinearGradient(
-                                    colors: [.mint, .mint],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                ),
-                                lineWidth: 1.5
-                            )
-                    )
                 }
             }
 
@@ -369,6 +490,11 @@ struct PhotoFilters: View {
     // Helper function to get emoji for category name
     private func emojiForCategory(_ categoryName: String) -> String {
         return CategoryConfigurationManager.shared.emoji(for: categoryName)
+    }
+    
+    // Get selected filters based on selectedFilterIds
+    private var selectedFilters: [InfoPacket] {
+        viewModel.filters.filter { selectedFilterIds.contains($0.id) }
     }
 }
 
@@ -455,6 +581,8 @@ struct PhotoFilterCategorySection: View {
     let emoji: String
     let filters: [InfoPacket]
     let selectedFilter: InfoPacket?
+    let isMultiSelectMode: Bool
+    @Binding var selectedFilterIds: Set<UUID>
     let onSelect: (InfoPacket) -> Void
     
     var body: some View {
@@ -478,6 +606,8 @@ struct PhotoFilterCategorySection: View {
             PhotoFiltersGrid(
                 filters: filters,
                 selectedFilter: selectedFilter,
+                isMultiSelectMode: isMultiSelectMode,
+                selectedFilterIds: $selectedFilterIds,
                 onSelect: onSelect
             )
         }
