@@ -250,5 +250,25 @@
       "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
     },
     "prompt": "Transform the subject of the uploaded photo into a clean, professional corporate studio portrait while preserving the subject’s exact facial identity, hair color, hairstyle, and body shape.\n\nPresent the subject wearing a simple black T-shirt against a pure black studio background. Pose the body with a slight natural tilt to avoid stiffness.\n\nUse controlled side lighting to create subtle contrast and depth across the face and shoulders while maintaining a polished, professional look.\n\nKeep the composition minimal and distraction-free with no text or logos. The final image should feel cohesive, confident, and suitable for a modern corporate team presentation."
+  },
+
+  {
+    "display": {
+      "title": "Confetti Celebration Moment",
+      "imageName": "confetti_celebration",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+    },
+    "prompt": "Transform the subject of the uploaded photo into a joyful celebration portrait captured mid-motion. Preserve the subject’s facial identity, hair color, hairstyle, and body shape.\n\nThe subject tosses colorful confetti into the air while smiling with eyes closed. Hair lifts naturally with motion. The subject wears a dark blouse and a delicate necklace.\n\nConfetti in gold, blue, pink, and metallic tones floats sharply in focus around the subject. Use soft natural indoor lighting with shallow depth of field.\n\nRender in cinematic, professional photography style with natural skin tones, crisp detail, candid emotion, and ultra-realistic motion freeze."
+  },
+
+  {
+    "display": {
+      "title": "Chiaroscuro Sunlit Portrait",
+      "imageName": "chiaroscuro_sunray_portrait",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+    },
+    "prompt": "Transform the subject of the uploaded photo into a hyper-realistic 8K chiaroscuro-style cinematic portrait. Preserve the subject’s exact facial identity, hair color, hairstyle, and body shape without alteration.\n\nPose the subject gazing slightly upward and to the side with a soft, calm, introspective expression. Lips are glossy and slightly parted, catching subtle highlights. Hair falls naturally across the forehead with fine realistic texture.\n\nIlluminate the face using dramatic chiaroscuro lighting: a thin ray of warm sunlight striking the eyes and upper cheek while deep shadows envelop the background and lower face. Maintain strong contrast between light and darkness for emotional depth.\n\nRender in ultra-detailed 8K realism with natural skin tones, painterly contrast, soft hair detailing, and cinematic mood. Portrait orientation, minimal background fading into shadow."
   }
 ]

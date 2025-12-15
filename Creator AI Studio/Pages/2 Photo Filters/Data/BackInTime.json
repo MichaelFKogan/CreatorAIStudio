@@ -12,7 +12,17 @@
   {
     "display": {
       "title": "1990s Grunge Portrait",
-      "imageName": "1990s_grunge_portrait",
+      "imageName": "1990s_grunge_portrait-male",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+    },
+    "prompt": "Transform the subject of the uploaded photo into a 1990s grunge-era portrait while preserving the subject’s exact facial identity, hair color, hairstyle, and body shape.\n\nDress the subject in authentic 1990s grunge clothing such as flannel shirts, worn denim, and combat boots, adapted without altering hair color or facial structure.\n\nSet the scene on a slightly gritty urban street with muted tones, concrete textures, and overcast lighting.\n\nUse subdued color grading and a raw, documentary-style feel while keeping the subject instantly recognizable."
+  },
+
+  {
+    "display": {
+      "title": "1990s Grunge Portrait",
+      "imageName": "1990s_grunge_portrait-female",
       "imageNameOriginal": "yourphoto",
       "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
     },
@@ -32,7 +42,17 @@
   {
     "display": {
       "title": "1980s Neon Mall Portrait",
-      "imageName": "1980s_mall_portrait",
+      "imageName": "1980s_mall_portrait-male",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+    },
+    "prompt": "Transform the subject of the uploaded photo into a 1980s mall-era portrait while preserving the subject’s exact facial identity, hair color, hairstyle, and body shape.\n\nStyle the subject in bold 1980s fashion with neon colors, layered clothing, and era-appropriate accessories, keeping hair color and structure unchanged.\n\nPlace the subject inside a vintage shopping mall or arcade with glowing signs, retro decor, and colorful lighting.\n\nApply vibrant saturation and nostalgic color grading while maintaining a realistic and recognizable appearance."
+  },
+
+  {
+    "display": {
+      "title": "1980s Neon Mall Portrait",
+      "imageName": "1980s_mall_portrait-female",
       "imageNameOriginal": "yourphoto",
       "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
     },
@@ -52,7 +72,17 @@
   {
     "display": {
       "title": "1920s Art Deco Portrait",
-      "imageName": "1920s_gatsby_portrait",
+      "imageName": "1920s_gatsby_portrait-male",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+    },
+    "prompt": "Transform the subject of the uploaded photo into a 1920s Great Gatsby–era portrait while preserving the subject’s exact facial identity, hair color, hairstyle, and body shape.\n\nStyle the subject in historically accurate 1920s fashion, such as a flapper-inspired dress or a tailored suit, with finger waves or neatly slicked hair adapted without changing hair color or structure.\n\nPlace the subject inside an elegant Art Deco interior with geometric patterns, warm ambient lighting, and luxurious textures.\n\nMaintain a refined, cinematic tone with period-accurate color grading and props while keeping the subject fully recognizable."
+  },
+
+  {
+    "display": {
+      "title": "1920s Art Deco Portrait",
+      "imageName": "1920s_gatsby_portrait-female",
       "imageNameOriginal": "yourphoto",
       "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
     },
@@ -90,7 +120,17 @@
   {
     "display": {
       "title": "Ancient Egyptian Portrait",
-      "imageName": "ancient_egypt_portrait",
+      "imageName": "ancient_egypt_portrait-male",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+    },
+    "prompt": "Transform the subject of the uploaded photo into an Ancient Egyptian–inspired portrait while preserving the subject’s exact facial identity, hair color, hairstyle, and body shape.\n\nDress the subject in historically inspired Egyptian garments with linen textures and gold-accented accessories, carefully adapted to their original hair and facial features.\n\nPlace the subject against a sunlit desert temple or stone relief background with warm golden tones.\n\nUse stylized yet realistic lighting and color grading inspired by ancient art while keeping the subject’s likeness fully intact."
+  },
+
+  {
+    "display": {
+      "title": "Ancient Egyptian Portrait",
+      "imageName": "ancient_egypt_portrait-female",
       "imageNameOriginal": "yourphoto",
       "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
     },

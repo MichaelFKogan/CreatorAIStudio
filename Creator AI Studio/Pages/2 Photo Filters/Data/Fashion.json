@@ -17,15 +17,7 @@
     },
     "prompt": "Use the uploaded photo as a reference and preserve 100% of the subject’s face and identity.\n\nGenerate a realistic outdoor portrait of the person standing in a dense field of tall white flowers with organic centers. Flowers should reach shoulder and head height, surrounding the subject closely, with some overlapping and blurred in the extreme foreground.\n\nThe subject wears a delicate white dress with lace and relaxed fabric details, standing upright and centered with a calm, serene expression, directly facing the camera.\n\nBackground: tall blooming flowers and a bright blue sky with soft clouds.\n\nLighting: warm golden daylight, soft natural sunlight highlighting textures and gently illuminating the face and hair. Shadows are subtle.\n\nCamera: vertical 4:5 close-to-medium portrait, eye-level perspective, lens 85-105mm full-frame equivalent for soft natural field focus.\n\nThe subject should appear integrated into the flower field, not superimposed. Avoid altering face, adding text/logos, distorting flowers or clothing, or leaving empty backgrounds.\n\nFinal output: ultra-realistic, high-resolution, immersive floral editorial portrait in 4K."
   },
-  {
-    "display": {
-      "title": "10K Followers",
-      "imageName": "10kfollowerspink",
-      "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
-    },
-    "prompt": "Transform the uploaded photo into a celebratory social media scene.\n\nThe subject is a young woman with long wavy dark hair sitting cross-legged on a white bed, smiling softly with eyes closed, holding two sparklers.\n\nShe wears a light pink blouse with wide flowy sleeves and black shorts, with pink manicured nails.\n\nSurrounding her are metallic rose-gold and pastel pink balloons. Behind her are giant rose-gold balloons spelling '10K' and a transparent balloon containing smaller pink balloons.\n\nIn front of her is a pink frosted cake on a crystal-decorated cake stand, topped with a '10K' decoration. A small pink tray beside the cake holds a glass pitcher of orange juice and a filled stemmed glass.\n\nLighting: soft, Instagram-style, feminine, festive, and celebratory with pink and rose-gold tones."
-  },
+
   {
     "display": {
       "title": "Indie Aesthetic",
@@ -82,5 +74,15 @@
       "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
     },
     "prompt": "Transform the subject of the uploaded photo into a Q-style 3D C4D-rendered character while preserving facial identity, hair color, hairstyle, and body shape.\n\nRecreate the original clothing, accessories, colors, and hairstyle exactly from the photo style.\n\nSubtly integrate profession-inspired accessories related to the specified profession without changing the outfit itself.\n\nLayout includes top text reading “OOTD,” a full-body character on the left, and individual outfit and accessory items displayed on the right. Use a solid background color that complements the outfit."
+  },
+
+  {
+    "display": {
+      "title": "Enchanted Fairy Editorial",
+      "imageName": "enchanted_fairy_editorial",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+    },
+    "prompt": "Transform the subject of the uploaded photo into a whimsical enchanted fairy fashion editorial. Preserve the subject’s exact facial identity, original hair color, hairstyle, and body shape, only adding subtle magical styling.\n\nThe subject lies gracefully on her stomach, propped on elbows, head tilted toward the camera with a playful, mischievous smile. Maintain recognizable facial features and proportions.\n\nPlace the subject in a dreamy studio with a lavender-to-pink gradient backdrop, floating sparkles, and ethereal mist. Outfit is a modern fairy-princess bodysuit with iridescent fabric and delicate crystal accents.\n\nSoft enchanted studio lighting creates a dewy glow on skin and gentle sparkle on hair and accessories. Ultra-photorealistic fantasy fashion editorial style with shallow depth of field."
   }
 ]

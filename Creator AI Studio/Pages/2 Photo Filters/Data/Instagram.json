@@ -31,12 +31,12 @@
 
   {
     "display": {
-      "title": "Autumn Academy Portrait",
-      "imageName": "autumnacademiaportrait",
+      "title": "10K Followers",
+      "imageName": "10kfollowerspink",
       "imageNameOriginal": "yourphoto",
       "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
     },
-    "prompt": "Transform the subject of the uploaded photo into a seated autumn academy portrait while preserving her exact facial identity, hair color, hairstyle, and body shape.\n\nThe subject is seated naturally on a wooden railing in a high-elevation temperate deciduous forest during late autumn. She wears a white cotton poplin shirt under a loose beige wool cable-knit cardigan, a brown and black plaid flannel mini skirt, and knee-high black socks. Her pose is relaxed and natural, with limbs resting comfortably and spine upright.\n\nThe environment includes backlit maple trees with vivid orange-red foliage, warm golden-hour sunlight casting micro-shimmering particulates, and high-elevation mountain scenery in the background. The lighting is warm and directional, highlighting the subject and creating soft, cinematic shadows.\n\nUse an 85mm portrait lens with shallow depth of field and creamy circular bokeh, keeping the subject sharply in focus while foreground and background elements are softly blurred. Apply a photorealistic, film-photography style with heavy detail on textures such as skin, fabric, wood, and leaves. Color grading should emphasize warm golden and red tones to evoke the late-autumn atmosphere.\n\nEnsure the composition feels cinematic and balanced, with the subject as the clear focal point. Optional environmental details such as scattered leaves or visible railing grain may enhance depth and realism, but the subject remains the central focus."
+    "prompt": "Transform the uploaded photo into a celebratory social media scene.\n\nThe subject is a young woman with long wavy dark hair sitting cross-legged on a white bed, smiling softly with eyes closed, holding two sparklers.\n\nShe wears a light pink blouse with wide flowy sleeves and black shorts, with pink manicured nails.\n\nSurrounding her are metallic rose-gold and pastel pink balloons. Behind her are giant rose-gold balloons spelling '10K' and a transparent balloon containing smaller pink balloons.\n\nIn front of her is a pink frosted cake on a crystal-decorated cake stand, topped with a '10K' decoration. A small pink tray beside the cake holds a glass pitcher of orange juice and a filled stemmed glass.\n\nLighting: soft, Instagram-style, feminine, festive, and celebratory with pink and rose-gold tones."
   },
 
   {
@@ -75,5 +75,25 @@
       "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
     },
     "prompt": "Transform the subject of the uploaded photo into a vibrant festival-style portrait while preserving the subject’s facial identity, hair color, hairstyle, and body shape.\n\nThe subject wears playful glitter makeup and is framed from the shoulders up. The expression is energetic and candid.\n\nThe background includes colorful lights, lens flares, and a softly blurred crowd. Lighting is dynamic and high-energy.\n\nUse high saturation and bokeh effects while keeping the subject’s likeness intact."
+  },
+
+  {
+    "display": {
+      "title": "Natural Indoor Smartphone Portrait",
+      "imageName": "natural_indoor_portrait",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+    },
+    "prompt": "Transform the subject of the uploaded photo into a realistic waist-up indoor portrait captured with a front-facing smartphone aesthetic. Preserve the subject’s facial identity, freckles, hair color, hairstyle, and body shape exactly as shown.\n\nThe subject is seated and leaning back slightly, with relaxed posture and subtle facial asymmetry intact. Maintain visible freckles across the nose and cheeks, light flushing, glossy parted lips, and natural eye catchlights.\n\nUse soft indoor lighting with gentle shadows and moderate grain in darker areas. Hair retains micro-bangs, flyaways, and natural drape against the background.\n\nApply a candid, unposed photographic style with shallow depth of field, natural skin texture, and authentic smartphone realism."
+  },
+
+  {
+    "display": {
+      "title": "Autumn Academy Portrait",
+      "imageName": "autumnacademiaportrait",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+    },
+    "prompt": "Transform the subject of the uploaded photo into a seated autumn academy portrait while preserving her exact facial identity, hair color, hairstyle, and body shape.\n\nThe subject is seated naturally on a wooden railing in a high-elevation temperate deciduous forest during late autumn. She wears a white cotton poplin shirt under a loose beige wool cable-knit cardigan, a brown and black plaid flannel mini skirt, and knee-high black socks. Her pose is relaxed and natural, with limbs resting comfortably and spine upright.\n\nThe environment includes backlit maple trees with vivid orange-red foliage, warm golden-hour sunlight casting micro-shimmering particulates, and high-elevation mountain scenery in the background. The lighting is warm and directional, highlighting the subject and creating soft, cinematic shadows.\n\nUse an 85mm portrait lens with shallow depth of field and creamy circular bokeh, keeping the subject sharply in focus while foreground and background elements are softly blurred. Apply a photorealistic, film-photography style with heavy detail on textures such as skin, fabric, wood, and leaves. Color grading should emphasize warm golden and red tones to evoke the late-autumn atmosphere.\n\nEnsure the composition feels cinematic and balanced, with the subject as the clear focal point. Optional environmental details such as scattered leaves or visible railing grain may enhance depth and realism, but the subject remains the central focus."
   }
 ]

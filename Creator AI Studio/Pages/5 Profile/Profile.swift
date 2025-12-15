@@ -159,13 +159,13 @@ struct ProfileViewContent: View {
                             }) {
                                 ZStack {
                                     Circle()
-                                        .fill(Color.black)
+                                        .fill(Color.blue.opacity(0.9))
                                         .frame(width: 50, height: 50)
-                                        .overlay(
-                                            Circle()
-                                                .stroke(Color.white, lineWidth: 2)
-                                        )
-                                        .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
+                                        // .overlay(
+                                        //     Circle()
+                                        //         .stroke(Color.black, lineWidth: 2)
+                                        // )
+                                        .shadow(color: .black.opacity(0.5), radius: 4, x: 0, y: 2)
                                     
                                     Image(systemName: "arrow.up")
                                         .font(.system(size: 20, weight: .semibold))
