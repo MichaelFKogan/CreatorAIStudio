@@ -23,15 +23,15 @@ struct Post: View {
     @State private var selectedImageModel: InfoPacket?
 
     // Presets state
-//    @StateObject private var presetViewModel = PresetViewModel()
+    //    @StateObject private var presetViewModel = PresetViewModel()
 
-//    // Convert presets to InfoPacket format
-//    private var presetInfoPackets: [InfoPacket] {
-//        let allModels = imageModelsViewModel.filteredAndSortedImageModels
-//        return presetViewModel.presets.compactMap { preset in
-//            preset.toInfoPacket(allModels: allModels)
-//        }
-//    }
+    //    // Convert presets to InfoPacket format
+    //    private var presetInfoPackets: [InfoPacket] {
+    //        let allModels = imageModelsViewModel.filteredAndSortedImageModels
+    //        return presetViewModel.presets.compactMap { preset in
+    //            preset.toInfoPacket(allModels: allModels)
+    //        }
+    //    }
 
     var body: some View {
         NavigationStack {
@@ -145,24 +145,30 @@ struct Post: View {
                                 // When scrolling, always show the nearest item (left or right) even if over a gap
                                 // When not scrolling, show selected filter/model if available
                                 if !shouldShowCapturedImage {
-                                    let displayFilter: InfoPacket? = isScrollingActive
+                                    let displayFilter: InfoPacket? =
+                                        isScrollingActive
                                         ? centeredFilter  // While scrolling, always shows nearest item (left or right of gap)
-                                        : (centeredFilter ?? selectedFilter ?? selectedImageModel)  // When not scrolling, show selected
-                                    
-                                    if let displayFilter = displayFilter {
-                                    VStack(spacing: 12) {
+                                        : (centeredFilter ?? selectedFilter
+                                            ?? selectedImageModel)  // When not scrolling, show selected
 
-                                        // Filter title above the image
-                                        Text(displayFilter.display.title)
+                                    if let displayFilter = displayFilter {
+                                        VStack(spacing: 12) {
+
+                                            // Category title above the image
+                                            Text(
+                                                categoryTitle(
+                                                    for: displayFilter)
+                                            )
                                             .font(
                                                 .system(
-                                                    size: 18, weight: .semibold,
+                                                    size: 18, weight: .medium,
                                                     design: .rounded)
                                             )
-                                            .foregroundColor(.white)
-                                            .lineLimit(1)
-                                            .truncationMode(.tail)
-                                            .frame(maxWidth: 300)
+                                            .foregroundColor(
+                                                .white.opacity(0.7)
+                                            )
+                                            .textCase(.uppercase)
+                                            .tracking(1.2)
                                             .opacity(
                                                 isScrollingActive ? 1.0 : 0
                                             )
@@ -171,34 +177,89 @@ struct Post: View {
                                                 value: isScrollingActive
                                             )
                                             .shadow(
-                                                color: .black.opacity(0.8),
-                                                radius: 4,
+                                                color: .black.opacity(0.6),
+                                                radius: 2,
                                                 x: 0,
-                                                y: 2)
+                                                y: 1)
 
-                                        // Preview image
-                                        // Check if imageName is a URL (for presets)
-                                        Group {
-                                            if displayFilter.display.imageName
-                                                .hasPrefix("http://")
-                                                || displayFilter.display
-                                                    .imageName.hasPrefix(
-                                                        "https://"),
-                                                let url = URL(
-                                                    string: displayFilter
-                                                        .display.imageName)
-                                            {
-                                                KFImage(url)
-                                                    .placeholder {
-                                                        Rectangle()
-                                                            .fill(
-                                                                Color.gray
-                                                                    .opacity(
-                                                                        0.2)
+                                            // Filter title above the image
+                                            Text(displayFilter.display.title)
+                                                .font(
+                                                    .system(
+                                                        size: 18,
+                                                        weight: .semibold,
+                                                        design: .rounded)
+                                                )
+                                                .foregroundColor(.white)
+                                                .lineLimit(1)
+                                                .truncationMode(.tail)
+                                                .frame(maxWidth: 300)
+                                                .opacity(
+                                                    isScrollingActive ? 1.0 : 0
+                                                )
+                                                .animation(
+                                                    .easeOut(duration: 0.3),
+                                                    value: isScrollingActive
+                                                )
+                                                .shadow(
+                                                    color: .black.opacity(0.8),
+                                                    radius: 4,
+                                                    x: 0,
+                                                    y: 2)
+
+                                            // Preview image
+                                            // Check if imageName is a URL (for presets)
+                                            Group {
+                                                if displayFilter.display
+                                                    .imageName
+                                                    .hasPrefix("http://")
+                                                    || displayFilter.display
+                                                        .imageName.hasPrefix(
+                                                            "https://"),
+                                                    let url = URL(
+                                                        string: displayFilter
+                                                            .display.imageName)
+                                                {
+                                                    KFImage(url)
+                                                        .placeholder {
+                                                            Rectangle()
+                                                                .fill(
+                                                                    Color.gray
+                                                                        .opacity(
+                                                                            0.2)
+                                                                )
+                                                                .overlay(
+                                                                    ProgressView()
+                                                                )
+                                                        }
+                                                        .resizable()
+                                                        .scaledToFill()
+                                                        .frame(
+                                                            width: 250,
+                                                            height: 300
+                                                        )
+                                                        .clipShape(
+                                                            RoundedRectangle(
+                                                                cornerRadius: 16
                                                             )
-                                                            .overlay(
-                                                                ProgressView())
-                                                    }
+                                                        )
+                                                        .opacity(
+                                                            isScrollingActive
+                                                                ? 0.8 : 0
+                                                        )
+                                                        .shadow(
+                                                            color: .black
+                                                                .opacity(
+                                                                    0.5),
+                                                            radius: 20,
+                                                            x: 0,
+                                                            y: 0
+                                                        )
+                                                } else {
+                                                    Image(
+                                                        displayFilter.display
+                                                            .imageName
+                                                    )
                                                     .resizable()
                                                     .scaledToFill()
                                                     .frame(
@@ -219,83 +280,70 @@ struct Post: View {
                                                         x: 0,
                                                         y: 0
                                                     )
-                                            } else {
-                                                Image(
-                                                    displayFilter.display
-                                                        .imageName
-                                                )
-                                                .resizable()
-                                                .scaledToFill()
-                                                .frame(width: 250, height: 300)
-                                                .clipShape(
-                                                    RoundedRectangle(
-                                                        cornerRadius: 16)
-                                                )
-                                                .opacity(
-                                                    isScrollingActive ? 0.8 : 0
-                                                )
-                                                .shadow(
-                                                    color: .black.opacity(0.5),
-                                                    radius: 20,
-                                                    x: 0,
-                                                    y: 0
-                                                )
+                                                }
                                             }
-                                        }
-                                        .overlay(
-                                            // Cost badge in top right
-                                            Group {
-                                                if let cost = displayFilter
-                                                    .resolvedCost
-                                                {
-                                                    // Text( "$\(NSDecimalNumber(decimal: cost).stringValue)")
-                                                    Text("\(cost.credits)")
-                                                    .font(
-                                                        .system(
-                                                            size: 13,
-                                                            weight:
-                                                                .semibold,
-                                                            design: .rounded
-                                                        )
-                                                    )
-                                                    .foregroundColor(.white)
-                                                    .padding(
-                                                        .horizontal, 10
-                                                    )
-                                                    .padding(.vertical, 5)
-                                                    .background(
-                                                        Capsule()
-                                                            .fill(
-                                                                Color.black
-                                                                    .opacity(
-                                                                        0.75
+                                            .overlay(
+                                                // Cost badge in top right
+                                                Group {
+                                                    if let cost = displayFilter
+                                                        .resolvedCost
+                                                    {
+                                                        // Text( "$\(NSDecimalNumber(decimal: cost).stringValue)")
+                                                        Text("\(cost.credits)")
+                                                            .font(
+                                                                .system(
+                                                                    size: 13,
+                                                                    weight:
+                                                                        .semibold,
+                                                                    design:
+                                                                        .rounded
+                                                                )
+                                                            )
+                                                            .foregroundColor(
+                                                                .white
+                                                            )
+                                                            .padding(
+                                                                .horizontal, 10
+                                                            )
+                                                            .padding(
+                                                                .vertical, 5
+                                                            )
+                                                            .background(
+                                                                Capsule()
+                                                                    .fill(
+                                                                        Color
+                                                                            .black
+                                                                            .opacity(
+                                                                                0.75
+                                                                            )
                                                                     )
                                                             )
-                                                    )
-                                                    .shadow(
-                                                        color: .black
-                                                            .opacity(0.4),
-                                                        radius: 4, x: 0,
-                                                        y: 2
-                                                    )
-                                                    .padding(12)
-                                                    .opacity(
-                                                        isScrollingActive
-                                                            ? 1.0 : 0
-                                                    )
-                                                    .animation(
-                                                        .easeOut(
-                                                            duration: 0.3),
-                                                        value:
-                                                            isScrollingActive
-                                                    )
-                                                }
-                                            },
-                                            alignment: .bottomTrailing
-                                        )
-                                    }
-                                    .allowsHitTesting(false)
-                                    .padding(.bottom, 24)
+                                                            .shadow(
+                                                                color: .black
+                                                                    .opacity(
+                                                                        0.4),
+                                                                radius: 4, x: 0,
+                                                                y: 2
+                                                            )
+                                                            .padding(12)
+                                                            .opacity(
+                                                                isScrollingActive
+                                                                    ? 1.0 : 0
+                                                            )
+                                                            .animation(
+                                                                .easeOut(
+                                                                    duration:
+                                                                        0.3),
+                                                                value:
+                                                                    isScrollingActive
+                                                            )
+                                                    }
+                                                },
+                                                alignment: .bottomTrailing
+                                            )
+                                        }
+                                        .allowsHitTesting(false)
+                                        .padding(.bottom, 24)
                                     }
                                 }
 
@@ -312,7 +360,7 @@ struct Post: View {
                                         )
                                         .font(
                                             .system(
-                                                size: 12, weight: .medium,
+                                                size: 16, weight: .medium,
                                                 design: .rounded)
                                         )
                                         .foregroundColor(
@@ -425,41 +473,41 @@ struct Post: View {
                                     }
                                     .accessibilityLabel("Switch camera")
 
-                                    // MARK: LIBRARY
-                                    Button {
-                                        showLibraryPicker = true
-                                    } label: {
-                                        Image(
-                                            systemName:
-                                                "photo.on.rectangle.angled"
-                                        )
-                                        .font(.system(size: 25))
-                                        .foregroundColor(.white).opacity(0.8)
-                                        .cornerRadius(8)
-                                        .shadow(radius: 3)
-                                    }
+                                    // // MARK: LIBRARY
+                                    // Button {
+                                    //     showLibraryPicker = true
+                                    // } label: {
+                                    //     Image(
+                                    //         systemName:
+                                    //             "photo.on.rectangle.angled"
+                                    //     )
+                                    //     .font(.system(size: 25))
+                                    //     .foregroundColor(.white).opacity(0.8)
+                                    //     .cornerRadius(8)
+                                    //     .shadow(radius: 3)
+                                    // }
 
-                                    // MARK: MENU
-                                    Button {
-                                        showFilterCategorySheet = true
-                                    } label: {
-                                        VStack(spacing: 4) {
-                                            Image(
-                                                systemName:
-                                                    "square.grid.2x2.fill"
-                                            )
-                                            .font(
-                                                .system(
-                                                    size: 22,
-                                                    weight: .medium)
-                                            )
-                                            .foregroundColor(.white)
-                                            .opacity(0.9)
-                                            Text("Menu")
-                                                .font(.caption2)
-                                                .foregroundColor(.secondary)
-                                        }
-                                    }
+                                    // // MARK: MENU
+                                    // Button {
+                                    //     showFilterCategorySheet = true
+                                    // } label: {
+                                    //     VStack(spacing: 4) {
+                                    //         Image(
+                                    //             systemName:
+                                    //                 "square.grid.2x2.fill"
+                                    //         )
+                                    //         .font(
+                                    //             .system(
+                                    //                 size: 22,
+                                    //                 weight: .medium)
+                                    //         )
+                                    //         .foregroundColor(.white)
+                                    //         .opacity(0.9)
+                                    //         Text("Menu")
+                                    //             .font(.caption2)
+                                    //             .foregroundColor(.secondary)
+                                    //     }
+                                    // }
                                 }
                                 .padding(.vertical, 12)
                                 .padding(.horizontal, 6)
@@ -476,25 +524,23 @@ struct Post: View {
                         HStack {
                             Spacer()
                             FilterScrollRow(
-//                                presets: presetInfoPackets,
-                                imageModels: imageModelsViewModel
-                                    .filteredAndSortedImageModels,
+                                //                                presets: presetInfoPackets,
+                                imageModels: imageToImageModels,
                                 filters: filtersViewModel.filters,
                                 selectedFilter: selectedFilter,
                                 selectedImageModel: selectedImageModel,
                                 onSelect: { item in
-//                                    // Check if the item is a preset
-//                                    if presetInfoPackets.contains(where: {
-//                                        $0.id == item.id
-//                                    }) {
-//                                        // It's a preset - treat as a filter
-//                                        selectedFilter = item
-//                                        selectedImageModel = nil
-//                                    }
+                                    //                                    // Check if the item is a preset
+                                    //                                    if presetInfoPackets.contains(where: {
+                                    //                                        $0.id == item.id
+                                    //                                    }) {
+                                    //                                        // It's a preset - treat as a filter
+                                    //                                        selectedFilter = item
+                                    //                                        selectedImageModel = nil
+                                    //                                    }
                                     // Check if the item is an image model or a filter
-                                    if imageModelsViewModel
-                                        .filteredAndSortedImageModels.contains(
-                                            where: { $0.id == item.id })
+                                    if imageToImageModels.contains(
+                                        where: { $0.id == item.id })
                                     {
                                         // It's an image model
                                         selectedImageModel = item
@@ -524,21 +570,76 @@ struct Post: View {
 
                         // MARK: CAPTURE
 
-                        Button {
-                            // Explicitly hide the large image preview when capturing
-                            isScrollingActive = false
-                            cameraService.capturePhoto()
-                        } label: {
-                            Circle()
-                                .stroke(
-                                    isFilterOrModelSelected
-                                        ? Color.white
-                                        : Color.gray.opacity(0.5),
-                                    lineWidth: 5
+                        HStack {
+                            Spacer()
+                            // MARK: LIBRARY
+                            Button {
+                                showLibraryPicker = true
+                            } label: {
+                                Image(
+                                    systemName:
+                                        "photo.on.rectangle.angled"
                                 )
-                                .frame(width: 80, height: 80)
+                                .font(.system(size: 25))
+                                .foregroundColor(.white).opacity(0.8)
+                                .shadow(radius: 3)
+                            }
+                            .frame(width: 70, height: 70)
+                            .background(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(Color.black.opacity(0.5))
+                            )
+
+                            Spacer()
+
+                            Button {
+                                // Explicitly hide the large image preview when capturing
+                                isScrollingActive = false
+                                cameraService.capturePhoto()
+                            } label: {
+                                Circle()
+                                    .stroke(
+                                        isFilterOrModelSelected
+                                            ? Color.white
+                                            : Color.gray.opacity(0.5),
+                                        lineWidth: 5
+                                    )
+                                    .frame(width: 80, height: 80)
+                            }
+                            .disabled(!isFilterOrModelSelected)
+
+                            Spacer()
+
+                            // MARK: MENU
+                            Button {
+                                showFilterCategorySheet = true
+                            } label: {
+                                VStack(spacing: 4) {
+                                    Image(
+                                        systemName:
+                                            "square.grid.2x2.fill"
+                                    )
+                                    .font(
+                                        .system(
+                                            size: 25,
+                                            weight: .medium)
+                                    )
+                                    .foregroundColor(.white)
+                                    .opacity(0.9)
+                                    Text("Menu")
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                            .frame(width: 70, height: 70)
+                            .background(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(Color.black.opacity(0.5))
+                            )
+
+                            Spacer()
+
                         }
-                        .disabled(!isFilterOrModelSelected)
 
                     }
                     .safeAreaInset(edge: .bottom) {
@@ -555,13 +656,13 @@ struct Post: View {
                 // Ensure session is running when view appears
                 cameraService.startSession()
 
-//                // Load presets if user is signed in
-//                if let userId = authViewModel.user?.id.uuidString {
-//                    presetViewModel.userId = userId
-//                    Task {
-//                        await presetViewModel.fetchPresets()
-//                    }
-//                }
+                //                // Load presets if user is signed in
+                //                if let userId = authViewModel.user?.id.uuidString {
+                //                    presetViewModel.userId = userId
+                //                    Task {
+                //                        await presetViewModel.fetchPresets()
+                //                    }
+                //                }
             }
             .onDisappear {
                 isViewActive = false
@@ -623,15 +724,15 @@ struct Post: View {
                     selectedImageModel: $selectedImageModel,
                     onSelect: { filter in
                         // Check if it's a preset
-//                        if presetInfoPackets.contains(where: {
-//                            $0.id == filter.id
-//                        }) {
-//                            selectedFilter = filter
-//                            selectedImageModel = nil
-//                        } else {
-                            selectedFilter = filter
-                            selectedImageModel = nil  // Clear model when filter is selected
-//                        }
+                        //                        if presetInfoPackets.contains(where: {
+                        //                            $0.id == filter.id
+                        //                        }) {
+                        //                            selectedFilter = filter
+                        //                            selectedImageModel = nil
+                        //                        } else {
+                        selectedFilter = filter
+                        selectedImageModel = nil  // Clear model when filter is selected
+                        //                        }
                     },
                     onSelectModel: { model in
                         selectedImageModel = model
@@ -649,15 +750,22 @@ struct Post: View {
         selectedFilter != nil || selectedImageModel != nil
     }
 
+    /// Image models filtered to only include those with "Image to Image" capability
+    private var imageToImageModels: [InfoPacket] {
+        imageModelsViewModel.filteredAndSortedImageModels.filter { model in
+            model.resolvedCapabilities?.contains("Image to Image") == true
+        }
+    }
+
     // Helper function to get category title for an item
     private func categoryTitle(for item: InfoPacket) -> String {
-//        // Check if it's a preset first
-//        if presetInfoPackets.contains(where: { $0.id == item.id }) {
-//            return "Presets"
-//        }
+        //        // Check if it's a preset first
+        //        if presetInfoPackets.contains(where: { $0.id == item.id }) {
+        //            return "Presets"
+        //        }
 
-        // Check if it's an image model
-        if imageModelsViewModel.filteredAndSortedImageModels.contains(where: {
+        // Check if it's an image model (using filtered list to match what's shown)
+        if imageToImageModels.contains(where: {
             $0.id == item.id
         }) {
             return "AI Models"
@@ -687,7 +795,7 @@ struct Post: View {
                         cameraService.capturedImage = nil
                     }
                 } else if let model = selectedImageModel {
-                    ImageModelDetailPageWithPhoto(
+                    ImageModelDetailPage(
                         item: model,
                         capturedImage: capturedImage
                     )
@@ -715,3 +823,4 @@ struct Post: View {
         }
     }
 }
+ 

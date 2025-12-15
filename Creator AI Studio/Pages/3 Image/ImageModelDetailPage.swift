@@ -17,6 +17,7 @@ struct LazyView<Content: View>: View {
 
 struct ImageModelDetailPage: View {
     @State var item: InfoPacket
+    let capturedImage: UIImage?
 
     @State private var prompt: String = ""
     @FocusState private var isPromptFocused: Bool
@@ -38,6 +39,11 @@ struct ImageModelDetailPage: View {
     @State private var selectedGenerationMode: Int = 0
 
     @EnvironmentObject var authViewModel: AuthViewModel
+    
+    init(item: InfoPacket, capturedImage: UIImage? = nil) {
+        self._item = State(initialValue: item)
+        self.capturedImage = capturedImage
+    }
 
     // MARK: Constants
 
@@ -291,6 +297,12 @@ struct ImageModelDetailPage: View {
         }
         .contentShape(Rectangle())
         .onTapGesture { isPromptFocused = false }
+        .onAppear {
+            // Pre-populate reference images with captured image if provided
+            if let capturedImage = capturedImage, referenceImages.isEmpty {
+                referenceImages = [capturedImage]
+            }
+        }
         .sheet(isPresented: $isExamplePromptsPresented) {
             ExamplePromptsSheet(
                 examplePrompts: examplePrompts,
