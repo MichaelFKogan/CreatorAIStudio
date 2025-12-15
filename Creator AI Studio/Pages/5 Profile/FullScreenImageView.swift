@@ -995,8 +995,19 @@ struct FullScreenImageView: View {
             
             // Initialize video player once if it's a video
             if isVideo, let url = mediaURL, player == nil {
-                player = AVPlayer(url: url)
-                player?.play()
+                // ✅ Use cached video URL
+                Task {
+                    if let cachedURL = await VideoCacheManager.shared.getCachedVideoURL(for: url) {
+                        await MainActor.run {
+                            player = AVPlayer(url: cachedURL)
+                        }
+                    } else {
+                        // Fallback to remote URL if caching fails
+                        await MainActor.run {
+                            player = AVPlayer(url: url)
+                        }
+                    }
+                }
             }
 
 //            // Load presets if user is signed in

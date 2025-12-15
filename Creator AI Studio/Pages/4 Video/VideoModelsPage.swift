@@ -122,11 +122,11 @@ final class VideoModelsViewModel: ObservableObject {
 
         switch videoFilterIndex {
         case 1:
-            models = models.filter { $0.capabilities?.contains("Text to Video") == true }
+            models = models.filter { $0.resolvedCapabilities?.contains("Text to Video") == true }
         case 2:
-            models = models.filter { $0.capabilities?.contains("Image to Video") == true }
+            models = models.filter { $0.resolvedCapabilities?.contains("Image to Video") == true }
         case 3:
-            models = models.filter { $0.capabilities?.contains("Audio") == true }
+            models = models.filter { $0.resolvedCapabilities?.contains("Audio") == true }
         default:
             break
         }

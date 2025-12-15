@@ -133,7 +133,7 @@ class ProfileViewModel: ObservableObject {
     private var hasFetchedFromDatabase = false
     private var currentPage = 0
     private let pageSize = 50 // Fetch 50 images at a time
-    private let cacheStaleInterval: TimeInterval = 5 * 60 // 5 minutes
+    private let cacheStaleInterval: TimeInterval = 30 * 60 // ✅ Changed from 5 to 30 minutes
     
     // Cache for model-specific images to avoid repeated queries
     private var modelImagesCache: [String: (images: [UserImage], fetchedAt: Date)] = [:]
@@ -362,26 +362,23 @@ class ProfileViewModel: ObservableObject {
             return
         }
 
-        // If we have cached images, always do a lightweight refresh to check for new images
-        // This ensures newly created images appear even if the page was already loaded
-        // We do this asynchronously so it doesn't block the UI
+        // ✅ OPTIMIZATION: Only refresh if cache is stale
         if !userImages.isEmpty {
-            print("🔄 Profile: Found \(userImages.count) cached images, doing lightweight refresh to check for new images")
-            // Do a background refresh to check for new images
-            // This runs asynchronously and won't block the UI
-            Task { @MainActor [weak self] in
-                guard let self = self else { return }
-                await self.refreshLatest(for: userId)
+            if isCacheFresh {
+                print("✅ Profile: Using fresh cache (\(userImages.count) images), skipping refresh")
+                hasFetchedFromDatabase = true
+                return
+            } else {
+                print("🔄 Profile: Cache stale, refreshing to check for new images")
+                // Do a background refresh to check for new images
+                Task { @MainActor [weak self] in
+                    guard let self = self else { return }
+                    await self.refreshLatest(for: userId)
+                }
+                // Mark as fetched so we don't do a full fetch below
+                hasFetchedFromDatabase = true
+                return
             }
-            // Mark as fetched so we don't do a full fetch below
-            hasFetchedFromDatabase = true
-            return
-        }
-
-        // If we have fresh cached data and this is not a forced refresh, avoid a network call
-        if isCacheFresh {
-            hasFetchedFromDatabase = true
-            return
         }
 
         // If we've already fetched during this session and there's no force refresh, skip
