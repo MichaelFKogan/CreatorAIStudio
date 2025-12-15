@@ -1,15 +1,6 @@
 [
   {
     "display": {
-      "title": "Stylized Body Variant",
-      "imageName": "stylized_body_variant",
-      "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
-    },
-    "prompt": "Transform the subject of the uploaded photo into a realistic variation with a target body type while strictly preserving the subject’s facial identity, hair color, hairstyle, and overall likeness.\n\nKeep the same face, expression, hairstyle, and clothing from the original photo. Adjust only the body type in a natural and believable way, maintaining realistic anatomy and proportions.\n\nEnsure photorealistic detailing, natural lighting, and lifelike textures. Avoid exaggeration, distortion, or changes to identity."
-  },
-  {
-    "display": {
       "title": "Fitness Progress Portrait",
       "imageName": "fitness_progress_portrait",
       "imageNameOriginal": "yourphoto",

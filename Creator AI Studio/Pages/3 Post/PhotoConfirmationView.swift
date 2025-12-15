@@ -6,7 +6,8 @@ struct PhotoConfirmationView: View {
     @EnvironmentObject var notificationManager: NotificationManager
 
     let item: InfoPacket
-    let image: UIImage
+    let images: [UIImage]
+    let additionalFilters: [InfoPacket]? // Additional filters for multi-select
 
     @State private var shimmer: Bool = false
     @State private var sparklePulse: Bool = false
@@ -19,9 +20,51 @@ struct PhotoConfirmationView: View {
     @State private var isLoading = false
 
     @State private var arrowWiggle: Bool = false
-    @State private var currentTaskId: UUID? = nil
+    @State private var currentTaskIds: [UUID] = []
     @State private var selectedAspectIndex: Int = 0
     @State private var sizeButtonTapped: Bool = false
+    
+    // Primary initializer for multiple images
+    init(item: InfoPacket, images: [UIImage], additionalFilters: [InfoPacket]? = nil) {
+        self.item = item
+        self.images = images
+        self.additionalFilters = additionalFilters
+    }
+    
+    // Convenience initializer for single image (backward compatibility)
+    init(item: InfoPacket, image: UIImage, additionalFilters: [InfoPacket]? = nil) {
+        self.item = item
+        self.images = [image]
+        self.additionalFilters = additionalFilters
+    }
+    
+    // Computed property for first image (for UI display)
+    private var firstImage: UIImage {
+        images.first ?? UIImage()
+    }
+    
+    // Computed property for generate button text
+    private var generateButtonText: String {
+        let totalFilters = 1 + (additionalFilters?.count ?? 0)
+        let totalGenerations = images.count * totalFilters
+        if totalGenerations > 1 {
+            return "Generating \(totalGenerations) images..."
+        } else {
+            return "Generating..."
+        }
+    }
+    
+    // Calculate total credits: sum of all filter costs × number of images
+    // Each image gets generated with each filter
+    private var totalCredits: Int {
+        let itemCredits = item.resolvedCost?.credits ?? 0
+        let additionalCredits = additionalFilters?.reduce(0) { total, filter in
+            total + (filter.resolvedCost?.credits ?? 0)
+        } ?? 0
+        let totalFilterCost = itemCredits + additionalCredits
+        // Each image will be generated with each filter
+        return totalFilterCost * images.count
+    }
 
     // MARK: - Aspect Ratio Options
     private let imageAspectOptions: [AspectRatioOption] = [
@@ -53,7 +96,7 @@ struct PhotoConfirmationView: View {
                 // MARK: - Animated Title
 
                 ZStack {
-                    Text("Confirm Your Photo")
+                    Text(images.count > 1 ? "Confirm Your Photos" : "Confirm Your Photo")
                         .font(
                             .system(size: 28, weight: .bold, design: .rounded)
                         )
@@ -71,7 +114,7 @@ struct PhotoConfirmationView: View {
                             .rotationEffect(.degrees(20))
                             .offset(x: shimmer ? 300 : -300)
                             .mask(
-                                Text("Confirm Your Photo")
+                                Text(images.count > 1 ? "Confirm Your Photos" : "Confirm Your Photo")
                                     .font(.system(size: 28, weight: .bold, design: .rounded))
                             )
                         )
@@ -105,6 +148,7 @@ struct PhotoConfirmationView: View {
                 }
                 .padding(.top, 20)
                 .onAppear { sparklePulse = true }
+        
 
                 // MARK: - Main Photo
 
@@ -179,7 +223,7 @@ struct PhotoConfirmationView: View {
                         .offset(x: imageWidth * 0.50)
 
                         // Left image (user's photo) - drawn second so it's on top
-                        Image(uiImage: image)
+                        Image(uiImage: firstImage)
                             .resizable()
                             .aspectRatio(contentMode: .fill)
                             .frame(width: imageWidth, height: imageHeight)
@@ -229,6 +273,75 @@ struct PhotoConfirmationView: View {
                     .foregroundColor(.primary)
                     .padding(.top, 8)
                     .padding(.horizontal)
+                
+                // Additional selected filters (if multi-select with 2+ filters)
+                if let additionalFilters = additionalFilters, !additionalFilters.isEmpty {
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundColor(.blue)
+                            Text("Additional Selected Filters")
+                                .font(.system(size: 18, weight: .semibold, design: .rounded))
+                            Spacer()
+                        }
+                        .padding(.horizontal)
+                        
+                        // Grid of additional filter images (2 columns = 50% width each, square)
+                        LazyVGrid(
+                            columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: 2),
+                            spacing: 12
+                        ) {
+                            ForEach(additionalFilters) { filter in
+                                GeometryReader { geometry in
+                                    Group {
+                                        if let urlString = filter.display.imageName.hasPrefix("http") ? filter.display.imageName : nil,
+                                           let url = URL(string: urlString) {
+                                            KFImage(url)
+                                                .placeholder {
+                                                    Rectangle()
+                                                        .fill(Color.gray.opacity(0.2))
+                                                        .overlay(ProgressView())
+                                                }
+                                                .resizable()
+                                                .scaledToFill()
+                                                .frame(width: geometry.size.width, height: geometry.size.width)
+                                                .clipped()
+                                                .cornerRadius(12)
+                                        } else {
+                                            Image(filter.display.imageName)
+                                                .resizable()
+                                                .scaledToFill()
+                                                .frame(width: geometry.size.width, height: geometry.size.width)
+                                                .clipped()
+                                                .cornerRadius(12)
+                                        }
+                                    }
+                                    .overlay(
+                                        VStack {
+                                            Spacer()
+                                            Text(filter.display.title)
+                                                .font(.caption2)
+                                                .fontWeight(.semibold)
+                                                .foregroundColor(.white)
+                                                .lineLimit(1)
+                                                .truncationMode(.tail)
+                                                .padding(.horizontal, 8)
+                                                .padding(.vertical, 4)
+                                                .background(
+                                                    Capsule()
+                                                        .fill(Color.black.opacity(0.6))
+                                                )
+                                                .padding(8)
+                                        }
+                                    )
+                                    .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
+                                }
+                                .aspectRatio(1, contentMode: .fit)
+                            }
+                        }
+                        .padding(.horizontal)
+                    }
+                }
 
                 if let generated = generatedImage {
                     VStack {
@@ -241,6 +354,32 @@ struct PhotoConfirmationView: View {
                             .clipShape(RoundedRectangle(cornerRadius: 16))
                             .shadow(radius: 8)
                     }
+                }
+
+                // Multi-select indicator for filters
+                if let additionalFilters = additionalFilters, !additionalFilters.isEmpty {
+                    HStack {
+                        Image(systemName: "photo.on.rectangle")
+                            .foregroundColor(.blue)
+                        Text("\(additionalFilters.count + 1) filter\(additionalFilters.count + 1 == 1 ? "" : "s") selected")
+                            .font(.system(size: 16, weight: .medium, design: .rounded))
+                            .foregroundColor(.secondary)
+                        Spacer()
+                    }
+                    .padding(.horizontal)
+                }
+                
+                // Multi-image indicator
+                if images.count > 1 {
+                    HStack {
+                        Image(systemName: "photo.stack")
+                            .foregroundColor(.blue)
+                        Text("\(images.count) photo\(images.count == 1 ? "" : "s") selected")
+                            .font(.system(size: 16, weight: .medium, design: .rounded))
+                            .foregroundColor(.secondary)
+                        Spacer()
+                    }
+                    .padding(.horizontal)
                 }
 
                 // MARK: - Size Selector
@@ -337,28 +476,58 @@ struct PhotoConfirmationView: View {
                     config.aspectRatio = selectedAspectOption.id
                     modifiedItem.apiConfig = config
 
-                    // Start background generation using ImageGenerationCoordinator
+                    // Collect all filters to generate (primary + additional)
+                    var allFilters: [InfoPacket] = [item]
+                    if let additionalFilters = additionalFilters {
+                        allFilters.append(contentsOf: additionalFilters)
+                    }
+                    
+                    // Start background generation for ALL images × ALL filters
                     Task { @MainActor in
-                        let taskId = ImageGenerationCoordinator.shared
-                            .startImageGeneration(
-                                item: modifiedItem,
-                                image: image,
-                                userId: userId,
-                                onImageGenerated: { downloadedImage in
-                                    // Update local state when generation completes
-                                    generatedImage = downloadedImage
-                                    isLoading = false
-                                },
-                                onError: { error in
-                                    // Handle error
-                                    isLoading = false
-                                    print(
-                                        "Image generation failed: \(error.localizedDescription)"
+                        var taskIds: [UUID] = []
+                        var completedCount = 0
+                        let totalCount = images.count * allFilters.count
+                        
+                        // Generate each image with each filter
+                        for image in images {
+                            for filter in allFilters {
+                                // Create modified filter with aspect ratio
+                                var modifiedFilter = filter
+                                var config = modifiedFilter.resolvedAPIConfig
+                                config.aspectRatio = selectedAspectOption.id
+                                modifiedFilter.apiConfig = config
+                                
+                                let taskId = ImageGenerationCoordinator.shared
+                                    .startImageGeneration(
+                                        item: modifiedFilter,
+                                        image: image,
+                                        userId: userId,
+                                        onImageGenerated: { downloadedImage in
+                                            completedCount += 1
+                                            // Update local state with the last generated image
+                                            generatedImage = downloadedImage
+                                            
+                                            // Only stop loading when all tasks complete
+                                            if completedCount == totalCount {
+                                                isLoading = false
+                                            }
+                                        },
+                                        onError: { error in
+                                            completedCount += 1
+                                            print(
+                                                "Image generation failed: \(error.localizedDescription)"
+                                            )
+                                            // If all tasks completed (success or failure), stop loading
+                                            if completedCount == totalCount {
+                                                isLoading = false
+                                            }
+                                        }
                                     )
-                                }
-                            )
-
-                        currentTaskId = taskId
+                                taskIds.append(taskId)
+                            }
+                        }
+                        
+                        currentTaskIds = taskIds
                     }
                 }) {
                     HStack(spacing: 12) {
@@ -369,7 +538,7 @@ struct PhotoConfirmationView: View {
                                 )
                                 .scaleEffect(1.2)
                         }
-                        Text(isLoading ? "Generating..." : "Generate")
+                        Text(isLoading ? generateButtonText : "Generate")
                             .font(
                                 .system(
                                     size: 18, weight: .bold, design: .rounded)
@@ -451,7 +620,7 @@ struct PhotoConfirmationView: View {
                             )
                             .font(.system(size: 11))
 
-                        Text("\(item.resolvedCost.credits)")
+                        Text("\(totalCredits)")
                             .font(
                                 .system(size: 16, weight: .semibold, design: .rounded)
                             )
@@ -535,7 +704,7 @@ struct PhotoConfirmationView: View {
                             )
                             .font(.system(size: 9))
 
-                        Text("250")
+                        Text("\(totalCredits)")
                             .font(
                                 .system(
                                     size: 16, weight: .semibold,

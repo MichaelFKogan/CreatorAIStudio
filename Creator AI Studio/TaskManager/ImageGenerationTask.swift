@@ -194,9 +194,10 @@ class ImageGenerationTask: MediaGenerationTask {
             // Returns the inserted image so we can get the ID for the notification
             let insertedImage = try await saveMetadataWithRetry(metadata)
 
-            // Small delay to ensure database transaction is fully committed
-            // This helps with eventual consistency in Supabase
-            try? await Task.sleep(for: .milliseconds(500))
+            // Increased delay to ensure database transaction is fully committed
+            // This is especially important when multiple images are saved concurrently
+            // The delay helps with eventual consistency in Supabase and prevents race conditions
+            try? await Task.sleep(for: .milliseconds(1000))
 
             // Post notification that image was saved to database
             // This allows ProfileViewModel to immediately fetch and display the new image
@@ -211,7 +212,8 @@ class ImageGenerationTask: MediaGenerationTask {
                     userInfo["imageId"] = imageId
                     print("📢 Posting ImageSavedToDatabase notification for userId: \(userId), imageId: \(imageId), imageUrl: \(supabaseImageURL)")
                 } else {
-                    print("📢 Posting ImageSavedToDatabase notification for userId: \(userId), imageUrl: \(supabaseImageURL)")
+                    print("⚠️ Posting ImageSavedToDatabase notification WITHOUT imageId for userId: \(userId), imageUrl: \(supabaseImageURL)")
+                    print("⚠️ This may cause issues with concurrent image saves. Consider retrying the save.")
                 }
                 
                 NotificationCenter.default.post(

@@ -21,12 +21,12 @@
 
   {
     "display": {
-      "title": "90s Mall Studio Portrait",
-      "imageName": "retro_90s_mall_studio",
+      "title": "90s Mall Portrait",
+      "imageName": "retro_90s_mall_portrait",
       "imageNameOriginal": "yourphoto",
       "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
     },
-    "prompt": "Transform the subject of the uploaded photo into a retro 1990s mall photo studio portrait while preserving the subject’s exact facial identity, hair color, hairstyle, and body shape.\n\nDress the subject in authentic 90s fashion such as a slightly oversized jacket, keeping proportions and features unchanged.\n\nSet the background as a neon gradient studio backdrop with stars and geometric shapes.\n\nApply soft focus, slightly cheesy but charming studio lighting, and subtle film grain for an authentic mall-portrait look."
+    "prompt": "Transform the subject of the uploaded photo into a candid retro 1990s shopping mall scene while preserving the subject’s exact facial identity, hair color, hairstyle, and body shape.\n\nDress the subject in authentic 90s fashion such as a slightly oversized jacket, baggy jeans, or sneakers, keeping proportions and features unchanged.\n\nPlace the subject inside a classic 90s indoor mall with tiled floors, neon signage, escalators, storefronts, and food court lighting in the background.\n\nUse natural mall lighting with slight color casts from neon signs, mild motion blur or depth of field, and subtle film grain to create a nostalgic, everyday 90s mall atmosphere."
   },
 
   {

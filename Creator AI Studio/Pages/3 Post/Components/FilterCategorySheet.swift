@@ -290,8 +290,10 @@ struct CategorySection: View {
                         .foregroundColor(.white.opacity(0.7))
                     }
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, 20)
                 .padding(.vertical, 12)
+                .contentShape(Rectangle())
             }
             .buttonStyle(PlainButtonStyle())
 

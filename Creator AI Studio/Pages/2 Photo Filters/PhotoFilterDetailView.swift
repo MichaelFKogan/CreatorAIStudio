@@ -14,7 +14,7 @@ struct PhotoFilterDetailView: View {
     let additionalFilters: [InfoPacket]? // Additional filters for multi-select (if 2+ selected)
     @State private var prompt: String = ""
     @State private var isGenerating: Bool = false
-    @State private var selectedImage: UIImage?
+    @State private var selectedImages: [UIImage] = []
     @State private var selectedPhotoItems: [PhotosPickerItem] = []
     @State private var showCamera: Bool = false
     @State private var showActionSheet: Bool = false
@@ -184,6 +184,20 @@ struct PhotoFilterDetailView: View {
 
                 // Card 1: Photo Upload Section
                 VStack(alignment: .leading) {
+
+                // Multi-select indicator
+                if let additionalFilters = additionalFilters, !additionalFilters.isEmpty {
+                    HStack {
+                        Image(systemName: "photo.on.rectangle")
+                            .foregroundColor(.blue)
+                        Text("\(additionalFilters.count + 1) filter\(additionalFilters.count + 1 == 1 ? "" : "s") selected")
+                            .font(.system(size: 16, weight: .medium, design: .rounded))
+                            .foregroundColor(.secondary)
+                        Spacer()
+                    }
+                    .padding(.horizontal)
+                }
+
                     //                    HStack {
                     //                        Image(systemName: "photo.badge.plus")
                     //                            .foregroundColor(.blue)
@@ -212,6 +226,22 @@ struct PhotoFilterDetailView: View {
                     .cornerRadius(16)
                     .shadow(
                         color: Color.black.opacity(0.05), radius: 8, x: 0, y: 2)
+
+                    // Disclaimer text for multi-select
+                    if let additionalFilters = additionalFilters, !additionalFilters.isEmpty {
+                        HStack(spacing: 8) {
+                            Image(systemName: "info.circle")
+                                .font(.caption)
+                                .foregroundColor(.blue)
+                            Text("You will not be charged yet. Upload a photo and go to the next page to confirm.")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                            Spacer()
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.top, 8)
+                    }                        
 
                     // MARK: - Cost Section
                     HStack {
@@ -250,6 +280,7 @@ struct PhotoFilterDetailView: View {
                         )
                     }
                     .padding(.trailing, 6)
+                
 
                     // Example Images Section
                     if let exampleImages = item.resolvedExampleImages,
@@ -291,8 +322,8 @@ struct PhotoFilterDetailView: View {
             .padding(.bottom, 150)
 
             NavigationLink(isActive: $navigateToConfirmation) {
-                if let image = selectedImage {
-                    PhotoConfirmationView(item: item, image: image)
+                if !selectedImages.isEmpty {
+                    PhotoConfirmationView(item: item, images: selectedImages, additionalFilters: additionalFilters)
                 }
             } label: {
                 EmptyView()
@@ -307,19 +338,19 @@ struct PhotoFilterDetailView: View {
             }
         }
         .sheet(isPresented: $showCamera) {
-            ImagePicker(sourceType: .camera, selectedImage: $selectedImage)
+            ImagePicker(sourceType: .camera, selectedImages: $selectedImages)
         }
         .sheet(isPresented: $showActionSheet) {
             ImageSourceSelectionSheetForSingleImage(
                 showCameraSheet: $showCamera,
                 selectedPhotoItems: $selectedPhotoItems,
                 showActionSheet: $showActionSheet,
-                selectedImage: $selectedImage,
+                selectedImages: $selectedImages,
                 navigateToConfirmation: $navigateToConfirmation
             )
         }
-        .onChange(of: selectedImage) { newImage in
-            if newImage != nil {
+        .onChange(of: selectedImages) { newImages in
+            if !newImages.isEmpty {
                 // Small delay to ensure state is fully updated before navigation
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                     navigateToConfirmation = true
@@ -491,7 +522,7 @@ struct SpinningPlusButton: View {
                     .font(.system(size: 20, weight: .bold, design: .rounded)).opacity(0)
                     .foregroundColor(.black)
                 Spacer()
-                Text("Add Photo")
+                Text("Upload Your Photo")
                     .font(.system(size: 20, weight: .bold, design: .rounded))
                     .foregroundColor(.black)
                 Spacer()
@@ -554,7 +585,7 @@ struct SpinningPlusButton: View {
 // MARK: - ImagePicker for Camera
 struct ImagePicker: UIViewControllerRepresentable {
     let sourceType: UIImagePickerController.SourceType
-    @Binding var selectedImage: UIImage?
+    @Binding var selectedImages: [UIImage]
     @Environment(\.dismiss) private var dismiss
 
     func makeUIViewController(context: Context) -> UIImagePickerController {
@@ -584,7 +615,7 @@ struct ImagePicker: UIViewControllerRepresentable {
                 .InfoKey: Any]
         ) {
             if let image = info[.originalImage] as? UIImage {
-                parent.selectedImage = image
+                parent.selectedImages = [image]
             }
             parent.dismiss()
         }
@@ -815,7 +846,7 @@ struct ImageSourceSelectionSheetForSingleImage: View {
     @Binding var showCameraSheet: Bool
     @Binding var selectedPhotoItems: [PhotosPickerItem]
     @Binding var showActionSheet: Bool
-    @Binding var selectedImage: UIImage?
+    @Binding var selectedImages: [UIImage]
     @Binding var navigateToConfirmation: Bool
 
     var body: some View {
@@ -848,7 +879,7 @@ struct ImageSourceSelectionSheetForSingleImage: View {
 
                 PhotosPicker(
                     selection: $selectedPhotoItems,
-                    maxSelectionCount: 1,
+                    maxSelectionCount: 10,
                     matching: .images
                 ) {
                     HStack(spacing: 16) {
@@ -870,15 +901,27 @@ struct ImageSourceSelectionSheetForSingleImage: View {
                 }
                 .buttonStyle(PlainButtonStyle())
                 .onChange(of: selectedPhotoItems) { newItems in
-                    if !newItems.isEmpty, let item = newItems.first {
-                        Task {
+                    guard !newItems.isEmpty else { return }
+                    
+                    Task {
+                        var loadedImages: [UIImage] = []
+                        
+                        // Load all selected images
+                        for item in newItems {
                             if let data = try? await item.loadTransferable(type: Data.self),
                                let image = UIImage(data: data) {
-                                await MainActor.run {
-                                    selectedImage = image
-                                    selectedPhotoItems.removeAll()
-                                    showActionSheet = false
-                                }
+                                loadedImages.append(image)
+                            }
+                        }
+                        
+                        await MainActor.run {
+                            selectedImages = loadedImages
+                            selectedPhotoItems.removeAll()
+                            showActionSheet = false
+                            
+                            // Navigate to confirmation if we have images
+                            if !selectedImages.isEmpty {
+                                navigateToConfirmation = true
                             }
                         }
                     }
@@ -887,7 +930,7 @@ struct ImageSourceSelectionSheetForSingleImage: View {
                 Spacer()
             }
             .padding()
-            .navigationTitle("Add Photo")
+            .navigationTitle("Add Photo\(selectedPhotoItems.count > 1 ? "s" : "")")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
