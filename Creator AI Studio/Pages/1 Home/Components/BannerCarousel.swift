@@ -8,7 +8,7 @@ struct BannerCarousel: View {
         BannerData(
             title: "New AI Models",
             subtitle: "Try our latest image generation models",
-            gradientColors: [.gray, .gray]
+            gradientColors: [.pink, .purple]
         ),
         BannerData(
             title: "Special Promotion",
