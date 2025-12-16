@@ -182,6 +182,24 @@ struct AspectRatioCard: View {
     }
 }
 
+// MARK: - Full Screen Video Player
+
+struct FullScreenVideoPlayer: UIViewControllerRepresentable {
+    let player: AVPlayer
+    
+    func makeUIViewController(context: Context) -> AVPlayerViewController {
+        let controller = AVPlayerViewController()
+        controller.player = player
+        controller.videoGravity = .resizeAspect
+        controller.showsPlaybackControls = true
+        return controller
+    }
+    
+    func updateUIViewController(_ uiViewController: AVPlayerViewController, context: Context) {
+        // Update if needed
+    }
+}
+
 // MARK: - Full Screen Image View
 
 struct FullScreenImageView: View {
@@ -335,18 +353,15 @@ struct FullScreenImageView: View {
     @ViewBuilder
     private var immersiveVideoPlayer: some View {
         if let player = player {
-            VideoPlayer(player: player)
-                .aspectRatio(contentMode: .fit)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .onAppear {
-                    // Ensure video plays when entering immersive mode
-                    player.play()
-                }
-                .onTapGesture {
-                    withAnimation {
-                        isImmersiveMode = false
+            ZStack {
+                Color.black.ignoresSafeArea()
+                FullScreenVideoPlayer(player: player)
+                    .ignoresSafeArea()
+                    .onAppear {
+                        // Ensure video plays when entering immersive mode
+                        player.play()
                     }
-                }
+            }
         }
     }
 

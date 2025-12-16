@@ -466,11 +466,15 @@ struct Post: View {
                                             systemName:
                                                 "arrow.triangle.2.circlepath"
                                         )
-                                        .font(.system(size: 25))
-                                        .foregroundColor(.white).opacity(0.8)
-                                        .clipShape(Circle())
-                                        .shadow(radius: 3)
+                                        .font(.system(size: 20, weight: .medium))
+                                        .foregroundColor(.white)
                                     }
+                                    .frame(width: 55, height: 55)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 14)
+                                            .fill(.ultraThinMaterial)
+                                            .environment(\.colorScheme, .dark)
+                                    )
                                     .accessibilityLabel("Switch camera")
 
                                     // // MARK: LIBRARY
@@ -509,12 +513,6 @@ struct Post: View {
                                     //     }
                                     // }
                                 }
-                                .padding(.vertical, 12)
-                                .padding(.horizontal, 6)
-                                .background(
-                                    Capsule()
-                                        .fill(Color.black.opacity(0.5))
-                                )
                             }
 
                         }
@@ -570,8 +568,7 @@ struct Post: View {
 
                         // MARK: CAPTURE
 
-                        HStack {
-                            Spacer()
+                        HStack(spacing: 50) {
                             // MARK: LIBRARY
                             Button {
                                 showLibraryPicker = true
@@ -580,66 +577,62 @@ struct Post: View {
                                     systemName:
                                         "photo.on.rectangle.angled"
                                 )
-                                .font(.system(size: 25))
-                                .foregroundColor(.white).opacity(0.8)
-                                .shadow(radius: 3)
+                                .font(.system(size: 20, weight: .medium))
+                                .foregroundColor(.white)
                             }
-                            .frame(width: 70, height: 70)
+                            .frame(width: 55, height: 55)
                             .background(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .fill(Color.black.opacity(0.5))
+                                RoundedRectangle(cornerRadius: 14)
+                                    .fill(.ultraThinMaterial)
+                                    .environment(\.colorScheme, .dark)
                             )
 
-                            Spacer()
-
+                            // MARK: CAPTURE BUTTON
                             Button {
                                 // Explicitly hide the large image preview when capturing
                                 isScrollingActive = false
                                 cameraService.capturePhoto()
                             } label: {
-                                Circle()
-                                    .stroke(
-                                        isFilterOrModelSelected
-                                            ? Color.white
-                                            : Color.gray.opacity(0.5),
-                                        lineWidth: 5
-                                    )
-                                    .frame(width: 80, height: 80)
+                                ZStack {
+                                    Circle()
+                                        .fill(
+                                            isFilterOrModelSelected
+                                                ? Color.white
+                                                : Color.gray.opacity(0.3)
+                                        )
+                                        .frame(width: 72, height: 72)
+                                    
+                                    Circle()
+                                        .stroke(
+                                            isFilterOrModelSelected
+                                                ? Color.white
+                                                : Color.gray.opacity(0.5),
+                                            lineWidth: 4
+                                        )
+                                        .frame(width: 80, height: 80)
+                                }
                             }
                             .disabled(!isFilterOrModelSelected)
-
-                            Spacer()
 
                             // MARK: MENU
                             Button {
                                 showFilterCategorySheet = true
                             } label: {
-                                VStack(spacing: 4) {
-                                    Image(
-                                        systemName:
-                                            "square.grid.2x2.fill"
-                                    )
-                                    .font(
-                                        .system(
-                                            size: 25,
-                                            weight: .medium)
-                                    )
-                                    .foregroundColor(.white)
-                                    .opacity(0.9)
-                                    Text("Menu")
-                                        .font(.caption2)
-                                        .foregroundColor(.secondary)
-                                }
+                                Image(
+                                    systemName:
+                                        "square.grid.2x2.fill"
+                                )
+                                .font(.system(size: 20, weight: .medium))
+                                .foregroundColor(.white)
                             }
-                            .frame(width: 70, height: 70)
+                            .frame(width: 55, height: 55)
                             .background(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .fill(Color.black.opacity(0.5))
+                                RoundedRectangle(cornerRadius: 14)
+                                    .fill(.ultraThinMaterial)
+                                    .environment(\.colorScheme, .dark)
                             )
-
-                            Spacer()
-
                         }
+                        .padding(.horizontal, 20)
 
                     }
                     .safeAreaInset(edge: .bottom) {
