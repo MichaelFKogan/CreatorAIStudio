@@ -40,15 +40,25 @@ class PricingManager {
             "Z-Image-Turbo": 0.003,
             "Wavespeed Ghibli": 0.005,
             // Video Models with fixed pricing (fallback)
-            "Sora 2": 0.8,
             "Google Veo 3": 1.2,
             "Kling AI": 0.8,
             "Wan 2.5": 1.0,
         ]
         
         // Initialize variable pricing for video models
-        // Seedance 1.0 Pro Fast pricing from Runware pricing page
         variableVideoPricing = [
+            // Sora 2 pricing: 4s ($0.4), 8s ($0.8), 12s ($1.2) - only supports 720p
+            "Sora 2": VideoPricingConfiguration(
+                pricing: [
+                    "16:9": [
+                        "720p": [4.0: 0.4, 8.0: 0.8, 12.0: 1.2]
+                    ],
+                    "9:16": [
+                        "720p": [4.0: 0.4, 8.0: 0.8, 12.0: 1.2]
+                    ]
+                ]
+            ),
+            // Seedance 1.0 Pro Fast pricing from Runware pricing page
             "Seedance 1.0 Pro Fast": VideoPricingConfiguration(
                 pricing: [
                     "16:9": [

@@ -6,9 +6,20 @@ struct Home: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView { VStack {} }
-                .navigationTitle("")
-                .toolbar {
+            ScrollView {
+                VStack(spacing: 0) {
+                    // Banner Carousel
+                    BannerCarousel()
+                        .padding(.top, 8)
+                    
+                    // Rest of content can go here
+                    VStack {
+                        // Placeholder for future content
+                    }
+                }
+            }
+            .navigationTitle("")
+            .toolbar {
 
                     // MARK: Leading Title
                     ToolbarItem(placement: .navigationBarLeading) {

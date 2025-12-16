@@ -794,8 +794,8 @@ struct ModelGallerySection: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 6) {
                 Image(systemName: "photo.on.rectangle.angled")
-                    .foregroundColor(.blue)
-                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .font(.headline)
                 Text("Your Creations With This Model")
                     .font(.subheadline)
                     .fontWeight(.semibold)
