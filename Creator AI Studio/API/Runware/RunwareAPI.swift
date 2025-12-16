@@ -458,6 +458,7 @@ func sendVideoToRunware(
     model: String,
     aspectRatio: String? = nil,
     duration: Double = 5.0,
+    resolution: String? = nil,
     isImageToVideo: Bool = false,
     runwareConfig: RunwareConfig? = nil,
     onPollingProgress: ((Int, Int) -> Void)? = nil
@@ -473,17 +474,26 @@ func sendVideoToRunware(
 
     // MARK: - Determine width/height
 
-    // Get model-specific allowed sizes
-    let allowedSizes = getAllowedSizes(for: model)
-
     var width = 1920
     var height = 1088
+    
+    // If resolution is provided, use PricingManager helper to get dimensions
     if let ratio = aspectRatio?.trimmingCharacters(in: .whitespacesAndNewlines),
-       let (w, h) = allowedSizes[ratio]
-    {
-        width = w
-        height = h
-        print("[Runware] Aspect ratio: \(ratio) -> \(width)x\(height)")
+       let res = resolution?.trimmingCharacters(in: .whitespacesAndNewlines),
+       let dimensions = PricingManager.dimensionsForAspectRatioAndResolution(aspectRatio: ratio, resolution: res) {
+        width = dimensions.width
+        height = dimensions.height
+        print("[Runware] Aspect ratio: \(ratio), Resolution: \(res) -> \(width)x\(height)")
+    } else if let ratio = aspectRatio?.trimmingCharacters(in: .whitespacesAndNewlines) {
+        // Fallback to model-specific allowed sizes (defaults to 1080p)
+        let allowedSizes = getAllowedSizes(for: model)
+        if let (w, h) = allowedSizes[ratio] {
+            width = w
+            height = h
+            print("[Runware] Aspect ratio: \(ratio) -> \(width)x\(height) (using default resolution)")
+        } else {
+            print("[Runware] Using default 1920x1088")
+        }
     } else {
         print("[Runware] Using default 1920x1088")
     }

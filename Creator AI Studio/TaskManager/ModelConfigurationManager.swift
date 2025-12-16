@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 
 /// Centralized configuration manager for image and video generation models.
 /// Maps model names to their API configurations and capabilities, eliminating the need
@@ -18,6 +19,15 @@ class ModelConfigurationManager {
     
     /// Dictionary mapping model names to model image names
     private let modelImageNames: [String: String]
+    
+    /// Dictionary mapping model names to allowed durations for video models
+    private let allowedDurationsMap: [String: [DurationOption]]
+    
+    /// Dictionary mapping model names to allowed aspect ratios for video models
+    private let allowedAspectRatiosMap: [String: [AspectRatioOption]]
+    
+    /// Dictionary mapping model names to allowed resolutions for video models
+    private let allowedResolutionsMap: [String: [ResolutionOption]]
     
     private init() {
         // Initialize API configurations for all models
@@ -288,6 +298,77 @@ class ModelConfigurationManager {
             "Wan 2.5": "wan25",
             "Seedance 1.0 Pro Fast": "seedance10profast"
         ]
+        
+        // Initialize allowed durations mapping for video models
+        allowedDurationsMap = [
+            "Sora 2": [
+                DurationOption(id: "5", label: "5 seconds", duration: 5.0, description: "Standard duration"),
+                DurationOption(id: "10", label: "10 seconds", duration: 10.0, description: "Extended duration"),
+                DurationOption(id: "12", label: "12 seconds", duration: 12.0, description: "Maximum duration")
+            ],
+            "Google Veo 3": [
+                DurationOption(id: "5", label: "5 seconds", duration: 5.0, description: "Standard duration"),
+                DurationOption(id: "10", label: "10 seconds", duration: 10.0, description: "Extended duration")
+            ],
+            "Kling AI": [
+                DurationOption(id: "3", label: "3 seconds", duration: 3.0, description: "Quick clip"),
+                DurationOption(id: "5", label: "5 seconds", duration: 5.0, description: "Standard duration"),
+                DurationOption(id: "8", label: "8 seconds", duration: 8.0, description: "Medium duration"),
+                DurationOption(id: "10", label: "10 seconds", duration: 10.0, description: "Extended duration")
+            ],
+            "Wan 2.5": [
+                DurationOption(id: "5", label: "5 seconds", duration: 5.0, description: "Standard duration"),
+                DurationOption(id: "8", label: "8 seconds", duration: 8.0, description: "Medium duration"),
+                DurationOption(id: "10", label: "10 seconds", duration: 10.0, description: "Extended duration"),
+                DurationOption(id: "12", label: "12 seconds", duration: 12.0, description: "Maximum duration")
+            ],
+            "Seedance 1.0 Pro Fast": [
+                DurationOption(id: "5", label: "5 seconds", duration: 5.0, description: "Standard duration"),
+                DurationOption(id: "10", label: "10 seconds", duration: 10.0, description: "Extended duration")
+            ]
+        ]
+        
+        // Initialize allowed aspect ratios mapping for video models
+        allowedAspectRatiosMap = [
+            "Sora 2": [
+                AspectRatioOption(id: "9:16", label: "9:16", width: 9, height: 16, platforms: ["TikTok", "Reels"]),
+                AspectRatioOption(id: "1:1", label: "1:1", width: 1, height: 1, platforms: ["Instagram"]),
+                AspectRatioOption(id: "16:9", label: "16:9", width: 16, height: 9, platforms: ["YouTube"])
+            ],
+            "Google Veo 3": [
+                AspectRatioOption(id: "9:16", label: "9:16", width: 9, height: 16, platforms: ["TikTok", "Reels"]),
+                AspectRatioOption(id: "1:1", label: "1:1", width: 1, height: 1, platforms: ["Instagram"]),
+                AspectRatioOption(id: "16:9", label: "16:9", width: 16, height: 9, platforms: ["YouTube"])
+            ],
+            "Kling AI": [
+                AspectRatioOption(id: "3:4", label: "3:4", width: 3, height: 4, platforms: ["Portrait"]),
+                AspectRatioOption(id: "9:16", label: "9:16", width: 9, height: 16, platforms: ["TikTok", "Reels"]),
+                AspectRatioOption(id: "1:1", label: "1:1", width: 1, height: 1, platforms: ["Instagram"]),
+                AspectRatioOption(id: "4:3", label: "4:3", width: 4, height: 3, platforms: ["Landscape"]),
+                AspectRatioOption(id: "16:9", label: "16:9", width: 16, height: 9, platforms: ["YouTube"])
+            ],
+            "Wan 2.5": [
+                AspectRatioOption(id: "9:16", label: "9:16", width: 9, height: 16, platforms: ["TikTok", "Reels"]),
+                AspectRatioOption(id: "1:1", label: "1:1", width: 1, height: 1, platforms: ["Instagram"]),
+                AspectRatioOption(id: "16:9", label: "16:9", width: 16, height: 9, platforms: ["YouTube"])
+            ],
+            "Seedance 1.0 Pro Fast": [
+                AspectRatioOption(id: "3:4", label: "3:4", width: 3, height: 4, platforms: ["Portrait"]),
+                AspectRatioOption(id: "9:16", label: "9:16", width: 9, height: 16, platforms: ["TikTok", "Reels"]),
+                AspectRatioOption(id: "1:1", label: "1:1", width: 1, height: 1, platforms: ["Instagram"]),
+                AspectRatioOption(id: "4:3", label: "4:3", width: 4, height: 3, platforms: ["Landscape"]),
+                AspectRatioOption(id: "16:9", label: "16:9", width: 16, height: 9, platforms: ["YouTube"])
+            ]
+        ]
+        
+        // Initialize allowed resolutions mapping for video models
+        allowedResolutionsMap = [
+            "Seedance 1.0 Pro Fast": [
+                ResolutionOption(id: "480p", label: "480p", description: "Standard quality"),
+                ResolutionOption(id: "720p", label: "720p", description: "High quality"),
+                ResolutionOption(id: "1080p", label: "1080p", description: "Full HD")
+            ]
+        ]
     }
     
     /// Returns the API configuration for a given InfoPacket based on its model name.
@@ -332,5 +413,35 @@ class ModelConfigurationManager {
         let modelName = item.display.modelName ?? ""
         guard !modelName.isEmpty else { return nil }
         return modelImageNames[modelName]
+    }
+    
+    /// Returns the allowed durations for a given video model InfoPacket.
+    ///
+    /// - Parameter item: The InfoPacket to look up durations for
+    /// - Returns: The allowed durations array, or nil if not found (allowing fallback to default durations)
+    func allowedDurations(for item: InfoPacket) -> [DurationOption]? {
+        let modelName = item.display.modelName ?? ""
+        guard !modelName.isEmpty else { return nil }
+        return allowedDurationsMap[modelName]
+    }
+    
+    /// Returns the allowed aspect ratios for a given video model InfoPacket.
+    ///
+    /// - Parameter item: The InfoPacket to look up aspect ratios for
+    /// - Returns: The allowed aspect ratios array, or nil if not found (allowing fallback to default aspect ratios)
+    func allowedAspectRatios(for item: InfoPacket) -> [AspectRatioOption]? {
+        let modelName = item.display.modelName ?? ""
+        guard !modelName.isEmpty else { return nil }
+        return allowedAspectRatiosMap[modelName]
+    }
+    
+    /// Returns the allowed resolutions for a given video model InfoPacket.
+    ///
+    /// - Parameter item: The InfoPacket to look up resolutions for
+    /// - Returns: The allowed resolutions array, or nil if not found (allowing fallback to default resolutions)
+    func allowedResolutions(for item: InfoPacket) -> [ResolutionOption]? {
+        let modelName = item.display.modelName ?? ""
+        guard !modelName.isEmpty else { return nil }
+        return allowedResolutionsMap[modelName]
     }
 }

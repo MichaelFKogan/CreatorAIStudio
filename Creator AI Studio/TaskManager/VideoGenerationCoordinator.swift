@@ -29,6 +29,7 @@ class VideoGenerationCoordinator: ObservableObject {
         userId: String,
         duration: Double,
         aspectRatio: String,
+        resolution: String? = nil,
         onVideoGenerated: @escaping (String) -> Void = { _ in },
         onError: @escaping (Error) -> Void = { _ in }
     ) -> UUID {
@@ -69,7 +70,8 @@ class VideoGenerationCoordinator: ObservableObject {
             image: image,
             userId: userId,
             duration: duration,
-            aspectRatio: aspectRatio
+            aspectRatio: aspectRatio,
+            resolution: resolution
         )
 
         // MARK: Run the worker on a background thread using Swift concurrency.

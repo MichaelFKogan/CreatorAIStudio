@@ -37,12 +37,13 @@ struct VideoModelDetailPage: View {
     @State private var selectedAspectIndex: Int = 0
     @State private var selectedGenerationMode: Int = 0
     @State private var selectedDurationIndex: Int = 0
+    @State private var selectedResolutionIndex: Int = 0
 
     @EnvironmentObject var authViewModel: AuthViewModel
 
-    // MARK: Constants
-
-    private let videoDurationOptions: [DurationOption] = [
+    // MARK: Constants - Default fallback options
+    
+    private let defaultDurationOptions: [DurationOption] = [
         DurationOption(
             id: "5",
             label: "5 seconds",
@@ -75,7 +76,7 @@ struct VideoModelDetailPage: View {
         )
     ]
 
-    private let videoAspectOptions: [AspectRatioOption] = [
+    private let defaultAspectOptions: [AspectRatioOption] = [
         AspectRatioOption(
             id: "3:4", label: "3:4", width: 3, height: 4,
             platforms: ["Portrait"]
@@ -97,6 +98,32 @@ struct VideoModelDetailPage: View {
             platforms: ["YouTube"]
         ),
     ]
+    
+    // MARK: Computed Properties - Model-specific options
+    
+    private var videoDurationOptions: [DurationOption] {
+        ModelConfigurationManager.shared.allowedDurations(for: item) ?? defaultDurationOptions
+    }
+    
+    private var videoAspectOptions: [AspectRatioOption] {
+        ModelConfigurationManager.shared.allowedAspectRatios(for: item) ?? defaultAspectOptions
+    }
+    
+    private let defaultResolutionOptions: [ResolutionOption] = [
+        ResolutionOption(id: "480p", label: "480p", description: "Standard quality"),
+        ResolutionOption(id: "720p", label: "720p", description: "High quality"),
+        ResolutionOption(id: "1080p", label: "1080p", description: "Full HD")
+    ]
+    
+    private var videoResolutionOptions: [ResolutionOption] {
+        ModelConfigurationManager.shared.allowedResolutions(for: item) ?? defaultResolutionOptions
+    }
+    
+    /// Checks if the current model supports variable resolution selection
+    private var hasVariableResolution: Bool {
+        guard let modelName = item.display.modelName else { return false }
+        return PricingManager.shared.hasVariablePricing(for: modelName)
+    }
 
     private let examplePrompts: [String] = [
         "A serene landscape with mountains at sunset, photorealistic, 8k quality",
@@ -160,11 +187,53 @@ struct VideoModelDetailPage: View {
     ]
 
     private var costString: String {
-        NSDecimalNumber(decimal: item.resolvedCost ?? 0).stringValue
+        NSDecimalNumber(decimal: currentPrice ?? item.resolvedCost ?? 0).stringValue
     }
 
     private var creditsString: String {
-        "\(item.resolvedCost.credits)"
+        "\((currentPrice ?? item.resolvedCost ?? 0).credits)"
+    }
+    
+    /// Computed property to get the current price based on selected aspect ratio and duration
+    /// Returns variable pricing if available, otherwise falls back to base price
+    /// This automatically updates the UI when aspect ratio or duration selections change
+    private var currentPrice: Decimal? {
+        guard let modelName = item.display.modelName else { return item.resolvedCost }
+        
+        // Check if model has variable pricing
+        guard PricingManager.shared.hasVariablePricing(for: modelName) else {
+            return item.resolvedCost
+        }
+        
+        // Ensure indices are valid
+        guard selectedAspectIndex < videoAspectOptions.count,
+              selectedDurationIndex < videoDurationOptions.count else {
+            return item.resolvedCost
+        }
+        
+        // Get selected options
+        let selectedAspectOption = videoAspectOptions[selectedAspectIndex]
+        let selectedDurationOption = videoDurationOptions[selectedDurationIndex]
+        
+        // Get selected resolution
+        guard selectedResolutionIndex < videoResolutionOptions.count else {
+            return item.resolvedCost
+        }
+        let selectedResolutionOption = videoResolutionOptions[selectedResolutionIndex]
+        let resolution = selectedResolutionOption.id
+        
+        // Get variable price for this combination
+        if let variablePrice = PricingManager.shared.variablePrice(
+            for: modelName,
+            aspectRatio: selectedAspectOption.id,
+            resolution: resolution,
+            duration: selectedDurationOption.duration
+        ) {
+            return variablePrice
+        }
+        
+        // Fallback to base price if variable pricing not found for this combination
+        return item.resolvedCost
     }
 
     private var isMidjourney: Bool {
@@ -239,8 +308,15 @@ struct VideoModelDetailPage: View {
                                 options: videoAspectOptions,
                                 selectedIndex: $selectedAspectIndex
                             ))
-
-                        Divider().padding(.horizontal)
+                        
+                        // Only show resolution selector for models with variable pricing
+                        if hasVariableResolution {
+                            LazyView(
+                                ResolutionSectionVideo(
+                                    options: videoResolutionOptions,
+                                    selectedIndex: $selectedResolutionIndex
+                                ))
+                        }
 
                         LazyView(
                             DurationSectionVideo(
@@ -340,6 +416,24 @@ struct VideoModelDetailPage: View {
         } message: {
             Text(ocrAlertMessage)
         }
+        .onAppear {
+            // Validate and reset indices if they're out of bounds for model-specific options
+            if selectedAspectIndex >= videoAspectOptions.count {
+                selectedAspectIndex = 0
+            }
+            if selectedDurationIndex >= videoDurationOptions.count {
+                selectedDurationIndex = 0
+            }
+            if selectedResolutionIndex >= videoResolutionOptions.count {
+                selectedResolutionIndex = 0
+            }
+        }
+        .onChange(of: item.display.modelName) { _ in
+            // Reset indices when model changes (if item changes)
+            selectedAspectIndex = 0
+            selectedDurationIndex = 0
+            selectedResolutionIndex = 0
+        }
     }
 
     // MARK: FUNCTION GENERATE
@@ -354,6 +448,7 @@ struct VideoModelDetailPage: View {
         isGenerating = true
         let selectedAspectOption = videoAspectOptions[selectedAspectIndex]
         let selectedDurationOption = videoDurationOptions[selectedDurationIndex]
+        let selectedResolutionOption = videoResolutionOptions[selectedResolutionIndex]
         var modifiedItem = item
         modifiedItem.prompt = prompt
         // Use resolvedAPIConfig as base, then modify aspectRatio
@@ -376,6 +471,7 @@ struct VideoModelDetailPage: View {
                 userId: userId,
                 duration: selectedDurationOption.duration,
                 aspectRatio: selectedAspectOption.id,
+                resolution: hasVariableResolution ? selectedResolutionOption.id : nil,
                 onVideoGenerated: { _ in
                     isGenerating = false
                 },
@@ -572,26 +668,26 @@ private struct PromptSectionVideo: View {
                 .animation(.easeInOut(duration: 0.2), value: isFocused)
                 .focused($isFocused)
 
-            Button(action: { isExamplePromptsPresented = true }) {
-                HStack {
-                    Image(systemName: "lightbulb.fill").foregroundColor(.purple)
-                        .font(.caption)
-                    Text("Example Prompts").font(.caption).fontWeight(.semibold)
-                        .foregroundColor(.secondary)
-                    Spacer()
-                    Image(systemName: "chevron.right").font(.caption)
-                        .foregroundColor(.secondary)
-                }
-                .padding(.horizontal, 10)
-                .padding(.vertical, 8)
-                .background(Color.gray.opacity(0.06))
-                .clipShape(RoundedRectangle(cornerRadius: 8))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 8).stroke(
-                        Color.purple.opacity(0.3), lineWidth: 1
-                    ))
-            }
-            .buttonStyle(PlainButtonStyle())
+            // Button(action: { isExamplePromptsPresented = true }) {
+            //     HStack {
+            //         Image(systemName: "lightbulb.fill").foregroundColor(.purple)
+            //             .font(.caption)
+            //         Text("Example Prompts").font(.caption).fontWeight(.semibold)
+            //             .foregroundColor(.secondary)
+            //         Spacer()
+            //         Image(systemName: "chevron.right").font(.caption)
+            //             .foregroundColor(.secondary)
+            //     }
+            //     .padding(.horizontal, 10)
+            //     .padding(.vertical, 8)
+            //     .background(Color.gray.opacity(0.06))
+            //     .clipShape(RoundedRectangle(cornerRadius: 8))
+            //     .overlay(
+            //         RoundedRectangle(cornerRadius: 8).stroke(
+            //             Color.purple.opacity(0.3), lineWidth: 1
+            //         ))
+            // }
+            // .buttonStyle(PlainButtonStyle())
         }
         .padding(.horizontal)
     }
@@ -609,6 +705,25 @@ private struct AspectRatioSectionVideo: View {
                 .foregroundColor(.secondary)
                 .padding(.top, -6)
             AspectRatioSelector(
+                options: options, selectedIndex: $selectedIndex, color: .purple
+            )
+        }
+        .padding(.horizontal)
+    }
+}
+
+// MARK: RESOLUTION
+
+private struct ResolutionSectionVideo: View {
+    let options: [ResolutionOption]
+    @Binding var selectedIndex: Int
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Resolution")
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .padding(.top, -6)
+            ResolutionSelector(
                 options: options, selectedIndex: $selectedIndex, color: .purple
             )
         }

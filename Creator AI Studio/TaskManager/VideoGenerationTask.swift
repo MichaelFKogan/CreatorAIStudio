@@ -21,13 +21,15 @@ class VideoGenerationTask: MediaGenerationTask {
     // Video generation parameters
     let duration: Double
     let aspectRatio: String
+    let resolution: String?
 
-    init(item: InfoPacket, image: UIImage?, userId: String, duration: Double, aspectRatio: String) {
+    init(item: InfoPacket, image: UIImage?, userId: String, duration: Double, aspectRatio: String, resolution: String? = nil) {
         self.item = item
         self.image = image
         self.userId = userId
         self.duration = duration
         self.aspectRatio = aspectRatio
+        self.resolution = resolution
     }
     
     /// Executes the full video generation pipeline:
@@ -48,17 +50,23 @@ class VideoGenerationTask: MediaGenerationTask {
         let apiConfig = item.resolvedAPIConfig
         
         // Helpful debug information printed for each request.
-        print("""
+        var debugInfo = """
         --- Runware Video Request Info ---
         ------------------------------
         Model: \(apiConfig.runwareModel ?? "unknown")
         Prompt: \(item.prompt ?? "(no prompt)")
         Duration: \(duration) seconds
         Aspect Ratio: \(aspectRatio)
+        """
+        if let resolution = resolution {
+            debugInfo += "\nResolution: \(resolution)"
+        }
+        debugInfo += """
         Mode: \(image != nil ? "Image-to-Video" : "Text-to-Video")
         Cost: \(item.resolvedCost?.credits ?? 0) credits
         ------------------------------
-        """)
+        """
+        print(debugInfo)
         
         do {
             // MARK: STEP 1 — SEND TO API
@@ -85,6 +93,7 @@ class VideoGenerationTask: MediaGenerationTask {
                     model: runwareModel,
                     aspectRatio: self.aspectRatio,
                     duration: self.duration,
+                    resolution: self.resolution,
                     isImageToVideo: isImageToVideo,
                     runwareConfig: apiConfig.runwareConfig,
                     onPollingProgress: { attempt, maxAttempts in

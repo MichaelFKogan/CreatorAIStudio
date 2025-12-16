@@ -28,7 +28,7 @@ struct ReferenceImagesSection: View {
                     HStack(spacing: 8) {
                         Image(systemName: "plus.circle.fill")
                             .font(.system(size: 20))
-                            .foregroundColor(.blue)
+                            .foregroundColor(color)
                         Text("Add Image")
                             .font(.subheadline)
                             .fontWeight(.semibold)
@@ -151,7 +151,8 @@ struct ReferenceImagesSection: View {
                 showCameraSheet: $showCameraSheet,
                 selectedPhotoItems: $selectedPhotoItems,
                 showActionSheet: $showActionSheet,
-                referenceImages: $referenceImages
+                referenceImages: $referenceImages,
+                color: color
             )
         }
     }
@@ -164,7 +165,8 @@ struct ImageSourceSelectionSheet: View {
     @Binding var selectedPhotoItems: [PhotosPickerItem]
     @Binding var showActionSheet: Bool
     @Binding var referenceImages: [UIImage]
-
+    let color: Color
+    
     var body: some View {
         NavigationView {
             VStack(spacing: 20) {
@@ -177,7 +179,7 @@ struct ImageSourceSelectionSheet: View {
                     HStack(spacing: 16) {
                         Image(systemName: "camera.fill")
                             .font(.system(size: 24))
-                            .foregroundColor(.blue)
+                            .foregroundColor(color)
                             .frame(width: 40)
                         Text("Camera")
                             .font(.headline)
@@ -201,7 +203,7 @@ struct ImageSourceSelectionSheet: View {
                     HStack(spacing: 16) {
                         Image(systemName: "photo.on.rectangle")
                             .font(.system(size: 24))
-                            .foregroundColor(.blue)
+                            .foregroundColor(color)
                             .frame(width: 40)
                         Text("Gallery")
                             .font(.headline)
