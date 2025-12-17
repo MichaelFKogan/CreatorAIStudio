@@ -106,6 +106,7 @@ class PricingManager {
 // MARK: METHODS
     
     /// Returns the price for a given InfoPacket based on its model name.
+    /// For variable pricing models (video), returns the base/starting price.
     ///
     /// - Parameter item: The InfoPacket to look up pricing for
     /// - Returns: The price as a Decimal, or nil if not found
@@ -113,8 +114,38 @@ class PricingManager {
         let modelName = item.display.modelName ?? ""
         guard !modelName.isEmpty else { return nil }
         
-        // Look up price by model name (source of truth)
-        return prices[modelName]
+        // First check fixed prices
+        if let fixedPrice = prices[modelName] {
+            return fixedPrice
+        }
+        
+        // Then check variable pricing - return base price for display purposes
+        if let variableConfig = variableVideoPricing[modelName] {
+            return basePrice(from: variableConfig)
+        }
+        
+        return nil
+    }
+    
+    /// Returns the minimum/base price from a variable pricing configuration.
+    /// Used for display purposes in grid/list views.
+    ///
+    /// - Parameter config: The variable pricing configuration
+    /// - Returns: The minimum price from all combinations
+    private func basePrice(from config: VideoPricingConfiguration) -> Decimal? {
+        var minPrice: Decimal?
+        
+        for (_, resolutions) in config.pricing {
+            for (_, durations) in resolutions {
+                for (_, price) in durations {
+                    if minPrice == nil || price < minPrice! {
+                        minPrice = price
+                    }
+                }
+            }
+        }
+        
+        return minPrice
     }
     
     /// Returns the variable price for a video model based on aspect ratio, resolution, and duration.
