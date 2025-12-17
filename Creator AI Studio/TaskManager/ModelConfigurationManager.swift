@@ -33,7 +33,7 @@ class ModelConfigurationManager {
     
     
     private init() {
-// MARK: MODEL CONFIGS
+// MARK: IMAGE MODELS API
         
         // Initialize API configurations for all models
         apiConfigurations = [
@@ -168,7 +168,8 @@ class ModelConfigurationManager {
                 ),
                 runwareConfig: nil
             ),
-            // Video Models
+
+// MARK: VIDEO MODELS API
             "Sora 2": APIConfiguration(
                 provider: .runware,
                 endpoint: "https://api.runware.ai/v1",
@@ -189,50 +190,6 @@ class ModelConfigurationManager {
                     outputQuality: nil
                 )
             ),
-            // "Google Veo 3": APIConfiguration(
-            //     provider: .runware,
-            //     endpoint: "https://api.wavespeed.ai/api/v3/google/nano-banana/edit",
-            //     runwareModel: nil,
-            //     aspectRatio: nil,
-            //     wavespeedConfig: WaveSpeedConfig(
-            //         outputFormat: "jpeg",
-            //         enableSyncMode: false,
-            //         enableBase64Output: false
-            //     ),
-            //     runwareConfig: nil
-            // ),
-            // "Kling AI": APIConfiguration(
-            //     provider: .runware,
-            //     endpoint: "https://api.wavespeed.ai/api/v3/google/nano-banana/edit",
-            //     runwareModel: nil,
-            //     aspectRatio: nil,
-            //     wavespeedConfig: WaveSpeedConfig(
-            //         outputFormat: "jpeg",
-            //         enableSyncMode: false,
-            //         enableBase64Output: false
-            //     ),
-            //     runwareConfig: nil
-            // ),
-            // "Wan 2.5": APIConfiguration(
-            //     provider: .runware,
-            //     endpoint: "https://api.runware.ai/v1",
-            //     runwareModel: "runware:201@1",
-            //     aspectRatio: nil,
-            //     wavespeedConfig: nil,
-            //     runwareConfig: RunwareConfig(
-            //         imageToImageMethod: "frameImages",
-            //         strength: nil,
-            //         additionalTaskParams: [
-            //             "taskType": "videoInference",
-            //             "deliveryMethod": "async"
-            //         ],
-            //         requiresDimensions: true,
-            //         imageCompressionQuality: 0.9,
-            //         outputFormat: "MP4",
-            //         outputType: "URL",
-            //         outputQuality: 85
-            //     )
-            // ),
             "Seedance 1.0 Pro Fast": APIConfiguration(
                 provider: .runware,
                 endpoint: "https://api.runware.ai/v1",
@@ -255,7 +212,7 @@ class ModelConfigurationManager {
             )
         ]
         
-// MARK: CAPABILITIES
+// MARK: CAPABILITIES PILLS
         
         // Initialize capabilities mapping
         capabilitiesMap = [
@@ -275,7 +232,7 @@ class ModelConfigurationManager {
             "Seedance 1.0 Pro Fast": ["Text to Video", "Image to Video"]
         ]
         
-// MARK: DESCRIPTIONS
+// MARK: MODEL DESCRIPTIONS
         
         // Initialize model descriptions mapping
         modelDescriptions = [
@@ -299,7 +256,7 @@ class ModelConfigurationManager {
             "Seedance 1.0 Pro Fast": "Seedance 1.0 Pro Fast delivers accelerated video generation while maintaining the high visual quality and cinematic capabilities of Seedance 1.0 Pro. Optimized for faster iteration and production workflows, it supports dynamic camera movements, multiple aspect ratios, and resolutions up to 1080p. Perfect for rapid prototyping, quick content creation, and efficient video production."
         ]
         
-// MARK: IMAGE NAMES
+// MARK: MODEL IMAGE NAMES
         
         // Initialize model image names mapping
         modelImageNames = [
@@ -319,7 +276,7 @@ class ModelConfigurationManager {
             "Seedance 1.0 Pro Fast": "seedance10profast"
         ]
         
-// MARK: DURATIONS
+// MARK: ALLOWED DURATIONS
         
         // Initialize allowed durations mapping for video models
         allowedDurationsMap = [
@@ -328,53 +285,19 @@ class ModelConfigurationManager {
                 DurationOption(id: "8", label: "8 seconds", duration: 8.0, description: "Extended duration"),
                 DurationOption(id: "12", label: "12 seconds", duration: 12.0, description: "Maximum duration")
             ],
-            // "Google Veo 3": [
-            //     DurationOption(id: "5", label: "5 seconds", duration: 5.0, description: "Standard duration"),
-            //     DurationOption(id: "10", label: "10 seconds", duration: 10.0, description: "Extended duration")
-            // ],
-            // "Kling AI": [
-            //     DurationOption(id: "3", label: "3 seconds", duration: 3.0, description: "Quick clip"),
-            //     DurationOption(id: "5", label: "5 seconds", duration: 5.0, description: "Standard duration"),
-            //     DurationOption(id: "8", label: "8 seconds", duration: 8.0, description: "Medium duration"),
-            //     DurationOption(id: "10", label: "10 seconds", duration: 10.0, description: "Extended duration")
-            // ],
-            // "Wan 2.5": [
-            //     DurationOption(id: "5", label: "5 seconds", duration: 5.0, description: "Standard duration"),
-            //     DurationOption(id: "8", label: "8 seconds", duration: 8.0, description: "Medium duration"),
-            //     DurationOption(id: "10", label: "10 seconds", duration: 10.0, description: "Extended duration"),
-            //     DurationOption(id: "12", label: "12 seconds", duration: 12.0, description: "Maximum duration")
-            // ],
             "Seedance 1.0 Pro Fast": [
                 DurationOption(id: "5", label: "5 seconds", duration: 5.0, description: "Standard duration"),
                 DurationOption(id: "10", label: "10 seconds", duration: 10.0, description: "Extended duration")
             ]
         ]
         
-// MARK: ASPECT RATIOS
+// MARK: ALLOWED SIZES
         
         // Initialize allowed aspect ratios mapping for video models
         allowedAspectRatiosMap = [
             "Sora 2": [
                 AspectRatioOption(id: "9:16", label: "9:16", width: 9, height: 16, platforms: ["TikTok", "Reels"]),
                 AspectRatioOption(id: "16:9", label: "16:9", width: 16, height: 9, platforms: ["YouTube"])
-            ],
-            // "Google Veo 3": [
-            //     AspectRatioOption(id: "9:16", label: "9:16", width: 9, height: 16, platforms: ["TikTok", "Reels"]),
-            //     AspectRatioOption(id: "1:1", label: "1:1", width: 1, height: 1, platforms: ["Instagram"]),
-            //     AspectRatioOption(id: "16:9", label: "16:9", width: 16, height: 9, platforms: ["YouTube"])
-            // ],
-            // "Kling AI": [
-            //     AspectRatioOption(id: "3:4", label: "3:4", width: 3, height: 4, platforms: ["Portrait"]),
-            //     AspectRatioOption(id: "9:16", label: "9:16", width: 9, height: 16, platforms: ["TikTok", "Reels"]),
-            //     AspectRatioOption(id: "1:1", label: "1:1", width: 1, height: 1, platforms: ["Instagram"]),
-            //     AspectRatioOption(id: "4:3", label: "4:3", width: 4, height: 3, platforms: ["Landscape"]),
-            //     AspectRatioOption(id: "16:9", label: "16:9", width: 16, height: 9, platforms: ["YouTube"])
-            // ],
-            // "Wan 2.5": [
-            //     AspectRatioOption(id: "9:16", label: "9:16", width: 9, height: 16, platforms: ["TikTok", "Reels"]),
-            //     AspectRatioOption(id: "1:1", label: "1:1", width: 1, height: 1, platforms: ["Instagram"]),
-            //     AspectRatioOption(id: "16:9", label: "16:9", width: 16, height: 9, platforms: ["YouTube"])
-            // ],
             "Seedance 1.0 Pro Fast": [
                 AspectRatioOption(id: "3:4", label: "3:4", width: 3, height: 4, platforms: ["Portrait"]),
                 AspectRatioOption(id: "9:16", label: "9:16", width: 9, height: 16, platforms: ["TikTok", "Reels"]),
@@ -384,7 +307,7 @@ class ModelConfigurationManager {
             ]
         ]
         
-// MARK: RESOLUTIONS
+// MARK: ALLOWED RESOLUTIONS
         
         // Initialize allowed resolutions mapping for video models
         allowedResolutionsMap = [
@@ -399,9 +322,7 @@ class ModelConfigurationManager {
         ]
     }
     
-    // MARK: - PUBLIC METHODS
-    
-    // MARK: - API CONFIGURATION METHODS
+    // MARK: - METHODS
     
     /// Returns the API configuration for a given InfoPacket based on its model name.
     ///
@@ -415,8 +336,6 @@ class ModelConfigurationManager {
         return apiConfigurations[modelName]
     }
     
-    // MARK: - CAPABILITIES METHODS
-    
     /// Returns the capabilities array for a given InfoPacket based on its model name.
     ///
     /// - Parameter item: The InfoPacket to look up capabilities for
@@ -428,8 +347,6 @@ class ModelConfigurationManager {
         // Look up capabilities by model name (source of truth)
         return capabilitiesMap[modelName]
     }
-    
-    // MARK: - MODEL METADATA METHODS
     
     /// Returns the model description for a given InfoPacket based on its model name.
     ///
@@ -450,8 +367,6 @@ class ModelConfigurationManager {
         guard !modelName.isEmpty else { return nil }
         return modelImageNames[modelName]
     }
-    
-    // MARK: - VIDEO MODEL CONFIGURATION METHODS
     
     /// Returns the allowed durations for a given video model InfoPacket.
     ///

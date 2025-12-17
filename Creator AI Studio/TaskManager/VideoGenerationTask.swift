@@ -32,6 +32,38 @@ class VideoGenerationTask: MediaGenerationTask {
         self.resolution = resolution
     }
     
+    // MARK: - Helper: Generate Descriptive Progress Message
+    
+    /// Generates a descriptive message for progress notifications based on item type.
+    /// - For Photo/Video Filters: Shows the filter name
+    /// - For Image/Video Models: Shows a truncated version of the prompt
+    private func generateProgressMessage() -> String {
+        let itemType = item.type ?? ""
+        
+        // For filters, display the filter name
+        if itemType == "Photo Filter" || itemType == "Video Filter" {
+            let filterName = item.display.title
+            return "Generating: \(filterName)"
+        }
+        
+        // For image/video models, display truncated prompt
+        if itemType == "Image Model" || itemType == "Video Model" {
+            if let prompt = item.prompt, !prompt.isEmpty {
+                // Truncate to first ~30 characters or 5 words, whichever is shorter
+                let words = prompt.split(separator: " ").prefix(5).joined(separator: " ")
+                let truncated = words.count > 30 ? String(words.prefix(30)) + "..." : words
+                return "Generating: \(truncated)..."
+            }
+        }
+        
+        // Fallback to title if no prompt or unknown type
+        if !item.display.title.isEmpty {
+            return "Generating: \(item.display.title)"
+        }
+        
+        return "Sending request to AI..."
+    }
+    
     /// Executes the full video generation pipeline:
     /// 1. Send request to Runware API
     /// 2. Download generated video
@@ -71,7 +103,7 @@ class VideoGenerationTask: MediaGenerationTask {
         do {
             // MARK: STEP 1 — SEND TO API
             
-            await onProgress(TaskProgress(progress: 0.1, message: "Sending request to AI..."))
+            await onProgress(TaskProgress(progress: 0.1, message: generateProgressMessage()))
             
             guard let runwareModel = apiConfig.runwareModel else {
                 throw NSError(

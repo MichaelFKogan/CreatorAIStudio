@@ -1,5 +1,7 @@
 import Foundation
 
+// MARK: - VIDEO PRICING CONFIGURATION
+
 /// Structure to represent video pricing configuration
 /// Maps aspect ratio, resolution, and duration combinations to prices
 struct VideoPricingConfiguration {
@@ -15,10 +17,13 @@ struct VideoPricingConfiguration {
     }
 }
 
+// MARK: - PRICING MANAGER
+
 /// Centralized pricing manager for image and video generation models.
 /// Maps model names to their current prices, eliminating the need to update
 /// prices in hundreds of JSON files when pricing changes.
 class PricingManager {
+
     /// Singleton instance
     static let shared = PricingManager()
     
@@ -28,7 +33,10 @@ class PricingManager {
     /// Dictionary mapping model names to variable pricing configurations (for video models with variable pricing)
     private let variableVideoPricing: [String: VideoPricingConfiguration]
     
+
     private init() {
+
+// MARK: IMAGE PRICES
         // Initialize with current model prices (fixed pricing)
         prices = [
             "Google Gemini Flash 2.5 (Nano Banana)": 0.039,
@@ -39,12 +47,16 @@ class PricingManager {
             "FLUX.1 Kontext [max]": 0.08,
             "Z-Image-Turbo": 0.003,
             "Wavespeed Ghibli": 0.005,
+            
             // Video Models with fixed pricing (fallback)
             "Google Veo 3": 1.2,
             "Kling AI": 0.8,
             "Wan 2.5": 1.0,
         ]
         
+
+
+// MARK: VIDEO PRICES
         // Initialize variable pricing for video models
         variableVideoPricing = [
             // Sora 2 pricing: 4s ($0.4), 8s ($0.8), 12s ($1.2) - only supports 720p
@@ -95,6 +107,8 @@ class PricingManager {
             )
         ]
     }
+    
+// MARK: METHODS
     
     /// Returns the price for a given InfoPacket based on its model name.
     ///
