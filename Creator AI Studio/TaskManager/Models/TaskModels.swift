@@ -16,6 +16,7 @@ struct GenerationTaskInfo {
 enum TaskResult {
     case imageSuccess(UIImage, url: String)
     case videoSuccess(videoUrl: String)
+    case queued(taskId: String, jobType: JobType)  // For webhook-based submissions
     case failure(Error)
 }
 

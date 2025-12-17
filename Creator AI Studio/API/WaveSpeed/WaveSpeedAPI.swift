@@ -20,7 +20,16 @@ struct WaveSpeedResponse: Decodable {
     let data: DataItem
 }
 
+// MARK: - WaveSpeed API Key
 let apiKey = "5fb599c5eca75157f34d7da3efc734a3422a4b5ae0e6bbf753a09b82e6caebdf"
+
+// MARK: - WaveSpeed Webhook Submission Response
+
+/// Response from submitting a job with webhook (returns immediately)
+struct WaveSpeedWebhookSubmissionResponse {
+    let jobId: String
+    let submitted: Bool
+}
 
 func sendImageToWaveSpeed(
     image: UIImage,
@@ -237,4 +246,129 @@ func fetchWaveSpeedJobStatus(id: String) async throws -> WaveSpeedResponse {
     let decoder = JSONDecoder()
     decoder.keyDecodingStrategy = .convertFromSnakeCase
     return try decoder.decode(WaveSpeedResponse.self, from: data)
+}
+
+// MARK: - Submit Image with Webhook (Returns Immediately)
+
+/// Submits an image generation request with a webhook URL and returns immediately
+/// The result will be delivered via the webhook callback
+func submitImageToWaveSpeedWithWebhook(
+    taskId: String,
+    image: UIImage,
+    prompt: String,
+    endpoint: String,
+    aspectRatio: String? = nil,
+    outputFormat: String = "jpeg",
+    userId: String? = nil
+) async throws -> WaveSpeedWebhookSubmissionResponse {
+    print("[WaveSpeed] Preparing webhook request…")
+    print("[WaveSpeed] Task ID: \(taskId)")
+    print("[WaveSpeed] Endpoint: \(endpoint)")
+    
+    // Build webhook URL - WaveSpeed uses query parameter
+    let webhookURL = WebhookConfig.webhookURL(for: "wavespeed")
+    let endpointWithWebhook: String
+    if endpoint.contains("?") {
+        endpointWithWebhook = "\(endpoint)&webhook=\(webhookURL.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? webhookURL)"
+    } else {
+        endpointWithWebhook = "\(endpoint)?webhook=\(webhookURL.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? webhookURL)"
+    }
+    
+    print("[WaveSpeed] Endpoint with webhook: \(endpointWithWebhook)")
+    
+    let url = URL(string: endpointWithWebhook)!
+    var request = URLRequest(url: url)
+    request.httpMethod = "POST"
+    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+    request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+    
+    // Check if this endpoint requires URL format instead of base64
+    let requiresURLFormat = endpoint.contains("nano-banana") || endpoint.contains("google/")
+    
+    var body: [String: Any] = [:]
+    
+    if requiresURLFormat {
+        guard let userId = userId else {
+            throw NSError(domain: "WaveSpeedAPI", code: -1, userInfo: [
+                NSLocalizedDescriptionKey: "userId is required for this endpoint",
+            ])
+        }
+        
+        // Upload image to Supabase to get a public URL
+        let imageURL = try await SupabaseManager.shared.uploadImage(
+            image: image,
+            userId: userId,
+            modelName: "temp-wavespeed"
+        )
+        
+        print("[WaveSpeed] Image uploaded for webhook, public URL: \(imageURL)")
+        
+        body["images"] = [imageURL]
+        body["output_format"] = outputFormat
+        body["enable_sync_mode"] = false // Must be false for webhook
+        body["enable_base64_output"] = false
+        
+    } else {
+        guard let jpegData = image.jpegData(compressionQuality: 0.8) else {
+            throw URLError(.cannotDecodeRawData)
+        }
+        
+        let base64String = jpegData.base64EncodedString()
+        
+        if endpoint.contains("/bytedance/") {
+            body["images"] = [base64String]
+        } else {
+            body["image"] = "data:image/jpeg;base64,\(base64String)"
+        }
+        
+        body["output_format"] = outputFormat
+        body["enable_sync_mode"] = false // Must be false for webhook
+        body["enable_base64_output"] = false
+    }
+    
+    // Add prompt if provided
+    if !prompt.isEmpty {
+        body["prompt"] = prompt
+    }
+    
+    // Add aspect ratio if provided
+    if let aspectRatio = aspectRatio, !aspectRatio.isEmpty {
+        body["aspect_ratio"] = aspectRatio
+    }
+    
+    request.httpBody = try JSONSerialization.data(withJSONObject: body)
+    
+    // Debug log
+    var debugBody = body
+    if let imageData = debugBody["image"] as? String, imageData.hasPrefix("data:image") {
+        debugBody["image"] = "data:image/jpeg;base64,[BASE64_DATA_TRUNCATED]"
+    }
+    if let bodyJSON = try? JSONSerialization.data(withJSONObject: debugBody),
+       let bodyString = String(data: bodyJSON, encoding: .utf8) {
+        print("[WaveSpeed] Webhook request body: \(bodyString)")
+    }
+    
+    print("[WaveSpeed] Sending webhook request to API…")
+    
+    let (data, response) = try await URLSession.shared.data(for: request)
+    
+    guard let httpResponse = response as? HTTPURLResponse,
+          (200 ... 299).contains(httpResponse.statusCode) else {
+        print("[WaveSpeed] HTTP error: \((response as? HTTPURLResponse)?.statusCode ?? -1)")
+        throw URLError(.badServerResponse)
+    }
+    
+    let decoder = JSONDecoder()
+    decoder.keyDecodingStrategy = .convertFromSnakeCase
+    let wavespeedResponse = try decoder.decode(WaveSpeedResponse.self, from: data)
+    
+    // The response should have status "created" since we're using async mode
+    print("[WaveSpeed] Webhook request submitted successfully")
+    print("[WaveSpeed] Job ID: \(wavespeedResponse.data.id)")
+    print("[WaveSpeed] Status: \(wavespeedResponse.data.status)")
+    
+    return WaveSpeedWebhookSubmissionResponse(
+        jobId: wavespeedResponse.data.id,
+        submitted: true
+    )
 }

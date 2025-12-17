@@ -31,6 +31,9 @@ class AuthViewModel: ObservableObject {
 //            print("✅ Session found: \(session.user.id)")
             self.user = session.user
             self.isSignedIn = true
+            
+            // Start listening for webhook job completions
+            await JobStatusManager.shared.startListening(userId: session.user.id.uuidString)
         } catch {
             print("❌ Session check failed: \(error)")
             self.isSignedIn = false
@@ -55,6 +58,9 @@ class AuthViewModel: ObservableObject {
                 print("✅ Session created immediately")
                 self.user = session.user
                 self.isSignedIn = true
+                
+                // Start listening for webhook job completions
+                await JobStatusManager.shared.startListening(userId: session.user.id.uuidString)
             } else {
                 print("⚠️ Email confirmation required - check your inbox")
                 // You might want to show an alert to the user here
@@ -76,6 +82,9 @@ class AuthViewModel: ObservableObject {
             self.user = session.user
             self.isSignedIn = true
             
+            // Start listening for webhook job completions
+            await JobStatusManager.shared.startListening(userId: session.user.id.uuidString)
+            
             // Test: Check if session persists in UserDefaults
             if let storedData = UserDefaults.standard.data(forKey: "supabase.session") {
                 print("✅ Session stored in UserDefaults: \(storedData.count) bytes")
@@ -96,6 +105,9 @@ class AuthViewModel: ObservableObject {
             )
             self.user = session.user
             self.isSignedIn = true
+            
+            // Start listening for webhook job completions
+            await JobStatusManager.shared.startListening(userId: session.user.id.uuidString)
         } catch {
             print("Apple sign-in error: \(error.localizedDescription)")
         }
@@ -110,6 +122,9 @@ class AuthViewModel: ObservableObject {
             )
             self.user = session.user
             self.isSignedIn = true
+            
+            // Start listening for webhook job completions
+            await JobStatusManager.shared.startListening(userId: session.user.id.uuidString)
         } catch {
             print("Google sign-in error: \(error.localizedDescription)")
         }
@@ -119,6 +134,9 @@ class AuthViewModel: ObservableObject {
 
     func signOut() async {
         do {
+            // Stop listening for webhook job completions
+            await JobStatusManager.shared.stopListening()
+            
             try await client.auth.signOut()
             self.isSignedIn = false
             self.user = nil

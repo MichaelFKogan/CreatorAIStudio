@@ -298,6 +298,20 @@ struct ProfileViewContent: View {
                     newNotifications: newNotifications
                 )
             }
+            // Listen for webhook-based image completions
+            .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("ImageSavedToDatabase"))) { _ in
+                print("📸 [Profile] Received ImageSavedToDatabase notification - refreshing gallery")
+                Task {
+                    await viewModel.fetchUserImages(forceRefresh: true)
+                }
+            }
+            // Listen for webhook-based video completions
+            .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("VideoSavedToDatabase"))) { _ in
+                print("🎬 [Profile] Received VideoSavedToDatabase notification - refreshing gallery")
+                Task {
+                    await viewModel.fetchUserImages(forceRefresh: true)
+                }
+            }
             .sheet(item: $selectedUserImage) { userImage in
                 FullScreenImageView(
                     userImage: userImage,

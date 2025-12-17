@@ -59,7 +59,7 @@ class ImageGenerationCoordinator: ObservableObject {
         )
 
         // Create the worker that actually performs the API call / processing.
-        let task = ImageGenerationTask(item: item, image: image, userId: userId)
+        let task = ImageGenerationTask(item: item, image: image, userId: userId, useWebhook: true)
 
         // MARK: Run the worker on a background thread using Swift concurrency.
 
@@ -141,9 +141,27 @@ class ImageGenerationCoordinator: ObservableObject {
             // Don't cleanup task info on failure - keep it for retry functionality
             // Only remove the background task reference
             backgroundTasks.removeValue(forKey: taskId)
+            
+        // MARK: QUEUED CASE — Task was submitted via webhook, waiting for callback.
+        case let .queued(webhookTaskId, jobType):
+            print("📤 Image generation queued via webhook - taskId: \(webhookTaskId), type: \(jobType)")
+            
+            // Update notification to show processing status (keep visible!)
+            NotificationManager.shared.updateMessage("Almost done! Saving your creation...", for: notificationId)
+            // Don't set progress to 1.0 yet - keep the animation going
+            NotificationManager.shared.updateProgress(0.80, for: notificationId)
+            
+            // Register the notification with JobStatusManager so it can update it when complete
+            JobStatusManager.shared.registerNotification(taskId: webhookTaskId, notificationId: notificationId)
+            
+            // For webhook mode, we don't wait - the result comes via Realtime/push notification
+            // Keep the task info for potential retry, but cleanup the background task
+            backgroundTasks.removeValue(forKey: taskId)
+            
+            // DON'T dismiss the notification - JobStatusManager will update it when the webhook completes
 
-        // Other result types (if added later) are simply ignored here.
-        default:
+        // Video success is not expected here, but handle gracefully
+        case .videoSuccess:
             break
         }
     }
@@ -209,7 +227,7 @@ class ImageGenerationCoordinator: ObservableObject {
         }
         
         // Create the worker that actually performs the API call / processing.
-        let task = ImageGenerationTask(item: item, image: image, userId: userId)
+        let task = ImageGenerationTask(item: item, image: image, userId: userId, useWebhook: true)
         
         // Run the worker on a background thread using Swift concurrency.
         let backgroundTask = Task.detached { [weak self] in
