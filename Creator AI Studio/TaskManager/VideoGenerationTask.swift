@@ -159,12 +159,50 @@ class VideoGenerationTask: MediaGenerationTask {
             await onProgress(TaskProgress(progress: 0.5, message: "Downloading video..."))
             print("[Runware] Fetching generated video from: \(urlString)")
             
-            // Download video with a 120-second timeout
-            let (videoData, urlResponse) = try await withTimeout(seconds: 120) {
-                try await URLSession.shared.data(from: url)
+            // For async video generation, wait a few seconds for the video file to be fully written
+            // Some providers return the URL before the file is completely ready
+            let isAsyncDelivery = item.resolvedAPIConfig.runwareConfig?.additionalTaskParams?["deliveryMethod"] as? String == "async"
+            if isAsyncDelivery {
+                print("[Runware] Async delivery detected, waiting 5 seconds for video to be ready...")
+                try await Task.sleep(for: .seconds(5))
+            }
+            
+            // Download video with a 120-second timeout and retry logic for empty responses
+            var videoData: Data = Data()
+            var urlResponse: URLResponse?
+            let maxDownloadRetries = 3
+            
+            for downloadAttempt in 1...maxDownloadRetries {
+                let (data, response) = try await withTimeout(seconds: 120) {
+                    try await URLSession.shared.data(from: url)
+                }
+                videoData = data
+                urlResponse = response
+                
+                if videoData.count > 0 {
+                    print("[Runware] Video downloaded successfully on attempt \(downloadAttempt)")
+                    break
+                } else {
+                    print("⚠️ [Runware] Download attempt \(downloadAttempt)/\(maxDownloadRetries) returned 0 bytes")
+                    if downloadAttempt < maxDownloadRetries {
+                        // Wait longer between retries (exponential backoff)
+                        let waitTime = Double(downloadAttempt) * 5.0
+                        print("[Runware] Waiting \(waitTime) seconds before retry...")
+                        try await Task.sleep(for: .seconds(waitTime))
+                    }
+                }
             }
             
             print("[Runware] Video downloaded, size: \(videoData.count) bytes (\(Double(videoData.count) / 1_000_000) MB)")
+            
+            // Validate that we actually got video data
+            guard videoData.count > 0 else {
+                throw NSError(
+                    domain: "APIError",
+                    code: -1,
+                    userInfo: [NSLocalizedDescriptionKey: "Downloaded video is empty (0 bytes). The video may not be ready yet or the URL may have expired."]
+                )
+            }
             
             // Detect file extension from MIME type or URL
             var fileExtension = "mp4"

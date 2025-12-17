@@ -151,6 +151,15 @@ class SupabaseManager {
     /// - Returns: The public URL of the uploaded video in Supabase Storage
 
     func uploadVideo(videoData: Data, userId: String, modelName: String, fileExtension: String, maxRetries: Int = 3) async throws -> String {
+        // Safety check: prevent uploading empty files
+        guard videoData.count > 0 else {
+            throw NSError(
+                domain: "StorageError",
+                code: -1,
+                userInfo: [NSLocalizedDescriptionKey: "Cannot upload empty video data (0 bytes)"]
+            )
+        }
+        
         // Create unique filename: userId/timestamp_modelName.extension
         let timestamp = Int(Date().timeIntervalSince1970)
         let sanitizedModelName = modelName.replacingOccurrences(of: " ", with: "-")
