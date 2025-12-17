@@ -47,11 +47,6 @@ class PricingManager {
             "FLUX.1 Kontext [max]": 0.08,
             "Z-Image-Turbo": 0.003,
             "Wavespeed Ghibli": 0.005,
-            
-            // Video Models with fixed pricing (fallback)
-            "Google Veo 3": 1.2,
-            "Kling AI": 0.8,
-            "Wan 2.5": 1.0,
         ]
         
 
@@ -142,6 +137,10 @@ class PricingManager {
     func hasVariablePricing(for modelName: String) -> Bool {
         return variableVideoPricing[modelName] != nil
     }
+    
+
+
+// MARK: DIMENSIONS??? WHY?
     
     /// Determines resolution string from width and height dimensions
     /// Used to map dimensions to pricing resolution keys (480p, 720p, 1080p)

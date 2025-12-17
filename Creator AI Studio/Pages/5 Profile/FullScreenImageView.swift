@@ -1323,6 +1323,12 @@ struct FullScreenImageView: View {
                         storagePath = pathAfterBucket.joined(separator: "/")
                     }
                 }
+                
+                // URL-decode the storage path (important: URLs may have encoded characters like %20)
+                if let path = storagePath, let decodedPath = path.removingPercentEncoding {
+                    storagePath = decodedPath
+                    print("🔍 Decoded storage path: \(decodedPath)")
+                }
 
                 // Delete thumbnail if it's a video (non-critical, don't fail if this fails)
                 if isVideo, let thumbnailUrl = userImage.thumbnail_url {
@@ -1356,27 +1362,31 @@ struct FullScreenImageView: View {
                 // Delete main storage file (with retry)
                 if let storagePath = storagePath {
                     print(
-                        "🗑️ Extracted storage path: '\(storagePath)' from bucket: \(bucketName)"
+                        "🗑️ Attempting to delete from storage - bucket: '\(bucketName)', path: '\(storagePath)'"
                     )
 
                     do {
-                        try await retryOperation(maxAttempts: 2) {
-                            _ = try await SupabaseManager.shared.client.storage
-                                .from(bucketName)
-                                .remove(paths: [storagePath])
+                        let deleteResult = try await SupabaseManager.shared.client.storage
+                            .from(bucketName)
+                            .remove(paths: [storagePath])
+                        print("🗑️ Storage delete response: \(deleteResult)")
+                        if deleteResult.isEmpty {
+                            print("⚠️ Storage delete returned empty result - file may not have been deleted")
+                        } else {
+                            print(
+                                "✅ \(isVideo ? "Video" : "Image") file deleted from storage: \(deleteResult)"
+                            )
                         }
-                        print(
-                            "✅ \(isVideo ? "Video" : "Image") file deleted from storage successfully"
-                        )
                     } catch {
                         print(
-                            "⚠️ Storage deletion failed (non-critical): \(error)"
+                            "❌ Storage deletion FAILED for path '\(storagePath)': \(error)"
                         )
                     }
                 } else {
                     print(
-                        "⚠️ Could not extract storage path from URL: \(imageUrl)"
+                        "❌ Could not extract storage path from URL: \(imageUrl)"
                     )
+                    print("❌ Full URL: \(imageUrl)")
                 }
 
                 // Success - remove from view model and close the view

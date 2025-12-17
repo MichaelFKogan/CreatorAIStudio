@@ -789,6 +789,12 @@ class ProfileViewModel: ObservableObject {
                         }
                     }
                     
+                    // URL-decode the storage path (important: URLs may have encoded characters like %20)
+                    if let path = storagePath, let decodedPath = path.removingPercentEncoding {
+                        storagePath = decodedPath
+                        print("🔍 Decoded storage path: \(decodedPath)")
+                    }
+                    
                     // Delete thumbnail if it's a video (non-critical)
                     if isVideo, let thumbnailUrl = image.thumbnail_url {
                         var thumbnailPath: String?
@@ -809,17 +815,23 @@ class ProfileViewModel: ObservableObject {
                         }
                     }
                     
-                    // Delete main storage file (non-critical if this fails)
+                    // Delete main storage file
                     if let storagePath = storagePath {
+                        print("🗑️ Attempting to delete from storage - bucket: '\(bucketName)', path: '\(storagePath)'")
                         do {
-                            try await retryOperation(maxAttempts: 2) {
-                                _ = try await client.storage
-                                    .from(bucketName)
-                                    .remove(paths: [storagePath])
+                            let deleteResult = try await client.storage
+                                .from(bucketName)
+                                .remove(paths: [storagePath])
+                            if deleteResult.isEmpty {
+                                print("⚠️ Storage delete returned empty result for '\(storagePath)' - file may not have been deleted")
+                            } else {
+                                print("✅ Storage file deleted: \(deleteResult)")
                             }
                         } catch {
-                            print("⚠️ Storage deletion failed (non-critical): \(error)")
+                            print("❌ Storage deletion FAILED for path '\(storagePath)': \(error)")
                         }
+                    } else {
+                        print("❌ Could not extract storage path from URL: \(imageUrl)")
                     }
                     
                     // Success - remove from local array
