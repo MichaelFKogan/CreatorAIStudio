@@ -396,7 +396,7 @@ class ImageGenerationTask: MediaGenerationTask {
             }
             
             // MARK: Step 3 - Return immediately with queued status
-            await onProgress(TaskProgress(progress: 1.0, message: "Image queued! You'll be notified when ready."))
+            // Note: Don't update progress here - the coordinator will set the appropriate progress for queued state
             await onComplete(.queued(taskId: taskId, jobType: .image))
             
         } catch {

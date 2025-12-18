@@ -314,6 +314,12 @@ class JobStatusManager: ObservableObject {
         print("[JobStatusManager] 🚀 Processing completed job: \(job.task_id)")
         print("[JobStatusManager] 🔗 Result URL: \(resultUrl)")
         
+        // Update the notification to show we're almost done (this is the RIGHT time!)
+        if let notificationId = taskNotificationMap[job.task_id] {
+            NotificationManager.shared.updateMessage("Almost done! Saving your creation...", for: notificationId)
+            NotificationManager.shared.updateProgress(0.85, for: notificationId)
+        }
+        
         do {
             // Extract metadata
             let metadata = job.metadata

@@ -127,12 +127,8 @@ class VideoGenerationCoordinator: ObservableObject {
             // Update the notification to show completion.
             NotificationManager.shared.markAsCompleted(id: notificationId)
 
-            // Remove the notification after a few seconds, then clean up.
-            Task {
-                try? await Task.sleep(for: .seconds(5))
-                await NotificationManager.shared.dismissNotification(id: notificationId)
-                cleanupTask(taskId: taskId)
-            }
+            // Clean up task tracking (notification stays visible until user dismisses it)
+            cleanupTask(taskId: taskId)
 
         // MARK: FAILURE CASE — Task failed.
 
@@ -155,9 +151,10 @@ class VideoGenerationCoordinator: ObservableObject {
             print("📤 Video generation queued via webhook - taskId: \(webhookTaskId), type: \(jobType)")
             
             // Update notification to show processing status (keep visible!)
-            NotificationManager.shared.updateMessage("Almost done! Saving your creation...", for: notificationId)
-            // Don't set progress to 1.0 yet - keep the animation going
-            NotificationManager.shared.updateProgress(0.80, for: notificationId)
+            // Note: The actual processing happens in the cloud and can take several minutes
+            NotificationManager.shared.updateMessage("Processing in the cloud... This may take a few minutes.", for: notificationId)
+            // Set progress to ~50% to indicate we're waiting for remote processing
+            NotificationManager.shared.updateProgress(0.50, for: notificationId)
             
             // Register the notification with JobStatusManager so it can update it when complete
             JobStatusManager.shared.registerNotification(taskId: webhookTaskId, notificationId: notificationId)

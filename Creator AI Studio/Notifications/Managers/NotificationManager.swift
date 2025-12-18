@@ -127,11 +127,7 @@ class NotificationManager: ObservableObject {
             newCompletedCount += 1
         }
         
-        // Auto-dismiss completed notification after 3 seconds
-        Task {
-            try? await Task.sleep(for: .seconds(3))
-            dismissNotification(id: id)
-        }
+        // Notification stays visible until user manually dismisses it (via chevron button)
     }
     
     /// Mark notification as failed with error message
