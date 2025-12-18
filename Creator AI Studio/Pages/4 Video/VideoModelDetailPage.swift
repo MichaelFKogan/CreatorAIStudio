@@ -322,6 +322,9 @@ struct VideoModelDetailPage: View {
                                 isGenerating: $isGenerating,
                                 keyboardHeight: $keyboardHeight,
                                 creditsString: creditsString,
+                                selectedSize: videoAspectOptions[selectedAspectIndex].id,
+                                selectedResolution: hasVariableResolution ? videoResolutionOptions[selectedResolutionIndex].id : nil,
+                                selectedDuration: "\(Int(videoDurationOptions[selectedDurationIndex].duration))s",
                                 action: generate
                             ))
 
@@ -790,10 +793,13 @@ private struct GenerateButtonVideo: View {
     @Binding var isGenerating: Bool
     @Binding var keyboardHeight: CGFloat
     let creditsString: String
+    let selectedSize: String
+    let selectedResolution: String?
+    let selectedDuration: String
     let action: () -> Void
 
     var body: some View {
-        VStack(spacing: 0) {
+        VStack(spacing: 8) {
             Button(action: action) {
                 HStack {
                     if isGenerating {
@@ -834,6 +840,40 @@ private struct GenerateButtonVideo: View {
             .disabled(isGenerating)
             .padding(.horizontal)
             .background(Color(UIColor.systemBackground))
+            
+            // Compact summary of selected options
+            HStack(spacing: 0) {
+                // Size column
+                HStack(spacing: 4) {
+                    Image(systemName: "aspectratio")
+                        .font(.system(size: 11))
+                    Text(selectedSize)
+                        .font(.system(size: 12, weight: .medium))
+                }
+                .frame(maxWidth: .infinity)
+                
+                // Resolution column (if available)
+                if let resolution = selectedResolution {
+                    HStack(spacing: 4) {
+                        Image(systemName: "sparkles.tv")
+                            .font(.system(size: 11))
+                        Text(resolution)
+                            .font(.system(size: 12, weight: .medium))
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+                
+                // Duration column
+                HStack(spacing: 4) {
+                    Image(systemName: "timer")
+                        .font(.system(size: 11))
+                    Text(selectedDuration)
+                        .font(.system(size: 12, weight: .medium))
+                }
+                .frame(maxWidth: .infinity)
+            }
+            .foregroundColor(.secondary)
+            .padding(.horizontal)
         }
         .animation(.easeOut(duration: 0.25), value: keyboardHeight)
     }
@@ -878,6 +918,7 @@ private struct CreditsViewVideo: View {
 private struct AudioToggleSectionVideo: View {
     @Binding var generateAudio: Bool
     let isRequired: Bool
+    @State private var showWarning: Bool = false
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -885,12 +926,12 @@ private struct AudioToggleSectionVideo: View {
                 VStack(alignment: .leading, spacing: 4) {
                     HStack(spacing: 6) {
                         Image(systemName: "waveform")
-                            .foregroundColor(isRequired ? .gray : .purple)
+                            .foregroundColor(.purple)
                             .font(.system(size: 14))
                         Text("Audio Generation")
                             .font(.subheadline)
                             .fontWeight(.medium)
-                            .foregroundColor(isRequired ? .secondary : .primary)
+                            .foregroundColor(.primary)
                     }
                     Text("Generate synchronized audio, dialogue, and sound effects")
                         .font(.caption)
@@ -899,20 +940,42 @@ private struct AudioToggleSectionVideo: View {
                 
                 Spacer()
                 
-                Toggle("", isOn: $generateAudio)
-                    .toggleStyle(SwitchToggleStyle(tint: isRequired ? .gray : .purple))
-                    .labelsHidden()
-                    .disabled(isRequired)
+                if isRequired {
+                    // Custom non-interactive toggle that triggers warning on tap
+                    Toggle("", isOn: .constant(true))
+                        .toggleStyle(SwitchToggleStyle(tint: .purple))
+                        .labelsHidden()
+                        .allowsHitTesting(false)
+                        .overlay(
+                            Color.clear
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    withAnimation(.easeInOut(duration: 0.15)) {
+                                        showWarning = true
+                                    }
+                                    // Reset after a delay
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                                        withAnimation(.easeInOut(duration: 0.3)) {
+                                            showWarning = false
+                                        }
+                                    }
+                                }
+                        )
+                } else {
+                    Toggle("", isOn: $generateAudio)
+                        .toggleStyle(SwitchToggleStyle(tint: .purple))
+                        .labelsHidden()
+                }
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
             .background(
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(isRequired ? Color.gray.opacity(0.04) : Color.purple.opacity(0.06))
+                    .fill(Color.purple.opacity(0.06))
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 12)
-                    .stroke(isRequired ? Color.gray.opacity(0.2) : (generateAudio ? Color.purple.opacity(0.3) : Color.gray.opacity(0.2)), lineWidth: 1)
+                    .stroke(generateAudio ? Color.purple.opacity(0.3) : Color.gray.opacity(0.2), lineWidth: 1)
             )
             
             // Disclaimer for models that require audio
@@ -920,12 +983,13 @@ private struct AudioToggleSectionVideo: View {
                 HStack(spacing: 6) {
                     Image(systemName: "info.circle.fill")
                         .font(.system(size: 12))
-                        .foregroundColor(.purple.opacity(0.7))
-                    Text("This model can only generate video with audio")
+                        .foregroundColor(showWarning ? .red : .purple.opacity(0.7))
+                    Text("Audio required. This model can only generate video with audio")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(showWarning ? .red : .secondary)
                 }
                 .padding(.horizontal, 4)
+                .scaleEffect(showWarning ? 1.02 : 1.0)
             }
         }
         .padding(.horizontal)
