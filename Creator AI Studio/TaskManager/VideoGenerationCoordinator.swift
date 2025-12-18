@@ -30,6 +30,7 @@ class VideoGenerationCoordinator: ObservableObject {
         duration: Double,
         aspectRatio: String,
         resolution: String? = nil,
+        generateAudio: Bool? = nil,
         onVideoGenerated: @escaping (String) -> Void = { _ in },
         onError: @escaping (Error) -> Void = { _ in }
     ) -> UUID {
@@ -72,6 +73,7 @@ class VideoGenerationCoordinator: ObservableObject {
             duration: duration,
             aspectRatio: aspectRatio,
             resolution: resolution,
+            generateAudio: generateAudio,
             useWebhook: true
         )
 

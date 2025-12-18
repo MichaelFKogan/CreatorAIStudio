@@ -213,7 +213,7 @@ class ModelConfigurationManager {
             "Google Veo 3.1 Fast": APIConfiguration(
                 provider: .runware,
                 endpoint: "https://api.runware.ai/v1",
-                runwareModel: "google:3@1",
+                runwareModel: "google:3@3",
                 aspectRatio: nil,
                 wavespeedConfig: nil,
                 runwareConfig: RunwareConfig(
@@ -309,8 +309,6 @@ class ModelConfigurationManager {
                 DurationOption(id: "12", label: "12 seconds", duration: 12.0, description: "Maximum duration")
             ],
             "Google Veo 3.1 Fast": [
-                DurationOption(id: "4", label: "4 seconds", duration: 4.0, description: "Quick clip"),
-                DurationOption(id: "6", label: "6 seconds", duration: 6.0, description: "Standard duration"),
                 DurationOption(id: "8", label: "8 seconds", duration: 8.0, description: "Extended duration")
             ],
             "Seedance 1.0 Pro Fast": [
@@ -348,7 +346,6 @@ class ModelConfigurationManager {
                 ResolutionOption(id: "720p", label: "720p", description: "High quality"),
             ],
             "Google Veo 3.1 Fast": [
-                ResolutionOption(id: "720p", label: "720p", description: "High quality"),
                 ResolutionOption(id: "1080p", label: "1080p", description: "Full HD")
             ],
             "Seedance 1.0 Pro Fast": [

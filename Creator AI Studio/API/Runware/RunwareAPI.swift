@@ -482,6 +482,7 @@ func sendVideoToRunware(
     resolution: String? = nil,
     isImageToVideo: Bool = false,
     runwareConfig: RunwareConfig? = nil,
+    generateAudio: Bool? = nil,
     onPollingProgress: ((Int, Int) -> Void)? = nil
 ) async throws -> RunwareResponse {
     print("[Runware] Preparing video request…")
@@ -603,6 +604,20 @@ func sendVideoToRunware(
         providerSettings["bytedance"] = bytedanceSettings
         task["providerSettings"] = providerSettings
         print("[Runware] Added ByteDance provider settings")
+    }
+    
+    // MARK: - Provider-specific settings for Google models
+    
+    // Google Veo 3.1 Fast supports generateAudio parameter
+    if model.lowercased().contains("google:") {
+        if let generateAudio = generateAudio {
+            var providerSettings = task["providerSettings"] as? [String: Any] ?? [:]
+            var googleSettings: [String: Any] = [:]
+            googleSettings["generateAudio"] = generateAudio
+            providerSettings["google"] = googleSettings
+            task["providerSettings"] = providerSettings
+            print("[Runware] Added Google provider settings - generateAudio: \(generateAudio)")
+        }
     }
 
     // MARK: - Wrap task in authentication array (required!)
@@ -980,7 +995,8 @@ func submitVideoToRunwareWithWebhook(
     duration: Double = 5.0,
     resolution: String? = nil,
     isImageToVideo: Bool = false,
-    runwareConfig: RunwareConfig? = nil
+    runwareConfig: RunwareConfig? = nil,
+    generateAudio: Bool? = nil
 ) async throws -> RunwareWebhookSubmissionResponse {
     print("[Runware] Preparing webhook request for video…")
     print("[Runware] Task UUID: \(taskUUID)")
@@ -1051,6 +1067,18 @@ func submitVideoToRunwareWithWebhook(
         bytedanceSettings["cameraFixed"] = false
         providerSettings["bytedance"] = bytedanceSettings
         task["providerSettings"] = providerSettings
+    }
+    
+    // Google provider settings (audio generation)
+    if model.lowercased().contains("google:") {
+        if let generateAudio = generateAudio {
+            var providerSettings = task["providerSettings"] as? [String: Any] ?? [:]
+            var googleSettings: [String: Any] = [:]
+            googleSettings["generateAudio"] = generateAudio
+            providerSettings["google"] = googleSettings
+            task["providerSettings"] = providerSettings
+            print("[Runware] Added Google provider settings (webhook) - generateAudio: \(generateAudio)")
+        }
     }
     
     let requestBody: [[String: Any]] = [

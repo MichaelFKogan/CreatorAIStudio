@@ -38,6 +38,7 @@ struct VideoModelDetailPage: View {
     @State private var selectedGenerationMode: Int = 0
     @State private var selectedDurationIndex: Int = 0
     @State private var selectedResolutionIndex: Int = 0
+    @State private var generateAudio: Bool = true // Default to ON for audio generation
 
     @EnvironmentObject var authViewModel: AuthViewModel
 
@@ -124,6 +125,21 @@ struct VideoModelDetailPage: View {
         guard let modelName = item.display.modelName else { return false }
         return PricingManager.shared.hasVariablePricing(for: modelName)
     }
+    
+    /// Checks if the current model supports audio generation
+    private var supportsAudio: Bool {
+        guard let capabilities = ModelConfigurationManager.shared.capabilities(for: item) else { return false }
+        return capabilities.contains("Audio")
+    }
+    
+    /// Checks if the current model requires audio (cannot be disabled)
+    /// Some models like Sora 2 only support video with audio
+    private var audioRequired: Bool {
+        guard let modelName = item.display.modelName else { return false }
+        // Models that require audio (cannot generate without it)
+        let audioRequiredModels = ["Sora 2"]
+        return audioRequiredModels.contains(modelName)
+    }
 
     private let examplePrompts: [String] = [
         "A serene landscape with mountains at sunset, photorealistic, 8k quality",
@@ -194,9 +210,9 @@ struct VideoModelDetailPage: View {
         "\((currentPrice ?? item.resolvedCost ?? 0).credits)"
     }
     
-    /// Computed property to get the current price based on selected aspect ratio and duration
+    /// Computed property to get the current price based on selected aspect ratio, duration, and audio
     /// Returns variable pricing if available, otherwise falls back to base price
-    /// This automatically updates the UI when aspect ratio or duration selections change
+    /// This automatically updates the UI when aspect ratio, duration, or audio selections change
     private var currentPrice: Decimal? {
         guard let modelName = item.display.modelName else { return item.resolvedCost }
         
@@ -223,12 +239,20 @@ struct VideoModelDetailPage: View {
         let resolution = selectedResolutionOption.id
         
         // Get variable price for this combination
-        if let variablePrice = PricingManager.shared.variablePrice(
+        if var variablePrice = PricingManager.shared.variablePrice(
             for: modelName,
             aspectRatio: selectedAspectOption.id,
             resolution: resolution,
             duration: selectedDurationOption.duration
         ) {
+            // Adjust audio pricing if applicable
+            // Base price includes audio (since audio is ON by default)
+            // Subtract audio addon when audio is turned OFF
+            if supportsAudio && !generateAudio {
+                if let audioAddon = PricingManager.shared.audioPriceAddon(for: modelName) {
+                    variablePrice -= audioAddon
+                }
+            }
             return variablePrice
         }
         
@@ -302,6 +326,14 @@ struct VideoModelDetailPage: View {
                             ))
 
                         Divider().padding(.horizontal)
+
+                        // Audio toggle - only show for models that support audio generation
+                        if supportsAudio {
+                            AudioToggleSectionVideo(
+                                generateAudio: $generateAudio,
+                                isRequired: audioRequired
+                            )
+                        }
 
                         LazyView(
                             AspectRatioSectionVideo(
@@ -472,6 +504,7 @@ struct VideoModelDetailPage: View {
                 duration: selectedDurationOption.duration,
                 aspectRatio: selectedAspectOption.id,
                 resolution: hasVariableResolution ? selectedResolutionOption.id : nil,
+                generateAudio: supportsAudio ? generateAudio : nil,
                 onVideoGenerated: { _ in
                     isGenerating = false
                 },
@@ -837,6 +870,65 @@ private struct CreditsViewVideo: View {
                     endPoint: .trailing
                 ), lineWidth: 1.5
             ))
+    }
+}
+
+// MARK: AUDIO TOGGLE
+
+private struct AudioToggleSectionVideo: View {
+    @Binding var generateAudio: Bool
+    let isRequired: Bool
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "waveform")
+                            .foregroundColor(isRequired ? .gray : .purple)
+                            .font(.system(size: 14))
+                        Text("Audio Generation")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundColor(isRequired ? .secondary : .primary)
+                    }
+                    Text("Generate synchronized audio, dialogue, and sound effects")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                
+                Spacer()
+                
+                Toggle("", isOn: $generateAudio)
+                    .toggleStyle(SwitchToggleStyle(tint: isRequired ? .gray : .purple))
+                    .labelsHidden()
+                    .disabled(isRequired)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(isRequired ? Color.gray.opacity(0.04) : Color.purple.opacity(0.06))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(isRequired ? Color.gray.opacity(0.2) : (generateAudio ? Color.purple.opacity(0.3) : Color.gray.opacity(0.2)), lineWidth: 1)
+            )
+            
+            // Disclaimer for models that require audio
+            if isRequired {
+                HStack(spacing: 6) {
+                    Image(systemName: "info.circle.fill")
+                        .font(.system(size: 12))
+                        .foregroundColor(.purple.opacity(0.7))
+                    Text("This model can only generate video with audio")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .padding(.horizontal, 4)
+            }
+        }
+        .padding(.horizontal)
     }
 }
 

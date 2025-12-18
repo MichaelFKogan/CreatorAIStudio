@@ -64,17 +64,17 @@ class PricingManager {
                     ],
                 ]
             ),
-            // Google Veo 3.1 Fast pricing: $0.10/second for 1080p (720p same rate)
-            // Durations: 4s, 6s, 8s - only supports 720p and 1080p
+            // Google Veo 3.1 Fast pricing: Only supports 1080p at 8 seconds
+            // Without audio: $0.80, With audio: $1.20
+            // Base price is $1.20 (with audio) since audio is ON by default
+            // Audio addon is negative (-$0.40) when audio is turned OFF
             "Google Veo 3.1 Fast": VideoPricingConfiguration(
                 pricing: [
                     "16:9": [
-                        "720p": [4.0: 0.40, 6.0: 0.60, 8.0: 0.80],
-                        "1080p": [4.0: 0.40, 6.0: 0.60, 8.0: 0.80]
+                        "1080p": [8.0: 1.20]
                     ],
                     "9:16": [
-                        "720p": [4.0: 0.40, 6.0: 0.60, 8.0: 0.80],
-                        "1080p": [4.0: 0.40, 6.0: 0.60, 8.0: 0.80]
+                        "1080p": [8.0: 1.20]
                     ]
                 ]
             ),
@@ -180,6 +180,26 @@ class PricingManager {
     /// - Returns: True if the model has variable pricing, false otherwise
     func hasVariablePricing(for modelName: String) -> Bool {
         return variableVideoPricing[modelName] != nil
+    }
+    
+    // MARK: AUDIO PRICING
+    
+    /// Audio generation price difference for video models that support it
+    /// Base prices INCLUDE audio (since audio is ON by default)
+    /// This value is SUBTRACTED when audio is turned OFF
+    private static let audioPriceAddons: [String: Decimal] = [
+        // Google Veo 3.1 Fast: Base $1.20 (with audio), $0.80 without audio
+        // Difference: $0.40 (subtracted when audio OFF)
+        "Google Veo 3.1 Fast": 0.40
+    ]
+    
+    /// Returns the audio price difference for a given model
+    /// This amount is subtracted from the base price when audio is turned OFF
+    ///
+    /// - Parameter modelName: The name of the video model
+    /// - Returns: The price difference as a Decimal, or nil if model doesn't support audio pricing
+    func audioPriceAddon(for modelName: String) -> Decimal? {
+        return PricingManager.audioPriceAddons[modelName]
     }
 
     // MARK: DIMENSIONS??? WHY?

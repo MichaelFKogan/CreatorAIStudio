@@ -27,16 +27,20 @@ class VideoGenerationTask: MediaGenerationTask {
     let aspectRatio: String
     let resolution: String?
     
+    // Audio generation (for models that support it, e.g., Google Veo 3.1 Fast)
+    let generateAudio: Bool?
+    
     // Whether to use webhook mode (returns immediately) or polling mode (waits for result)
     let useWebhook: Bool
 
-    init(item: InfoPacket, image: UIImage?, userId: String, duration: Double, aspectRatio: String, resolution: String? = nil, useWebhook: Bool = false) {
+    init(item: InfoPacket, image: UIImage?, userId: String, duration: Double, aspectRatio: String, resolution: String? = nil, generateAudio: Bool? = nil, useWebhook: Bool = false) {
         self.item = item
         self.image = image
         self.userId = userId
         self.duration = duration
         self.aspectRatio = aspectRatio
         self.resolution = resolution
+        self.generateAudio = generateAudio
         self.useWebhook = useWebhook && WebhookConfig.useWebhooks
     }
     
@@ -101,6 +105,9 @@ class VideoGenerationTask: MediaGenerationTask {
         if let resolution = resolution {
             debugInfo += "\nResolution: \(resolution)"
         }
+        if let generateAudio = generateAudio {
+            debugInfo += "\nGenerate Audio: \(generateAudio)"
+        }
         debugInfo += """
         
         Mode: \(image != nil ? "Image-to-Video" : "Text-to-Video")
@@ -145,6 +152,7 @@ class VideoGenerationTask: MediaGenerationTask {
                     resolution: self.resolution,
                     isImageToVideo: isImageToVideo,
                     runwareConfig: apiConfig.runwareConfig,
+                    generateAudio: self.generateAudio,
                     onPollingProgress: { attempt, maxAttempts in
                         let progress = 0.1 + (Double(attempt) / Double(maxAttempts)) * 0.4 // 0.1 to 0.5
                         Task { @MainActor in
@@ -428,7 +436,8 @@ class VideoGenerationTask: MediaGenerationTask {
                 duration: duration,
                 resolution: resolution,
                 isImageToVideo: isImageToVideo,
-                runwareConfig: apiConfig.runwareConfig
+                runwareConfig: apiConfig.runwareConfig,
+                generateAudio: generateAudio
             )
             print("✅ Runware video webhook request submitted")
             
