@@ -619,6 +619,20 @@ func sendVideoToRunware(
             print("[Runware] Added Google provider settings - generateAudio: \(generateAudio)")
         }
     }
+    
+    // MARK: - Provider-specific settings for KlingAI models
+    
+    // Kling VIDEO 2.6 Pro supports sound parameter for audio generation
+    if model.lowercased().contains("klingai:") {
+        if let generateAudio = generateAudio {
+            var providerSettings = task["providerSettings"] as? [String: Any] ?? [:]
+            var klingSettings: [String: Any] = [:]
+            klingSettings["sound"] = generateAudio
+            providerSettings["klingai"] = klingSettings
+            task["providerSettings"] = providerSettings
+            print("[Runware] Added KlingAI provider settings - sound: \(generateAudio)")
+        }
+    }
 
     // MARK: - Wrap task in authentication array (required!)
 
@@ -1078,6 +1092,18 @@ func submitVideoToRunwareWithWebhook(
             providerSettings["google"] = googleSettings
             task["providerSettings"] = providerSettings
             print("[Runware] Added Google provider settings (webhook) - generateAudio: \(generateAudio)")
+        }
+    }
+    
+    // KlingAI provider settings (sound/audio generation)
+    if model.lowercased().contains("klingai:") {
+        if let generateAudio = generateAudio {
+            var providerSettings = task["providerSettings"] as? [String: Any] ?? [:]
+            var klingSettings: [String: Any] = [:]
+            klingSettings["sound"] = generateAudio
+            providerSettings["klingai"] = klingSettings
+            task["providerSettings"] = providerSettings
+            print("[Runware] Added KlingAI provider settings (webhook) - sound: \(generateAudio)")
         }
     }
     

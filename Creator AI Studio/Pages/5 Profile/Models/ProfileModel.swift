@@ -692,10 +692,26 @@ class ProfileViewModel: ObservableObject {
         userImages.filter { $0.is_favorite == true }
     }
 
-    /// Gets unique list of models from user images
+    /// Gets unique list of models from user images (images only)
     var uniqueModels: [String] {
-        let models = userImages.compactMap { $0.model }
+        let models = userImages.filter { $0.isImage }.compactMap { $0.model }
         return Array(Set(models)).sorted()
+    }
+    
+    /// Gets unique list of video models from user videos
+    var uniqueVideoModels: [String] {
+        let models = userImages.filter { $0.isVideo }.compactMap { $0.model }
+        return Array(Set(models)).sorted()
+    }
+    
+    /// Gets all video items
+    var userVideos: [UserImage] {
+        userImages.filter { $0.isVideo }
+    }
+    
+    /// Gets favorited videos
+    var favoriteVideos: [UserImage] {
+        userImages.filter { $0.isVideo && $0.is_favorite == true }
     }
 
     /// Filters images by model name
@@ -727,6 +743,29 @@ class ProfileViewModel: ObservableObject {
             filtered = filtered.filter { $0.model == modelName }
         }
 
+        return filtered
+    }
+    
+    /// Filters videos by model name
+    /// - Parameter modelName: The model name to filter by (nil for all)
+    func filteredVideos(by modelName: String?) -> [UserImage] {
+        guard let modelName = modelName else {
+            return userVideos
+        }
+        return userVideos.filter { $0.model == modelName }
+    }
+    
+    /// Filters videos by both model and favorites
+    /// - Parameters:
+    ///   - modelName: The model name to filter by (nil for all)
+    ///   - favoritesOnly: If true, returns only favorited videos
+    func filteredVideos(by modelName: String?, favoritesOnly: Bool) -> [UserImage] {
+        var filtered = favoritesOnly ? favoriteVideos : userVideos
+        
+        if let modelName = modelName {
+            filtered = filtered.filter { $0.model == modelName }
+        }
+        
         return filtered
     }
     

@@ -40,7 +40,8 @@ class PricingManager {
     private let defaultVideoConfigs: [String: (aspectRatio: String, resolution: String, duration: Double)] = [
         "Sora 2": ("9:16", "720p", 8.0),  // Sora 2 defaults to 8 seconds
         "Google Veo 3.1 Fast": ("9:16", "1080p", 8.0),  // Only option available
-        "Seedance 1.0 Pro Fast": ("3:4", "480p", 5.0)  // Default to cheapest option
+        "Seedance 1.0 Pro Fast": ("3:4", "480p", 5.0),  // Default to cheapest option
+        "Kling VIDEO 2.6 Pro": ("9:16", "1080p", 5.0)  // Default to 5 seconds with audio
     ]
 
     private init() {
@@ -114,6 +115,22 @@ class PricingManager {
                         "720p": [5.0: 0.0668, 10.0: 0.1336],
                         "1080p": [5.0: 0.1589, 10.0: 0.3177],
                     ],
+                ]
+            ),
+            // Kling VIDEO 2.6 Pro pricing from Runware pricing page
+            // Base prices include audio (audio ON by default): $0.14/s
+            // Without audio: $0.07/s
+            "Kling VIDEO 2.6 Pro": VideoPricingConfiguration(
+                pricing: [
+                    "16:9": [
+                        "1080p": [5.0: 0.70, 10.0: 1.40]
+                    ],
+                    "9:16": [
+                        "1080p": [5.0: 0.70, 10.0: 1.40]
+                    ],
+                    "1:1": [
+                        "1080p": [5.0: 0.70, 10.0: 1.40]
+                    ]
                 ]
             ),
         ]
@@ -211,13 +228,22 @@ class PricingManager {
     
     // MARK: AUDIO PRICING
     
-    /// Audio generation price difference for video models that support it
+    /// Audio generation price difference for video models that support it (fixed amount)
     /// Base prices INCLUDE audio (since audio is ON by default)
     /// This value is SUBTRACTED when audio is turned OFF
     private static let audioPriceAddons: [String: Decimal] = [
         // Google Veo 3.1 Fast: Base $1.20 (with audio), $0.80 without audio
         // Difference: $0.40 (subtracted when audio OFF)
         "Google Veo 3.1 Fast": 0.40
+    ]
+    
+    /// Audio generation price difference per second for video models with variable durations
+    /// Used when audio addon varies based on duration
+    /// This rate is multiplied by duration and SUBTRACTED when audio is turned OFF
+    private static let audioPricePerSecond: [String: Decimal] = [
+        // Kling VIDEO 2.6 Pro: $0.14/s with audio, $0.07/s without audio
+        // Difference: $0.07/s (subtracted when audio OFF)
+        "Kling VIDEO 2.6 Pro": 0.07
     ]
     
     /// Returns the audio price difference for a given model
@@ -227,6 +253,37 @@ class PricingManager {
     /// - Returns: The price difference as a Decimal, or nil if model doesn't support audio pricing
     func audioPriceAddon(for modelName: String) -> Decimal? {
         return PricingManager.audioPriceAddons[modelName]
+    }
+    
+    /// Returns the audio price difference for a given model and duration
+    /// This amount is subtracted from the base price when audio is turned OFF
+    /// Supports both fixed addons and per-second rate addons
+    ///
+    /// - Parameters:
+    ///   - modelName: The name of the video model
+    ///   - duration: The video duration in seconds
+    /// - Returns: The price difference as a Decimal, or nil if model doesn't support audio pricing
+    func audioPriceAddon(for modelName: String, duration: Double) -> Decimal? {
+        // First check for fixed addon
+        if let fixedAddon = PricingManager.audioPriceAddons[modelName] {
+            return fixedAddon
+        }
+        
+        // Then check for per-second rate
+        if let perSecondRate = PricingManager.audioPricePerSecond[modelName] {
+            return perSecondRate * Decimal(duration)
+        }
+        
+        return nil
+    }
+    
+    /// Checks if a model supports audio pricing (has audio toggle that affects price)
+    ///
+    /// - Parameter modelName: The name of the video model
+    /// - Returns: True if the model has audio-dependent pricing
+    func hasAudioPricing(for modelName: String) -> Bool {
+        return PricingManager.audioPriceAddons[modelName] != nil ||
+               PricingManager.audioPricePerSecond[modelName] != nil
     }
 
     // MARK: DIMENSIONS??? WHY?

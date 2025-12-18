@@ -229,6 +229,26 @@ class ModelConfigurationManager {
                     outputType: "URL",
                     outputQuality: nil
                 )
+            ),
+            "Kling VIDEO 2.6 Pro": APIConfiguration(
+                provider: .runware,
+                endpoint: "https://api.runware.ai/v1",
+                runwareModel: "klingai:kling-video@2.6-pro",
+                aspectRatio: nil,
+                wavespeedConfig: nil,
+                runwareConfig: RunwareConfig(
+                    imageToImageMethod: "frameImages",
+                    strength: nil,
+                    additionalTaskParams: [
+                        "taskType": "videoInference",
+                        "deliveryMethod": "async"
+                    ],
+                    requiresDimensions: true,
+                    imageCompressionQuality: 0.9,
+                    outputFormat: "MP4",
+                    outputType: "URL",
+                    outputQuality: nil
+                )
             )
         ]
         
@@ -250,7 +270,8 @@ class ModelConfigurationManager {
             "Google Veo 3.1 Fast": ["Text to Video", "Image to Video", "Audio"],
             "Kling AI": ["Text to Video", "Image to Video"],
             "Wan 2.5": ["Text to Video", "Image to Video", "Audio"],
-            "Seedance 1.0 Pro Fast": ["Text to Video", "Image to Video"]
+            "Seedance 1.0 Pro Fast": ["Text to Video", "Image to Video"],
+            "Kling VIDEO 2.6 Pro": ["Text to Video", "Image to Video", "Audio"]
         ]
         
 // MARK: DESCRIPTIONS
@@ -275,7 +296,8 @@ class ModelConfigurationManager {
             "Google Veo 3.1 Fast": "Google Veo 3.1 Fast is optimized for rapid video generation with minimal latency, ideal for quick creative iterations. It supports native audio generation including dialogue, ambient sounds, and sound effects. Perfect for short-form content, rapid prototyping, and responsive creative workflows.",
             "Kling AI": "Kling AI specializes in hyper-realistic motion and high-speed action scenes. With sharp detail and stable, precise frame-to-frame movement, it's a strong choice for sports, sci-fi shots, fast motion, and large sweeping environments.",
             "Wan 2.5": "Wan 2.5 delivers dramatic cinematic visuals, advanced character performance, atmospheric effects, and stylized world-building. It shines in fantasy, anime, surreal scenes, and richly creative storytelling.",
-            "Seedance 1.0 Pro Fast": "Seedance 1.0 Pro Fast delivers accelerated video generation while maintaining the high visual quality and cinematic capabilities of Seedance 1.0 Pro. Optimized for faster iteration and production workflows, it supports dynamic camera movements, multiple aspect ratios, and resolutions up to 1080p. Perfect for rapid prototyping, quick content creation, and efficient video production."
+            "Seedance 1.0 Pro Fast": "Seedance 1.0 Pro Fast delivers accelerated video generation while maintaining the high visual quality and cinematic capabilities of Seedance 1.0 Pro. Optimized for faster iteration and production workflows, it supports dynamic camera movements, multiple aspect ratios, and resolutions up to 1080p. Perfect for rapid prototyping, quick content creation, and efficient video production.",
+            "Kling VIDEO 2.6 Pro": "Kling VIDEO 2.6 Pro is a next-generation video-and-audio AI model that delivers cinematic-quality visuals and native synchronized audio including dialogue, sound effects, and ambience. This model combines strong prompt fidelity with scene consistency and flexible artistic control for professional video production workflows."
         ]
         
 // MARK: IMAGE NAMES
@@ -296,7 +318,8 @@ class ModelConfigurationManager {
             "Google Veo 3.1 Fast": "veo31fast",
             "Kling AI": "klingai",
             "Wan 2.5": "wan25",
-            "Seedance 1.0 Pro Fast": "seedance10profast"
+            "Seedance 1.0 Pro Fast": "seedance10profast",
+            "Kling VIDEO 2.6 Pro": "klingvideo26pro"
         ]
         
 // MARK: DURATIONS
@@ -314,6 +337,10 @@ class ModelConfigurationManager {
             "Seedance 1.0 Pro Fast": [
                 DurationOption(id: "5", label: "5 seconds", duration: 5.0, description: "Standard duration"),
                 DurationOption(id: "10", label: "10 seconds", duration: 10.0, description: "Extended duration"),
+            ],
+            "Kling VIDEO 2.6 Pro": [
+                DurationOption(id: "5", label: "5 seconds", duration: 5.0, description: "Standard duration"),
+                DurationOption(id: "10", label: "10 seconds", duration: 10.0, description: "Extended duration")
             ]
         ]
         
@@ -335,6 +362,11 @@ class ModelConfigurationManager {
                 AspectRatioOption(id: "1:1", label: "1:1", width: 1, height: 1, platforms: ["Instagram"]),
                 AspectRatioOption(id: "4:3", label: "4:3", width: 4, height: 3, platforms: ["Landscape"]),
                 AspectRatioOption(id: "16:9", label: "16:9", width: 16, height: 9, platforms: ["YouTube"])
+            ],
+            "Kling VIDEO 2.6 Pro": [
+                AspectRatioOption(id: "9:16", label: "9:16", width: 9, height: 16, platforms: ["TikTok", "Reels"]),
+                AspectRatioOption(id: "1:1", label: "1:1", width: 1, height: 1, platforms: ["Instagram"]),
+                AspectRatioOption(id: "16:9", label: "16:9", width: 16, height: 9, platforms: ["YouTube"])
             ]
         ]
         
@@ -351,6 +383,9 @@ class ModelConfigurationManager {
             "Seedance 1.0 Pro Fast": [
                 ResolutionOption(id: "480p", label: "480p", description: "Standard quality"),
                 ResolutionOption(id: "720p", label: "720p", description: "High quality"),
+                ResolutionOption(id: "1080p", label: "1080p", description: "Full HD")
+            ],
+            "Kling VIDEO 2.6 Pro": [
                 ResolutionOption(id: "1080p", label: "1080p", description: "Full HD")
             ]
         ]

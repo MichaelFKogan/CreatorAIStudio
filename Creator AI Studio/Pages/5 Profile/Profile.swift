@@ -64,7 +64,9 @@ struct ProfileViewContent: View {
     @State private var selectedUserImage: UserImage? = nil
     @State private var selectedTab: GalleryTab = .all
     @State private var selectedModel: String? = nil
+    @State private var selectedVideoModel: String? = nil
     @State private var showImageModelsPopover: Bool = false
+    @State private var showVideoModelsPopover: Bool = false
     @State private var showPresetsSheet: Bool = false
     @State private var isSelectionMode: Bool = false
     @State private var selectedImageIds: Set<String> = []
@@ -87,11 +89,23 @@ struct ProfileViewContent: View {
         Self.cachedImageModels = models
         return models
     }
+    
+    // Load video model data - cache at static level to avoid repeated loading
+    private static var cachedVideoModels: [InfoPacket]?
+    private var allVideoModels: [InfoPacket] {
+        if let cached = Self.cachedVideoModels {
+            return cached
+        }
+        let models = VideoModelsViewModel.loadVideoModels()
+        Self.cachedVideoModels = models
+        return models
+    }
 
     enum GalleryTab: String, CaseIterable {
         case all = "All"
         case favorites = "Favorites"
         case imageModels = "Image Models"
+        case videoModels = "Video Models"
     }
 
     // Compute models with metadata - returns immediately without caching
@@ -130,6 +144,40 @@ struct ProfileViewContent: View {
         // Sort by count descending
         let sorted = result.sorted { $0.1 > $1.1 }
         print("🔍 DEBUG: Computed \(sorted.count) models")
+        return sorted
+    }
+    
+    // Compute video models with metadata - returns immediately without caching
+    private func computeVideoModelsWithMetadata() -> [(model: String, count: Int, imageName: String)] {
+        let currentUniqueVideoModels = viewModel.uniqueVideoModels
+        print("🎬 DEBUG: Computing video models - uniqueVideoModels = \(currentUniqueVideoModels)")
+        print("🎬 DEBUG: Computing video models - Total userVideos = \(viewModel.userVideos.count)")
+        
+        var result: [(String, Int, String)] = []
+
+        for modelName in currentUniqueVideoModels {
+            let count = viewModel.filteredVideos(by: modelName, favoritesOnly: false).count
+            print("🎬 DEBUG: Video Model '\(modelName)' has \(count) videos")
+            guard count > 0 else { continue }
+
+            // Find the model image from VideoModelData using display.imageName
+            var imageName = "video.fill" // fallback
+            if let modelInfo = allVideoModels.first(where: { $0.display.modelName == modelName }) {
+                imageName = modelInfo.display.imageName
+                print("🎬 DEBUG: Found video model info by modelName: \(modelName) -> \(imageName)")
+            } else if let modelInfo = allVideoModels.first(where: { $0.display.title == modelName }) {
+                imageName = modelInfo.display.imageName
+                print("🎬 DEBUG: Found video model info by title: \(modelName) -> \(imageName)")
+            } else {
+                print("⚠️ DEBUG: No video model info found for: \(modelName), using fallback")
+            }
+
+            result.append((modelName, count, imageName))
+        }
+
+        // Sort by count descending
+        let sorted = result.sorted { $0.1 > $1.1 }
+        print("🎬 DEBUG: Computed \(sorted.count) video models")
         return sorted
     }
 
@@ -421,22 +469,24 @@ struct ProfileViewContent: View {
                     GalleryTabPill(
                         title: "All",
                         icon: "photo.on.rectangle.angled",
-                        isSelected: selectedTab == .all && selectedModel == nil,
+                        isSelected: selectedTab == .all && selectedModel == nil && selectedVideoModel == nil,
                         count: viewModel.userImages.count
                     ) {
                         selectedTab = .all
                         selectedModel = nil
+                        selectedVideoModel = nil
                     }
 
                     // Favorites pill
                     GalleryTabPill(
                         title: "Favorites",
                         icon: "heart.fill",
-                        isSelected: selectedTab == .favorites && selectedModel == nil,
+                        isSelected: selectedTab == .favorites && selectedModel == nil && selectedVideoModel == nil,
                         count: viewModel.favoriteImages.count
                     ) {
                         selectedTab = .favorites
                         selectedModel = nil
+                        selectedVideoModel = nil
                     }
 
                     // // Presets pill
@@ -450,6 +500,8 @@ struct ProfileViewContent: View {
                     // }
 
                     imageModelsButton
+                    
+                    videoModelsButton
                 }
                 .padding(.horizontal)
             }
@@ -470,6 +522,7 @@ struct ProfileViewContent: View {
                 return ImageModelsSheet(
                     models: models,
                     selectedModel: $selectedModel,
+                    selectedVideoModel: $selectedVideoModel,
                     selectedTab: $selectedTab,
                     isPresented: $showImageModelsPopover
                 )
@@ -513,6 +566,56 @@ struct ProfileViewContent: View {
         .background(isSelected ? Color.blue : Color.gray.opacity(0.15))
         .clipShape(Capsule())
     }
+    
+    private var videoModelsButton: some View {
+        Button {
+            print("🎬 DEBUG: Video Models button tapped")
+            showVideoModelsPopover = true
+        } label: {
+            videoModelsButtonLabel
+        }
+            .sheet(isPresented: $showVideoModelsPopover) {
+                let models = computeVideoModelsWithMetadata()
+                print("🎬 DEBUG: Sheet builder - Passing \(models.count) video models to sheet")
+                return VideoModelsSheet(
+                    models: models,
+                    selectedModel: $selectedModel,
+                    selectedVideoModel: $selectedVideoModel,
+                    selectedTab: $selectedTab,
+                    isPresented: $showVideoModelsPopover
+                )
+            }
+    }
+
+    private var videoModelsButtonLabel: some View {
+        let isSelected = selectedTab == .videoModels && selectedVideoModel != nil
+        let title = isSelected && selectedVideoModel != nil ? selectedVideoModel! : "Video Models"
+        let modelCount = viewModel.uniqueVideoModels.count
+
+        return HStack(spacing: 6) {
+            Image(systemName: "video")
+                .font(.system(size: 12, weight: .medium))
+            
+            Text(title)
+                .font(.system(size: 14, weight: isSelected ? .semibold : .regular))
+                .lineLimit(1)
+            
+            // Show count when not selected or when showing all models
+            if !isSelected && modelCount > 0 {
+                Text("(\(modelCount))")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(.secondary)
+            }
+            
+            Image(systemName: "chevron.down")
+                .font(.system(size: 10, weight: .medium))
+        }
+        .foregroundColor(isSelected ? .white : .primary)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 8)
+        .background(isSelected ? Color.purple : Color.gray.opacity(0.15))
+        .clipShape(Capsule())
+    }
 
     // MARK: - Content Section
 
@@ -535,7 +638,9 @@ struct ProfileViewContent: View {
             EmptyGalleryView(
                 tab: selectedTab,
                 model: selectedModel,
-                isImageModelsTab: selectedTab == .imageModels
+                isImageModelsTab: selectedTab == .imageModels,
+                isVideoModelsTab: selectedTab == .videoModels,
+                videoModel: selectedVideoModel
             )
         } else {
             ImageGridView(
@@ -574,6 +679,10 @@ struct ProfileViewContent: View {
             return selectedModel != nil
                 ? viewModel.filteredImages(by: selectedModel, favoritesOnly: false)
                 : viewModel.userImages
+        case .videoModels:
+            return selectedVideoModel != nil
+                ? viewModel.filteredVideos(by: selectedVideoModel, favoritesOnly: false)
+                : viewModel.userVideos
         }
     }
     
@@ -1487,6 +1596,8 @@ struct EmptyGalleryView: View {
     let tab: ProfileViewContent.GalleryTab
     let model: String?
     let isImageModelsTab: Bool
+    var isVideoModelsTab: Bool = false
+    var videoModel: String? = nil
 
     var body: some View {
         VStack(spacing: 16) {
@@ -1512,6 +1623,8 @@ struct EmptyGalleryView: View {
     private var iconName: String {
         if tab == .favorites {
             return "heart.slash"
+        } else if isVideoModelsTab {
+            return "video.slash"
         } else if isImageModelsTab && model != nil {
             return "photo.on.rectangle"
         } else {
@@ -1522,6 +1635,10 @@ struct EmptyGalleryView: View {
     private var emptyTitle: String {
         if tab == .favorites {
             return "No Favorites Yet"
+        } else if isVideoModelsTab && videoModel != nil {
+            return "No Videos for \(videoModel!)"
+        } else if isVideoModelsTab {
+            return "No Video Models Selected"
         } else if isImageModelsTab && model != nil {
             return "No Images for \(model!)"
         } else if isImageModelsTab {
@@ -1534,6 +1651,10 @@ struct EmptyGalleryView: View {
     private var emptyMessage: String {
         if tab == .favorites {
             return "Tap the heart icon on any image to add it to your favorites"
+        } else if isVideoModelsTab && videoModel != nil {
+            return "You haven't created any videos with this model yet"
+        } else if isVideoModelsTab {
+            return "Select a video model from the dropdown to view your creations"
         } else if isImageModelsTab && model != nil {
             return "You haven't created any images with this model yet"
         } else if isImageModelsTab {
@@ -1549,6 +1670,7 @@ struct EmptyGalleryView: View {
 struct ImageModelsSheet: View {
     let models: [(model: String, count: Int, imageName: String)]
     @Binding var selectedModel: String?
+    @Binding var selectedVideoModel: String?
     @Binding var selectedTab: ProfileViewContent.GalleryTab
     @Binding var isPresented: Bool
 
@@ -1565,6 +1687,7 @@ struct ImageModelsSheet: View {
                         Button {
                             selectedTab = .imageModels
                             selectedModel = modelData.model
+                            selectedVideoModel = nil  // Clear video model selection
                             isPresented = false
                         } label: {
                             HStack(spacing: 12) {
@@ -1634,6 +1757,106 @@ struct ImageModelsSheet: View {
                 print("🔍 DEBUG: Sheet appeared with \(models.count) models")
                 for model in models {
                     print("🔍 DEBUG: Sheet model: \(model.model) - \(model.count) images - image: \(model.imageName)")
+                }
+            }
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        isPresented = false
+                    }
+                }
+            }
+        }
+    }
+}
+
+// MARK: - VIDEO MODELS SHEET
+
+struct VideoModelsSheet: View {
+    let models: [(model: String, count: Int, imageName: String)]
+    @Binding var selectedModel: String?
+    @Binding var selectedVideoModel: String?
+    @Binding var selectedTab: ProfileViewContent.GalleryTab
+    @Binding var isPresented: Bool
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                LazyVStack(spacing: 0) {
+                    ForEach(models, id: \.model) { modelData in
+                        Button {
+                            selectedTab = .videoModels
+                            selectedVideoModel = modelData.model
+                            selectedModel = nil  // Clear image model selection
+                            isPresented = false
+                        } label: {
+                            HStack(spacing: 12) {
+                                // Model image with fallback
+                                ZStack {
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .fill(Color.gray.opacity(0.2))
+                                        .frame(width: 65, height: 65)
+                                    
+                                    Image(modelData.imageName)
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fill)
+                                        .frame(width: 65, height: 65)
+                                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                                }
+                                .frame(width: 65, height: 65)
+
+                                // Model name and count
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(modelData.model)
+                                        .font(.system(size: 15, weight: .bold, design: .rounded))
+                                        .foregroundColor(.primary)
+                                        .multilineTextAlignment(.leading)
+                                        .lineLimit(2)
+
+                                    Text("\(modelData.count) video\(modelData.count == 1 ? "" : "s")")
+                                        .font(.system(size: 12, weight: .medium, design: .rounded))
+                                        .foregroundColor(.purple)
+                                }
+
+                                Spacer()
+
+                                // Checkmark if selected
+                                if selectedTab == .videoModels && selectedVideoModel == modelData.model {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .font(.system(size: 20))
+                                        .foregroundColor(.purple)
+                                }
+                            }
+                            .padding(12)
+                            .background(
+                                selectedTab == .videoModels && selectedVideoModel == modelData.model
+                                    ? Color.purple.opacity(0.08)
+                                    : Color.gray.opacity(0.06)
+                            )
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(
+                                        selectedTab == .videoModels && selectedVideoModel == modelData.model
+                                            ? Color.purple.opacity(0.3)
+                                            : Color.gray.opacity(0.2),
+                                        lineWidth: 1
+                                    )
+                            )
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.horizontal)
+                        .padding(.vertical, 6)
+                    }
+                }
+                .padding(.vertical)
+            }
+            .navigationTitle("Video Models")
+            .navigationBarTitleDisplayMode(.inline)
+            .onAppear {
+                print("🎬 DEBUG: Video Models Sheet appeared with \(models.count) models")
+                for model in models {
+                    print("🎬 DEBUG: Sheet model: \(model.model) - \(model.count) videos - image: \(model.imageName)")
                 }
             }
             .toolbar {

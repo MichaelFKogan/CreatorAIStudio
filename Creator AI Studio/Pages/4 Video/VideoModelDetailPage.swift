@@ -249,7 +249,7 @@ struct VideoModelDetailPage: View {
             // Base price includes audio (since audio is ON by default)
             // Subtract audio addon when audio is turned OFF
             if supportsAudio && !generateAudio {
-                if let audioAddon = PricingManager.shared.audioPriceAddon(for: modelName) {
+                if let audioAddon = PricingManager.shared.audioPriceAddon(for: modelName, duration: selectedDurationOption.duration) {
                     variablePrice -= audioAddon
                 }
             }
@@ -827,12 +827,7 @@ private struct PricingTableSectionVideo: View {
     
     /// Check if this model has audio pricing (different prices for audio on/off)
     private var hasAudioPricing: Bool {
-        PricingManager.shared.audioPriceAddon(for: modelName) != nil
-    }
-    
-    /// Get the audio price addon for this model
-    private var audioPriceAddon: Decimal? {
-        PricingManager.shared.audioPriceAddon(for: modelName)
+        PricingManager.shared.hasAudioPricing(for: modelName)
     }
     
     /// Check if this model requires audio (audio-only, like Sora 2)
@@ -875,11 +870,11 @@ private struct PricingTableSectionVideo: View {
             .buttonStyle(PlainButtonStyle())
             
             if isExpanded, let config = pricingConfig {
-                if hasAudioPricing, let audioAddon = audioPriceAddon {
+                if hasAudioPricing {
                     // Show separate tables for audio/no-audio pricing
                     PricingTableContentWithAudio(
                         config: config,
-                        audioPriceAddon: audioAddon
+                        modelName: modelName
                     )
                 } else {
                     // Standard pricing table (with audio label for audio-required models)
@@ -898,7 +893,7 @@ private struct PricingTableSectionVideo: View {
 
 private struct PricingTableContentWithAudio: View {
     let config: VideoPricingConfiguration
-    let audioPriceAddon: Decimal
+    let modelName: String
     
     // Get sorted unique values
     private var aspectRatios: [String] {
@@ -937,6 +932,11 @@ private struct PricingTableContentWithAudio: View {
         return durSet.sorted()
     }
     
+    /// Get audio addon for a specific duration
+    private func audioAddon(for duration: Double) -> Decimal {
+        PricingManager.shared.audioPriceAddon(for: modelName, duration: duration) ?? 0
+    }
+    
     var body: some View {
         VStack(spacing: 20) {
             // With Audio table (first)
@@ -947,7 +947,7 @@ private struct PricingTableContentWithAudio: View {
                 resolutions: resolutions,
                 durations: durations,
                 config: config,
-                priceAdjustment: 0 // Base price includes audio
+                audioAddonProvider: { _ in 0 } // Base price includes audio
             )
             
             // Without Audio table
@@ -958,7 +958,7 @@ private struct PricingTableContentWithAudio: View {
                 resolutions: resolutions,
                 durations: durations,
                 config: config,
-                priceAdjustment: -audioPriceAddon // Subtract audio addon
+                audioAddonProvider: { duration in -audioAddon(for: duration) } // Subtract audio addon per duration
             )
         }
     }
@@ -973,7 +973,8 @@ private struct AudioPricingCard: View {
     let resolutions: [String]
     let durations: [Double]
     let config: VideoPricingConfiguration
-    let priceAdjustment: Decimal
+    /// Closure that returns the price adjustment for a given duration
+    let audioAddonProvider: (Double) -> Decimal
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -1029,7 +1030,7 @@ private struct AudioPricingCard: View {
                                 
                                 ForEach(durations, id: \.self) { duration in
                                     if let basePrice = config.price(aspectRatio: aspectRatio, resolution: resolution, duration: duration) {
-                                        let adjustedPrice = basePrice + priceAdjustment
+                                        let adjustedPrice = basePrice + audioAddonProvider(duration)
                                         Text("\(adjustedPrice.credits)")
                                             .font(.system(size: 12, weight: .medium, design: .rounded))
                                             .foregroundColor(.purple)
