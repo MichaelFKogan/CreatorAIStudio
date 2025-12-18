@@ -825,6 +825,22 @@ private struct PricingTableSectionVideo: View {
         PricingManager.shared.pricingConfiguration(for: modelName)
     }
     
+    /// Check if this model has audio pricing (different prices for audio on/off)
+    private var hasAudioPricing: Bool {
+        PricingManager.shared.audioPriceAddon(for: modelName) != nil
+    }
+    
+    /// Get the audio price addon for this model
+    private var audioPriceAddon: Decimal? {
+        PricingManager.shared.audioPriceAddon(for: modelName)
+    }
+    
+    /// Check if this model requires audio (audio-only, like Sora 2)
+    private var isAudioRequired: Bool {
+        let audioRequiredModels = ["Sora 2"]
+        return audioRequiredModels.contains(modelName)
+    }
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             // Header with expand/collapse
@@ -859,10 +875,194 @@ private struct PricingTableSectionVideo: View {
             .buttonStyle(PlainButtonStyle())
             
             if isExpanded, let config = pricingConfig {
-                PricingTableContent(config: config)
+                if hasAudioPricing, let audioAddon = audioPriceAddon {
+                    // Show separate tables for audio/no-audio pricing
+                    PricingTableContentWithAudio(
+                        config: config,
+                        audioPriceAddon: audioAddon
+                    )
+                } else {
+                    // Standard pricing table (with audio label for audio-required models)
+                    PricingTableContent(
+                        config: config,
+                        showAudioLabel: isAudioRequired
+                    )
+                }
             }
         }
         .padding(.horizontal)
+    }
+}
+
+// MARK: PRICING TABLE CONTENT WITH AUDIO
+
+private struct PricingTableContentWithAudio: View {
+    let config: VideoPricingConfiguration
+    let audioPriceAddon: Decimal
+    
+    // Get sorted unique values
+    private var aspectRatios: [String] {
+        Array(config.pricing.keys).sorted { lhs, rhs in
+            let order = ["9:16", "3:4", "1:1", "4:3", "16:9"]
+            let lhsIdx = order.firstIndex(of: lhs) ?? 99
+            let rhsIdx = order.firstIndex(of: rhs) ?? 99
+            return lhsIdx < rhsIdx
+        }
+    }
+    
+    private var resolutions: [String] {
+        var resSet = Set<String>()
+        for (_, resDict) in config.pricing {
+            for res in resDict.keys {
+                resSet.insert(res)
+            }
+        }
+        return resSet.sorted { lhs, rhs in
+            let order = ["480p", "720p", "1080p"]
+            let lhsIdx = order.firstIndex(of: lhs) ?? 99
+            let rhsIdx = order.firstIndex(of: rhs) ?? 99
+            return lhsIdx < rhsIdx
+        }
+    }
+    
+    private var durations: [Double] {
+        var durSet = Set<Double>()
+        for (_, resDict) in config.pricing {
+            for (_, durDict) in resDict {
+                for dur in durDict.keys {
+                    durSet.insert(dur)
+                }
+            }
+        }
+        return durSet.sorted()
+    }
+    
+    var body: some View {
+        VStack(spacing: 20) {
+            // With Audio table (first)
+            AudioPricingCard(
+                title: "With Audio",
+                icon: "speaker.wave.2.fill",
+                aspectRatios: aspectRatios,
+                resolutions: resolutions,
+                durations: durations,
+                config: config,
+                priceAdjustment: 0 // Base price includes audio
+            )
+            
+            // Without Audio table
+            AudioPricingCard(
+                title: "Without Audio",
+                icon: "speaker.slash",
+                aspectRatios: aspectRatios,
+                resolutions: resolutions,
+                durations: durations,
+                config: config,
+                priceAdjustment: -audioPriceAddon // Subtract audio addon
+            )
+        }
+    }
+}
+
+// MARK: AUDIO PRICING CARD
+
+private struct AudioPricingCard: View {
+    let title: String
+    let icon: String
+    let aspectRatios: [String]
+    let resolutions: [String]
+    let durations: [Double]
+    let config: VideoPricingConfiguration
+    let priceAdjustment: Decimal
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            // Audio type header
+            HStack(spacing: 6) {
+                Image(systemName: icon)
+                    .font(.system(size: 12))
+                    .foregroundColor(.purple)
+                Text(title)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.primary)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(
+                Capsule().fill(Color.purple.opacity(0.12))
+            )
+            
+            // For each resolution, show a sub-section
+            ForEach(resolutions, id: \.self) { resolution in
+                VStack(alignment: .leading, spacing: 4) {
+                    // Resolution label
+                    Text(resolution)
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundColor(.secondary)
+                        .padding(.leading, 4)
+                    
+                    // Table header
+                    HStack(spacing: 0) {
+                        Text("Size")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundColor(.secondary)
+                            .frame(width: 50, alignment: .leading)
+                        
+                        ForEach(durations, id: \.self) { duration in
+                            Text("\(Int(duration))s")
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundColor(.secondary)
+                                .frame(maxWidth: .infinity)
+                        }
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 4)
+                    
+                    // Table rows
+                    VStack(spacing: 0) {
+                        ForEach(Array(aspectRatios.enumerated()), id: \.element) { index, aspectRatio in
+                            HStack(spacing: 0) {
+                                Text(aspectRatio)
+                                    .font(.system(size: 12, weight: .medium, design: .monospaced))
+                                    .foregroundColor(.primary)
+                                    .frame(width: 50, alignment: .leading)
+                                
+                                ForEach(durations, id: \.self) { duration in
+                                    if let basePrice = config.price(aspectRatio: aspectRatio, resolution: resolution, duration: duration) {
+                                        let adjustedPrice = basePrice + priceAdjustment
+                                        Text("\(adjustedPrice.credits)")
+                                            .font(.system(size: 12, weight: .medium, design: .rounded))
+                                            .foregroundColor(.purple)
+                                            .frame(maxWidth: .infinity)
+                                    } else {
+                                        Text("-")
+                                            .font(.system(size: 12))
+                                            .foregroundColor(.secondary.opacity(0.5))
+                                            .frame(maxWidth: .infinity)
+                                    }
+                                }
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(
+                                index % 2 == 0
+                                    ? Color.clear
+                                    : Color.purple.opacity(0.03)
+                            )
+                        }
+                    }
+                    .background(
+                        RoundedRectangle(cornerRadius: 10)
+                            .fill(Color.gray.opacity(0.04))
+                    )
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 10)
+                            .stroke(Color.purple.opacity(0.15), lineWidth: 1)
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -870,6 +1070,7 @@ private struct PricingTableSectionVideo: View {
 
 private struct PricingTableContent: View {
     let config: VideoPricingConfiguration
+    var showAudioLabel: Bool = false
     
     // Get sorted unique values
     private var aspectRatios: [String] {
@@ -910,6 +1111,23 @@ private struct PricingTableContent: View {
     
     var body: some View {
         VStack(spacing: 16) {
+            // Show "With Audio" header for audio-required models
+            if showAudioLabel {
+                HStack(spacing: 6) {
+                    Image(systemName: "speaker.wave.2.fill")
+                        .font(.system(size: 12))
+                        .foregroundColor(.purple)
+                    Text("With Audio")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.primary)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(
+                    Capsule().fill(Color.purple.opacity(0.12))
+                )
+            }
+            
             ForEach(resolutions, id: \.self) { resolution in
                 ResolutionPricingCard(
                     resolution: resolution,
