@@ -8,6 +8,13 @@
   },
   {
     "display": {
+      "title": "Google Veo 3.1 Fast",
+      "imageName": "veo31fast",
+      "modelName": "Google Veo 3.1 Fast"
+    }
+  },
+  {
+    "display": {
       "title": "Seedance 1.0 Pro Fast",
       "imageName": "seedance10profast",
       "modelName": "Seedance 1.0 Pro Fast"

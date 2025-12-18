@@ -209,6 +209,26 @@ class ModelConfigurationManager {
                     outputType: "URL",
                     outputQuality: 85
                 )
+            ),
+            "Google Veo 3.1 Fast": APIConfiguration(
+                provider: .runware,
+                endpoint: "https://api.runware.ai/v1",
+                runwareModel: "google:3@1",
+                aspectRatio: nil,
+                wavespeedConfig: nil,
+                runwareConfig: RunwareConfig(
+                    imageToImageMethod: "frameImages",
+                    strength: nil,
+                    additionalTaskParams: [
+                        "taskType": "videoInference",
+                        "deliveryMethod": "async"
+                    ],
+                    requiresDimensions: true,
+                    imageCompressionQuality: 0.9,
+                    outputFormat: "MP4",
+                    outputType: "URL",
+                    outputQuality: nil
+                )
             )
         ]
         
@@ -227,12 +247,13 @@ class ModelConfigurationManager {
             // Video Models
             "Sora 2": ["Text to Video", "Image to Video", "Audio"],
             "Google Veo 3": ["Text to Video", "Image to Video", "Audio"],
+            "Google Veo 3.1 Fast": ["Text to Video", "Image to Video", "Audio"],
             "Kling AI": ["Text to Video", "Image to Video"],
             "Wan 2.5": ["Text to Video", "Image to Video", "Audio"],
             "Seedance 1.0 Pro Fast": ["Text to Video", "Image to Video"]
         ]
         
-// MARK: MODEL DESCRIPTIONS
+// MARK: DESCRIPTIONS
         
         // Initialize model descriptions mapping
         modelDescriptions = [
@@ -251,12 +272,13 @@ class ModelConfigurationManager {
             // Video Models
             "Sora 2": "Sora 2 is designed for cinematic-quality video generation with extremely stable motion, improved physics accuracy, expressive character animation, and rich scene detail. Perfect for storytelling, ads, and high-impact creative content.",
             "Google Veo 3": "Veo 3 focuses on clarity, smooth motion, and natural lighting. It excels at dynamic environments, realistic textures, and clean camera transitions—ideal for lifestyle clips, outdoor scenes, product demos, and fast-paced creative content.",
+            "Google Veo 3.1 Fast": "Google Veo 3.1 Fast is optimized for rapid video generation with minimal latency, ideal for quick creative iterations. It supports native audio generation including dialogue, ambient sounds, and sound effects. Perfect for short-form content, rapid prototyping, and responsive creative workflows.",
             "Kling AI": "Kling AI specializes in hyper-realistic motion and high-speed action scenes. With sharp detail and stable, precise frame-to-frame movement, it's a strong choice for sports, sci-fi shots, fast motion, and large sweeping environments.",
             "Wan 2.5": "Wan 2.5 delivers dramatic cinematic visuals, advanced character performance, atmospheric effects, and stylized world-building. It shines in fantasy, anime, surreal scenes, and richly creative storytelling.",
             "Seedance 1.0 Pro Fast": "Seedance 1.0 Pro Fast delivers accelerated video generation while maintaining the high visual quality and cinematic capabilities of Seedance 1.0 Pro. Optimized for faster iteration and production workflows, it supports dynamic camera movements, multiple aspect ratios, and resolutions up to 1080p. Perfect for rapid prototyping, quick content creation, and efficient video production."
         ]
         
-// MARK: MODEL IMAGE NAMES
+// MARK: IMAGE NAMES
         
         // Initialize model image names mapping
         modelImageNames = [
@@ -271,12 +293,13 @@ class ModelConfigurationManager {
             // Video Models
             "Sora 2": "sora2",
             "Google Veo 3": "veo3",
+            "Google Veo 3.1 Fast": "veo31fast",
             "Kling AI": "klingai",
             "Wan 2.5": "wan25",
             "Seedance 1.0 Pro Fast": "seedance10profast"
         ]
         
-// MARK: ALLOWED DURATIONS
+// MARK: DURATIONS
         
         // Initialize allowed durations mapping for video models
         allowedDurationsMap = [
@@ -285,9 +308,14 @@ class ModelConfigurationManager {
                 DurationOption(id: "8", label: "8 seconds", duration: 8.0, description: "Extended duration"),
                 DurationOption(id: "12", label: "12 seconds", duration: 12.0, description: "Maximum duration")
             ],
+            "Google Veo 3.1 Fast": [
+                DurationOption(id: "4", label: "4 seconds", duration: 4.0, description: "Quick clip"),
+                DurationOption(id: "6", label: "6 seconds", duration: 6.0, description: "Standard duration"),
+                DurationOption(id: "8", label: "8 seconds", duration: 8.0, description: "Extended duration")
+            ],
             "Seedance 1.0 Pro Fast": [
                 DurationOption(id: "5", label: "5 seconds", duration: 5.0, description: "Standard duration"),
-                DurationOption(id: "10", label: "10 seconds", duration: 10.0, description: "Extended duration")
+                DurationOption(id: "10", label: "10 seconds", duration: 10.0, description: "Extended duration"),
             ]
         ]
         
@@ -299,6 +327,10 @@ class ModelConfigurationManager {
                 AspectRatioOption(id: "9:16", label: "9:16", width: 9, height: 16, platforms: ["TikTok", "Reels"]),
                 AspectRatioOption(id: "16:9", label: "16:9", width: 16, height: 9, platforms: ["YouTube"])
                 ],
+            "Google Veo 3.1 Fast": [
+                AspectRatioOption(id: "9:16", label: "9:16", width: 9, height: 16, platforms: ["TikTok", "Reels"]),
+                AspectRatioOption(id: "16:9", label: "16:9", width: 16, height: 9, platforms: ["YouTube"])
+            ],
             "Seedance 1.0 Pro Fast": [
                 AspectRatioOption(id: "3:4", label: "3:4", width: 3, height: 4, platforms: ["Portrait"]),
                 AspectRatioOption(id: "9:16", label: "9:16", width: 9, height: 16, platforms: ["TikTok", "Reels"]),
@@ -314,6 +346,10 @@ class ModelConfigurationManager {
         allowedResolutionsMap = [
             "Sora 2": [
                 ResolutionOption(id: "720p", label: "720p", description: "High quality"),
+            ],
+            "Google Veo 3.1 Fast": [
+                ResolutionOption(id: "720p", label: "720p", description: "High quality"),
+                ResolutionOption(id: "1080p", label: "1080p", description: "Full HD")
             ],
             "Seedance 1.0 Pro Fast": [
                 ResolutionOption(id: "480p", label: "480p", description: "Standard quality"),
