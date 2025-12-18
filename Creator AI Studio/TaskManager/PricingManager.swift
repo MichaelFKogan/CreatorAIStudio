@@ -34,6 +34,14 @@ class PricingManager {
 
     /// Dictionary mapping model names to variable pricing configurations (for video models with variable pricing)
     private let variableVideoPricing: [String: VideoPricingConfiguration]
+    
+    /// Dictionary mapping model names to their default duration, aspect ratio, and resolution for display pricing
+    /// Used to show the correct "starting from" price based on the model's default configuration
+    private let defaultVideoConfigs: [String: (aspectRatio: String, resolution: String, duration: Double)] = [
+        "Sora 2": ("9:16", "720p", 8.0),  // Sora 2 defaults to 8 seconds
+        "Google Veo 3.1 Fast": ("9:16", "1080p", 8.0),  // Only option available
+        "Seedance 1.0 Pro Fast": ("3:4", "480p", 5.0)  // Default to cheapest option
+    ]
 
     private init() {
 
@@ -114,7 +122,7 @@ class PricingManager {
     // MARK: METHODS
 
     /// Returns the price for a given InfoPacket based on its model name.
-    /// For variable pricing models (video), returns the base/starting price.
+    /// For variable pricing models (video), returns the default configuration price.
     ///
     /// - Parameter item: The InfoPacket to look up pricing for
     /// - Returns: The price as a Decimal, or nil if not found
@@ -127,8 +135,18 @@ class PricingManager {
             return fixedPrice
         }
 
-        // Then check variable pricing - return base price for display purposes
+        // Then check variable pricing - return default config price for display purposes
         if let variableConfig = variableVideoPricing[modelName] {
+            // Use default config if available, otherwise fall back to minimum price
+            if let defaultConfig = defaultVideoConfigs[modelName] {
+                if let defaultPrice = variableConfig.price(
+                    aspectRatio: defaultConfig.aspectRatio,
+                    resolution: defaultConfig.resolution,
+                    duration: defaultConfig.duration
+                ) {
+                    return defaultPrice
+                }
+            }
             return basePrice(from: variableConfig)
         }
 
@@ -180,6 +198,15 @@ class PricingManager {
     /// - Returns: True if the model has variable pricing, false otherwise
     func hasVariablePricing(for modelName: String) -> Bool {
         return variableVideoPricing[modelName] != nil
+    }
+    
+    /// Returns the full pricing configuration for a model
+    /// Used for displaying pricing tables
+    ///
+    /// - Parameter modelName: The name of the model
+    /// - Returns: The VideoPricingConfiguration, or nil if model doesn't have variable pricing
+    func pricingConfiguration(for modelName: String) -> VideoPricingConfiguration? {
+        return variableVideoPricing[modelName]
     }
     
     // MARK: AUDIO PRICING

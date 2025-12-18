@@ -304,8 +304,8 @@ class ModelConfigurationManager {
         // Initialize allowed durations mapping for video models
         allowedDurationsMap = [
             "Sora 2": [
-                DurationOption(id: "8", label: "8 seconds", duration: 8.0, description: "Standard duration"),
                 DurationOption(id: "4", label: "4 seconds", duration: 4.0, description: "Short duration"),
+                DurationOption(id: "8", label: "8 seconds", duration: 8.0, description: "Standard duration"),
                 DurationOption(id: "12", label: "12 seconds", duration: 12.0, description: "Maximum duration")
             ],
             "Google Veo 3.1 Fast": [

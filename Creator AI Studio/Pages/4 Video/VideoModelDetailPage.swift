@@ -360,6 +360,16 @@ struct VideoModelDetailPage: View {
                             ))
 
                         Divider().padding(.horizontal)
+                        
+                        // Pricing Table - Only show for models with variable pricing
+                        if let modelName = item.display.modelName,
+                           PricingManager.shared.hasVariablePricing(for: modelName) {
+                            LazyView(
+                                PricingTableSectionVideo(modelName: modelName)
+                            )
+                            
+                            Divider().padding(.horizontal)
+                        }
 
                         // Example Gallery Section - Only show if model name exists
                         if let modelName = item.display.modelName, !modelName.isEmpty {
@@ -462,12 +472,31 @@ struct VideoModelDetailPage: View {
             if selectedResolutionIndex >= videoResolutionOptions.count {
                 selectedResolutionIndex = 0
             }
+            
+            // Set model-specific default duration
+            // Sora 2 defaults to 8 seconds (index 1)
+            if let modelName = item.display.modelName, modelName == "Sora 2" {
+                if let defaultIndex = videoDurationOptions.firstIndex(where: { $0.duration == 8.0 }) {
+                    selectedDurationIndex = defaultIndex
+                }
+            }
         }
-        .onChange(of: item.display.modelName) { _ in
+        .onChange(of: item.display.modelName) { newModelName in
             // Reset indices when model changes (if item changes)
             selectedAspectIndex = 0
-            selectedDurationIndex = 0
             selectedResolutionIndex = 0
+            
+            // Set model-specific default duration
+            // Sora 2 defaults to 8 seconds
+            if let modelName = newModelName, modelName == "Sora 2" {
+                if let defaultIndex = videoDurationOptions.firstIndex(where: { $0.duration == 8.0 }) {
+                    selectedDurationIndex = defaultIndex
+                } else {
+                    selectedDurationIndex = 0
+                }
+            } else {
+                selectedDurationIndex = 0
+            }
         }
     }
 
@@ -783,6 +812,200 @@ private struct DurationSectionVideo: View {
             )
         }
         .padding(.horizontal)
+    }
+}
+
+// MARK: PRICING TABLE
+
+private struct PricingTableSectionVideo: View {
+    let modelName: String
+    @State private var isExpanded: Bool = false
+    
+    private var pricingConfig: VideoPricingConfiguration? {
+        PricingManager.shared.pricingConfiguration(for: modelName)
+    }
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            // Header with expand/collapse
+            Button(action: {
+                withAnimation(.easeInOut(duration: 0.25)) {
+                    isExpanded.toggle()
+                }
+            }) {
+                HStack {
+                    HStack(spacing: 6) {
+                        Image(systemName: "tablecells")
+                            .foregroundColor(.purple)
+                            .font(.system(size: 14))
+                        Text("Pricing Table")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundColor(.primary)
+                    }
+                    
+                    Spacer()
+                    
+                    HStack(spacing: 4) {
+                        Text(isExpanded ? "Hide" : "View All")
+                            .font(.caption)
+                            .foregroundColor(.purple)
+                        Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(.purple)
+                    }
+                }
+            }
+            .buttonStyle(PlainButtonStyle())
+            
+            if isExpanded, let config = pricingConfig {
+                PricingTableContent(config: config)
+            }
+        }
+        .padding(.horizontal)
+    }
+}
+
+// MARK: PRICING TABLE CONTENT
+
+private struct PricingTableContent: View {
+    let config: VideoPricingConfiguration
+    
+    // Get sorted unique values
+    private var aspectRatios: [String] {
+        Array(config.pricing.keys).sorted { lhs, rhs in
+            let order = ["9:16", "3:4", "1:1", "4:3", "16:9"]
+            let lhsIdx = order.firstIndex(of: lhs) ?? 99
+            let rhsIdx = order.firstIndex(of: rhs) ?? 99
+            return lhsIdx < rhsIdx
+        }
+    }
+    
+    private var resolutions: [String] {
+        var resSet = Set<String>()
+        for (_, resDict) in config.pricing {
+            for res in resDict.keys {
+                resSet.insert(res)
+            }
+        }
+        return resSet.sorted { lhs, rhs in
+            let order = ["480p", "720p", "1080p"]
+            let lhsIdx = order.firstIndex(of: lhs) ?? 99
+            let rhsIdx = order.firstIndex(of: rhs) ?? 99
+            return lhsIdx < rhsIdx
+        }
+    }
+    
+    private var durations: [Double] {
+        var durSet = Set<Double>()
+        for (_, resDict) in config.pricing {
+            for (_, durDict) in resDict {
+                for dur in durDict.keys {
+                    durSet.insert(dur)
+                }
+            }
+        }
+        return durSet.sorted()
+    }
+    
+    var body: some View {
+        VStack(spacing: 16) {
+            ForEach(resolutions, id: \.self) { resolution in
+                ResolutionPricingCard(
+                    resolution: resolution,
+                    aspectRatios: aspectRatios,
+                    durations: durations,
+                    config: config
+                )
+            }
+        }
+    }
+}
+
+// MARK: RESOLUTION PRICING CARD
+
+private struct ResolutionPricingCard: View {
+    let resolution: String
+    let aspectRatios: [String]
+    let durations: [Double]
+    let config: VideoPricingConfiguration
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            // Resolution header
+            HStack(spacing: 6) {
+                Image(systemName: "sparkles.tv")
+                    .font(.system(size: 12))
+                    .foregroundColor(.purple)
+                Text(resolution)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.primary)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(
+                Capsule().fill(Color.purple.opacity(0.12))
+            )
+            
+            // Table header
+            HStack(spacing: 0) {
+                Text("Size")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundColor(.secondary)
+                    .frame(width: 50, alignment: .leading)
+                
+                ForEach(durations, id: \.self) { duration in
+                    Text("\(Int(duration))s")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundColor(.secondary)
+                        .frame(maxWidth: .infinity)
+                }
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 4)
+            
+            // Table rows
+            VStack(spacing: 0) {
+                ForEach(Array(aspectRatios.enumerated()), id: \.element) { index, aspectRatio in
+                    HStack(spacing: 0) {
+                        Text(aspectRatio)
+                            .font(.system(size: 12, weight: .medium, design: .monospaced))
+                            .foregroundColor(.primary)
+                            .frame(width: 50, alignment: .leading)
+                        
+                        ForEach(durations, id: \.self) { duration in
+                            if let price = config.price(aspectRatio: aspectRatio, resolution: resolution, duration: duration) {
+                                Text("\(price.credits)")
+                                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                                    .foregroundColor(.purple)
+                                    .frame(maxWidth: .infinity)
+                            } else {
+                                Text("-")
+                                    .font(.system(size: 12))
+                                    .foregroundColor(.secondary.opacity(0.5))
+                                    .frame(maxWidth: .infinity)
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(
+                        index % 2 == 0
+                            ? Color.clear
+                            : Color.purple.opacity(0.03)
+                    )
+                }
+            }
+            .background(
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(Color.gray.opacity(0.04))
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .overlay(
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke(Color.purple.opacity(0.15), lineWidth: 1)
+            )
+        }
     }
 }
 
