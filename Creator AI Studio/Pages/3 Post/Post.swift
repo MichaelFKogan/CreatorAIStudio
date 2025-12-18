@@ -40,14 +40,24 @@ struct Post: View {
                 Color.black.ignoresSafeArea()
 
                 // Only show captured photo when explicitly allowed
-                // This prevents the photo from appearing when returning from navigation
                 if shouldShowCapturedImage,
                     let captured = cameraService.capturedImage
                 {
                     // Show captured photo fullscreen
-                    Image(uiImage: captured)
-                        .resizable()
-                        .scaledToFill()
+                    GeometryReader { geometry in
+                        Image(uiImage: captured)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(
+                                width: geometry.size.width,
+                                height: geometry.size.height
+                            )
+                            .clipped()
+                    }
+                    .ignoresSafeArea()
+                    .transaction { transaction in
+                        transaction.animation = nil
+                    }
 
                 } else {
                     // Live camera preview
@@ -141,34 +151,57 @@ struct Post: View {
 
                                 // Show larger preview image of the centered/selected filter or model
                                 // Only visible while scrolling, fades out when scrolling stops
-                                // Hide when showing captured image
                                 // When scrolling, always show the nearest item (left or right) even if over a gap
                                 // When not scrolling, show selected filter/model if available
-                                if !shouldShowCapturedImage {
-                                    let displayFilter: InfoPacket? =
-                                        isScrollingActive
-                                        ? centeredFilter  // While scrolling, always shows nearest item (left or right of gap)
-                                        : (centeredFilter ?? selectedFilter
-                                            ?? selectedImageModel)  // When not scrolling, show selected
+                                let displayFilter: InfoPacket? =
+                                    isScrollingActive
+                                    ? centeredFilter  // While scrolling, always shows nearest item (left or right of gap)
+                                    : (centeredFilter ?? selectedFilter
+                                        ?? selectedImageModel)  // When not scrolling, show selected
 
-                                    if let displayFilter = displayFilter {
-                                        VStack(spacing: 12) {
+                                if let displayFilter = displayFilter {
+                                    VStack(spacing: 12) {
 
-                                            // Category title above the image
-                                            Text(
-                                                categoryTitle(
-                                                    for: displayFilter)
-                                            )
+                                        // Category title above the image
+                                        Text(
+                                            categoryTitle(
+                                                for: displayFilter)
+                                        )
+                                        .font(
+                                            .system(
+                                                size: 18, weight: .medium,
+                                                design: .rounded)
+                                        )
+                                        .foregroundColor(
+                                            .white.opacity(0.7)
+                                        )
+                                        .textCase(.uppercase)
+                                        .tracking(1.2)
+                                        .opacity(
+                                            isScrollingActive ? 1.0 : 0
+                                        )
+                                        .animation(
+                                            .easeOut(duration: 0.3),
+                                            value: isScrollingActive
+                                        )
+                                        .shadow(
+                                            color: .black.opacity(0.6),
+                                            radius: 2,
+                                            x: 0,
+                                            y: 1)
+
+                                        // Filter title above the image
+                                        Text(displayFilter.display.title)
                                             .font(
                                                 .system(
-                                                    size: 18, weight: .medium,
+                                                    size: 18,
+                                                    weight: .semibold,
                                                     design: .rounded)
                                             )
-                                            .foregroundColor(
-                                                .white.opacity(0.7)
-                                            )
-                                            .textCase(.uppercase)
-                                            .tracking(1.2)
+                                            .foregroundColor(.white)
+                                            .lineLimit(1)
+                                            .truncationMode(.tail)
+                                            .frame(maxWidth: 300)
                                             .opacity(
                                                 isScrollingActive ? 1.0 : 0
                                             )
@@ -177,174 +210,148 @@ struct Post: View {
                                                 value: isScrollingActive
                                             )
                                             .shadow(
-                                                color: .black.opacity(0.6),
-                                                radius: 2,
+                                                color: .black.opacity(0.8),
+                                                radius: 4,
                                                 x: 0,
-                                                y: 1)
+                                                y: 2)
 
-                                            // Filter title above the image
-                                            Text(displayFilter.display.title)
-                                                .font(
-                                                    .system(
-                                                        size: 18,
-                                                        weight: .semibold,
-                                                        design: .rounded)
-                                                )
-                                                .foregroundColor(.white)
-                                                .lineLimit(1)
-                                                .truncationMode(.tail)
-                                                .frame(maxWidth: 300)
-                                                .opacity(
-                                                    isScrollingActive ? 1.0 : 0
-                                                )
-                                                .animation(
-                                                    .easeOut(duration: 0.3),
-                                                    value: isScrollingActive
-                                                )
-                                                .shadow(
-                                                    color: .black.opacity(0.8),
-                                                    radius: 4,
-                                                    x: 0,
-                                                    y: 2)
-
-                                            // Preview image
-                                            // Check if imageName is a URL (for presets)
-                                            Group {
-                                                if displayFilter.display
-                                                    .imageName
-                                                    .hasPrefix("http://")
-                                                    || displayFilter.display
-                                                        .imageName.hasPrefix(
-                                                            "https://"),
-                                                    let url = URL(
-                                                        string: displayFilter
-                                                            .display.imageName)
-                                                {
-                                                    KFImage(url)
-                                                        .placeholder {
-                                                            Rectangle()
-                                                                .fill(
-                                                                    Color.gray
-                                                                        .opacity(
-                                                                            0.2)
-                                                                )
-                                                                .overlay(
-                                                                    ProgressView()
-                                                                )
-                                                        }
-                                                        .resizable()
-                                                        .scaledToFill()
-                                                        .frame(
-                                                            width: 250,
-                                                            height: 300
-                                                        )
-                                                        .clipShape(
-                                                            RoundedRectangle(
-                                                                cornerRadius: 16
+                                        // Preview image
+                                        // Check if imageName is a URL (for presets)
+                                        Group {
+                                            if displayFilter.display
+                                                .imageName
+                                                .hasPrefix("http://")
+                                                || displayFilter.display
+                                                    .imageName.hasPrefix(
+                                                        "https://"),
+                                                let url = URL(
+                                                    string: displayFilter
+                                                        .display.imageName)
+                                            {
+                                                KFImage(url)
+                                                    .placeholder {
+                                                        Rectangle()
+                                                            .fill(
+                                                                Color.gray
+                                                                    .opacity(
+                                                                        0.2)
                                                             )
-                                                        )
-                                                        .opacity(
-                                                            isScrollingActive
-                                                                ? 0.8 : 0
-                                                        )
-                                                        .shadow(
-                                                            color: .black
-                                                                .opacity(
-                                                                    0.5),
-                                                            radius: 20,
-                                                            x: 0,
-                                                            y: 0
-                                                        )
-                                                } else {
-                                                    Image(
-                                                        displayFilter.display
-                                                            .imageName
-                                                    )
+                                                            .overlay(
+                                                                ProgressView()
+                                                            )
+                                                    }
                                                     .resizable()
                                                     .scaledToFill()
                                                     .frame(
-                                                        width: 250, height: 300
+                                                        width: 250,
+                                                        height: 300
                                                     )
                                                     .clipShape(
                                                         RoundedRectangle(
-                                                            cornerRadius: 16)
+                                                            cornerRadius: 16
+                                                        )
                                                     )
                                                     .opacity(
                                                         isScrollingActive
                                                             ? 0.8 : 0
                                                     )
                                                     .shadow(
-                                                        color: .black.opacity(
-                                                            0.5),
+                                                        color: .black
+                                                            .opacity(
+                                                                0.5),
                                                         radius: 20,
                                                         x: 0,
                                                         y: 0
                                                     )
-                                                }
+                                            } else {
+                                                Image(
+                                                    displayFilter.display
+                                                        .imageName
+                                                )
+                                                .resizable()
+                                                .scaledToFill()
+                                                .frame(
+                                                    width: 250, height: 300
+                                                )
+                                                .clipShape(
+                                                    RoundedRectangle(
+                                                        cornerRadius: 16)
+                                                )
+                                                .opacity(
+                                                    isScrollingActive
+                                                        ? 0.8 : 0
+                                                )
+                                                .shadow(
+                                                    color: .black.opacity(
+                                                        0.5),
+                                                    radius: 20,
+                                                    x: 0,
+                                                    y: 0
+                                                )
                                             }
-                                            .overlay(
-                                                // Cost badge in top right
-                                                Group {
-                                                    if let cost = displayFilter
-                                                        .resolvedCost
-                                                    {
-                                                        // Text( "$\(NSDecimalNumber(decimal: cost).stringValue)")
-                                                        Text("\(cost.credits)")
-                                                            .font(
-                                                                .system(
-                                                                    size: 13,
-                                                                    weight:
-                                                                        .semibold,
-                                                                    design:
-                                                                        .rounded
-                                                                )
-                                                            )
-                                                            .foregroundColor(
-                                                                .white
-                                                            )
-                                                            .padding(
-                                                                .horizontal, 10
-                                                            )
-                                                            .padding(
-                                                                .vertical, 5
-                                                            )
-                                                            .background(
-                                                                Capsule()
-                                                                    .fill(
-                                                                        Color
-                                                                            .black
-                                                                            .opacity(
-                                                                                0.75
-                                                                            )
-                                                                    )
-                                                            )
-                                                            .shadow(
-                                                                color: .black
-                                                                    .opacity(
-                                                                        0.4),
-                                                                radius: 4, x: 0,
-                                                                y: 2
-                                                            )
-                                                            .padding(12)
-                                                            .opacity(
-                                                                isScrollingActive
-                                                                    ? 1.0 : 0
-                                                            )
-                                                            .animation(
-                                                                .easeOut(
-                                                                    duration:
-                                                                        0.3),
-                                                                value:
-                                                                    isScrollingActive
-                                                            )
-                                                    }
-                                                },
-                                                alignment: .bottomTrailing
-                                            )
                                         }
-                                        .allowsHitTesting(false)
-                                        .padding(.bottom, 24)
+                                        .overlay(
+                                            // Cost badge in top right
+                                            Group {
+                                                if let cost = displayFilter
+                                                    .resolvedCost
+                                                {
+                                                    // Text( "$\(NSDecimalNumber(decimal: cost).stringValue)")
+                                                    Text("\(cost.credits)")
+                                                        .font(
+                                                            .system(
+                                                                size: 13,
+                                                                weight:
+                                                                    .semibold,
+                                                                design:
+                                                                    .rounded
+                                                            )
+                                                        )
+                                                        .foregroundColor(
+                                                            .white
+                                                        )
+                                                        .padding(
+                                                            .horizontal, 10
+                                                        )
+                                                        .padding(
+                                                            .vertical, 5
+                                                        )
+                                                        .background(
+                                                            Capsule()
+                                                                .fill(
+                                                                    Color
+                                                                        .black
+                                                                        .opacity(
+                                                                            0.75
+                                                                        )
+                                                                )
+                                                        )
+                                                        .shadow(
+                                                            color: .black
+                                                                .opacity(
+                                                                    0.4),
+                                                            radius: 4, x: 0,
+                                                            y: 2
+                                                        )
+                                                        .padding(12)
+                                                        .opacity(
+                                                            isScrollingActive
+                                                                ? 1.0 : 0
+                                                        )
+                                                        .animation(
+                                                            .easeOut(
+                                                                duration:
+                                                                    0.3),
+                                                            value:
+                                                                isScrollingActive
+                                                        )
+                                                }
+                                            },
+                                            alignment: .bottomTrailing
+                                        )
                                     }
+                                    .allowsHitTesting(false)
+                                    .padding(.bottom, 24)
                                 }
 
                                 VStack(spacing: 12) {
@@ -457,8 +464,64 @@ struct Post: View {
                             VStack {
                                 Spacer()
 
-                                VStack(spacing: 24) {
-                                    // MARK: SWITCH
+                                VStack(spacing: 16) {
+                                    // MARK: ✅ ❌
+                                    // X (retake) and checkmark (confirm) buttons - visible only when photo is captured AND filter is selected
+                                    if shouldShowCapturedImage,
+                                        cameraService.capturedImage != nil,
+                                        isFilterOrModelSelected
+                                    {
+                                        // X Button - Retake photo
+                                        Button {
+                                            // Clear the captured image and return to camera preview
+                                            shouldShowCapturedImage = false
+                                            cameraService.capturedImage = nil
+                                            // Ensure camera session is running when returning to preview
+                                            // Restart session to ensure it's active
+                                            DispatchQueue.main.asyncAfter(
+                                                deadline: .now() + 0.1
+                                            ) {
+                                                self.cameraService
+                                                    .startSession()
+                                            }
+                                        } label: {
+                                            Image(systemName: "xmark")
+                                                .font(
+                                                    .system(
+                                                        size: 20, weight: .bold)
+                                                )
+                                                .foregroundColor(.red)
+                                        }
+                                        .frame(width: 55, height: 55)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 14)
+                                                .fill(.ultraThinMaterial)
+                                                .environment(
+                                                    \.colorScheme, .dark)
+                                        )
+
+                                        // Checkmark Button - Confirm and proceed
+                                        Button {
+                                            // Navigate to the next screen
+                                            navigateToPhotoReview = true
+                                        } label: {
+                                            Image(systemName: "checkmark")
+                                                .font(
+                                                    .system(
+                                                        size: 20, weight: .bold)
+                                                )
+                                                .foregroundColor(.green)
+                                        }
+                                        .frame(width: 55, height: 55)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 14)
+                                                .fill(.ultraThinMaterial)
+                                                .environment(
+                                                    \.colorScheme, .dark)
+                                        )
+                                    }
+
+                                    // MARK: 🔄 SWITCH
                                     Button {
                                         cameraService.switchCamera()
                                     } label: {
@@ -466,7 +529,7 @@ struct Post: View {
                                             systemName:
                                                 "arrow.triangle.2.circlepath"
                                         )
-                                        .font(.system(size: 20, weight: .medium))
+                                        .font(.system(size: 20, weight: .bold))
                                         .foregroundColor(.white)
                                     }
                                     .frame(width: 55, height: 55)
@@ -548,9 +611,8 @@ struct Post: View {
                                         selectedFilter = item
                                         selectedImageModel = nil  // Clear model when filter is selected
                                     }
-                                    // Clear centered filter when a selection is made
-                                    // This ensures the title shows the selected filter after snapping
-                                    centeredFilter = nil
+                                    // Don't clear centeredFilter here - it causes a flicker
+                                    // The displayFilter fallback will use selectedFilter when scrolling stops
                                 },
                                 onCenteredFilterChanged: { filter in
                                     centeredFilter = filter
@@ -566,10 +628,8 @@ struct Post: View {
                         }
                         .padding(.bottom, 20)
 
-                        // MARK: CAPTURE
-
                         HStack(spacing: 50) {
-                            // MARK: LIBRARY
+                            // MARK: 🖼️ LIBRARY
                             Button {
                                 showLibraryPicker = true
                             } label: {
@@ -577,7 +637,7 @@ struct Post: View {
                                     systemName:
                                         "photo.on.rectangle.angled"
                                 )
-                                .font(.system(size: 20, weight: .medium))
+                                .font(.system(size: 20, weight: .bold))
                                 .foregroundColor(.white)
                             }
                             .frame(width: 55, height: 55)
@@ -587,7 +647,7 @@ struct Post: View {
                                     .environment(\.colorScheme, .dark)
                             )
 
-                            // MARK: CAPTURE BUTTON
+                            // MARK: CAPTURE
                             Button {
                                 // Explicitly hide the large image preview when capturing
                                 isScrollingActive = false
@@ -596,23 +656,23 @@ struct Post: View {
                                 ZStack {
                                     Circle()
                                         .fill(
-                                            isFilterOrModelSelected
-                                                ? Color.white
-                                                : Color.gray.opacity(0.3)
+                                            shouldShowCapturedImage
+                                                ? Color.gray.opacity(0.3)
+                                                : Color.white
                                         )
                                         .frame(width: 72, height: 72)
-                                    
+
                                     Circle()
                                         .stroke(
-                                            isFilterOrModelSelected
-                                                ? Color.white
-                                                : Color.gray.opacity(0.5),
+                                            shouldShowCapturedImage
+                                                ? Color.gray.opacity(0.5)
+                                                : Color.white,
                                             lineWidth: 4
                                         )
                                         .frame(width: 80, height: 80)
                                 }
                             }
-                            .disabled(!isFilterOrModelSelected)
+                            .disabled(shouldShowCapturedImage)
 
                             // MARK: MENU
                             Button {
@@ -622,7 +682,7 @@ struct Post: View {
                                     systemName:
                                         "square.grid.2x2.fill"
                                 )
-                                .font(.system(size: 20, weight: .medium))
+                                .font(.system(size: 20, weight: .bold))
                                 .foregroundColor(.white)
                             }
                             .frame(width: 55, height: 55)
@@ -643,9 +703,11 @@ struct Post: View {
             // MARK: TOOLBAR
             .onAppear {
                 isViewActive = true
-                // Immediately hide captured image when view appears
-                // This prevents the photo from appearing when returning from navigation
-                shouldShowCapturedImage = false
+                // Keep captured image if it exists (user navigated back from confirmation)
+                // Only show it if there's actually a captured image
+                if cameraService.capturedImage != nil {
+                    shouldShowCapturedImage = true
+                }
                 // Ensure session is running when view appears
                 cameraService.startSession()
 
@@ -664,17 +726,9 @@ struct Post: View {
             }
             .onChange(of: navigateToPhotoReview) { isNavigating in
                 if !isNavigating {
-                    // Immediately hide the captured image when returning from navigation
-                    // Use a transaction to ensure state updates happen atomically
-                    var transaction = Transaction(animation: nil)
-                    transaction.disablesAnimations = true
-                    withTransaction(transaction) {
-                        shouldShowCapturedImage = false
-                        cameraService.capturedImage = nil
-                    }
-
-                    // We've returned from navigation, ensure session is running
-                    // Use a small delay to allow navigation animation to complete
+                    // Keep the captured image when returning from navigation
+                    // User can clear it by pressing the X button
+                    // Just ensure the camera session is ready if needed
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                         if !self.cameraService.session.isRunning {
                             self.cameraService.startSession()
@@ -684,9 +738,8 @@ struct Post: View {
             }
             .onChange(of: cameraService.capturedImage) { newImage in
                 if newImage != nil {
-                    // Show the image and navigate when a photo is captured
+                    // Show the captured image on screen (don't navigate yet)
                     shouldShowCapturedImage = true
-                    navigateToPhotoReview = true
                 } else {
                     // Hide the image when it's cleared
                     shouldShowCapturedImage = false
@@ -782,21 +835,11 @@ struct Post: View {
                         item: selectedFilter,
                         image: capturedImage
                     )
-                    .onDisappear {
-                        // Reset the captured image when the review page is dismissed
-                        shouldShowCapturedImage = false
-                        cameraService.capturedImage = nil
-                    }
                 } else if let model = selectedImageModel {
                     ImageModelDetailPage(
                         item: model,
                         capturedImage: capturedImage
                     )
-                    .onDisappear {
-                        // Reset the captured image when the review page is dismissed
-                        shouldShowCapturedImage = false
-                        cameraService.capturedImage = nil
-                    }
                 } else {
                     // If no filter or model selected, show a message or go back
                     VStack {
@@ -808,7 +851,6 @@ struct Post: View {
                         // Auto-dismiss after a moment if nothing selected
                         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                             navigateToPhotoReview = false
-                            cameraService.capturedImage = nil
                         }
                     }
                 }
@@ -816,4 +858,3 @@ struct Post: View {
         }
     }
 }
- 
