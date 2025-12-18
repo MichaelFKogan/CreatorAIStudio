@@ -301,4 +301,130 @@ class SupabaseManager {
             return nil
         }
     }
+    
+    // MARK: - PENDING JOBS (Webhook Support)
+    
+    /// Creates a new pending job record in the database
+    /// - Parameter job: The pending job to create
+    func createPendingJob(_ job: PendingJob) async throws {
+        let insertModel = PendingJobInsert(from: job)
+        
+        try await client.database
+            .from("pending_jobs")
+            .insert(insertModel)
+            .execute()
+        
+        print("[PendingJobs] Created job with taskId: \(job.task_id)")
+    }
+    
+    /// Fetches all pending jobs for a user
+    /// - Parameter userId: The user's ID
+    /// - Returns: Array of pending jobs
+    func fetchPendingJobs(userId: String) async throws -> [PendingJob] {
+        let jobs: [PendingJob] = try await client.database
+            .from("pending_jobs")
+            .select()
+            .eq("user_id", value: userId)
+            .order("created_at", ascending: false)
+            .execute()
+            .value
+        
+        print("[PendingJobs] Fetched \(jobs.count) jobs for user: \(userId)")
+        return jobs
+    }
+    
+    /// Fetches a specific pending job by task ID
+    /// - Parameter taskId: The task ID to look up
+    /// - Returns: The pending job if found
+    func fetchPendingJob(taskId: String) async throws -> PendingJob? {
+        let jobs: [PendingJob] = try await client.database
+            .from("pending_jobs")
+            .select()
+            .eq("task_id", value: taskId)
+            .limit(1)
+            .execute()
+            .value
+        
+        return jobs.first
+    }
+    
+    /// Updates a pending job's status
+    /// - Parameters:
+    ///   - taskId: The task ID to update
+    ///   - status: The new status
+    ///   - resultUrl: Optional result URL (for completed jobs)
+    ///   - errorMessage: Optional error message (for failed jobs)
+    func updatePendingJobStatus(
+        taskId: String,
+        status: JobStatus,
+        resultUrl: String? = nil,
+        errorMessage: String? = nil
+    ) async throws {
+        var updateData: [String: AnyJSON] = [
+            "status": .string(status.rawValue),
+            "updated_at": .string(ISO8601DateFormatter().string(from: Date()))
+        ]
+        
+        if let resultUrl = resultUrl {
+            updateData["result_url"] = .string(resultUrl)
+            updateData["completed_at"] = .string(ISO8601DateFormatter().string(from: Date()))
+        }
+        
+        if let errorMessage = errorMessage {
+            updateData["error_message"] = .string(errorMessage)
+            updateData["completed_at"] = .string(ISO8601DateFormatter().string(from: Date()))
+        }
+        
+        try await client.database
+            .from("pending_jobs")
+            .update(updateData)
+            .eq("task_id", value: taskId)
+            .execute()
+        
+        print("[PendingJobs] Updated job \(taskId) to status: \(status.rawValue)")
+    }
+    
+    /// Deletes a pending job
+    /// - Parameter taskId: The task ID to delete
+    func deletePendingJob(taskId: String) async throws {
+        try await client.database
+            .from("pending_jobs")
+            .delete()
+            .eq("task_id", value: taskId)
+            .execute()
+        
+        print("[PendingJobs] Deleted job with taskId: \(taskId)")
+    }
+    
+    /// Cleans up old completed/failed jobs (older than specified days)
+    /// - Parameter olderThanDays: Number of days after which to delete jobs
+    /// - Returns: Number of deleted jobs
+    func cleanupOldPendingJobs(olderThanDays: Int = 7) async throws -> Int {
+        let cutoffDate = Calendar.current.date(byAdding: .day, value: -olderThanDays, to: Date())!
+        let cutoffString = ISO8601DateFormatter().string(from: cutoffDate)
+        
+        // Fetch count first
+        let jobs: [PendingJob] = try await client.database
+            .from("pending_jobs")
+            .select()
+            .in("status", values: ["completed", "failed"])
+            .lt("completed_at", value: cutoffString)
+            .execute()
+            .value
+        
+        let count = jobs.count
+        
+        if count > 0 {
+            try await client.database
+                .from("pending_jobs")
+                .delete()
+                .in("status", values: ["completed", "failed"])
+                .lt("completed_at", value: cutoffString)
+                .execute()
+            
+            print("[PendingJobs] Cleaned up \(count) old jobs")
+        }
+        
+        return count
+    }
 }

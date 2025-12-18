@@ -59,7 +59,7 @@ class ImageGenerationCoordinator: ObservableObject {
         )
 
         // Create the worker that actually performs the API call / processing.
-        let task = ImageGenerationTask(item: item, image: image, userId: userId)
+        let task = ImageGenerationTask(item: item, image: image, userId: userId, useWebhook: true)
 
         // MARK: Run the worker on a background thread using Swift concurrency.
 
@@ -119,12 +119,8 @@ class ImageGenerationCoordinator: ObservableObject {
             // Update the notification to show completion.
             NotificationManager.shared.markAsCompleted(id: notificationId)
 
-            // Remove the notification after a few seconds, then clean up.
-            Task {
-                try? await Task.sleep(for: .seconds(5))
-                await NotificationManager.shared.dismissNotification(id: notificationId)
-                cleanupTask(taskId: taskId)
-            }
+            // Clean up task tracking (notification stays visible until user dismisses it)
+            cleanupTask(taskId: taskId)
 
         // MARK: FAILURE CASE — Task failed.
 
@@ -141,9 +137,28 @@ class ImageGenerationCoordinator: ObservableObject {
             // Don't cleanup task info on failure - keep it for retry functionality
             // Only remove the background task reference
             backgroundTasks.removeValue(forKey: taskId)
+            
+        // MARK: QUEUED CASE — Task was submitted via webhook, waiting for callback.
+        case let .queued(webhookTaskId, jobType):
+            print("📤 Image generation queued via webhook - taskId: \(webhookTaskId), type: \(jobType)")
+            
+            // Update notification to show processing status (keep visible!)
+            // Note: The actual processing happens in the cloud and can take several minutes
+            NotificationManager.shared.updateMessage("Processing in the cloud... This may take a few minutes.", for: notificationId)
+            // Set progress to ~50% to indicate we're waiting for remote processing
+            NotificationManager.shared.updateProgress(0.50, for: notificationId)
+            
+            // Register the notification with JobStatusManager so it can update it when complete
+            JobStatusManager.shared.registerNotification(taskId: webhookTaskId, notificationId: notificationId)
+            
+            // For webhook mode, we don't wait - the result comes via Realtime/push notification
+            // Keep the task info for potential retry, but cleanup the background task
+            backgroundTasks.removeValue(forKey: taskId)
+            
+            // DON'T dismiss the notification - JobStatusManager will update it when the webhook completes
 
-        // Other result types (if added later) are simply ignored here.
-        default:
+        // Video success is not expected here, but handle gracefully
+        case .videoSuccess:
             break
         }
     }
@@ -209,7 +224,7 @@ class ImageGenerationCoordinator: ObservableObject {
         }
         
         // Create the worker that actually performs the API call / processing.
-        let task = ImageGenerationTask(item: item, image: image, userId: userId)
+        let task = ImageGenerationTask(item: item, image: image, userId: userId, useWebhook: true)
         
         // Run the worker on a background thread using Swift concurrency.
         let backgroundTask = Task.detached { [weak self] in

@@ -8,6 +8,10 @@ import SwiftUI
 /// saves metadata to your database, and returns the final outcome.
 ///
 /// This is the worker object run by VideoGenerationCoordinator.
+///
+/// Supports two modes:
+/// - **Polling mode** (default): Waits for result via polling, returns completed video
+/// - **Webhook mode**: Submits job and returns immediately, result delivered via webhook
 class VideoGenerationTask: MediaGenerationTask {
     // The model/item defining prompts, settings, display info, etc.
     let item: InfoPacket
@@ -22,14 +26,18 @@ class VideoGenerationTask: MediaGenerationTask {
     let duration: Double
     let aspectRatio: String
     let resolution: String?
+    
+    // Whether to use webhook mode (returns immediately) or polling mode (waits for result)
+    let useWebhook: Bool
 
-    init(item: InfoPacket, image: UIImage?, userId: String, duration: Double, aspectRatio: String, resolution: String? = nil) {
+    init(item: InfoPacket, image: UIImage?, userId: String, duration: Double, aspectRatio: String, resolution: String? = nil, useWebhook: Bool = false) {
         self.item = item
         self.image = image
         self.userId = userId
         self.duration = duration
         self.aspectRatio = aspectRatio
         self.resolution = resolution
+        self.useWebhook = useWebhook && WebhookConfig.useWebhooks
     }
     
     // MARK: - Helper: Generate Descriptive Progress Message
@@ -94,12 +102,21 @@ class VideoGenerationTask: MediaGenerationTask {
             debugInfo += "\nResolution: \(resolution)"
         }
         debugInfo += """
+        
         Mode: \(image != nil ? "Image-to-Video" : "Text-to-Video")
         Cost: \(item.resolvedCost?.credits ?? 0) credits
+        Use Webhook: \(useWebhook)
         ------------------------------
         """
         print(debugInfo)
         
+        // MARK: - WEBHOOK MODE
+        if useWebhook {
+            await executeWithWebhook(apiConfig: apiConfig, onProgress: onProgress, onComplete: onComplete)
+            return
+        }
+        
+        // MARK: - POLLING MODE (existing behavior)
         do {
             // MARK: STEP 1 — SEND TO API
             
@@ -339,6 +356,88 @@ class VideoGenerationTask: MediaGenerationTask {
         } catch {
             // Catches everything else — JSON errors, decode errors, unexpected exceptions.
             print("❌ Runware video error: \(error)")
+            await onComplete(.failure(error))
+        }
+    }
+    
+    // MARK: - Webhook Execution
+    
+    /// Executes the video generation using webhook mode
+    /// Creates a pending job record and submits to API with webhook URL
+    /// Returns immediately with "queued" status - result delivered via webhook
+    private func executeWithWebhook(
+        apiConfig: APIConfiguration,
+        onProgress: @escaping (TaskProgress) async -> Void,
+        onComplete: @escaping (TaskResult) async -> Void
+    ) async {
+        do {
+            await onProgress(TaskProgress(progress: 0.1, message: "Preparing video request..."))
+            
+            // Generate a unique task ID
+            let taskId = UUID().uuidString
+            
+            guard let runwareModel = apiConfig.runwareModel else {
+                throw NSError(
+                    domain: "APIError",
+                    code: -1,
+                    userInfo: [NSLocalizedDescriptionKey: "Missing runware model configuration"]
+                )
+            }
+            
+            // Determine if this is image-to-video mode
+            let isImageToVideo = image != nil && image!.size.width > 1 && image!.size.height > 1
+            let modelName = item.display.modelName ?? "unknown"
+            
+            // MARK: Step 1 - Create pending job record
+            await onProgress(TaskProgress(progress: 0.2, message: "Creating job record..."))
+            
+            let jobMetadata = PendingJobMetadata(
+                prompt: item.prompt,
+                model: modelName,
+                title: item.display.title,
+                aspectRatio: aspectRatio,
+                resolution: resolution,
+                duration: duration,
+                cost: item.resolvedCost != nil ? NSDecimalNumber(decimal: item.resolvedCost!).doubleValue : nil,
+                type: item.type,
+                endpoint: apiConfig.endpoint
+            )
+            
+            let pendingJob = PendingJob(
+                userId: userId,
+                taskId: taskId,
+                provider: .runware,  // Videos only use Runware for now
+                jobType: .video,
+                metadata: jobMetadata,
+                deviceToken: nil // TODO: Add device token for push notifications
+            )
+            
+            // Insert pending job into database
+            try await SupabaseManager.shared.createPendingJob(pendingJob)
+            print("✅ Pending video job created with taskId: \(taskId)")
+            
+            // MARK: Step 2 - Submit to API with webhook
+            await onProgress(TaskProgress(progress: 0.4, message: generateProgressMessage()))
+            
+            let _ = try await submitVideoToRunwareWithWebhook(
+                taskUUID: taskId,
+                image: isImageToVideo ? image : nil,
+                prompt: item.prompt ?? "",
+                model: runwareModel,
+                aspectRatio: aspectRatio,
+                duration: duration,
+                resolution: resolution,
+                isImageToVideo: isImageToVideo,
+                runwareConfig: apiConfig.runwareConfig
+            )
+            print("✅ Runware video webhook request submitted")
+            
+            // MARK: Step 3 - Return immediately with queued status
+            // Note: Don't update progress here - the coordinator will set the appropriate progress for queued state
+            await onComplete(.queued(taskId: taskId, jobType: .video))
+            
+        } catch {
+            print("❌ Video webhook submission error: \(error)")
             await onComplete(.failure(error))
         }
     }

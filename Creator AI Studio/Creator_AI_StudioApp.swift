@@ -11,6 +11,11 @@ import SwiftUI
 struct Creator_AI_StudioApp: App {
     @StateObject private var themeManager = ThemeManager()
     @StateObject private var authViewModel = AuthViewModel()
+    
+    init() {
+        // Enable webhook mode for image and video generation
+        WebhookConfig.useWebhooks = true
+    }
 
     var body: some Scene {
         WindowGroup {

@@ -8,6 +8,10 @@ import SwiftUI
 /// saves metadata to your database, and returns the final outcome.
 ///
 /// This is the worker object run by ImageGenerationCoordinator.
+/// 
+/// Supports two modes:
+/// - **Polling mode** (default): Waits for result via polling, returns completed image
+/// - **Webhook mode**: Submits job and returns immediately, result delivered via webhook
 class ImageGenerationTask: MediaGenerationTask {
     // The model/item defining prompts, settings, display info, etc.
     let item: InfoPacket
@@ -17,11 +21,15 @@ class ImageGenerationTask: MediaGenerationTask {
 
     // The authenticated user performing this action.
     let userId: String
+    
+    // Whether to use webhook mode (returns immediately) or polling mode (waits for result)
+    let useWebhook: Bool
 
-    init(item: InfoPacket, image: UIImage, userId: String) {
+    init(item: InfoPacket, image: UIImage, userId: String, useWebhook: Bool = false) {
         self.item = item
         self.image = image
         self.userId = userId
+        self.useWebhook = useWebhook && WebhookConfig.useWebhooks
     }
     
     // MARK: - Helper: Generate Descriptive Progress Message
@@ -58,7 +66,7 @@ class ImageGenerationTask: MediaGenerationTask {
 
     /// Executes the full 6-step pipeline:
     /// 1. Upload image to API
-    /// 2. Poll for result
+    /// 2. Poll for result (or return immediately in webhook mode)
     /// 3. Download generated image
     /// 4. Upload final image to storage (Supabase)
     /// 5. Save metadata to database
@@ -85,8 +93,17 @@ class ImageGenerationTask: MediaGenerationTask {
         Enable Sync Mode: \(apiConfig.wavespeedConfig?.enableSyncMode)
         Enable Base64 Output: \(apiConfig.wavespeedConfig?.enableBase64Output)
         Cost: $\(NSDecimalNumber(decimal: item.resolvedCost ?? 0).stringValue)
+        Use Webhook: \(useWebhook)
         ------------------------------
         """)
+        
+        // MARK: - WEBHOOK MODE
+        if useWebhook {
+            await executeWithWebhook(apiConfig: apiConfig, onProgress: onProgress, onComplete: onComplete)
+            return
+        }
+        
+        // MARK: - POLLING MODE (existing behavior)
 
         do {
             // MARK: STEP 1 — SEND TO API
@@ -301,6 +318,93 @@ class ImageGenerationTask: MediaGenerationTask {
         }
     }
 
+    // MARK: - Webhook Execution
+    
+    /// Executes the image generation using webhook mode
+    /// Creates a pending job record and submits to API with webhook URL
+    /// Returns immediately with "queued" status - result delivered via webhook
+    private func executeWithWebhook(
+        apiConfig: APIConfiguration,
+        onProgress: @escaping (TaskProgress) async -> Void,
+        onComplete: @escaping (TaskResult) async -> Void
+    ) async {
+        do {
+            await onProgress(TaskProgress(progress: 0.1, message: "Preparing request..."))
+            
+            // Generate a unique task ID
+            let taskId = UUID().uuidString
+            
+            // Determine if this is image-to-image mode
+            let isImageToImage = image.size.width > 1 && image.size.height > 1
+            let modelName = item.display.modelName ?? extractModelFromEndpoint(apiConfig.endpoint) ?? "unknown"
+            
+            // MARK: Step 1 - Create pending job record
+            await onProgress(TaskProgress(progress: 0.2, message: "Creating job record..."))
+            
+            let jobMetadata = PendingJobMetadata(
+                prompt: item.prompt,
+                model: modelName,
+                title: item.display.title,
+                aspectRatio: apiConfig.aspectRatio,
+                resolution: nil,
+                duration: nil,
+                cost: item.resolvedCost != nil ? NSDecimalNumber(decimal: item.resolvedCost!).doubleValue : nil,
+                type: item.type,
+                endpoint: apiConfig.endpoint
+            )
+            
+            let pendingJob = PendingJob(
+                userId: userId,
+                taskId: taskId,
+                provider: apiConfig.provider == .runware ? .runware : .wavespeed,
+                jobType: .image,
+                metadata: jobMetadata,
+                deviceToken: nil // TODO: Add device token for push notifications
+            )
+            
+            // Insert pending job into database
+            try await SupabaseManager.shared.createPendingJob(pendingJob)
+            print("✅ Pending job created with taskId: \(taskId)")
+            
+            // MARK: Step 2 - Submit to API with webhook
+            await onProgress(TaskProgress(progress: 0.4, message: generateProgressMessage()))
+            
+            switch apiConfig.provider {
+            case .wavespeed:
+                let _ = try await submitImageToWaveSpeedWithWebhook(
+                    taskId: taskId,
+                    image: image,
+                    prompt: item.prompt ?? "",
+                    endpoint: apiConfig.endpoint,
+                    aspectRatio: apiConfig.aspectRatio,
+                    outputFormat: apiConfig.wavespeedConfig?.outputFormat ?? "jpeg",
+                    userId: userId
+                )
+                print("✅ WaveSpeed webhook request submitted")
+                
+            case .runware:
+                let _ = try await submitImageToRunwareWithWebhook(
+                    taskUUID: taskId,
+                    image: isImageToImage ? image : nil,
+                    prompt: item.prompt ?? "",
+                    model: apiConfig.runwareModel ?? "",
+                    aspectRatio: apiConfig.aspectRatio,
+                    isImageToImage: isImageToImage,
+                    runwareConfig: apiConfig.runwareConfig
+                )
+                print("✅ Runware webhook request submitted")
+            }
+            
+            // MARK: Step 3 - Return immediately with queued status
+            // Note: Don't update progress here - the coordinator will set the appropriate progress for queued state
+            await onComplete(.queued(taskId: taskId, jobType: .image))
+            
+        } catch {
+            print("❌ Webhook submission error: \(error)")
+            await onComplete(.failure(error))
+        }
+    }
+    
     // MARK: - Save Metadata With Retry
 
     /// Saves the generated image metadata to Supabase with exponential backoff.

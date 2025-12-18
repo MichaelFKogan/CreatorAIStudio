@@ -59,6 +59,27 @@ struct RunwareResponse: Decodable {
 // RunSpeedAI API Key
 let runwareApiKey = "zNNJ1KwqNUadOYKQmm58U84JqDjr5qMV"
 
+// MARK: - Webhook Configuration
+
+/// Configuration for webhook callbacks
+struct WebhookConfig {
+    /// Base URL for the Supabase Edge Function webhook receiver
+    static let supabaseProjectId = "inaffymocuppuddsewyq"
+    static let baseWebhookURL = "https://\(supabaseProjectId).supabase.co/functions/v1/webhook-receiver"
+    
+    /// Secret token for webhook verification (should match Supabase Edge Function secret)
+    /// IMPORTANT: Replace with your actual webhook secret from Supabase
+    static let webhookSecret = "f2fa291c970a1bcf0310e2aecc1189005ee601e0dec33697e3704681fb021728"
+    
+    /// Whether to use webhooks instead of polling (feature flag)
+    static var useWebhooks = true
+    
+    /// Build the full webhook URL with provider and token
+    static func webhookURL(for provider: String) -> String {
+        return "\(baseWebhookURL)?provider=\(provider)&token=\(webhookSecret)"
+    }
+}
+
 // MARK: - Image Upload Response Structure
 
 struct RunwareImageUploadResponse: Decodable {
@@ -816,6 +837,260 @@ func pollRunwareTaskStatus(taskUUID: String) async throws -> RunwareResponse {
     let decoder = JSONDecoder()
     decoder.keyDecodingStrategy = .convertFromSnakeCase
     return try decoder.decode(RunwareResponse.self, from: data)
+}
+
+// MARK: - Webhook Submission Response
+
+/// Response from submitting a job with webhook (returns immediately)
+struct RunwareWebhookSubmissionResponse {
+    let taskUUID: String
+    let submitted: Bool
+}
+
+// MARK: - Submit Image with Webhook (Returns Immediately)
+
+/// Submits an image generation request with a webhook URL and returns immediately
+/// The result will be delivered via the webhook callback
+func submitImageToRunwareWithWebhook(
+    taskUUID: String,
+    image: UIImage?,
+    prompt: String,
+    model: String,
+    aspectRatio: String? = nil,
+    isImageToImage: Bool = false,
+    runwareConfig: RunwareConfig? = nil
+) async throws -> RunwareWebhookSubmissionResponse {
+    print("[Runware] Preparing webhook request for image…")
+    print("[Runware] Task UUID: \(taskUUID)")
+    print("[Runware] Model: \(model)")
+    print("[Runware] Prompt: \(prompt)")
+    print("[Runware] Mode: \(isImageToImage ? "Image-to-Image" : "Text-to-Image")")
+    
+    // Get model-specific allowed sizes
+    let allowedSizes = getAllowedSizes(for: model)
+    
+    var width = 1024
+    var height = 1024
+    if let ratio = aspectRatio?.trimmingCharacters(in: .whitespacesAndNewlines),
+       let (w, h) = allowedSizes[ratio] {
+        width = w
+        height = h
+    }
+    
+    // Build task body with webhook URL
+    var task: [String: Any] = [
+        "taskType": "imageInference",
+        "taskUUID": taskUUID,
+        "model": model,
+        "positivePrompt": prompt,
+        "numberResults": 1,
+        "includeCost": true,
+        "webhookURL": WebhookConfig.webhookURL(for: "runware"),
+    ]
+    
+    // Add dimensions if required
+    let requiresDimensions = runwareConfig?.requiresDimensions ?? true
+    if requiresDimensions {
+        task["width"] = width
+        task["height"] = height
+    }
+    
+    // Handle image-to-image if provided
+    if isImageToImage, let seedImage = image {
+        let method = runwareConfig?.imageToImageMethod ?? "referenceImages"
+        let isFlux2Dev = model.lowercased().contains("runware:400@1")
+        let isRiverflow2 = model.lowercased().contains("sourceful:2@")
+        let requiresInputsObject = isFlux2Dev || isRiverflow2
+        
+        if isRiverflow2 && method == "referenceImages" {
+            let imageUUID = try await uploadImageToRunware(image: seedImage)
+            var inputs: [String: Any] = [:]
+            inputs["referenceImages"] = [imageUUID]
+            task["inputs"] = inputs
+        } else {
+            let orientedImage = seedImage.fixedOrientation()
+            let compressionQuality = runwareConfig?.imageCompressionQuality ?? 0.9
+            
+            guard let jpegData = orientedImage.jpegData(compressionQuality: compressionQuality) else {
+                throw NSError(domain: "RunwareAPI", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to convert image to JPEG"])
+            }
+            let base64 = jpegData.base64EncodedString()
+            let dataURI = "data:image/jpeg;base64,\(base64)"
+            
+            if requiresInputsObject {
+                var inputs: [String: Any] = [:]
+                inputs["referenceImages"] = [dataURI]
+                task["inputs"] = inputs
+            } else {
+                task["referenceImages"] = [dataURI]
+            }
+        }
+    }
+    
+    // Add additional config parameters
+    if let outputFormat = runwareConfig?.outputFormat { task["outputFormat"] = outputFormat }
+    if let outputType = runwareConfig?.outputType { task["outputType"] = outputType }
+    if let outputQuality = runwareConfig?.outputQuality { task["outputQuality"] = outputQuality }
+    if let additionalParams = runwareConfig?.additionalTaskParams {
+        for (key, value) in additionalParams { task[key] = value }
+    }
+    
+    // FLUX.2 [dev] specific parameters
+    if model.lowercased().contains("runware:400@1") {
+        if task["steps"] == nil { task["steps"] = 30 }
+        if task["CFGScale"] == nil { task["CFGScale"] = 4.0 }
+    }
+    
+    let requestBody: [[String: Any]] = [
+        ["taskType": "authentication", "apiKey": runwareApiKey],
+        task,
+    ]
+    
+    let url = URL(string: "https://api.runware.ai/v1")!
+    var request = URLRequest(url: url)
+    request.httpMethod = "POST"
+    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+    request.httpBody = try JSONSerialization.data(withJSONObject: requestBody)
+    
+    let (data, response) = try await URLSession.shared.data(for: request)
+    
+    guard let http = response as? HTTPURLResponse,
+          (200 ... 299).contains(http.statusCode) else {
+        throw NSError(
+            domain: "RunwareAPI",
+            code: (response as? HTTPURLResponse)?.statusCode ?? -1,
+            userInfo: [NSLocalizedDescriptionKey: "Runware returned HTTP \((response as? HTTPURLResponse)?.statusCode ?? -1)"]
+        )
+    }
+    
+    print("[Runware] Image webhook request submitted successfully, taskUUID: \(taskUUID)")
+    return RunwareWebhookSubmissionResponse(taskUUID: taskUUID, submitted: true)
+}
+
+// MARK: - Submit Video with Webhook (Returns Immediately)
+
+/// Submits a video generation request with a webhook URL and returns immediately
+/// The result will be delivered via the webhook callback
+func submitVideoToRunwareWithWebhook(
+    taskUUID: String,
+    image: UIImage?,
+    prompt: String,
+    model: String,
+    aspectRatio: String? = nil,
+    duration: Double = 5.0,
+    resolution: String? = nil,
+    isImageToVideo: Bool = false,
+    runwareConfig: RunwareConfig? = nil
+) async throws -> RunwareWebhookSubmissionResponse {
+    print("[Runware] Preparing webhook request for video…")
+    print("[Runware] Task UUID: \(taskUUID)")
+    print("[Runware] Model: \(model)")
+    print("[Runware] Prompt: \(prompt)")
+    print("[Runware] Duration: \(duration) seconds")
+    print("[Runware] Mode: \(isImageToVideo ? "Image-to-Video" : "Text-to-Video")")
+    
+    // Determine dimensions
+    var width = 1920
+    var height = 1088
+    
+    if let ratio = aspectRatio?.trimmingCharacters(in: .whitespacesAndNewlines),
+       let res = resolution?.trimmingCharacters(in: .whitespacesAndNewlines),
+       let dimensions = PricingManager.dimensionsForAspectRatioAndResolution(aspectRatio: ratio, resolution: res) {
+        width = dimensions.width
+        height = dimensions.height
+    } else if let ratio = aspectRatio?.trimmingCharacters(in: .whitespacesAndNewlines) {
+        let allowedSizes = getAllowedSizes(for: model)
+        if let (w, h) = allowedSizes[ratio] {
+            width = w
+            height = h
+        }
+    }
+    
+    // Build task body with webhook URL
+    var task: [String: Any] = [
+        "taskType": "videoInference",
+        "taskUUID": taskUUID,
+        "model": model,
+        "positivePrompt": prompt,
+        "duration": duration,
+        "width": width,
+        "height": height,
+        "includeCost": true,
+        "webhookURL": WebhookConfig.webhookURL(for: "runware"),
+    ]
+    
+    // Handle image-to-video if provided
+    if isImageToVideo, let seedImage = image {
+        let method = runwareConfig?.imageToImageMethod ?? "frameImages"
+        
+        if method == "frameImages" {
+            let imageUUID = try await uploadImageToRunware(image: seedImage)
+            task["frameImages"] = [
+                [
+                    "inputImage": imageUUID,
+                    "frame": "first"
+                ]
+            ]
+            print("[Runware] Image-to-video enabled with frameImages (first frame): \(imageUUID)")
+        }
+    }
+    
+    // Add additional config parameters
+    if let outputFormat = runwareConfig?.outputFormat { task["outputFormat"] = outputFormat }
+    if let outputType = runwareConfig?.outputType { task["outputType"] = outputType }
+    if let additionalParams = runwareConfig?.additionalTaskParams {
+        for (key, value) in additionalParams {
+            if key != "taskType" { task[key] = value }
+        }
+    }
+    
+    // ByteDance provider settings
+    if model.lowercased().contains("bytedance:2@2") {
+        var providerSettings: [String: Any] = [:]
+        var bytedanceSettings: [String: Any] = [:]
+        bytedanceSettings["cameraFixed"] = false
+        providerSettings["bytedance"] = bytedanceSettings
+        task["providerSettings"] = providerSettings
+    }
+    
+    let requestBody: [[String: Any]] = [
+        ["taskType": "authentication", "apiKey": runwareApiKey],
+        task,
+    ]
+    
+    // Debug log (masked API key)
+    if let requestJSON = try? JSONSerialization.data(withJSONObject: requestBody),
+       let requestString = String(data: requestJSON, encoding: .utf8) {
+        let maskedRequest = requestString.replacingOccurrences(
+            of: "\"apiKey\":\"[^\"]+\"",
+            with: "\"apiKey\":\"***\"",
+            options: .regularExpression
+        )
+        print("[Runware] Video webhook request body: \(maskedRequest)")
+    }
+    
+    let url = URL(string: "https://api.runware.ai/v1")!
+    var request = URLRequest(url: url)
+    request.httpMethod = "POST"
+    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+    request.httpBody = try JSONSerialization.data(withJSONObject: requestBody)
+    
+    let (data, response) = try await URLSession.shared.data(for: request)
+    
+    guard let http = response as? HTTPURLResponse,
+          (200 ... 299).contains(http.statusCode) else {
+        if let errorString = String(data: data, encoding: .utf8) {
+            print("[Runware] Error response body: \(errorString)")
+        }
+        throw NSError(
+            domain: "RunwareAPI",
+            code: (response as? HTTPURLResponse)?.statusCode ?? -1,
+            userInfo: [NSLocalizedDescriptionKey: "Runware returned HTTP \((response as? HTTPURLResponse)?.statusCode ?? -1)"]
+        )
+    }
+    
+    print("[Runware] Video webhook request submitted successfully, taskUUID: \(taskUUID)")
+    return RunwareWebhookSubmissionResponse(taskUUID: taskUUID, submitted: true)
 }
 
 // MARK: - UIImage Extension
