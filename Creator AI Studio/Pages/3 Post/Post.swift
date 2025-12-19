@@ -468,8 +468,7 @@ struct Post: View {
                                     // MARK: ✅ ❌
                                     // X (retake) and checkmark (confirm) buttons - visible only when photo is captured AND filter is selected
                                     if shouldShowCapturedImage,
-                                        cameraService.capturedImage != nil,
-                                        isFilterOrModelSelected
+                                        cameraService.capturedImage != nil
                                     {
                                         // X Button - Retake photo
                                         Button {

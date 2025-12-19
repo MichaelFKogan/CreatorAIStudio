@@ -12,13 +12,10 @@ struct ReferenceImagesSection: View {
     @State private var showActionSheet: Bool = false
 
     private let columns: [GridItem] = Array(
-        repeating: GridItem(.fixed(115), spacing: 12), count: 3
+        repeating: GridItem(.flexible(), spacing: 12), count: 3
     )
 
     var body: some View {
-        let gridWidth =
-            CGFloat(columns.count) * 115 + CGFloat(columns.count - 1) * 12
-
         VStack(alignment: .leading, spacing: 8) {
             if referenceImages.isEmpty {
                 // Single line button when no images
@@ -65,83 +62,78 @@ struct ReferenceImagesSection: View {
                 }
                 .padding(.top, -4)
 
-                // Grid layout when images exist
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack {
-                        LazyVGrid(columns: columns, spacing: 12) {
-                            // Existing selected reference images
-                            ForEach(referenceImages.indices, id: \.self) {
-                                index in
-                                ZStack(alignment: .topTrailing) {
-                                    Image(uiImage: referenceImages[index])
-                                        .resizable()
-                                        .aspectRatio(contentMode: .fill)
-                                        .frame(width: 115, height: 160)
-                                        .clipShape(
-                                            RoundedRectangle(cornerRadius: 6)
+                // Grid layout when images exist - responsive to screen width
+                LazyVGrid(columns: columns, spacing: 12) {
+                    // Existing selected reference images
+                    ForEach(referenceImages.indices, id: \.self) {
+                        index in
+                        ZStack(alignment: .topTrailing) {
+                            Image(uiImage: referenceImages[index])
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(maxWidth: .infinity)
+                                .aspectRatio(115.0 / 160.0, contentMode: .fit)
+                                .clipShape(
+                                    RoundedRectangle(cornerRadius: 6)
+                                )
+                                .clipped()
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 6)
+                                        .stroke(
+                                            color.opacity(0.6),
+                                            lineWidth: 1
                                         )
-                                        .clipped()
-                                        .overlay(
-                                            RoundedRectangle(cornerRadius: 6)
-                                                .stroke(
-                                                    color.opacity(0.6),
-                                                    lineWidth: 1
-                                                )
-                                        )
+                                )
 
-                                    Button(action: {
-                                        referenceImages.remove(at: index)
-                                    }) {
-                                        ZStack {
-                                            Circle()
-                                                .fill(Color.gray)
-                                                .frame(width: 20, height: 20)
+                            Button(action: {
+                                referenceImages.remove(at: index)
+                            }) {
+                                ZStack {
+                                    Circle()
+                                        .fill(Color.gray)
+                                        .frame(width: 20, height: 20)
 
-                                            Image(systemName: "xmark")
-                                                .font(.system(size: 10, weight: .bold))
-                                                .foregroundColor(.white)
-                                        }
-                                    }
-                                    .padding(4)
-                                    .shadow(color: Color.black.opacity(0.2), radius: 3, x: 0, y: 1)
+                                    Image(systemName: "xmark")
+                                        .font(.system(size: 10, weight: .bold))
+                                        .foregroundColor(.white)
                                 }
                             }
-
-                            // // Grid-sized add button
-                            // Button {
-                            //     showActionSheet = true
-                            // } label: {
-                            //     VStack(spacing: 8) {
-                            //         Image(systemName: "camera")
-                            //             .font(.system(size: 26))
-                            //             .foregroundColor(.gray.opacity(0.6))
-                            //         Text("Add Images")
-                            //             .font(.subheadline)
-                            //             .fontWeight(.medium)
-                            //             .foregroundColor(.gray)
-                            //         Text("Camera or Gallery")
-                            //             .font(.caption)
-                            //             .foregroundColor(.gray.opacity(0.7))
-                            //     }
-                            //     .frame(width: 115, height: 160)
-                            //     .background(Color.gray.opacity(0.03))
-                            //     .clipShape(RoundedRectangle(cornerRadius: 6))
-                            //     .overlay(
-                            //         RoundedRectangle(cornerRadius: 6)
-                            //             .strokeBorder(
-                            //                 style: StrokeStyle(
-                            //                     lineWidth: 3.5, dash: [6, 4]
-                            //                 )
-                            //             )
-                            //             .foregroundColor(.gray.opacity(0.4))
-                            //     )
-                            // }
-                            // .buttonStyle(PlainButtonStyle())
+                            .padding(4)
+                            .shadow(color: Color.black.opacity(0.2), radius: 3, x: 0, y: 1)
                         }
-                        .frame(width: gridWidth, alignment: .leading)
-
-                        Spacer()
                     }
+
+                    // // Grid-sized add button
+                    // Button {
+                    //     showActionSheet = true
+                    // } label: {
+                    //     VStack(spacing: 8) {
+                    //         Image(systemName: "camera")
+                    //             .font(.system(size: 26))
+                    //             .foregroundColor(.gray.opacity(0.6))
+                    //         Text("Add Images")
+                    //             .font(.subheadline)
+                    //             .fontWeight(.medium)
+                    //             .foregroundColor(.gray)
+                    //         Text("Camera or Gallery")
+                    //             .font(.caption)
+                    //             .foregroundColor(.gray.opacity(0.7))
+                    //     }
+                    //     .frame(maxWidth: .infinity)
+                    //     .aspectRatio(115.0 / 160.0, contentMode: .fit)
+                    //     .background(Color.gray.opacity(0.03))
+                    //     .clipShape(RoundedRectangle(cornerRadius: 6))
+                    //     .overlay(
+                    //         RoundedRectangle(cornerRadius: 6)
+                    //             .strokeBorder(
+                    //                 style: StrokeStyle(
+                    //                     lineWidth: 3.5, dash: [6, 4]
+                    //                 )
+                    //             )
+                    //             .foregroundColor(.gray.opacity(0.4))
+                    //     )
+                    // }
+                    // .buttonStyle(PlainButtonStyle())
                 }
             }
         }

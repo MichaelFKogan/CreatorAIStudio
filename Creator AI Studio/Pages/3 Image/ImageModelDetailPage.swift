@@ -777,7 +777,7 @@ struct CreditsView: View {
     }
 }
 
-// MARK: MODEL GALLERY SECTION
+// MARK: MODEL GALLERY
 
 struct ModelGallerySection: View {
     let modelName: String?
@@ -893,7 +893,7 @@ struct ModelGallerySection: View {
     }
 }
 
-// MARK: MODEL GALLERY GRID VIEW
+// MARK: GRID VIEW
 
 struct ModelGalleryGridView: View {
     let userImages: [UserImage]
