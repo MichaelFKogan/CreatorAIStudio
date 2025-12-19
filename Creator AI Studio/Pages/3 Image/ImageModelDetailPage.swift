@@ -787,6 +787,7 @@ struct ModelGallerySection: View {
     @EnvironmentObject var authViewModel: AuthViewModel
     @State private var modelImages: [UserImage] = []
     @State private var isLoading = false
+    @State private var isLoadingMore = false
     @State private var hasLoaded = false
     @State private var selectedUserImage: UserImage? = nil
 
@@ -830,8 +831,22 @@ struct ModelGallerySection: View {
             } else if !modelImages.isEmpty {
                 ModelGalleryGridView(
                     userImages: modelImages,
+                    isLoadingMore: isLoadingMore,
+                    hasMorePages: viewModel.hasMoreModelPages(modelName: modelName ?? ""),
                     onSelect: { userImage in
                         selectedUserImage = userImage
+                    },
+                    onLoadMore: {
+                        guard let modelName = modelName, !modelName.isEmpty else { return }
+                        guard !isLoadingMore else { return }
+                        isLoadingMore = true
+                        Task {
+                            let newImages = await viewModel.loadMoreModelImages(modelName: modelName)
+                            await MainActor.run {
+                                modelImages.append(contentsOf: newImages)
+                                isLoadingMore = false
+                            }
+                        }
                     }
                 )
             }
@@ -870,18 +885,11 @@ struct ModelGallerySection: View {
         isLoading = true
 
         Task {
-            // First, try to load all user images into cache (one-time cost)
-            // This helps populate the cache for future use
-            if viewModel.userImages.isEmpty {
-                await viewModel.fetchUserImages(forceRefresh: false)
-            }
-            
-            // Then fetch model-specific images
-            // ✅ OPTIMIZED: Reduced limit from 1000 to 50 to minimize database egress
-            // The cache will handle subsequent loads, and 50 is sufficient for initial grid view
+            // ✅ OPTIMIZED: Fetch first page only (50 images) using pagination
+            // This matches the Profile page pattern and reduces database egress
+            // Additional pages load automatically as user scrolls
             let images = await viewModel.fetchModelImages(
                 modelName: modelName,
-                limit: 50, // Reduced from 1000 - sufficient for grid view, cache handles rest
                 forceRefresh: false
             )
 
@@ -897,7 +905,10 @@ struct ModelGallerySection: View {
 
 struct ModelGalleryGridView: View {
     let userImages: [UserImage]
+    let isLoadingMore: Bool
+    let hasMorePages: Bool
     var onSelect: (UserImage) -> Void
+    var onLoadMore: () -> Void
 
     private let spacing: CGFloat = 2
     private let gridColumns: [GridItem] = Array(
@@ -964,6 +975,15 @@ struct ModelGalleryGridView: View {
                             }
                         }
                         .buttonStyle(.plain)
+                        .onAppear {
+                            // Trigger loading more when we're 10 items from the end
+                            if let index = userImages.firstIndex(where: { $0.id == userImage.id }),
+                               index >= userImages.count - 10,
+                               hasMorePages,
+                               !isLoadingMore {
+                                onLoadMore()
+                            }
+                        }
                     } else if let url = URL(string: userImage.image_url) {
                         // Fallback for videos without thumbnails
                         Button {
@@ -1006,20 +1026,42 @@ struct ModelGalleryGridView: View {
                             }
                         }
                         .buttonStyle(.plain)
+                        .onAppear {
+                            // Trigger loading more when we're 10 items from the end
+                            if let index = userImages.firstIndex(where: { $0.id == userImage.id }),
+                               index >= userImages.count - 10,
+                               hasMorePages,
+                               !isLoadingMore {
+                                onLoadMore()
+                            }
+                        }
                     }
+                }
+                
+                // Loading indicator at the bottom when loading more
+                if isLoadingMore {
+                    HStack {
+                        Spacer()
+                        ProgressView()
+                            .padding()
+                        Spacer()
+                    }
+                    .gridCellColumns(3)
                 }
             }
             .padding(.horizontal, 16)
         }
-        .frame(height: calculateHeight(for: userImages.count))
+        .frame(height: calculateHeight(for: userImages.count, isLoadingMore: isLoadingMore))
     }
 
-    private func calculateHeight(for count: Int) -> CGFloat {
+    private func calculateHeight(for count: Int, isLoadingMore: Bool) -> CGFloat {
         let rows = ceil(Double(count) / 3.0)
         let horizontalPadding: CGFloat = 16
         let totalHorizontalSpacing = spacing * 2
         let availableWidth = UIScreen.main.bounds.width - (horizontalPadding * 2) - totalHorizontalSpacing
         let itemWidth = availableWidth / 3
-        return CGFloat(rows) * (itemWidth * 1.4 + spacing)
+        let baseHeight = CGFloat(rows) * (itemWidth * 1.4 + spacing)
+        // Add extra height for loading indicator if loading more
+        return baseHeight + (isLoadingMore ? 60 : 0)
     }
 }

@@ -308,6 +308,13 @@ class ProfileViewModel: ObservableObject {
     private var modelImagesCache: [String: (images: [UserImage], fetchedAt: Date)] = [:]
     private let modelCacheStaleInterval: TimeInterval = 10 * 60 // 10 minutes
     
+    // Request deduplication: track in-flight requests to prevent duplicate queries
+    private var inFlightModelRequests: [String: Task<[UserImage], Never>] = [:]
+    
+    // Pagination state for model-specific images (per model)
+    private var modelCurrentPages: [String: Int] = [:] // model name -> current page
+    private var modelHasMorePages: [String: Bool] = [:] // model name -> has more pages
+    
     // Pagination for favorites
     private var favoritesCurrentPage = 0
     private var hasFetchedFavorites = false
@@ -833,16 +840,23 @@ class ProfileViewModel: ObservableObject {
         isLoadingMore = false
     }
 
-    // MARK: - Fetch Images by Model
+    // MARK: - Fetch Images by Model (with Pagination)
 
-    /// Fetches user images filtered by a specific model name
+    /// Fetches the first page of user images filtered by a specific model name
+    /// Uses pagination (50 images per page) to reduce database egress
     /// - Parameters:
     ///   - modelName: The model name to filter by (from item.display.modelName)
-    ///   - limit: Maximum number of images to fetch (default: 1000, effectively unlimited)
     ///   - forceRefresh: Whether to force a refresh from database
-    /// - Returns: Array of UserImage filtered by model
-    func fetchModelImages(modelName: String, limit: Int = 1000, forceRefresh: Bool = false) async -> [UserImage] {
+    /// - Returns: Array of UserImage filtered by model (first page only)
+    func fetchModelImages(modelName: String, forceRefresh: Bool = false) async -> [UserImage] {
         guard let userId = userId else { return [] }
+        
+        // Reset pagination state if forcing refresh
+        if forceRefresh {
+            modelCurrentPages[modelName] = 0
+            modelHasMorePages[modelName] = true
+            modelImagesCache.removeValue(forKey: modelName)
+        }
 
         // Check model-specific cache first (if not forcing refresh)
         if !forceRefresh {
@@ -850,6 +864,10 @@ class ProfileViewModel: ObservableObject {
                 let cacheAge = Date().timeIntervalSince(cached.fetchedAt)
                 if cacheAge < modelCacheStaleInterval {
                     print("✅ Using cached model images for \(modelName): \(cached.images.count) images")
+                    // Restore pagination state from cache
+                    let cachedCount = cached.images.count
+                    modelCurrentPages[modelName] = cachedCount >= pageSize ? 1 : 0
+                    modelHasMorePages[modelName] = cachedCount >= pageSize
                     return cached.images
                 } else {
                     print("⏰ Model cache stale for \(modelName), refreshing...")
@@ -862,15 +880,76 @@ class ProfileViewModel: ObservableObject {
         if !forceRefresh, userImages.count >= 50 {
             let filtered = userImages.filter { $0.model == modelName }
             if !filtered.isEmpty {
-                print("✅ Using main cache for \(modelName): \(filtered.count) images")
+                // Use first pageSize items from cache
+                let firstPage = Array(filtered.prefix(pageSize))
+                print("✅ Using main cache for \(modelName): \(firstPage.count) images (first page)")
                 // Cache the filtered results for future use
-                modelImagesCache[modelName] = (filtered, Date())
-                return filtered
+                modelImagesCache[modelName] = (firstPage, Date())
+                modelCurrentPages[modelName] = 1
+                modelHasMorePages[modelName] = filtered.count > pageSize
+                return firstPage
             }
         }
 
-        // Query database - use a high limit to get all images for this model
-        print("📡 Querying database for model images: \(modelName)")
+        // ✅ REQUEST DEDUPLICATION: Check if there's already an in-flight request for this model
+        if let existingTask = inFlightModelRequests[modelName] {
+            print("🔄 Reusing in-flight request for \(modelName)")
+            return await existingTask.value
+        }
+        
+        // Create a new task for this request
+        let requestTask = Task<[UserImage], Never> {
+            defer {
+                inFlightModelRequests.removeValue(forKey: modelName)
+            }
+            
+            // Query database - fetch first page only (50 images)
+            print("📡 Querying database for model images (first page): \(modelName)")
+            do {
+                let response: PostgrestResponse<[UserImage]> = try await client.database
+                    .from("user_media")
+                    .select()
+                    .eq("user_id", value: userId)
+                    .eq("model", value: modelName)
+                    .order("created_at", ascending: false)
+                    .limit(pageSize)
+                    .range(from: 0, to: pageSize - 1)
+                    .execute()
+
+                let images = response.value ?? []
+                
+                // Update pagination state
+                modelCurrentPages[modelName] = 1
+                modelHasMorePages[modelName] = images.count == pageSize
+                
+                // Cache the results
+                modelImagesCache[modelName] = (images, Date())
+                print("✅ Fetched and cached \(images.count) images for model \(modelName) (hasMore: \(modelHasMorePages[modelName] ?? false))")
+                
+                return images
+            } catch {
+                print("❌ Failed to fetch model images for \(modelName): \(error)")
+                modelHasMorePages[modelName] = false
+                return []
+            }
+        }
+        
+        // Store the task for deduplication
+        inFlightModelRequests[modelName] = requestTask
+        
+        // Wait for and return the result
+        return await requestTask.value
+    }
+    
+    /// Loads the next page of images for a specific model
+    func loadMoreModelImages(modelName: String) async -> [UserImage] {
+        guard let userId = userId else { return [] }
+        guard modelHasMorePages[modelName] == true else { return [] }
+        
+        let currentPage = modelCurrentPages[modelName] ?? 0
+        
+        print("📡 Loading more model images for \(modelName), page \(currentPage + 1)")
+        
         do {
             let response: PostgrestResponse<[UserImage]> = try await client.database
                 .from("user_media")
@@ -878,20 +957,36 @@ class ProfileViewModel: ObservableObject {
                 .eq("user_id", value: userId)
                 .eq("model", value: modelName)
                 .order("created_at", ascending: false)
-                .limit(limit)
+                .limit(pageSize)
+                .range(from: currentPage * pageSize, to: (currentPage + 1) * pageSize - 1)
                 .execute()
-
-            let images = response.value ?? []
             
-            // Cache the results
-            modelImagesCache[modelName] = (images, Date())
-            print("✅ Fetched and cached \(images.count) images for model \(modelName)")
+            let newImages = response.value ?? []
             
-            return images
+            // Update pagination state
+            modelHasMorePages[modelName] = newImages.count == pageSize
+            modelCurrentPages[modelName] = currentPage + 1
+            
+            // Update cache with new images appended
+            if let cached = modelImagesCache[modelName] {
+                var updatedImages = cached.images
+                updatedImages.append(contentsOf: newImages)
+                modelImagesCache[modelName] = (updatedImages, cached.fetchedAt)
+            }
+            
+            print("✅ Loaded \(newImages.count) more images for \(modelName) (hasMore: \(modelHasMorePages[modelName] ?? false))")
+            
+            return newImages
         } catch {
-            print("❌ Failed to fetch model images for \(modelName): \(error)")
+            print("❌ Failed to load more model images for \(modelName): \(error)")
+            modelHasMorePages[modelName] = false
             return []
         }
+    }
+    
+    /// Checks if there are more pages available for a model
+    func hasMoreModelPages(modelName: String) -> Bool {
+        return modelHasMorePages[modelName] ?? false
     }
     
     /// Clears the model-specific cache (useful when new images are created)

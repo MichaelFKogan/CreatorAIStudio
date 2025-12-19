@@ -15,6 +15,7 @@ struct Post: View {
     @StateObject private var filtersViewModel = PhotoFiltersViewModel()
     @State private var selectedFilter: InfoPacket?
     @State private var showFilterCategorySheet = false
+    @State private var showFilterModelSelectionSheet = false
     @State private var centeredFilter: InfoPacket?
     @State private var isScrollingActive = false
 
@@ -501,8 +502,13 @@ struct Post: View {
 
                                         // Checkmark Button - Confirm and proceed
                                         Button {
-                                            // Navigate to the next screen
-                                            navigateToPhotoReview = true
+                                            // Check if filter/model is selected before navigating
+                                            if isFilterOrModelSelected {
+                                                navigateToPhotoReview = true
+                                            } else {
+                                                // Show selection sheet if nothing is selected
+                                                showFilterModelSelectionSheet = true
+                                            }
                                         } label: {
                                             Image(systemName: "checkmark")
                                                 .font(
@@ -792,6 +798,32 @@ struct Post: View {
                 )
                 .environmentObject(authViewModel)
             }
+            .sheet(isPresented: $showFilterModelSelectionSheet) {
+                NavigationView {
+                    FilterModelSelectionView(
+                        isPresented: $showFilterModelSelectionSheet,
+                        capturedImage: cameraService.capturedImage ?? UIImage(),
+                        categorizedFilters: filtersViewModel.categorizedFilters,
+                        allFilters: filtersViewModel.filters,
+                        imageModels: imageModelsViewModel.filteredAndSortedImageModels,
+                        selectedFilter: $selectedFilter,
+                        selectedImageModel: $selectedImageModel,
+                        onSelectFilter: { filter in
+                            selectedFilter = filter
+                            selectedImageModel = nil
+                            // Navigate to photo review after selection
+                            navigateToPhotoReview = true
+                        },
+                        onSelectModel: { model in
+                            selectedImageModel = model
+                            selectedFilter = nil
+                            // Navigate to photo review after selection
+                            navigateToPhotoReview = true
+                        }
+                    )
+                    .environmentObject(authViewModel)
+                }
+            }
         }
     }
 
@@ -846,17 +878,12 @@ struct Post: View {
                         capturedImage: capturedImage
                     )
                 } else {
-                    // If no filter or model selected, show a message or go back
+                    // If no filter or model selected, show selection sheet
+                    // This should not normally be reached since we show the sheet before navigating
                     VStack {
                         Text("Please select a Filter or Image Model first")
                             .foregroundColor(.secondary)
                             .padding()
-                    }
-                    .onAppear {
-                        // Auto-dismiss after a moment if nothing selected
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                            navigateToPhotoReview = false
-                        }
                     }
                 }
             }
