@@ -60,7 +60,7 @@ struct ProfileViewContent: View {
     @ObservedObject var viewModel: ProfileViewModel
     @EnvironmentObject var authViewModel: AuthViewModel
     @StateObject private var notificationManager = NotificationManager.shared
-//    @StateObject private var presetViewModel = PresetViewModel()
+    //    @StateObject private var presetViewModel = PresetViewModel()
     @State private var selectedUserImage: UserImage? = nil
     @State private var selectedTab: GalleryTab = .all
     @State private var selectedModel: String? = nil
@@ -89,7 +89,7 @@ struct ProfileViewContent: View {
         Self.cachedImageModels = models
         return models
     }
-    
+
     // Load video model data - cache at static level to avoid repeated loading
     private static var cachedVideoModels: [InfoPacket]?
     private var allVideoModels: [InfoPacket] {
@@ -109,33 +109,50 @@ struct ProfileViewContent: View {
     }
 
     // Compute models with metadata - returns immediately without caching
-    private func computeModelsWithMetadata() -> [(model: String, count: Int, imageName: String)] {
+    private func computeModelsWithMetadata() -> [(
+        model: String, count: Int, imageName: String
+    )] {
         let currentUniqueModels = viewModel.uniqueModels
-        print("🔍 DEBUG: Computing models - uniqueModels = \(currentUniqueModels)")
-        print("🔍 DEBUG: Computing models - Total userImages = \(viewModel.userImages.count)")
-        
+        print(
+            "🔍 DEBUG: Computing models - uniqueModels = \(currentUniqueModels)")
+        print(
+            "🔍 DEBUG: Computing models - Total userImages = \(viewModel.userImages.count)"
+        )
+
         // Debug: Print first few images and their model values
         for (index, image) in viewModel.userImages.prefix(5).enumerated() {
             print("🔍 DEBUG: Image \(index): model = '\(image.model ?? "nil")'")
         }
-        
+
         var result: [(String, Int, String)] = []
 
         for modelName in currentUniqueModels {
-            let count = viewModel.filteredImages(by: modelName, favoritesOnly: false).count
+            let count = viewModel.filteredImages(
+                by: modelName, favoritesOnly: false
+            ).count
             print("🔍 DEBUG: Model '\(modelName)' has \(count) images")
             guard count > 0 else { continue }
 
             // Find the model image from ImageModelData using display.imageName
-            var imageName = "photo.on.rectangle.angled" // fallback
-            if let modelInfo = allImageModels.first(where: { $0.display.modelName == modelName }) {
+            var imageName = "photo.on.rectangle.angled"  // fallback
+            if let modelInfo = allImageModels.first(where: {
+                $0.display.modelName == modelName
+            }) {
                 imageName = modelInfo.display.imageName
-                print("🔍 DEBUG: Found model info by modelName: \(modelName) -> \(imageName)")
-            } else if let modelInfo = allImageModels.first(where: { $0.display.title == modelName }) {
+                print(
+                    "🔍 DEBUG: Found model info by modelName: \(modelName) -> \(imageName)"
+                )
+            } else if let modelInfo = allImageModels.first(where: {
+                $0.display.title == modelName
+            }) {
                 imageName = modelInfo.display.imageName
-                print("🔍 DEBUG: Found model info by title: \(modelName) -> \(imageName)")
+                print(
+                    "🔍 DEBUG: Found model info by title: \(modelName) -> \(imageName)"
+                )
             } else {
-                print("⚠️ DEBUG: No model info found for: \(modelName), using fallback")
+                print(
+                    "⚠️ DEBUG: No model info found for: \(modelName), using fallback"
+                )
             }
 
             result.append((modelName, count, imageName))
@@ -146,30 +163,48 @@ struct ProfileViewContent: View {
         print("🔍 DEBUG: Computed \(sorted.count) models")
         return sorted
     }
-    
+
     // Compute video models with metadata - returns immediately without caching
-    private func computeVideoModelsWithMetadata() -> [(model: String, count: Int, imageName: String)] {
+    private func computeVideoModelsWithMetadata() -> [(
+        model: String, count: Int, imageName: String
+    )] {
         let currentUniqueVideoModels = viewModel.uniqueVideoModels
-        print("🎬 DEBUG: Computing video models - uniqueVideoModels = \(currentUniqueVideoModels)")
-        print("🎬 DEBUG: Computing video models - Total userVideos = \(viewModel.userVideos.count)")
-        
+        print(
+            "🎬 DEBUG: Computing video models - uniqueVideoModels = \(currentUniqueVideoModels)"
+        )
+        print(
+            "🎬 DEBUG: Computing video models - Total userVideos = \(viewModel.userVideos.count)"
+        )
+
         var result: [(String, Int, String)] = []
 
         for modelName in currentUniqueVideoModels {
-            let count = viewModel.filteredVideos(by: modelName, favoritesOnly: false).count
+            let count = viewModel.filteredVideos(
+                by: modelName, favoritesOnly: false
+            ).count
             print("🎬 DEBUG: Video Model '\(modelName)' has \(count) videos")
             guard count > 0 else { continue }
 
             // Find the model image from VideoModelData using display.imageName
-            var imageName = "video.fill" // fallback
-            if let modelInfo = allVideoModels.first(where: { $0.display.modelName == modelName }) {
+            var imageName = "video.fill"  // fallback
+            if let modelInfo = allVideoModels.first(where: {
+                $0.display.modelName == modelName
+            }) {
                 imageName = modelInfo.display.imageName
-                print("🎬 DEBUG: Found video model info by modelName: \(modelName) -> \(imageName)")
-            } else if let modelInfo = allVideoModels.first(where: { $0.display.title == modelName }) {
+                print(
+                    "🎬 DEBUG: Found video model info by modelName: \(modelName) -> \(imageName)"
+                )
+            } else if let modelInfo = allVideoModels.first(where: {
+                $0.display.title == modelName
+            }) {
                 imageName = modelInfo.display.imageName
-                print("🎬 DEBUG: Found video model info by title: \(modelName) -> \(imageName)")
+                print(
+                    "🎬 DEBUG: Found video model info by title: \(modelName) -> \(imageName)"
+                )
             } else {
-                print("⚠️ DEBUG: No video model info found for: \(modelName), using fallback")
+                print(
+                    "⚠️ DEBUG: No video model info found for: \(modelName), using fallback"
+                )
             }
 
             result.append((modelName, count, imageName))
@@ -194,7 +229,7 @@ struct ProfileViewContent: View {
                         .padding(.top, 10)
                         .id("scrollTop")
                     }
-                    
+
                     // Scroll to top button overlay
                     VStack {
                         Spacer()
@@ -213,10 +248,14 @@ struct ProfileViewContent: View {
                                         //     Circle()
                                         //         .stroke(Color.black, lineWidth: 2)
                                         // )
-                                        .shadow(color: .black.opacity(0.5), radius: 4, x: 0, y: 2)
-                                    
+                                        .shadow(
+                                            color: .black.opacity(0.5),
+                                            radius: 4, x: 0, y: 2)
+
                                     Image(systemName: "arrow.up")
-                                        .font(.system(size: 20, weight: .semibold))
+                                        .font(
+                                            .system(size: 20, weight: .semibold)
+                                        )
                                         .foregroundColor(.white)
                                 }
                             }
@@ -229,11 +268,12 @@ struct ProfileViewContent: View {
                 .toolbar {
                     ToolbarItem(placement: .navigationBarTrailing) {
                         if isSelectionMode {
-                            HStack(spacing: 16) {
+                            HStack(spacing: 12) {
                                 // Save button
                                 Button(action: {
                                     if selectedImageIds.isEmpty {
-                                        noSelectionAlertMessage = "Please select at least one image to save."
+                                        noSelectionAlertMessage =
+                                            "Please select at least one image to save."
                                         showNoSelectionAlert = true
                                     } else {
                                         Task {
@@ -243,19 +283,22 @@ struct ProfileViewContent: View {
                                 }) {
                                     VStack(spacing: 2) {
                                         Image(systemName: "arrow.down.circle")
-                                            .font(.headline)
+                                            .font(.system(size: 20, weight: .medium))
                                             .foregroundColor(.blue)
+                                            .opacity(0.8)
                                         Text("Save")
                                             .font(.caption2)
                                             .foregroundColor(.blue)
                                     }
                                 }
+                                .buttonStyle(.plain)
                                 .disabled(isSaving || isDeleting)
-                                
+
                                 // Share button
                                 Button(action: {
                                     if selectedImageIds.isEmpty {
-                                        noSelectionAlertMessage = "Please select at least one image to share."
+                                        noSelectionAlertMessage =
+                                            "Please select at least one image to share."
                                         showNoSelectionAlert = true
                                     } else {
                                         Task {
@@ -265,19 +308,21 @@ struct ProfileViewContent: View {
                                 }) {
                                     VStack(spacing: 2) {
                                         Image(systemName: "square.and.arrow.up")
-                                            .font(.headline)
+                                            .font(.system(size: 20, weight: .medium))
                                             .foregroundColor(.blue)
+                                            .opacity(0.8)
                                         Text("Share")
                                             .font(.caption2)
                                             .foregroundColor(.blue)
                                     }
                                 }
                                 .disabled(isSharing || isDeleting)
-                                
+
                                 // Delete button
                                 Button(action: {
                                     if selectedImageIds.isEmpty {
-                                        noSelectionAlertMessage = "Please select at least one image to delete."
+                                        noSelectionAlertMessage =
+                                            "Please select at least one image to delete."
                                         showNoSelectionAlert = true
                                     } else {
                                         showDeleteConfirmation = true
@@ -285,21 +330,23 @@ struct ProfileViewContent: View {
                                 }) {
                                     VStack(spacing: 2) {
                                         Image(systemName: "trash")
-                                            .font(.headline)
+                                            .font(.system(size: 20, weight: .medium))
                                             .foregroundColor(.red)
+                                            .opacity(0.8)
                                         Text("Delete")
                                             .font(.caption2)
                                             .foregroundColor(.red)
                                     }
                                 }
+                                .buttonStyle(.plain)
                                 .disabled(isDeleting)
-                                
+
                                 Button(action: {
                                     isSelectionMode = false
                                     selectedImageIds.removeAll()
                                 }) {
                                     Text("Cancel")
-                                        .font(.headline)
+                                        .font(.body)
                                         .foregroundColor(.blue)
                                 }
                             }
@@ -309,13 +356,16 @@ struct ProfileViewContent: View {
                                     isSelectionMode = true
                                 }) {
                                     Text("Select")
-                                        .font(.headline)
+                                        .font(.body)
                                         .foregroundColor(.gray)
                                 }
-                                
-                                NavigationLink(destination: Settings().environmentObject(authViewModel)) {
+
+                                NavigationLink(
+                                    destination: Settings().environmentObject(
+                                        authViewModel)
+                                ) {
                                     Image(systemName: "gearshape")
-                                        .font(.headline)
+                                        .font(.body)
                                         .foregroundColor(.gray)
                                 }
                             }
@@ -323,14 +373,14 @@ struct ProfileViewContent: View {
                     }
                 }
             }
-//            .onAppear {
-//                if let userId = authViewModel.user?.id.uuidString {
-//                    Task {
-//                        presetViewModel.userId = userId
-//                        await presetViewModel.fetchPresets()
-//                    }
-//                }
-//            }
+            //            .onAppear {
+            //                if let userId = authViewModel.user?.id.uuidString {
+            //                    Task {
+            //                        presetViewModel.userId = userId
+            //                        await presetViewModel.fetchPresets()
+            //                    }
+            //                }
+            //            }
             .onChange(of: notificationManager.notifications.count) {
                 oldCount, newCount in
                 // When notification count decreases (notification dismissed), refresh images
@@ -340,22 +390,33 @@ struct ProfileViewContent: View {
                     }
                 }
             }
-            .onChange(of: notificationManager.notifications) { oldNotifications, newNotifications in
+            .onChange(of: notificationManager.notifications) {
+                oldNotifications, newNotifications in
                 handleNotificationChange(
                     oldNotifications: oldNotifications,
                     newNotifications: newNotifications
                 )
             }
             // Listen for webhook-based image completions
-            .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("ImageSavedToDatabase"))) { _ in
-                print("📸 [Profile] Received ImageSavedToDatabase notification - refreshing gallery")
+            .onReceive(
+                NotificationCenter.default.publisher(
+                    for: NSNotification.Name("ImageSavedToDatabase"))
+            ) { _ in
+                print(
+                    "📸 [Profile] Received ImageSavedToDatabase notification - refreshing gallery"
+                )
                 Task {
                     await viewModel.fetchUserImages(forceRefresh: true)
                 }
             }
             // Listen for webhook-based video completions
-            .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("VideoSavedToDatabase"))) { _ in
-                print("🎬 [Profile] Received VideoSavedToDatabase notification - refreshing gallery")
+            .onReceive(
+                NotificationCenter.default.publisher(
+                    for: NSNotification.Name("VideoSavedToDatabase"))
+            ) { _ in
+                print(
+                    "🎬 [Profile] Received VideoSavedToDatabase notification - refreshing gallery"
+                )
                 Task {
                     await viewModel.fetchUserImages(forceRefresh: true)
                 }
@@ -373,7 +434,9 @@ struct ProfileViewContent: View {
                 .presentationDragIndicator(.visible)
                 .ignoresSafeArea()
             }
-            .alert("Delete Selected Images?", isPresented: $showDeleteConfirmation) {
+            .alert(
+                "Delete Selected Images?", isPresented: $showDeleteConfirmation
+            ) {
                 Button("Cancel", role: .cancel) {}
                 Button("Delete", role: .destructive) {
                     Task {
@@ -381,7 +444,9 @@ struct ProfileViewContent: View {
                     }
                 }
             } message: {
-                Text("This will permanently delete \(selectedImageIds.count) image\(selectedImageIds.count == 1 ? "" : "s"). This action cannot be undone.")
+                Text(
+                    "This will permanently delete \(selectedImageIds.count) image\(selectedImageIds.count == 1 ? "" : "s"). This action cannot be undone."
+                )
             }
             .alert("No Images Selected", isPresented: $showNoSelectionAlert) {
                 Button("OK", role: .cancel) {}
@@ -400,10 +465,11 @@ struct ProfileViewContent: View {
     ) {
         // When a notification is marked as completed, fetch and add the new image
         let newlyCompleted = newNotifications.filter { notification in
-            notification.state == .completed &&
-            !oldNotifications.contains(where: { existing in
-                existing.id == notification.id && existing.state == .completed
-            })
+            notification.state == .completed
+                && !oldNotifications.contains(where: { existing in
+                    existing.id == notification.id
+                        && existing.state == .completed
+                })
         }
 
         guard !newlyCompleted.isEmpty else { return }
@@ -469,7 +535,8 @@ struct ProfileViewContent: View {
                     GalleryTabPill(
                         title: "All",
                         icon: "photo.on.rectangle.angled",
-                        isSelected: selectedTab == .all && selectedModel == nil && selectedVideoModel == nil,
+                        isSelected: selectedTab == .all && selectedModel == nil
+                            && selectedVideoModel == nil,
                         count: viewModel.userImages.count
                     ) {
                         selectedTab = .all
@@ -481,7 +548,9 @@ struct ProfileViewContent: View {
                     GalleryTabPill(
                         title: "Favorites",
                         icon: "heart.fill",
-                        isSelected: selectedTab == .favorites && selectedModel == nil && selectedVideoModel == nil,
+                        isSelected: selectedTab == .favorites
+                            && selectedModel == nil
+                            && selectedVideoModel == nil,
                         count: viewModel.favoriteImages.count
                     ) {
                         selectedTab = .favorites
@@ -500,7 +569,7 @@ struct ProfileViewContent: View {
                     // }
 
                     imageModelsButton
-                    
+
                     videoModelsButton
                 }
                 .padding(.horizontal)
@@ -516,47 +585,52 @@ struct ProfileViewContent: View {
         } label: {
             imageModelsButtonLabel
         }
-            .sheet(isPresented: $showImageModelsPopover) {
-                let models = computeModelsWithMetadata()
-                print("🔍 DEBUG: Sheet builder - Passing \(models.count) models to sheet")
-                return ImageModelsSheet(
-                    models: models,
-                    selectedModel: $selectedModel,
-                    selectedVideoModel: $selectedVideoModel,
-                    selectedTab: $selectedTab,
-                    isPresented: $showImageModelsPopover
-                )
-            }
-//            .sheet(isPresented: $showPresetsSheet) {
-//                PresetsListSheet(
-//                    presetViewModel: presetViewModel,
-//                    isPresented: $showPresetsSheet
-//                )
-//                .presentationDetents([.large])
-//                .presentationDragIndicator(.visible)
-//            }
+        .sheet(isPresented: $showImageModelsPopover) {
+            let models = computeModelsWithMetadata()
+            print(
+                "🔍 DEBUG: Sheet builder - Passing \(models.count) models to sheet"
+            )
+            return ImageModelsSheet(
+                models: models,
+                selectedModel: $selectedModel,
+                selectedVideoModel: $selectedVideoModel,
+                selectedTab: $selectedTab,
+                isPresented: $showImageModelsPopover
+            )
+        }
+        //            .sheet(isPresented: $showPresetsSheet) {
+        //                PresetsListSheet(
+        //                    presetViewModel: presetViewModel,
+        //                    isPresented: $showPresetsSheet
+        //                )
+        //                .presentationDetents([.large])
+        //                .presentationDragIndicator(.visible)
+        //            }
     }
 
     private var imageModelsButtonLabel: some View {
         let isSelected = selectedTab == .imageModels && selectedModel != nil
-        let title = isSelected && selectedModel != nil ? selectedModel! : "Image Models"
+        let title =
+            isSelected && selectedModel != nil ? selectedModel! : "Image Models"
         let modelCount = viewModel.uniqueModels.count
 
         return HStack(spacing: 6) {
             Image(systemName: "cpu")
                 .font(.system(size: 12, weight: .medium))
-            
+
             Text(title)
-                .font(.system(size: 14, weight: isSelected ? .semibold : .regular))
+                .font(
+                    .system(size: 14, weight: isSelected ? .semibold : .regular)
+                )
                 .lineLimit(1)
-            
+
             // Show count when not selected or when showing all models
             if !isSelected && modelCount > 0 {
                 Text("(\(modelCount))")
                     .font(.system(size: 12, weight: .medium))
                     .foregroundColor(.secondary)
             }
-            
+
             Image(systemName: "chevron.down")
                 .font(.system(size: 10, weight: .medium))
         }
@@ -566,7 +640,7 @@ struct ProfileViewContent: View {
         .background(isSelected ? Color.blue : Color.gray.opacity(0.15))
         .clipShape(Capsule())
     }
-    
+
     private var videoModelsButton: some View {
         Button {
             print("🎬 DEBUG: Video Models button tapped")
@@ -574,39 +648,46 @@ struct ProfileViewContent: View {
         } label: {
             videoModelsButtonLabel
         }
-            .sheet(isPresented: $showVideoModelsPopover) {
-                let models = computeVideoModelsWithMetadata()
-                print("🎬 DEBUG: Sheet builder - Passing \(models.count) video models to sheet")
-                return VideoModelsSheet(
-                    models: models,
-                    selectedModel: $selectedModel,
-                    selectedVideoModel: $selectedVideoModel,
-                    selectedTab: $selectedTab,
-                    isPresented: $showVideoModelsPopover
-                )
-            }
+        .sheet(isPresented: $showVideoModelsPopover) {
+            let models = computeVideoModelsWithMetadata()
+            print(
+                "🎬 DEBUG: Sheet builder - Passing \(models.count) video models to sheet"
+            )
+            return VideoModelsSheet(
+                models: models,
+                selectedModel: $selectedModel,
+                selectedVideoModel: $selectedVideoModel,
+                selectedTab: $selectedTab,
+                isPresented: $showVideoModelsPopover
+            )
+        }
     }
 
     private var videoModelsButtonLabel: some View {
-        let isSelected = selectedTab == .videoModels && selectedVideoModel != nil
-        let title = isSelected && selectedVideoModel != nil ? selectedVideoModel! : "Video Models"
+        let isSelected =
+            selectedTab == .videoModels && selectedVideoModel != nil
+        let title =
+            isSelected && selectedVideoModel != nil
+            ? selectedVideoModel! : "Video Models"
         let modelCount = viewModel.uniqueVideoModels.count
 
         return HStack(spacing: 6) {
             Image(systemName: "video")
                 .font(.system(size: 12, weight: .medium))
-            
+
             Text(title)
-                .font(.system(size: 14, weight: isSelected ? .semibold : .regular))
+                .font(
+                    .system(size: 14, weight: isSelected ? .semibold : .regular)
+                )
                 .lineLimit(1)
-            
+
             // Show count when not selected or when showing all models
             if !isSelected && modelCount > 0 {
                 Text("(\(modelCount))")
                     .font(.system(size: 12, weight: .medium))
                     .foregroundColor(.secondary)
             }
-            
+
             Image(systemName: "chevron.down")
                 .font(.system(size: 10, weight: .medium))
         }
@@ -634,7 +715,9 @@ struct ProfileViewContent: View {
     private var filteredContent: some View {
         let filteredImages = getFilteredImages()
 
-        if filteredImages.isEmpty && notificationManager.activePlaceholders.isEmpty {
+        if filteredImages.isEmpty
+            && notificationManager.activePlaceholders.isEmpty
+        {
             EmptyGalleryView(
                 tab: selectedTab,
                 model: selectedModel,
@@ -658,7 +741,7 @@ struct ProfileViewContent: View {
                     }
                 },
                 viewModel: viewModel,
-//                presetViewModel: presetViewModel,
+                //                presetViewModel: presetViewModel,
                 isSelectionMode: isSelectionMode,
                 selectedImageIds: $selectedImageIds
             )
@@ -670,60 +753,66 @@ struct ProfileViewContent: View {
         case .all:
             return selectedModel == nil
                 ? viewModel.userImages
-                : viewModel.filteredImages(by: selectedModel, favoritesOnly: false)
+                : viewModel.filteredImages(
+                    by: selectedModel, favoritesOnly: false)
         case .favorites:
             return selectedModel == nil
                 ? viewModel.favoriteImages
-                : viewModel.filteredImages(by: selectedModel, favoritesOnly: true)
+                : viewModel.filteredImages(
+                    by: selectedModel, favoritesOnly: true)
         case .imageModels:
             return selectedModel != nil
-                ? viewModel.filteredImages(by: selectedModel, favoritesOnly: false)
+                ? viewModel.filteredImages(
+                    by: selectedModel, favoritesOnly: false)
                 : viewModel.userImages
         case .videoModels:
             return selectedVideoModel != nil
-                ? viewModel.filteredVideos(by: selectedVideoModel, favoritesOnly: false)
+                ? viewModel.filteredVideos(
+                    by: selectedVideoModel, favoritesOnly: false)
                 : viewModel.userVideos
         }
     }
-    
+
     private func deleteSelectedImages() async {
         guard !selectedImageIds.isEmpty else { return }
-        
+
         isDeleting = true
         let idsToDelete = Array(selectedImageIds)
-        
+
         await viewModel.deleteImages(imageIds: idsToDelete)
-        
+
         await MainActor.run {
             selectedImageIds.removeAll()
             isSelectionMode = false
             isDeleting = false
         }
     }
-    
+
     private func saveSelectedImages() async {
         guard !selectedImageIds.isEmpty else { return }
-        
+
         await MainActor.run {
             isSaving = true
         }
-        
+
         // Get selected images
-        let selectedImages = viewModel.userImages.filter { selectedImageIds.contains($0.id) }
-        
+        let selectedImages = viewModel.userImages.filter {
+            selectedImageIds.contains($0.id)
+        }
+
         // Request photo library permission
         let status = await PHPhotoLibrary.requestAuthorization(for: .addOnly)
-        
+
         guard status == .authorized || status == .limited else {
             await MainActor.run {
                 isSaving = false
             }
             return
         }
-        
+
         var savedCount = 0
         var failedCount = 0
-        
+
         // Save each image
         for userImage in selectedImages {
             do {
@@ -731,22 +820,24 @@ struct ProfileViewContent: View {
                     failedCount += 1
                     continue
                 }
-                
+
                 // Download the media data
                 let (data, _) = try await URLSession.shared.data(from: url)
-                
+
                 if userImage.isVideo {
                     // Save video to photo library
                     let tempURL = FileManager.default.temporaryDirectory
                         .appendingPathComponent(UUID().uuidString)
-                        .appendingPathExtension(userImage.file_extension ?? "mp4")
-                    
+                        .appendingPathExtension(
+                            userImage.file_extension ?? "mp4")
+
                     try data.write(to: tempURL)
-                    
+
                     try await PHPhotoLibrary.shared().performChanges {
-                        PHAssetCreationRequest.creationRequestForAssetFromVideo(atFileURL: tempURL)
+                        PHAssetCreationRequest.creationRequestForAssetFromVideo(
+                            atFileURL: tempURL)
                     }
-                    
+
                     // Clean up temp file
                     try? FileManager.default.removeItem(at: tempURL)
                 } else {
@@ -755,19 +846,20 @@ struct ProfileViewContent: View {
                         failedCount += 1
                         continue
                     }
-                    
+
                     try await PHPhotoLibrary.shared().performChanges {
-                        PHAssetCreationRequest.creationRequestForAsset(from: image)
+                        PHAssetCreationRequest.creationRequestForAsset(
+                            from: image)
                     }
                 }
-                
+
                 savedCount += 1
             } catch {
                 print("❌ Failed to save image \(userImage.id): \(error)")
                 failedCount += 1
             }
         }
-        
+
         await MainActor.run {
             isSaving = false
             if savedCount > 0 {
@@ -779,44 +871,51 @@ struct ProfileViewContent: View {
             }
         }
     }
-    
+
     private func shareSelectedImages() async {
         guard !selectedImageIds.isEmpty else { return }
-        
+
         await MainActor.run {
             isSharing = true
             shareItems.removeAll()
         }
-        
+
         // Get selected images
-        let selectedImages = viewModel.userImages.filter { selectedImageIds.contains($0.id) }
-        
+        let selectedImages = viewModel.userImages.filter {
+            selectedImageIds.contains($0.id)
+        }
+
         var tempURLs: [URL] = []
-        
+
         // Download and create temporary files for each image
         for userImage in selectedImages {
             do {
                 guard let url = URL(string: userImage.image_url) else {
                     continue
                 }
-                
+
                 // Download the media data
                 let (data, _) = try await URLSession.shared.data(from: url)
-                
+
                 // Create a temporary file
-                let fileExtension = userImage.isVideo ? (userImage.file_extension ?? "mp4") : (userImage.file_extension ?? "jpg")
+                let fileExtension =
+                    userImage.isVideo
+                    ? (userImage.file_extension ?? "mp4")
+                    : (userImage.file_extension ?? "jpg")
                 let tempURL = FileManager.default.temporaryDirectory
                     .appendingPathComponent(UUID().uuidString)
                     .appendingPathExtension(fileExtension)
-                
+
                 // Write data to temporary file
                 try data.write(to: tempURL)
                 tempURLs.append(tempURL)
             } catch {
-                print("❌ Failed to prepare image \(userImage.id) for sharing: \(error)")
+                print(
+                    "❌ Failed to prepare image \(userImage.id) for sharing: \(error)"
+                )
             }
         }
-        
+
         await MainActor.run {
             isSharing = false
             shareItems = tempURLs
@@ -824,10 +923,10 @@ struct ProfileViewContent: View {
                 showShareSheet = true
             }
         }
-        
+
         // Clean up temporary files after a delay (to allow sharing to complete)
         Task {
-            try? await Task.sleep(nanoseconds: 60_000_000_000) // 60 seconds
+            try? await Task.sleep(nanoseconds: 60_000_000_000)  // 60 seconds
             for tempURL in tempURLs {
                 try? FileManager.default.removeItem(at: tempURL)
             }
@@ -843,7 +942,7 @@ struct ImageGridView: View {
     let spacing: CGFloat = 2
     var onSelect: (UserImage) -> Void
     var viewModel: ProfileViewModel?
-//    var presetViewModel: PresetViewModel?
+    //    var presetViewModel: PresetViewModel?
     var isSelectionMode: Bool = false
     @Binding var selectedImageIds: Set<String>
 
@@ -857,7 +956,7 @@ struct ImageGridView: View {
         GeometryReader { proxy in
             let totalSpacing = spacing * 2
             let contentWidth = max(0, proxy.size.width - totalSpacing - 8)
-            let itemWidth = max(44, contentWidth / 3) // minimum thumbnail size
+            let itemWidth = max(44, contentWidth / 3)  // minimum thumbnail size
             let itemHeight = itemWidth * 1.4
 
             LazyVGrid(columns: gridColumns, spacing: spacing) {
@@ -889,14 +988,22 @@ struct ImageGridView: View {
                                         }
                                         .resizable()
                                         .scaledToFill()
-                                        .frame(width: itemWidth, height: itemHeight)
+                                        .frame(
+                                            width: itemWidth, height: itemHeight
+                                        )
                                         .clipped()
                                         .overlay(
                                             // Selection overlay
                                             Group {
                                                 if isSelectionMode {
                                                     Rectangle()
-                                                        .fill(Color.black.opacity(selectedImageIds.contains(userImage.id) ? 0.3 : 0))
+                                                        .fill(
+                                                            Color.black.opacity(
+                                                                selectedImageIds
+                                                                    .contains(
+                                                                        userImage
+                                                                            .id)
+                                                                    ? 0.3 : 0))
                                                 }
                                             }
                                         )
@@ -909,12 +1016,44 @@ struct ImageGridView: View {
                                                             Spacer()
                                                             ZStack {
                                                                 Circle()
-                                                                    .fill(selectedImageIds.contains(userImage.id) ? Color.blue : Color.white.opacity(0.3))
-                                                                    .frame(width: 24, height: 24)
-                                                                if selectedImageIds.contains(userImage.id) {
-                                                                    Image(systemName: "checkmark")
-                                                                        .font(.system(size: 14, weight: .bold))
-                                                                        .foregroundColor(.white)
+                                                                    .fill(
+                                                                        selectedImageIds
+                                                                            .contains(
+                                                                                userImage
+                                                                                    .id
+                                                                            )
+                                                                            ? Color
+                                                                                .blue
+                                                                            : Color
+                                                                                .white
+                                                                                .opacity(
+                                                                                    0.3
+                                                                                )
+                                                                    )
+                                                                    .frame(
+                                                                        width:
+                                                                            24,
+                                                                        height:
+                                                                            24)
+                                                                if selectedImageIds
+                                                                    .contains(
+                                                                        userImage
+                                                                            .id)
+                                                                {
+                                                                    Image(
+                                                                        systemName:
+                                                                            "checkmark"
+                                                                    )
+                                                                    .font(
+                                                                        .system(
+                                                                            size:
+                                                                                14,
+                                                                            weight:
+                                                                                .bold
+                                                                        )
+                                                                    )
+                                                                    .foregroundColor(
+                                                                        .white)
                                                                 }
                                                             }
                                                             .padding(6)
@@ -949,39 +1088,70 @@ struct ImageGridView: View {
                                         VStack(spacing: 4) {
                                             ZStack {
                                                 Color.clear
-                                                    .frame(width: 32, height: 32)
+                                                    .frame(
+                                                        width: 32, height: 32
+                                                    )
                                                     .contentShape(Rectangle())
                                                     .onTapGesture {
-                                                        if let viewModel = viewModel {
+                                                        if let viewModel =
+                                                            viewModel
+                                                        {
                                                             Task {
-                                                                await viewModel.toggleFavorite(imageId: userImage.id)
+                                                                await viewModel
+                                                                    .toggleFavorite(
+                                                                        imageId:
+                                                                            userImage
+                                                                            .id)
                                                             }
                                                         } else {
                                                             // Fallback to local state if no viewModel
-                                                            let imageId = userImage.id
-                                                            if favoritedImageIds.contains(imageId) {
-                                                                favoritedImageIds.remove(imageId)
+                                                            let imageId =
+                                                                userImage.id
+                                                            if favoritedImageIds
+                                                                .contains(
+                                                                    imageId)
+                                                            {
+                                                                favoritedImageIds
+                                                                    .remove(
+                                                                        imageId)
                                                             } else {
-                                                                favoritedImageIds.insert(imageId)
+                                                                favoritedImageIds
+                                                                    .insert(
+                                                                        imageId)
                                                             }
                                                         }
                                                     }
 
                                                 // Heart icon
-                                                Image(systemName: (userImage.is_favorite ?? false) ? "heart.fill" : "heart")
-                                                    .font(.system(size: 16, weight: .semibold))
-                                                    .foregroundColor((userImage.is_favorite ?? false) ? .red : .white)
-                                                    .shadow(color: .black.opacity(0.5), radius: 2, x: 0, y: 1)
-                                                    .allowsHitTesting(false)
+                                                Image(
+                                                    systemName: (userImage
+                                                        .is_favorite ?? false)
+                                                        ? "heart.fill" : "heart"
+                                                )
+                                                .font(
+                                                    .system(
+                                                        size: 16,
+                                                        weight: .semibold)
+                                                )
+                                                .foregroundColor(
+                                                    (userImage.is_favorite
+                                                        ?? false)
+                                                        ? .red : .white
+                                                )
+                                                .shadow(
+                                                    color: .black.opacity(0.5),
+                                                    radius: 2, x: 0, y: 1
+                                                )
+                                                .allowsHitTesting(false)
                                             }
-                                            
+
                                             // // Bookmark icon (blue) if preset is enabled
                                             // if hasMatchingPreset(for: userImage) {
                                             //     ZStack {
                                             //         Circle()
                                             //             .fill(Color.black)
                                             //             .frame(width: 28, height: 28)
-                                                
+
                                             //         Image(systemName: "bookmark.fill")
                                             //             .font(.system(size: 12, weight: .semibold))
                                             //             .foregroundColor(.blue)
@@ -996,9 +1166,12 @@ struct ImageGridView: View {
                         }
                         .onAppear {
                             // Trigger loading more when we're 10 items from the end
-                            if let viewModel = viewModel, 
-                               let index = userImages.firstIndex(where: { $0.id == userImage.id }),
-                               index >= userImages.count - 10 {
+                            if let viewModel = viewModel,
+                                let index = userImages.firstIndex(where: {
+                                    $0.id == userImage.id
+                                }),
+                                index >= userImages.count - 10
+                            {
                                 Task {
                                     await viewModel.loadMoreImages()
                                 }
@@ -1017,21 +1190,31 @@ struct ImageGridView: View {
                                             Rectangle()
                                                 .fill(Color.gray.opacity(0.2))
                                                 .overlay(
-                                                    Image(systemName: "video.fill")
-                                                        .font(.largeTitle)
-                                                        .foregroundColor(.gray)
+                                                    Image(
+                                                        systemName: "video.fill"
+                                                    )
+                                                    .font(.largeTitle)
+                                                    .foregroundColor(.gray)
                                                 )
                                         }
                                         .resizable()
                                         .scaledToFill()
-                                        .frame(width: itemWidth, height: itemHeight)
+                                        .frame(
+                                            width: itemWidth, height: itemHeight
+                                        )
                                         .clipped()
                                         .overlay(
                                             // Selection overlay
                                             Group {
                                                 if isSelectionMode {
                                                     Rectangle()
-                                                        .fill(Color.black.opacity(selectedImageIds.contains(userImage.id) ? 0.3 : 0))
+                                                        .fill(
+                                                            Color.black.opacity(
+                                                                selectedImageIds
+                                                                    .contains(
+                                                                        userImage
+                                                                            .id)
+                                                                    ? 0.3 : 0))
                                                 }
                                             }
                                         )
@@ -1044,12 +1227,44 @@ struct ImageGridView: View {
                                                             Spacer()
                                                             ZStack {
                                                                 Circle()
-                                                                    .fill(selectedImageIds.contains(userImage.id) ? Color.blue : Color.white.opacity(0.3))
-                                                                    .frame(width: 24, height: 24)
-                                                                if selectedImageIds.contains(userImage.id) {
-                                                                    Image(systemName: "checkmark")
-                                                                        .font(.system(size: 14, weight: .bold))
-                                                                        .foregroundColor(.white)
+                                                                    .fill(
+                                                                        selectedImageIds
+                                                                            .contains(
+                                                                                userImage
+                                                                                    .id
+                                                                            )
+                                                                            ? Color
+                                                                                .blue
+                                                                            : Color
+                                                                                .white
+                                                                                .opacity(
+                                                                                    0.3
+                                                                                )
+                                                                    )
+                                                                    .frame(
+                                                                        width:
+                                                                            24,
+                                                                        height:
+                                                                            24)
+                                                                if selectedImageIds
+                                                                    .contains(
+                                                                        userImage
+                                                                            .id)
+                                                                {
+                                                                    Image(
+                                                                        systemName:
+                                                                            "checkmark"
+                                                                    )
+                                                                    .font(
+                                                                        .system(
+                                                                            size:
+                                                                                14,
+                                                                            weight:
+                                                                                .bold
+                                                                        )
+                                                                    )
+                                                                    .foregroundColor(
+                                                                        .white)
                                                                 }
                                                             }
                                                             .padding(6)
@@ -1083,39 +1298,70 @@ struct ImageGridView: View {
                                         VStack(spacing: 4) {
                                             ZStack {
                                                 Color.clear
-                                                    .frame(width: 32, height: 32)
+                                                    .frame(
+                                                        width: 32, height: 32
+                                                    )
                                                     .contentShape(Rectangle())
                                                     .onTapGesture {
-                                                        if let viewModel = viewModel {
+                                                        if let viewModel =
+                                                            viewModel
+                                                        {
                                                             Task {
-                                                                await viewModel.toggleFavorite(imageId: userImage.id)
+                                                                await viewModel
+                                                                    .toggleFavorite(
+                                                                        imageId:
+                                                                            userImage
+                                                                            .id)
                                                             }
                                                         } else {
                                                             // Fallback to local state if no viewModel
-                                                            let imageId = userImage.id
-                                                            if favoritedImageIds.contains(imageId) {
-                                                                favoritedImageIds.remove(imageId)
+                                                            let imageId =
+                                                                userImage.id
+                                                            if favoritedImageIds
+                                                                .contains(
+                                                                    imageId)
+                                                            {
+                                                                favoritedImageIds
+                                                                    .remove(
+                                                                        imageId)
                                                             } else {
-                                                                favoritedImageIds.insert(imageId)
+                                                                favoritedImageIds
+                                                                    .insert(
+                                                                        imageId)
                                                             }
                                                         }
                                                     }
 
                                                 // Heart icon
-                                                Image(systemName: (userImage.is_favorite ?? false) ? "heart.fill" : "heart")
-                                                    .font(.system(size: 16, weight: .semibold))
-                                                    .foregroundColor((userImage.is_favorite ?? false) ? .red : .white)
-                                                    .shadow(color: .black.opacity(0.5), radius: 2, x: 0, y: 1)
-                                                    .allowsHitTesting(false)
+                                                Image(
+                                                    systemName: (userImage
+                                                        .is_favorite ?? false)
+                                                        ? "heart.fill" : "heart"
+                                                )
+                                                .font(
+                                                    .system(
+                                                        size: 16,
+                                                        weight: .semibold)
+                                                )
+                                                .foregroundColor(
+                                                    (userImage.is_favorite
+                                                        ?? false)
+                                                        ? .red : .white
+                                                )
+                                                .shadow(
+                                                    color: .black.opacity(0.5),
+                                                    radius: 2, x: 0, y: 1
+                                                )
+                                                .allowsHitTesting(false)
                                             }
-                                            
+
                                             // // Bookmark icon (blue) if preset is enabled
                                             // if hasMatchingPreset(for: userImage) {
                                             //     ZStack {
                                             //         Circle()
                                             //             .fill(Color.gray.opacity(0.7))
                                             //             .frame(width: 24, height: 24)
-                                                
+
                                             //         Image(systemName: "bookmark.fill")
                                             //             .font(.system(size: 12, weight: .semibold))
                                             //             .foregroundColor(.blue)
@@ -1131,8 +1377,11 @@ struct ImageGridView: View {
                         .onAppear {
                             // Trigger loading more when we're 10 items from the end
                             if let viewModel = viewModel,
-                               let index = userImages.firstIndex(where: { $0.id == userImage.id }),
-                               index >= userImages.count - 10 {
+                                let index = userImages.firstIndex(where: {
+                                    $0.id == userImage.id
+                                }),
+                                index >= userImages.count - 10
+                            {
                                 Task {
                                     await viewModel.loadMoreImages()
                                 }
@@ -1140,7 +1389,7 @@ struct ImageGridView: View {
                         }
                     }
                 }
-                
+
                 // Loading indicator for pagination
                 if let viewModel = viewModel, viewModel.isLoadingMore {
                     HStack {
@@ -1153,7 +1402,8 @@ struct ImageGridView: View {
             }
             .padding(.horizontal, 4)
         }
-        .frame(height: calculateHeight(for: placeholders.count + userImages.count))
+        .frame(
+            height: calculateHeight(for: placeholders.count + userImages.count))
     }
 
     private func calculateHeight(for count: Int) -> CGFloat {
@@ -1161,36 +1411,36 @@ struct ImageGridView: View {
         let itemWidth = (UIScreen.main.bounds.width - 16) / 3
         return CGFloat(rows) * (itemWidth * 1.4 + spacing)
     }
-    
-//    // Check if an image has a matching preset
-//    private func hasMatchingPreset(for userImage: UserImage) -> Bool {
-//        guard let presetViewModel = presetViewModel else { return false }
-//        
-//        let currentModelName = userImage.title
-//        let currentPrompt = userImage.prompt
-//        
-//        return presetViewModel.presets.contains { preset in
-//            // Compare model names (both can be nil or empty)
-//            let modelMatch: Bool
-//            if let currentModel = currentModelName, !currentModel.isEmpty {
-//                modelMatch = preset.modelName == currentModel
-//            } else {
-//                // Both are nil/empty - consider it a match
-//                modelMatch = preset.modelName == nil || preset.modelName?.isEmpty == true
-//            }
-//            
-//            // Compare prompts (both can be nil or empty)
-//            let promptMatch: Bool
-//            if let current = currentPrompt, !current.isEmpty {
-//                promptMatch = preset.prompt == current
-//            } else {
-//                // Both are nil/empty - consider it a match
-//                promptMatch = preset.prompt == nil || preset.prompt?.isEmpty == true
-//            }
-//            
-//            return modelMatch && promptMatch
-//        }
-//    }
+
+    //    // Check if an image has a matching preset
+    //    private func hasMatchingPreset(for userImage: UserImage) -> Bool {
+    //        guard let presetViewModel = presetViewModel else { return false }
+    //
+    //        let currentModelName = userImage.title
+    //        let currentPrompt = userImage.prompt
+    //
+    //        return presetViewModel.presets.contains { preset in
+    //            // Compare model names (both can be nil or empty)
+    //            let modelMatch: Bool
+    //            if let currentModel = currentModelName, !currentModel.isEmpty {
+    //                modelMatch = preset.modelName == currentModel
+    //            } else {
+    //                // Both are nil/empty - consider it a match
+    //                modelMatch = preset.modelName == nil || preset.modelName?.isEmpty == true
+    //            }
+    //
+    //            // Compare prompts (both can be nil or empty)
+    //            let promptMatch: Bool
+    //            if let current = currentPrompt, !current.isEmpty {
+    //                promptMatch = preset.prompt == current
+    //            } else {
+    //                // Both are nil/empty - consider it a match
+    //                promptMatch = preset.prompt == nil || preset.prompt?.isEmpty == true
+    //            }
+    //
+    //            return modelMatch && promptMatch
+    //        }
+    //    }
 }
 
 // MARK: PLACEHOLDER Image Card (for in-progress generations)
@@ -1243,7 +1493,7 @@ struct PlaceholderImageCard: View {
                                     colors: [
                                         Color(red: 0.4, green: 0.6, blue: 1.0),
                                         Color(red: 0.6, green: 0.4, blue: 1.0),
-                                        Color(red: 0.8, green: 0.5, blue: 1.0)
+                                        Color(red: 0.8, green: 0.5, blue: 1.0),
                                     ],
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
@@ -1251,12 +1501,14 @@ struct PlaceholderImageCard: View {
                             )
                             .frame(width: 50, height: 50)
                             .opacity(0.8)
-                        
+
                         // Sparkles/magic wand icon to represent AI text-to-image
                         Image(systemName: "wand.and.stars")
                             .font(.system(size: 24, weight: .medium))
                             .foregroundColor(.white)
-                            .shadow(color: .black.opacity(0.2), radius: 2, x: 0, y: 1)
+                            .shadow(
+                                color: .black.opacity(0.2), radius: 2, x: 0,
+                                y: 1)
                     }
                     .overlay(
                         Circle()
@@ -1269,7 +1521,9 @@ struct PlaceholderImageCard: View {
                                 lineWidth: 2
                             )
                     )
-                    .shadow(color: Color.purple.opacity(0.4), radius: 6, x: 0, y: 2)
+                    .shadow(
+                        color: Color.purple.opacity(0.4), radius: 6, x: 0, y: 2
+                    )
                     .scaleEffect(pulseAnimation ? 1.05 : 1.0)
                 }
 
@@ -1302,7 +1556,7 @@ struct PlaceholderImageCard: View {
                                 .multilineTextAlignment(.center)
                                 .padding(.horizontal, 8)
                         }
-                        
+
                         // Retry button
                         Button(action: {
                             retryGeneration()
@@ -1310,11 +1564,16 @@ struct PlaceholderImageCard: View {
                             HStack(spacing: 4) {
                                 if isRetrying {
                                     ProgressView()
-                                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                        .progressViewStyle(
+                                            CircularProgressViewStyle(
+                                                tint: .white)
+                                        )
                                         .scaleEffect(0.8)
                                 } else {
                                     Image(systemName: "arrow.clockwise")
-                                        .font(.system(size: 10, weight: .semibold))
+                                        .font(
+                                            .system(size: 10, weight: .semibold)
+                                        )
                                 }
                                 Text("Retry")
                                     .font(.custom("Nunito-Bold", size: 10))
@@ -1334,24 +1593,35 @@ struct PlaceholderImageCard: View {
                         }
                         .disabled(isRetrying)
                         .padding(.top, 4)
-                        
+
                         // Copy Prompt button (only show if prompt exists)
                         if let prompt = placeholder.prompt, !prompt.isEmpty {
                             Button(action: {
                                 copyPrompt(prompt)
                             }) {
                                 HStack(spacing: 3) {
-                                    Image(systemName: showCopiedConfirmation ? "checkmark" : "doc.on.doc")
-                                        .font(.system(size: 9, weight: .semibold))
-                                    Text(showCopiedConfirmation ? "Copied!" : "Copy Prompt")
-                                        .font(.custom("Nunito-Bold", size: 9))
+                                    Image(
+                                        systemName: showCopiedConfirmation
+                                            ? "checkmark" : "doc.on.doc"
+                                    )
+                                    .font(.system(size: 9, weight: .semibold))
+                                    Text(
+                                        showCopiedConfirmation
+                                            ? "Copied!" : "Copy Prompt"
+                                    )
+                                    .font(.custom("Nunito-Bold", size: 9))
                                 }
-                                .foregroundColor(showCopiedConfirmation ? .green : .blue)
+                                .foregroundColor(
+                                    showCopiedConfirmation ? .green : .blue
+                                )
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 4)
                                 .overlay(
                                     Capsule()
-                                        .stroke(showCopiedConfirmation ? Color.green : Color.blue, lineWidth: 1.5)
+                                        .stroke(
+                                            showCopiedConfirmation
+                                                ? Color.green : Color.blue,
+                                            lineWidth: 1.5)
                                 )
                             }
                             .padding(.top, 2)
@@ -1400,11 +1670,12 @@ struct PlaceholderImageCard: View {
                         Text("\(Int(placeholder.progress * 100))%")
                             .font(.custom("Nunito-Regular", size: 9))
                             .foregroundColor(.secondary)
-                        
+
                         // Cancel button for in-progress tasks
                         if placeholder.state == .inProgress {
                             Button(action: {
-                                notificationManager.cancelTask(notificationId: placeholder.id)
+                                notificationManager.cancelTask(
+                                    notificationId: placeholder.id)
                             }) {
                                 Text("Cancel")
                                     .font(.custom("Nunito-Bold", size: 10))
@@ -1428,7 +1699,7 @@ struct PlaceholderImageCard: View {
                         Circle()
                             .fill(Color.red.opacity(0.2))
                             .frame(width: 24, height: 24)
-                        
+
                         Image(systemName: "xmark")
                             .font(.system(size: 12, weight: .bold))
                             .foregroundColor(.red)
@@ -1481,32 +1752,33 @@ struct PlaceholderImageCard: View {
         default: return Color.gray.opacity(0.3)
         }
     }
-    
+
     private func retryGeneration() {
         guard !isRetrying else { return }
         isRetrying = true
-        
+
         Task {
-            let success = ImageGenerationCoordinator.shared.retryImageGeneration(
-                notificationId: placeholder.id,
-                onImageGenerated: { _ in
-                    isRetrying = false
-                },
-                onError: { _ in
-                    isRetrying = false
-                }
-            )
-            
+            let success = ImageGenerationCoordinator.shared
+                .retryImageGeneration(
+                    notificationId: placeholder.id,
+                    onImageGenerated: { _ in
+                        isRetrying = false
+                    },
+                    onError: { _ in
+                        isRetrying = false
+                    }
+                )
+
             if !success {
                 isRetrying = false
             }
         }
     }
-    
+
     private func copyPrompt(_ prompt: String) {
         UIPasteboard.general.string = prompt
         showCopiedConfirmation = true
-        
+
         // Reset confirmation after 2 seconds
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
             showCopiedConfirmation = false
@@ -1528,15 +1800,19 @@ struct GalleryTabPill: View {
             HStack(spacing: 6) {
                 Image(systemName: icon)
                     .font(.system(size: 12, weight: .medium))
-                
+
                 Text(title)
-                    .font(.system(size: 14, weight: isSelected ? .semibold : .regular))
+                    .font(
+                        .system(
+                            size: 14, weight: isSelected ? .semibold : .regular)
+                    )
                     .foregroundColor(isSelected ? .white : .primary)
 
                 if count > 0 {
                     Text("(\(count))")
                         .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(isSelected ? .white.opacity(0.9) : .secondary)
+                        .foregroundColor(
+                            isSelected ? .white.opacity(0.9) : .secondary)
                 }
             }
             .padding(.horizontal, 14)
@@ -1566,13 +1842,17 @@ struct ModelFilterChip: View {
         Button(action: action) {
             HStack(spacing: 6) {
                 Text(title)
-                    .font(.system(size: 14, weight: isSelected ? .semibold : .regular))
+                    .font(
+                        .system(
+                            size: 14, weight: isSelected ? .semibold : .regular)
+                    )
                     .foregroundColor(isSelected ? .white : .primary)
 
                 if count > 0 {
                     Text("(\(count))")
                         .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(isSelected ? .white.opacity(0.9) : .secondary)
+                        .foregroundColor(
+                            isSelected ? .white.opacity(0.9) : .secondary)
                 }
             }
             .padding(.horizontal, 14)
@@ -1654,11 +1934,13 @@ struct EmptyGalleryView: View {
         } else if isVideoModelsTab && videoModel != nil {
             return "You haven't created any videos with this model yet"
         } else if isVideoModelsTab {
-            return "Select a video model from the dropdown to view your creations"
+            return
+                "Select a video model from the dropdown to view your creations"
         } else if isImageModelsTab && model != nil {
             return "You haven't created any images with this model yet"
         } else if isImageModelsTab {
-            return "Select an image model from the dropdown to view your creations"
+            return
+                "Select an image model from the dropdown to view your creations"
         } else {
             return "Start creating amazing images to see them here!"
         }
@@ -1682,7 +1964,7 @@ struct ImageModelsSheet: View {
                     //     .font(.caption)
                     //     .foregroundColor(.red)
                     //     .padding()
-                    
+
                     ForEach(models, id: \.model) { modelData in
                         Button {
                             selectedTab = .imageModels
@@ -1696,32 +1978,45 @@ struct ImageModelsSheet: View {
                                     RoundedRectangle(cornerRadius: 8)
                                         .fill(Color.gray.opacity(0.2))
                                         .frame(width: 65, height: 65)
-                                    
+
                                     Image(modelData.imageName)
                                         .resizable()
                                         .aspectRatio(contentMode: .fill)
                                         .frame(width: 65, height: 65)
-                                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                                        .clipShape(
+                                            RoundedRectangle(cornerRadius: 8))
                                 }
                                 .frame(width: 65, height: 65)
 
                                 // Model name and count
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text(modelData.model)
-                                        .font(.system(size: 15, weight: .bold, design: .rounded))
+                                        .font(
+                                            .system(
+                                                size: 15, weight: .bold,
+                                                design: .rounded)
+                                        )
                                         .foregroundColor(.primary)
                                         .multilineTextAlignment(.leading)
                                         .lineLimit(2)
 
-                                    Text("\(modelData.count) image\(modelData.count == 1 ? "" : "s")")
-                                        .font(.system(size: 12, weight: .medium, design: .rounded))
-                                        .foregroundColor(.blue)
+                                    Text(
+                                        "\(modelData.count) image\(modelData.count == 1 ? "" : "s")"
+                                    )
+                                    .font(
+                                        .system(
+                                            size: 12, weight: .medium,
+                                            design: .rounded)
+                                    )
+                                    .foregroundColor(.blue)
                                 }
 
                                 Spacer()
 
                                 // Checkmark if selected
-                                if selectedTab == .imageModels && selectedModel == modelData.model {
+                                if selectedTab == .imageModels
+                                    && selectedModel == modelData.model
+                                {
                                     Image(systemName: "checkmark.circle.fill")
                                         .font(.system(size: 20))
                                         .foregroundColor(.blue)
@@ -1729,7 +2024,8 @@ struct ImageModelsSheet: View {
                             }
                             .padding(12)
                             .background(
-                                selectedTab == .imageModels && selectedModel == modelData.model
+                                selectedTab == .imageModels
+                                    && selectedModel == modelData.model
                                     ? Color.blue.opacity(0.08)
                                     : Color.gray.opacity(0.06)
                             )
@@ -1737,7 +2033,8 @@ struct ImageModelsSheet: View {
                             .overlay(
                                 RoundedRectangle(cornerRadius: 12)
                                     .stroke(
-                                        selectedTab == .imageModels && selectedModel == modelData.model
+                                        selectedTab == .imageModels
+                                            && selectedModel == modelData.model
                                             ? Color.blue.opacity(0.3)
                                             : Color.gray.opacity(0.2),
                                         lineWidth: 1
@@ -1756,7 +2053,9 @@ struct ImageModelsSheet: View {
             .onAppear {
                 print("🔍 DEBUG: Sheet appeared with \(models.count) models")
                 for model in models {
-                    print("🔍 DEBUG: Sheet model: \(model.model) - \(model.count) images - image: \(model.imageName)")
+                    print(
+                        "🔍 DEBUG: Sheet model: \(model.model) - \(model.count) images - image: \(model.imageName)"
+                    )
                 }
             }
             .toolbar {
@@ -1796,32 +2095,45 @@ struct VideoModelsSheet: View {
                                     RoundedRectangle(cornerRadius: 8)
                                         .fill(Color.gray.opacity(0.2))
                                         .frame(width: 65, height: 65)
-                                    
+
                                     Image(modelData.imageName)
                                         .resizable()
                                         .aspectRatio(contentMode: .fill)
                                         .frame(width: 65, height: 65)
-                                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                                        .clipShape(
+                                            RoundedRectangle(cornerRadius: 8))
                                 }
                                 .frame(width: 65, height: 65)
 
                                 // Model name and count
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text(modelData.model)
-                                        .font(.system(size: 15, weight: .bold, design: .rounded))
+                                        .font(
+                                            .system(
+                                                size: 15, weight: .bold,
+                                                design: .rounded)
+                                        )
                                         .foregroundColor(.primary)
                                         .multilineTextAlignment(.leading)
                                         .lineLimit(2)
 
-                                    Text("\(modelData.count) video\(modelData.count == 1 ? "" : "s")")
-                                        .font(.system(size: 12, weight: .medium, design: .rounded))
-                                        .foregroundColor(.purple)
+                                    Text(
+                                        "\(modelData.count) video\(modelData.count == 1 ? "" : "s")"
+                                    )
+                                    .font(
+                                        .system(
+                                            size: 12, weight: .medium,
+                                            design: .rounded)
+                                    )
+                                    .foregroundColor(.purple)
                                 }
 
                                 Spacer()
 
                                 // Checkmark if selected
-                                if selectedTab == .videoModels && selectedVideoModel == modelData.model {
+                                if selectedTab == .videoModels
+                                    && selectedVideoModel == modelData.model
+                                {
                                     Image(systemName: "checkmark.circle.fill")
                                         .font(.system(size: 20))
                                         .foregroundColor(.purple)
@@ -1829,7 +2141,8 @@ struct VideoModelsSheet: View {
                             }
                             .padding(12)
                             .background(
-                                selectedTab == .videoModels && selectedVideoModel == modelData.model
+                                selectedTab == .videoModels
+                                    && selectedVideoModel == modelData.model
                                     ? Color.purple.opacity(0.08)
                                     : Color.gray.opacity(0.06)
                             )
@@ -1837,7 +2150,9 @@ struct VideoModelsSheet: View {
                             .overlay(
                                 RoundedRectangle(cornerRadius: 12)
                                     .stroke(
-                                        selectedTab == .videoModels && selectedVideoModel == modelData.model
+                                        selectedTab == .videoModels
+                                            && selectedVideoModel
+                                                == modelData.model
                                             ? Color.purple.opacity(0.3)
                                             : Color.gray.opacity(0.2),
                                         lineWidth: 1
@@ -1854,9 +2169,13 @@ struct VideoModelsSheet: View {
             .navigationTitle("Video Models")
             .navigationBarTitleDisplayMode(.inline)
             .onAppear {
-                print("🎬 DEBUG: Video Models Sheet appeared with \(models.count) models")
+                print(
+                    "🎬 DEBUG: Video Models Sheet appeared with \(models.count) models"
+                )
                 for model in models {
-                    print("🎬 DEBUG: Sheet model: \(model.model) - \(model.count) videos - image: \(model.imageName)")
+                    print(
+                        "🎬 DEBUG: Sheet model: \(model.model) - \(model.count) videos - image: \(model.imageName)"
+                    )
                 }
             }
             .toolbar {
@@ -1879,7 +2198,7 @@ struct VideoModelsSheet: View {
 //    @State private var showDeleteConfirmation = false
 //    @State private var isEditMode = false
 ////    @State private var selectedPreset: Preset? = nil
-//    
+//
 //    var body: some View {
 //        NavigationStack {
 //            Group {
@@ -1997,7 +2316,7 @@ struct VideoModelsSheet: View {
 ////    let preset: Preset
 //    let isEditMode: Bool
 //    let onDelete: (() -> Void)?
-//    
+//
 //    var body: some View {
 //        HStack(spacing: 12) {
 //            // // Drag handle in edit mode
@@ -2007,13 +2326,13 @@ struct VideoModelsSheet: View {
 //            //         .foregroundColor(.secondary)
 //            //         .padding(.trailing, 4)
 //            // }
-//            
+//
 //            // Icon or image
 //            ZStack {
 //                RoundedRectangle(cornerRadius: 8)
 //                    .fill(Color.blue.opacity(0.1))
 //                    .frame(width: 60, height: 60)
-//                
+//
 //                if let imageUrl = preset.imageUrl, let url = URL(string: imageUrl) {
 //                    KFImage(url)
 //                        .placeholder {
@@ -2032,14 +2351,14 @@ struct VideoModelsSheet: View {
 //                }
 //            }
 //            .frame(width: 60, height: 60)
-//            
+//
 //            // Preset details
 //            VStack(alignment: .leading, spacing: 6) {
 //                Text(preset.title)
 //                    .font(.system(size: 16, weight: .semibold, design: .rounded))
 //                    .foregroundColor(.primary)
 //                    .lineLimit(1)
-//                
+//
 //                if let modelName = preset.modelName, !modelName.isEmpty {
 //                    HStack(spacing: 4) {
 //                        Image(systemName: "cpu")
@@ -2051,7 +2370,7 @@ struct VideoModelsSheet: View {
 //                            .lineLimit(1)
 //                    }
 //                }
-//                
+//
 //                if let prompt = preset.prompt, !prompt.isEmpty {
 //                    Text(prompt)
 //                        .font(.system(size: 12, design: .rounded))
@@ -2059,9 +2378,9 @@ struct VideoModelsSheet: View {
 //                        .lineLimit(2)
 //                }
 //            }
-//            
+//
 //            Spacer()
-//            
+//
 //            // Delete button in edit mode, chevron in normal mode
 //            if isEditMode {
 //                Button(action: {
@@ -2094,7 +2413,7 @@ struct VideoModelsSheet: View {
 //    let preset: Preset
 //    @ObservedObject var presetViewModel: PresetViewModel
 //    @Binding var isPresented: Bool
-//    
+//
 //    @State private var title: String
 //    @State private var modelName: String
 //    @State private var prompt: String
@@ -2103,11 +2422,11 @@ struct VideoModelsSheet: View {
 //    @State private var showError = false
 //    @State private var errorMessage = ""
 //    @FocusState private var focusedField: Field?
-//    
+//
 //    enum Field {
 //        case title, modelName, prompt
 //    }
-//    
+//
 //    init(preset: Preset, presetViewModel: PresetViewModel, isPresented: Binding<Bool>) {
 //        self.preset = preset
 //        self.presetViewModel = presetViewModel
@@ -2116,7 +2435,7 @@ struct VideoModelsSheet: View {
 //        _modelName = State(initialValue: preset.modelName ?? "")
 //        _prompt = State(initialValue: preset.prompt ?? "")
 //    }
-//    
+//
 //    var body: some View {
 //        NavigationStack {
 //            ScrollView {
@@ -2139,7 +2458,7 @@ struct VideoModelsSheet: View {
 //                            .clipShape(RoundedRectangle(cornerRadius: 12))
 //                            .padding(.horizontal)
 //                    }
-//                    
+//
 //                    // Edit fields
 //                    VStack(alignment: .leading, spacing: 20) {
 //                        // Title field
@@ -2147,29 +2466,29 @@ struct VideoModelsSheet: View {
 //                            Text("Title")
 //                                .font(.headline)
 //                                .foregroundColor(.primary)
-//                            
+//
 //                            TextField("Preset title", text: $title)
 //                                .textFieldStyle(.roundedBorder)
 //                                .focused($focusedField, equals: .title)
 //                        }
-//                        
+//
 //                        // Model name field
 //                        VStack(alignment: .leading, spacing: 8) {
 //                            Text("Model Name")
 //                                .font(.headline)
 //                                .foregroundColor(.primary)
-//                            
+//
 //                            TextField("Image model", text: $modelName)
 //                                .textFieldStyle(.roundedBorder)
 //                                .focused($focusedField, equals: .modelName)
 //                        }
-//                        
+//
 //                        // Prompt field
 //                        VStack(alignment: .leading, spacing: 8) {
 //                            Text("Prompt")
 //                                .font(.headline)
 //                                .foregroundColor(.primary)
-//                            
+//
 //                            ZStack(alignment: .topLeading) {
 //                                // Hidden text to measure content height
 //                                Text(prompt.isEmpty ? " " : prompt)
@@ -2178,7 +2497,7 @@ struct VideoModelsSheet: View {
 //                                    .opacity(0)
 //                                    .fixedSize(horizontal: false, vertical: true)
 //                                    .frame(maxWidth: .infinity, alignment: .leading)
-//                                
+//
 //                                // Actual TextEditor
 //                                TextEditor(text: $prompt)
 //                                    .scrollDisabled(true)
@@ -2196,7 +2515,7 @@ struct VideoModelsSheet: View {
 //                        }
 //                    }
 //                    .padding(.horizontal)
-//                    
+//
 //                    // Save button
 //                    Button(action: {
 //                        Task {
@@ -2219,7 +2538,7 @@ struct VideoModelsSheet: View {
 //                    }
 //                    .disabled(title.isEmpty || isSaving)
 //                    .padding(.horizontal)
-//                    
+//
 //                    // Delete button
 //                    Button(action: {
 //                        showDeleteConfirmation = true
@@ -2268,10 +2587,10 @@ struct VideoModelsSheet: View {
 //            }
 //        }
 //    }
-//    
+//
 //    private func savePreset() async {
 //        isSaving = true
-//        
+//
 //        do {
 //            try await presetViewModel.updatePreset(
 //                presetId: preset.id,
@@ -2280,7 +2599,7 @@ struct VideoModelsSheet: View {
 //                prompt: prompt.isEmpty ? nil : prompt.trimmingCharacters(in: .whitespacesAndNewlines),
 //                imageUrl: preset.imageUrl
 //            )
-//            
+//
 //            await MainActor.run {
 //                isSaving = false
 //                isPresented = false
@@ -2293,11 +2612,11 @@ struct VideoModelsSheet: View {
 //            }
 //        }
 //    }
-//    
+//
 //    private func deletePreset() async {
 //        do {
 //            try await presetViewModel.deletePreset(presetId: preset.id)
-//            
+//
 //            await MainActor.run {
 //                isPresented = false
 //            }
@@ -2318,12 +2637,12 @@ struct VideoModelsSheet: View {
 //            Image(systemName: "slider.horizontal.3")
 //                .font(.system(size: 48))
 //                .foregroundColor(.gray.opacity(0.5))
-//            
+//
 //            VStack(spacing: 8) {
 //                Text("No Presets Yet")
 //                    .font(.headline)
 //                    .foregroundColor(.primary)
-//                
+//
 //                Text("Save presets from your images to quickly reuse your favorite settings")
 //                    .font(.subheadline)
 //                    .foregroundColor(.secondary)
@@ -2354,5 +2673,7 @@ struct ShareSheet: UIViewControllerRepresentable {
         return controller
     }
 
-    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
+    func updateUIViewController(
+        _ uiViewController: UIActivityViewController, context: Context
+    ) {}
 }

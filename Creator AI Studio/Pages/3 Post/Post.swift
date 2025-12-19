@@ -173,7 +173,7 @@ struct Post: View {
                                                 design: .rounded)
                                         )
                                         .foregroundColor(
-                                            .white.opacity(0.7)
+                                            .white.opacity(0.8)
                                         )
                                         .textCase(.uppercase)
                                         .tracking(1.2)
@@ -185,10 +185,10 @@ struct Post: View {
                                             value: isScrollingActive
                                         )
                                         .shadow(
-                                            color: .black.opacity(0.6),
-                                            radius: 2,
+                                            color: .black.opacity(1),
+                                            radius: 4,
                                             x: 0,
-                                            y: 1)
+                                            y: 2)
 
                                         // Filter title above the image
                                         Text(displayFilter.display.title)
@@ -210,7 +210,7 @@ struct Post: View {
                                                 value: isScrollingActive
                                             )
                                             .shadow(
-                                                color: .black.opacity(0.8),
+                                                color: .black.opacity(1),
                                                 radius: 4,
                                                 x: 0,
                                                 y: 2)
@@ -355,39 +355,39 @@ struct Post: View {
                                 }
 
                                 VStack(spacing: 12) {
-                                    // Category title
-                                    if let displayFilter =
-                                        centeredFilter
-                                        ?? selectedFilter
-                                        ?? selectedImageModel
-                                    {
-                                        Text(
-                                            categoryTitle(
-                                                for: displayFilter)
-                                        )
-                                        .font(
-                                            .system(
-                                                size: 16, weight: .medium,
-                                                design: .rounded)
-                                        )
-                                        .foregroundColor(
-                                            .white.opacity(0.7)
-                                        )
-                                        .textCase(.uppercase)
-                                        .tracking(1.2)
-                                        .opacity(
-                                            isScrollingActive ? 1.0 : 0
-                                        )
-                                        .animation(
-                                            .easeOut(duration: 0.3),
-                                            value: isScrollingActive
-                                        )
-                                        .shadow(
-                                            color: .black.opacity(0.6),
-                                            radius: 2,
-                                            x: 0,
-                                            y: 1)
-                                    }
+                                    // // Category title
+                                    // if let displayFilter =
+                                    //     centeredFilter
+                                    //     ?? selectedFilter
+                                    //     ?? selectedImageModel
+                                    // {
+                                    //     Text(
+                                    //         categoryTitle(
+                                    //             for: displayFilter)
+                                    //     )
+                                    //     .font(
+                                    //         .system(
+                                    //             size: 16, weight: .medium,
+                                    //             design: .rounded)
+                                    //     )
+                                    //     .foregroundColor(
+                                    //         .white.opacity(0.7)
+                                    //     )
+                                    //     .textCase(.uppercase)
+                                    //     .tracking(1.2)
+                                    //     .opacity(
+                                    //         isScrollingActive ? 1.0 : 0
+                                    //     )
+                                    //     .animation(
+                                    //         .easeOut(duration: 0.3),
+                                    //         value: isScrollingActive
+                                    //     )
+                                    //     .shadow(
+                                    //         color: .black.opacity(0.6),
+                                    //         radius: 2,
+                                    //         x: 0,
+                                    //         y: 1)
+                                    // }
 
                                     // MARK: FILTER TITLE
                                     Button {
@@ -401,34 +401,34 @@ struct Post: View {
                                                     ?? selectedFilter
                                                     ?? selectedImageModel
                                                 {
-                                                    Text(
-                                                        displayFilter.display
-                                                            .title
-                                                    )
-                                                    .font(
-                                                        .system(
-                                                            size: 14,
-                                                            weight: .medium,
-                                                            design: .rounded)
-                                                    )
-                                                    .foregroundColor(.white)
-                                                    .lineLimit(1)
-                                                    .truncationMode(.tail)
-                                                    .fixedSize(
-                                                        horizontal: true,
-                                                        vertical: false
-                                                    )
-                                                    .padding(.horizontal, 16)
-                                                    .padding(.vertical, 8)
-                                                    .background(
-                                                        RoundedRectangle(
-                                                            cornerRadius: 12
-                                                        )
-                                                        .fill(
-                                                            Color.black.opacity(
-                                                                0.5)
-                                                        )
-                                                    )
+                                                    // Text(
+                                                    //     displayFilter.display
+                                                    //         .title
+                                                    // )
+                                                    // .font(
+                                                    //     .system(
+                                                    //         size: 14,
+                                                    //         weight: .medium,
+                                                    //         design: .rounded)
+                                                    // )
+                                                    // .foregroundColor(.white)
+                                                    // .lineLimit(1)
+                                                    // .truncationMode(.tail)
+                                                    // .fixedSize(
+                                                    //     horizontal: true,
+                                                    //     vertical: false
+                                                    // )
+                                                    // .padding(.horizontal, 16)
+                                                    // .padding(.vertical, 8)
+                                                    // .background(
+                                                    //     RoundedRectangle(
+                                                    //         cornerRadius: 12
+                                                    //     )
+                                                    //     .fill(
+                                                    //         Color.black.opacity(
+                                                    //             0.5)
+                                                    //     )
+                                                    // )
                                                 } else {
                                                     Text(
                                                         "Select an AI Model or Photo Filter"
@@ -521,13 +521,13 @@ struct Post: View {
                                         )
                                     }
 
-                                    // MARK: 🔄 SWITCH
+                                    // MARK: MENU
                                     Button {
-                                        cameraService.switchCamera()
+                                        showFilterCategorySheet = true
                                     } label: {
                                         Image(
                                             systemName:
-                                                "arrow.triangle.2.circlepath"
+                                                "square.grid.2x2.fill"
                                         )
                                         .font(.system(size: 20, weight: .bold))
                                         .foregroundColor(.white)
@@ -538,7 +538,6 @@ struct Post: View {
                                             .fill(.ultraThinMaterial)
                                             .environment(\.colorScheme, .dark)
                                     )
-                                    .accessibilityLabel("Switch camera")
 
                                     // // MARK: LIBRARY
                                     // Button {
@@ -674,13 +673,13 @@ struct Post: View {
                             }
                             .disabled(shouldShowCapturedImage)
 
-                            // MARK: MENU
+                            // MARK: 🔄 SWITCH
                             Button {
-                                showFilterCategorySheet = true
+                                cameraService.switchCamera()
                             } label: {
                                 Image(
                                     systemName:
-                                        "square.grid.2x2.fill"
+                                        "arrow.triangle.2.circlepath"
                                 )
                                 .font(.system(size: 20, weight: .bold))
                                 .foregroundColor(.white)
@@ -691,6 +690,7 @@ struct Post: View {
                                     .fill(.ultraThinMaterial)
                                     .environment(\.colorScheme, .dark)
                             )
+                            .accessibilityLabel("Switch camera")
                         }
                         .padding(.horizontal, 20)
 
