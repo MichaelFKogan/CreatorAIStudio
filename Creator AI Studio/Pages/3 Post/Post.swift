@@ -354,108 +354,108 @@ struct Post: View {
                                     // .padding(.bottom, 24)
                                 }
 
-                                VStack(spacing: 12) {
-                                    // // Category title
-                                    // if let displayFilter =
-                                    //     centeredFilter
-                                    //     ?? selectedFilter
-                                    //     ?? selectedImageModel
-                                    // {
-                                    //     Text(
-                                    //         categoryTitle(
-                                    //             for: displayFilter)
-                                    //     )
-                                    //     .font(
-                                    //         .system(
-                                    //             size: 16, weight: .medium,
-                                    //             design: .rounded)
-                                    //     )
-                                    //     .foregroundColor(
-                                    //         .white.opacity(0.7)
-                                    //     )
-                                    //     .textCase(.uppercase)
-                                    //     .tracking(1.2)
-                                    //     .opacity(
-                                    //         isScrollingActive ? 1.0 : 0
-                                    //     )
-                                    //     .animation(
-                                    //         .easeOut(duration: 0.3),
-                                    //         value: isScrollingActive
-                                    //     )
-                                    //     .shadow(
-                                    //         color: .black.opacity(0.6),
-                                    //         radius: 2,
-                                    //         x: 0,
-                                    //         y: 1)
-                                    // }
+                                // VStack(spacing: 12) {
+                                //     // // Category title
+                                //     // if let displayFilter =
+                                //     //     centeredFilter
+                                //     //     ?? selectedFilter
+                                //     //     ?? selectedImageModel
+                                //     // {
+                                //     //     Text(
+                                //     //         categoryTitle(
+                                //     //             for: displayFilter)
+                                //     //     )
+                                //     //     .font(
+                                //     //         .system(
+                                //     //             size: 16, weight: .medium,
+                                //     //             design: .rounded)
+                                //     //     )
+                                //     //     .foregroundColor(
+                                //     //         .white.opacity(0.7)
+                                //     //     )
+                                //     //     .textCase(.uppercase)
+                                //     //     .tracking(1.2)
+                                //     //     .opacity(
+                                //     //         isScrollingActive ? 1.0 : 0
+                                //     //     )
+                                //     //     .animation(
+                                //     //         .easeOut(duration: 0.3),
+                                //     //         value: isScrollingActive
+                                //     //     )
+                                //     //     .shadow(
+                                //     //         color: .black.opacity(0.6),
+                                //     //         radius: 2,
+                                //     //         x: 0,
+                                //     //         y: 1)
+                                //     // }
 
-                                    // MARK: FILTER TITLE
-                                    Button {
-                                        showFilterCategorySheet = true
-                                    } label: {
-                                        Group {
-                                            HStack {
-                                                // Show centered filter while scrolling, otherwise show selected filter or model
-                                                if let displayFilter =
-                                                    centeredFilter
-                                                    ?? selectedFilter
-                                                    ?? selectedImageModel
-                                                {
-                                                    // Text(
-                                                    //     displayFilter.display
-                                                    //         .title
-                                                    // )
-                                                    // .font(
-                                                    //     .system(
-                                                    //         size: 14,
-                                                    //         weight: .medium,
-                                                    //         design: .rounded)
-                                                    // )
-                                                    // .foregroundColor(.white)
-                                                    // .lineLimit(1)
-                                                    // .truncationMode(.tail)
-                                                    // .fixedSize(
-                                                    //     horizontal: true,
-                                                    //     vertical: false
-                                                    // )
-                                                    // .padding(.horizontal, 16)
-                                                    // .padding(.vertical, 8)
-                                                    // .background(
-                                                    //     RoundedRectangle(
-                                                    //         cornerRadius: 12
-                                                    //     )
-                                                    //     .fill(
-                                                    //         Color.black.opacity(
-                                                    //             0.5)
-                                                    //     )
-                                                    // )
-                                                } else {
-                                                    Text(
-                                                        "Select an AI Model or Photo Filter"
-                                                    )
-                                                    .font(
-                                                        .system(
-                                                            size: 14,
-                                                            weight: .medium,
-                                                            design: .rounded)
-                                                    )
-                                                    .foregroundColor(.white)
-                                                    .padding(.horizontal, 16)
-                                                    .padding(.vertical, 8)
-                                                    .background(
-                                                        RoundedRectangle(
-                                                            cornerRadius: 12
-                                                        )
-                                                        .fill(
-                                                            Color.black.opacity(
-                                                                0.5)
-                                                        )
-                                                    )
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
+                                //     // MARK: FILTER TITLE
+                                //     Button {
+                                //         showFilterCategorySheet = true
+                                //     } label: {
+                                //         Group {
+                                //             HStack {
+                                //                 // Show centered filter while scrolling, otherwise show selected filter or model
+                                //                 if let displayFilter =
+                                //                     centeredFilter
+                                //                     ?? selectedFilter
+                                //                     ?? selectedImageModel
+                                //                 {
+                                //                     // Text(
+                                //                     //     displayFilter.display
+                                //                     //         .title
+                                //                     // )
+                                //                     // .font(
+                                //                     //     .system(
+                                //                     //         size: 14,
+                                //                     //         weight: .medium,
+                                //                     //         design: .rounded)
+                                //                     // )
+                                //                     // .foregroundColor(.white)
+                                //                     // .lineLimit(1)
+                                //                     // .truncationMode(.tail)
+                                //                     // .fixedSize(
+                                //                     //     horizontal: true,
+                                //                     //     vertical: false
+                                //                     // )
+                                //                     // .padding(.horizontal, 16)
+                                //                     // .padding(.vertical, 8)
+                                //                     // .background(
+                                //                     //     RoundedRectangle(
+                                //                     //         cornerRadius: 12
+                                //                     //     )
+                                //                     //     .fill(
+                                //                     //         Color.black.opacity(
+                                //                     //             0.5)
+                                //                     //     )
+                                //                     // )
+                                //                 } else {
+                                //                     Text(
+                                //                         "Select an AI Model or Photo Filter"
+                                //                     )
+                                //                     .font(
+                                //                         .system(
+                                //                             size: 14,
+                                //                             weight: .medium,
+                                //                             design: .rounded)
+                                //                     )
+                                //                     .foregroundColor(.white)
+                                //                     .padding(.horizontal, 16)
+                                //                     .padding(.vertical, 8)
+                                //                     .background(
+                                //                         RoundedRectangle(
+                                //                             cornerRadius: 12
+                                //                         )
+                                //                         .fill(
+                                //                             Color.black.opacity(
+                                //                                 0.5)
+                                //                         )
+                                //                     )
+                                //                 }
+                                //             }
+                                //         }
+                                //     }
+                                // }
                             }
 
                             Spacer()
@@ -612,6 +612,11 @@ struct Post: View {
                                     }
                                     // Don't clear centeredFilter here - it causes a flicker
                                     // The displayFilter fallback will use selectedFilter when scrolling stops
+                                },
+                                onDeselect: {
+                                    // Clear both selections when empty space is selected
+                                    selectedFilter = nil
+                                    selectedImageModel = nil
                                 },
                                 onCenteredFilterChanged: { filter in
                                     centeredFilter = filter

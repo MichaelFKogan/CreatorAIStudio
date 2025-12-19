@@ -10,6 +10,7 @@ struct FilterScrollRow: View {
     let selectedFilter: InfoPacket?
     let selectedImageModel: InfoPacket?
     let onSelect: (InfoPacket) -> Void
+    var onDeselect: (() -> Void)? = nil  // Callback to clear selection when empty space is selected
     var onCenteredFilterChanged: ((InfoPacket?) -> Void)? = nil
     var onScrollingStateChanged: ((Bool) -> Void)? = nil
     var onCapture: (() -> Void)? = nil
@@ -37,11 +38,17 @@ struct FilterScrollRow: View {
     @State private var scrollStopTimer: DispatchWorkItem?
     @State private var hasInitializedPositions = false
     @State private var hasUserInteracted = false
+    
+    // Empty space indicator ID - special UUID to represent empty space
+    private let emptySpaceId = UUID()
 
     // Frame dimensions
     private let frameWidth: CGFloat = 85
     private let frameHeight: CGFloat = 85
     private let thumbnailWidth: CGFloat = 75
+    
+    // Threshold for empty space selection - if nearest item is beyond this distance, treat as empty space
+    private let emptySpaceThreshold: CGFloat = 50  // Half the frame width plus some padding
 
     var body: some View {
         GeometryReader { geometry in
@@ -50,13 +57,51 @@ struct FilterScrollRow: View {
                 ScrollViewReader { scrollProxy in
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 12) {
-                            // Leading spacer to position first item to the right of white frame
-                            // White frame is centered at width/2, extends 40 points each side
-                            // Position first item to start after the frame (width/2 + 40 + spacing)
+                            // Leading spacer to position empty space indicator at center initially
+                            // Center the indicator (75x75) at width/2, same as filters
                             Color.clear
                                 .frame(
-                                    width: geometry.size.width / 2 + frameWidth
-                                        / 2 + 12)
+                                    width: geometry.size.width / 2 - thumbnailWidth / 2)
+                            
+                            // MARK: EMPTY SPACE INDICATOR
+                            EmptySpaceIndicator(
+                                isSelected: selectedFilter == nil && selectedImageModel == nil
+                            )
+                            .frame(width: thumbnailWidth, height: thumbnailWidth)
+                            .id(emptySpaceId)
+                            .background(
+                                GeometryReader { itemGeometry in
+                                    Color.clear
+                                        .preference(
+                                            key: FilterPositionPreferenceKey.self,
+                                            value: [
+                                                emptySpaceId: itemGeometry.frame(
+                                                    in: .named("scrollView")
+                                                ).midX
+                                            ]
+                                        )
+                                }
+                            )
+                            .onTapGesture {
+                                // Mark that user has interacted
+                                hasUserInteracted = true
+                                // Cancel any pending snap when tapping
+                                checkScrollStopTask?.cancel()
+                                
+                                // Haptic feedback on tap
+                                let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+                                impactFeedback.impactOccurred()
+                                
+                                withAnimation(
+                                    .spring(response: 0.4, dampingFraction: 0.8)
+                                ) {
+                                    scrollProxy.scrollTo(emptySpaceId, anchor: .center)
+                                }
+                                // Delay deselection to allow scroll animation
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                    onDeselect?()
+                                }
+                            }
 
                             // MARK: FOR EACH
                             ForEach(allItems) { item in
@@ -261,10 +306,17 @@ struct FilterScrollRow: View {
     }
 
     private func checkCenteredFilter(centerX: CGFloat) {
-        // Find the item closest to center (left or right)
+        // Check empty space indicator position first
         var closestItem: InfoPacket?
         var minDistance: CGFloat = .infinity
-
+        var emptySpaceDistance: CGFloat = .infinity
+        
+        // Check empty space indicator
+        if let emptySpacePosition = filterPositions[emptySpaceId] {
+            emptySpaceDistance = abs(emptySpacePosition - centerX)
+        }
+        
+        // Find the item closest to center (left or right)
         for item in allItems {
             if let position = filterPositions[item.id] {
                 let distance = abs(position - centerX)
@@ -274,11 +326,18 @@ struct FilterScrollRow: View {
                 }
             }
         }
-
-        // Always show the closest item while scrolling, even if it's in a gap
-        // This ensures the large image is always visible during scrolling
-        if let item = closestItem {
-            // Trigger haptic if a different item is now centered
+        
+        // Check if empty space is closer than any item
+        if emptySpaceDistance < minDistance && emptySpaceDistance < emptySpaceThreshold {
+            // Empty space is centered
+            if currentCenteredFilterId != emptySpaceId {
+                currentCenteredFilterId = emptySpaceId
+                hapticGenerator.impactOccurred(intensity: 0.6)
+                hapticGenerator.prepare()
+            }
+            onCenteredFilterChanged?(nil)
+        } else if minDistance < emptySpaceThreshold, let item = closestItem {
+            // An item is centered
             if item.id != currentCenteredFilterId {
                 currentCenteredFilterId = item.id
                 hapticGenerator.impactOccurred(intensity: 0.6)
@@ -287,7 +346,7 @@ struct FilterScrollRow: View {
             // Always notify parent of closest item for real-time title updates
             onCenteredFilterChanged?(item)
         } else {
-            // No items available (shouldn't happen, but handle gracefully)
+            // We're in empty space (nearest item is too far away)
             if currentCenteredFilterId != nil {
                 currentCenteredFilterId = nil
                 onCenteredFilterChanged?(nil)
@@ -326,10 +385,17 @@ struct FilterScrollRow: View {
     private func snapToNearestFilter(
         scrollProxy: ScrollViewProxy, centerX: CGFloat
     ) {
-        // Find the item closest to center
+        // Check empty space indicator position first
         var closestItem: InfoPacket?
         var minDistance: CGFloat = .infinity
-
+        var emptySpaceDistance: CGFloat = .infinity
+        
+        // Check empty space indicator
+        if let emptySpacePosition = filterPositions[emptySpaceId] {
+            emptySpaceDistance = abs(emptySpacePosition - centerX)
+        }
+        
+        // Find the item closest to center
         for item in allItems {
             if let position = filterPositions[item.id] {
                 let distance = abs(position - centerX)
@@ -340,9 +406,60 @@ struct FilterScrollRow: View {
             }
         }
 
-        // Snap to closest item if it's different from current selection
+        // Check if we're in empty space (nearest item is too far away)
         let currentSelectionId = selectedFilter?.id ?? selectedImageModel?.id
-        if let item = closestItem, item.id != currentSelectionId {
+        
+        // Check if empty space is closest
+        if emptySpaceDistance < minDistance && emptySpaceDistance < emptySpaceThreshold {
+            // Empty space is closest - deselect if something is currently selected
+            if currentSelectionId != nil {
+                isScrolling = true
+                setScrollingActive(true)
+                
+                // Haptic feedback on deselect
+                let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+                impactFeedback.impactOccurred()
+                
+                withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                    scrollProxy.scrollTo(emptySpaceId, anchor: .center)
+                }
+                
+                // Clear selection
+                onDeselect?()
+                
+                // Re-enable snapping after programmatic change
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    isScrolling = false
+                    scheduleScrollStopFade()
+                }
+            } else {
+                // Already deselected, just fade out
+                scheduleScrollStopFade()
+            }
+        } else if minDistance > emptySpaceThreshold {
+            // We're in empty space (nearest item is too far away) - deselect if something is currently selected
+            if currentSelectionId != nil {
+                isScrolling = true
+                setScrollingActive(true)
+                
+                // Haptic feedback on deselect
+                let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+                impactFeedback.impactOccurred()
+                
+                // Clear selection
+                onDeselect?()
+                
+                // Re-enable snapping after programmatic change
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    isScrolling = false
+                    scheduleScrollStopFade()
+                }
+            } else {
+                // Already deselected, just fade out
+                scheduleScrollStopFade()
+            }
+        } else if let item = closestItem, item.id != currentSelectionId {
+            // Snap to closest item if it's different from current selection
             isScrolling = true
             setScrollingActive(true)
 
@@ -647,5 +764,24 @@ struct StyleSelectionButtonTwo: View {
                     .lineLimit(2)
             }
         }
+    }
+}
+
+// MARK: EMPTY SPACE INDICATOR
+
+struct EmptySpaceIndicator: View {
+    let isSelected: Bool
+    
+    var body: some View {
+        RoundedRectangle(cornerRadius: 12)
+            .strokeBorder(
+                isSelected ? Color.pink : Color.gray,
+                lineWidth: isSelected ? 4 : 1
+            )
+            .frame(width: 75, height: 75)
+            .animation(
+                .spring(response: 0.3, dampingFraction: 0.7),
+                value: isSelected
+            )
     }
 }
