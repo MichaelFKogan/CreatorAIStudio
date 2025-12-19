@@ -362,16 +362,17 @@ struct PhotoFilters: View {
                             // Confirm button (on the right)
                             NavigationLink(destination: destinationView) {
                                 HStack(spacing: 6) {
-                                    Text("Next")
-                                        .font(.system(size: 15, weight: .semibold))
+                                    // Text("Next")
+                                    //     .font(.system(size: 15, weight: .semibold))
                                     Image(systemName: "arrow.right")
                                         .font(.system(size: 13, weight: .semibold))
                                 }
                                 .foregroundColor(.white)
                                 .padding(.horizontal, 18)
                                 .padding(.vertical, 10)
+                                .frame(width: 50, height: 50)
                                 .background(
-                                    RoundedRectangle(cornerRadius: 20)
+                                    RoundedRectangle(cornerRadius: 8)
                                         .fill(
                                             LinearGradient(
                                                 colors: [.green, .teal],
