@@ -209,6 +209,8 @@ struct UserStats: Codable {
         try container.encodeIfPresent(id, forKey: .id)
         try container.encode(user_id, forKey: .user_id)
         try container.encode(favorite_count, forKey: .favorite_count)
+        try container.encode(image_count, forKey: .image_count)
+        try container.encode(video_count, forKey: .video_count)
         try container.encode(model_counts, forKey: .model_counts)
         try container.encode(video_model_counts, forKey: .video_model_counts)
     }
@@ -325,6 +327,11 @@ class ProfileViewModel: ObservableObject {
     @AppStorage("cachedUserImagesV3") private var cachedUserImagesData: Data = .init()
     private var cachedUserImagesMap: [String: CachedUserMediaEntry] = [:]
     private var lastFetchedAt: Date?
+    
+    // ✅ Cache user stats persistently between launches, keyed per user
+    @AppStorage("cachedUserStats") private var cachedUserStatsData: Data = .init()
+    @AppStorage("lastUserId") private var lastUserId: String = ""
+    private var cachedUserStatsMap: [String: UserStats] = [:]
 
     // Convenience computed property for backward compatibility (just URLs)
     var images: [String] {
@@ -333,8 +340,29 @@ class ProfileViewModel: ObservableObject {
 
     init() {
         decodeCacheStore()
+        decodeStatsCache() // Load stats cache immediately
         setupImageSavedNotification()
         setupVideoSavedNotification()
+    }
+    
+    /// Decodes the stats cache and loads stats for the last known user
+    private func decodeStatsCache() {
+        // Decode cached stats
+        if let data = try? JSONDecoder().decode([String: UserStats].self, from: cachedUserStatsData),
+           !data.isEmpty {
+            cachedUserStatsMap = data
+            
+            // If we have a last known user, load their stats immediately
+            if !lastUserId.isEmpty, let stats = cachedUserStatsMap[lastUserId] {
+                favoriteCount = stats.favorite_count
+                imageCount = stats.image_count
+                videoCount = stats.video_count
+                modelCounts = stats.model_counts
+                videoModelCounts = stats.video_model_counts
+                hasLoadedStats = true
+                print("✅ Pre-loaded cached stats in init() for user: \(lastUserId)")
+            }
+        }
     }
     
     deinit {
@@ -489,15 +517,52 @@ class ProfileViewModel: ObservableObject {
         cachedFavoriteImages = []
         hasFetchedFavorites = false
         hasMoreFavoritePages = true
-        favoriteCount = 0
-        imageCount = 0
-        videoCount = 0
-        modelCounts = [:]
-        videoModelCounts = [:]
-        hasLoadedStats = false
+        
+        // Only reset stats if we don't already have loaded stats for this user
+        // This prevents resetting stats when navigating back to the same user
+        // Stats will be refreshed by fetchUserStats() if needed
+        if !hasLoadedStats {
+            favoriteCount = 0
+            imageCount = 0
+            videoCount = 0
+            modelCounts = [:]
+            videoModelCounts = [:]
+        }
+        // Note: We keep hasLoadedStats = true if it was already true
+        // This way the UI shows the correct counts immediately
 
         // Load cached data for this user if available
         loadCachedImages(for: userId)
+        loadCachedStats(for: userId)
+    }
+    
+    private func loadCachedStats(for userId: String) {
+        // Decode cached stats if available
+        if cachedUserStatsMap.isEmpty {
+            if let data = try? JSONDecoder().decode([String: UserStats].self, from: cachedUserStatsData),
+               !data.isEmpty {
+                cachedUserStatsMap = data
+            }
+        }
+        
+        // Load stats for this user if available
+        if let stats = cachedUserStatsMap[userId] {
+            favoriteCount = stats.favorite_count
+            imageCount = stats.image_count
+            videoCount = stats.video_count
+            modelCounts = stats.model_counts
+            videoModelCounts = stats.video_model_counts
+            hasLoadedStats = true
+            print("✅ Loaded cached stats: \(stats.favorite_count) favorites, \(stats.image_count) images, \(stats.video_count) videos")
+        }
+    }
+    
+    private func saveCachedStats(for userId: String, stats: UserStats) {
+        cachedUserStatsMap[userId] = stats
+        lastUserId = userId // Remember the last user for pre-loading in init()
+        if let encoded = try? JSONEncoder().encode(cachedUserStatsMap) {
+            cachedUserStatsData = encoded
+        }
     }
 
     private func loadCachedImages(for userId: String) {
@@ -855,9 +920,10 @@ class ProfileViewModel: ObservableObject {
             
             if let stats = response.value.first {
                 // Check if image_count/video_count are 0 (likely from migration - need to recompute)
-                // This happens when the migration adds the columns with default 0 values
-                if stats.image_count == 0 && stats.video_count == 0 && (stats.favorite_count > 0 || !stats.model_counts.isEmpty || !stats.video_model_counts.isEmpty) {
-                    print("⚠️ Stats found but image_count/video_count are 0 - likely from migration. Auto-re-syncing...")
+                // Always resync if both image_count AND video_count are 0 (simplified condition)
+                if stats.image_count == 0 && stats.video_count == 0 {
+                    print("⚠️ Stats found but image_count=0 and video_count=0 - triggering resync...")
+                    print("📊 DB values: favorites=\(stats.favorite_count), models=\(stats.model_counts.count)")
                     await initializeUserStats()
                     return
                 }
@@ -870,6 +936,10 @@ class ProfileViewModel: ObservableObject {
                 modelCounts = stats.model_counts
                 videoModelCounts = stats.video_model_counts
                 hasLoadedStats = true
+                
+                // Cache stats for immediate availability on next load
+                saveCachedStats(for: userId, stats: stats)
+                
                 print("✅ Fetched user stats: \(stats.favorite_count) favorites, \(stats.image_count) images, \(stats.video_count) videos, \(stats.model_counts.count) image models, \(stats.video_model_counts.count) video models")
                 print("✅ Model counts: \(stats.model_counts)")
                 print("📊 Counts after update: favorites=\(favoriteCount), images=\(imageCount), videos=\(videoCount)")
@@ -1017,16 +1087,20 @@ class ProfileViewModel: ObservableObject {
                 }
             }
             
-            // Create stats record
+            // Create stats record (IMPORTANT: include image_count and video_count!)
             let stats = UserStats(
                 id: nil,
                 user_id: userId,
                 favorite_count: favoriteCount,
+                image_count: imageCount,
+                video_count: videoCount,
                 model_counts: modelCounts,
                 video_model_counts: videoModelCounts,
                 created_at: nil,
                 updated_at: nil
             )
+            
+            print("📊 Stats to save: favorites=\(favoriteCount), images=\(imageCount), videos=\(videoCount)")
             
             // Check if stats already exist (for re-sync)
             let existingResponse: PostgrestResponse<[UserStats]> = try await client.database
@@ -1037,20 +1111,41 @@ class ProfileViewModel: ObservableObject {
                 .execute()
             
             if existingResponse.value.first != nil {
-                // Update existing stats
-                print("📊 Updating existing user stats...")
-                try await client.database
-                    .from("user_stats")
-                    .update(stats)
-                    .eq("user_id", value: userId)
-                    .execute()
+                // Update existing stats using raw SQL via RPC to ensure it works
+                print("📊 Updating existing user stats with: favorites=\(favoriteCount), images=\(imageCount), videos=\(videoCount)")
+                
+                // First try using the Codable object
+                do {
+                    let response = try await client.database
+                        .from("user_stats")
+                        .update(stats)
+                        .eq("user_id", value: userId)
+                        .select()
+                        .execute()
+                    
+                    // Check what was returned
+                    if let updatedStats = try? JSONDecoder().decode([UserStats].self, from: response.data),
+                       let first = updatedStats.first {
+                        print("✅ Database update returned: favorites=\(first.favorite_count), images=\(first.image_count), videos=\(first.video_count)")
+                    } else {
+                        print("⚠️ Database update returned unexpected data: \(String(data: response.data, encoding: .utf8) ?? "nil")")
+                    }
+                } catch {
+                    print("❌ Database update failed: \(error)")
+                    print("❌ Error details: \(error.localizedDescription)")
+                }
             } else {
                 // Insert new stats
                 print("📊 Inserting new user stats...")
-                try await client.database
-                    .from("user_stats")
-                    .insert(stats)
-                    .execute()
+                do {
+                    try await client.database
+                        .from("user_stats")
+                        .insert(stats)
+                        .execute()
+                    print("✅ Database insert completed successfully")
+                } catch {
+                    print("❌ Database insert failed: \(error)")
+                }
             }
             
             // Update published properties
@@ -1062,6 +1157,21 @@ class ProfileViewModel: ObservableObject {
             self.modelCounts = modelCounts
             self.videoModelCounts = videoModelCounts
             self.hasLoadedStats = true
+            
+            // Cache stats for immediate availability on next load
+            let statsToCache = UserStats(
+                id: nil,
+                user_id: userId,
+                favorite_count: favoriteCount,
+                image_count: imageCount,
+                video_count: videoCount,
+                model_counts: modelCounts,
+                video_model_counts: videoModelCounts,
+                created_at: nil,
+                updated_at: nil
+            )
+            self.saveCachedStats(for: userId, stats: statsToCache)
+            
             print("📊 After update - favorites=\(self.favoriteCount), images=\(self.imageCount), videos=\(self.videoCount)")
             
             print("✅ Initialized user stats: \(favoriteCount) favorites, \(imageCount) images, \(videoCount) videos, \(modelCounts.count) image models, \(videoModelCounts.count) video models")
@@ -1096,7 +1206,10 @@ class ProfileViewModel: ObservableObject {
                 .eq("user_id", value: userId)
                 .execute()
             
-            print("✅ Updated user stats in database")
+            // Update cache with new stats
+            saveCachedStats(for: userId, stats: statsUpdate)
+            
+            print("✅ Updated user stats in database and cache")
         } catch {
             print("❌ Failed to update user stats: \(error)")
         }

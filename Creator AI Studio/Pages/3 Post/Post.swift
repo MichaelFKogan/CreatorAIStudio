@@ -351,7 +351,7 @@ struct Post: View {
                                         )
                                     }
                                     .allowsHitTesting(false)
-                                    .padding(.bottom, 24)
+                                    // .padding(.bottom, 24)
                                 }
 
                                 VStack(spacing: 12) {
@@ -579,6 +579,7 @@ struct Post: View {
 
                         }
                         .padding(.horizontal)
+                        .padding(.bottom, 24)
 
                         // MARK: FILTER ROW
                         HStack {

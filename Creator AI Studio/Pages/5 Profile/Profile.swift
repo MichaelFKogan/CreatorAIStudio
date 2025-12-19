@@ -17,15 +17,19 @@ struct Profile: View {
                     ProfileViewContent(viewModel: viewModel)
                         .environmentObject(authViewModel)
                         .onAppear {
-                            if viewModel.userId != user.id.uuidString {
+                            let userIdChanged = viewModel.userId != user.id.uuidString
+                            if userIdChanged {
                                 viewModel.userId = user.id.uuidString
                             }
                             Task {
-                                //                            print("🔄 Profile appeared, fetching images for user: \(user.id.uuidString)")
+                                // Fetch stats FIRST so UI shows correct counts immediately
+                                // This is very cheap - just one row from user_stats table
+                                if !viewModel.hasLoadedStats || userIdChanged {
+                                    await viewModel.fetchUserStats()
+                                }
+                                // Then fetch images
                                 await viewModel.fetchUserImages(
                                     forceRefresh: false)
-                                // Fetch user stats (very cheap - just one row from user_stats table)
-                                await viewModel.fetchUserStats()
                                 //                            print("📸 Fetched \(viewModel.images.count) images")
                             }
                         }
@@ -349,6 +353,7 @@ struct ProfileViewContent: View {
                                             .font(.caption2)
                                             .foregroundColor(.red)
                                     }
+                                    .padding(.top, 2)
                                 }
                                 .buttonStyle(.plain)
                                 .disabled(isDeleting)
@@ -549,7 +554,8 @@ struct ProfileViewContent: View {
                         icon: "photo.on.rectangle.angled",
                         isSelected: selectedTab == .all && selectedModel == nil
                             && selectedVideoModel == nil,
-                        count: viewModel.hasLoadedStats ? (viewModel.imageCount + viewModel.videoCount) : viewModel.userImages.count
+                        // Stats are pre-loaded from cache in init(), so this should show correct count immediately
+                        count: viewModel.imageCount + viewModel.videoCount
                     ) {
                         selectedTab = .all
                         selectedModel = nil
@@ -563,7 +569,8 @@ struct ProfileViewContent: View {
                         isSelected: selectedTab == .favorites
                             && selectedModel == nil
                             && selectedVideoModel == nil,
-                        count: viewModel.hasLoadedStats ? viewModel.favoriteCount : viewModel.favoriteImages.count
+                        // Stats are pre-loaded from cache in init(), so this should show correct count immediately
+                        count: viewModel.favoriteCount
                     ) {
                         selectedTab = .favorites
                         selectedModel = nil
