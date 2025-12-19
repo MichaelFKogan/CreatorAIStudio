@@ -2,18 +2,20 @@
   {
     "display": {
       "title": "Anime 1",
-      "imageName": "anime1-boy",
+      "imageName": "anime3-boy",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Wavespeed Ghibli"
-    }
+      "modelName": "FLUX.1 Kontext [pro]"
+    },
+    "prompt": "Transform to Anime style"
   },
   {
     "display": {
       "title": "Anime 1",
-      "imageName": "anime1-girl",
+      "imageName": "anime3-girl",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Wavespeed Ghibli"
-    }
+      "modelName": "FLUX.1 Kontext [pro]"
+    },
+    "prompt": "Transform to Anime style"
   },
 
   {
@@ -32,25 +34,6 @@
       "imageName": "anime2-girl",
       "imageNameOriginal": "yourphoto",
       "modelName": "Seedream 4.0"
-    },
-    "prompt": "Transform to Anime style"
-  },
-
-  {
-    "display": {
-      "title": "Anime 3",
-      "imageName": "anime3-boy",
-      "imageNameOriginal": "yourphoto",
-      "modelName": "FLUX.1 Kontext [pro]"
-    },
-    "prompt": "Transform to Anime style"
-  },
-  {
-    "display": {
-      "title": "Anime 3",
-      "imageName": "anime3-girl",
-      "imageNameOriginal": "yourphoto",
-      "modelName": "FLUX.1 Kontext [pro]"
     },
     "prompt": "Transform to Anime style"
   },

@@ -64,9 +64,9 @@ struct Home: View {
                                 )
                                 .foregroundColor(.primary)
 
-                            Text("credits")
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
+                            // Text("credits")
+                            //     .font(.caption2)
+                            //     .foregroundColor(.secondary)
                         }
                         .padding(.horizontal, 12)
                         .padding(.vertical, 6)

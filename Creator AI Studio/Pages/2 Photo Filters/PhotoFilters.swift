@@ -168,21 +168,30 @@ struct PhotoFilters: View {
                 HStack {
                     Spacer()
                     
-                    Text("Multi-Select")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(.primary)
-                    
-                    Toggle("", isOn: $isMultiSelectMode)
-                        .labelsHidden()
-                        .controlSize(.mini)
-                        .onChange(of: isMultiSelectMode) { newValue in
-                            if !newValue {
-                                selectedFilterIds.removeAll()
-                            }
+                    Button(action: {
+                        isMultiSelectMode.toggle()
+                        if !isMultiSelectMode {
+                            selectedFilterIds.removeAll()
                         }
+                    }) {
+                        HStack(spacing: 8) {
+                            Text("Multi-Select")
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(.primary)
+                            
+                            Toggle("", isOn: $isMultiSelectMode)
+                                .scaleEffect(0.60)
+                                .labelsHidden()
+                                .onChange(of: isMultiSelectMode) { newValue in
+                                    if !newValue {
+                                        selectedFilterIds.removeAll()
+                                    }
+                                }
+                        }
+                    }
+                    .buttonStyle(PlainButtonStyle())
                 }
-                .padding(.horizontal, 16)
-                .padding(.top, 6)
+                .padding(.vertical, 2)
                 .background(Color(.systemGroupedBackground))
                 
                 // Main content with ScrollViewReader
@@ -261,7 +270,7 @@ struct PhotoFilters: View {
                         // Bottom spacing
                         Color.clear.frame(height: 160)
                         }
-                        .padding(.top, 16)
+                        // .padding(.top, 16)
                     }
                     .onChange(of: selectedCategoryTab) { newCategory in
                         if let category = newCategory {
@@ -561,7 +570,8 @@ struct CategoryTabBar: View {
                 }
             }
             .padding(.horizontal, 16)
-            .padding(.vertical, 12)
+            .padding(.top, 12)
+            .padding(.bottom, 2)
         }
         .background(Color(.systemGroupedBackground))
     }

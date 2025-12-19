@@ -24,6 +24,8 @@ struct Profile: View {
                                 //                            print("🔄 Profile appeared, fetching images for user: \(user.id.uuidString)")
                                 await viewModel.fetchUserImages(
                                     forceRefresh: false)
+                                // Fetch user stats (very cheap - just one row from user_stats table)
+                                await viewModel.fetchUserStats()
                                 //                            print("📸 Fetched \(viewModel.images.count) images")
                             }
                         }
@@ -112,24 +114,27 @@ struct ProfileViewContent: View {
     private func computeModelsWithMetadata() -> [(
         model: String, count: Int, imageName: String
     )] {
-        let currentUniqueModels = viewModel.uniqueModels
-        print(
-            "🔍 DEBUG: Computing models - uniqueModels = \(currentUniqueModels)")
-        print(
-            "🔍 DEBUG: Computing models - Total userImages = \(viewModel.userImages.count)"
-        )
-
-        // Debug: Print first few images and their model values
-        for (index, image) in viewModel.userImages.prefix(5).enumerated() {
-            print("🔍 DEBUG: Image \(index): model = '\(image.model ?? "nil")'")
+        // Use modelCounts if available (from database query), otherwise fall back to uniqueModels
+        let modelNames: [String]
+        if !viewModel.modelCounts.isEmpty {
+            modelNames = Array(viewModel.modelCounts.keys).sorted()
+            print("🔍 DEBUG: Computing models from modelCounts: \(modelNames.count) models")
+        } else {
+            modelNames = viewModel.uniqueModels
+            print("🔍 DEBUG: Computing models from uniqueModels: \(modelNames.count) models")
         }
 
         var result: [(String, Int, String)] = []
 
-        for modelName in currentUniqueModels {
-            let count = viewModel.filteredImages(
-                by: modelName, favoritesOnly: false
-            ).count
+        for modelName in modelNames {
+            // Use count from modelCounts if available, otherwise filter from userImages
+            let count: Int
+            if let dbCount = viewModel.modelCounts[modelName], dbCount > 0 {
+                count = dbCount
+            } else {
+                count = viewModel.filteredImages(by: modelName, favoritesOnly: false).count
+            }
+            
             print("🔍 DEBUG: Model '\(modelName)' has \(count) images")
             guard count > 0 else { continue }
 
@@ -168,20 +173,27 @@ struct ProfileViewContent: View {
     private func computeVideoModelsWithMetadata() -> [(
         model: String, count: Int, imageName: String
     )] {
-        let currentUniqueVideoModels = viewModel.uniqueVideoModels
-        print(
-            "🎬 DEBUG: Computing video models - uniqueVideoModels = \(currentUniqueVideoModels)"
-        )
-        print(
-            "🎬 DEBUG: Computing video models - Total userVideos = \(viewModel.userVideos.count)"
-        )
+        // Use videoModelCounts if available (from database query), otherwise fall back to uniqueVideoModels
+        let modelNames: [String]
+        if !viewModel.videoModelCounts.isEmpty {
+            modelNames = Array(viewModel.videoModelCounts.keys).sorted()
+            print("🎬 DEBUG: Computing video models from videoModelCounts: \(modelNames.count) models")
+        } else {
+            modelNames = viewModel.uniqueVideoModels
+            print("🎬 DEBUG: Computing video models from uniqueVideoModels: \(modelNames.count) models")
+        }
 
         var result: [(String, Int, String)] = []
 
-        for modelName in currentUniqueVideoModels {
-            let count = viewModel.filteredVideos(
-                by: modelName, favoritesOnly: false
-            ).count
+        for modelName in modelNames {
+            // Use count from videoModelCounts if available, otherwise filter from userVideos
+            let count: Int
+            if let dbCount = viewModel.videoModelCounts[modelName], dbCount > 0 {
+                count = dbCount
+            } else {
+                count = viewModel.filteredVideos(by: modelName, favoritesOnly: false).count
+            }
+            
             print("🎬 DEBUG: Video Model '\(modelName)' has \(count) videos")
             guard count > 0 else { continue }
 
@@ -551,11 +563,15 @@ struct ProfileViewContent: View {
                         isSelected: selectedTab == .favorites
                             && selectedModel == nil
                             && selectedVideoModel == nil,
-                        count: viewModel.favoriteImages.count
+                        count: viewModel.hasLoadedStats ? viewModel.favoriteCount : viewModel.favoriteImages.count
                     ) {
                         selectedTab = .favorites
                         selectedModel = nil
                         selectedVideoModel = nil
+                        // Fetch favorites when tab is clicked (with pagination)
+                        Task {
+                            await viewModel.fetchFavorites()
+                        }
                     }
 
                     // // Presets pill
@@ -612,7 +628,7 @@ struct ProfileViewContent: View {
         let isSelected = selectedTab == .imageModels && selectedModel != nil
         let title =
             isSelected && selectedModel != nil ? selectedModel! : "Image Models"
-        let modelCount = viewModel.uniqueModels.count
+        let modelCount = viewModel.hasLoadedStats ? viewModel.modelCounts.count : viewModel.uniqueModels.count
 
         return HStack(spacing: 6) {
             Image(systemName: "cpu")
@@ -669,7 +685,7 @@ struct ProfileViewContent: View {
         let title =
             isSelected && selectedVideoModel != nil
             ? selectedVideoModel! : "Video Models"
-        let modelCount = viewModel.uniqueVideoModels.count
+        let modelCount = viewModel.hasLoadedStats ? viewModel.videoModelCounts.count : viewModel.uniqueVideoModels.count
 
         return HStack(spacing: 6) {
             Image(systemName: "video")
@@ -743,7 +759,8 @@ struct ProfileViewContent: View {
                 viewModel: viewModel,
                 //                presetViewModel: presetViewModel,
                 isSelectionMode: isSelectionMode,
-                selectedImageIds: $selectedImageIds
+                selectedImageIds: $selectedImageIds,
+                isFavoritesTab: selectedTab == .favorites
             )
         }
     }
@@ -945,6 +962,7 @@ struct ImageGridView: View {
     //    var presetViewModel: PresetViewModel?
     var isSelectionMode: Bool = false
     @Binding var selectedImageIds: Set<String>
+    var isFavoritesTab: Bool = false
 
     @State private var favoritedImageIds: Set<String> = []
 
@@ -1173,7 +1191,11 @@ struct ImageGridView: View {
                                 index >= userImages.count - 10
                             {
                                 Task {
-                                    await viewModel.loadMoreImages()
+                                    if isFavoritesTab {
+                                        await viewModel.loadMoreFavorites()
+                                    } else {
+                                        await viewModel.loadMoreImages()
+                                    }
                                 }
                             }
                         }
@@ -1383,7 +1405,11 @@ struct ImageGridView: View {
                                 index >= userImages.count - 10
                             {
                                 Task {
-                                    await viewModel.loadMoreImages()
+                                    if isFavoritesTab {
+                                        await viewModel.loadMoreFavorites()
+                                    } else {
+                                        await viewModel.loadMoreImages()
+                                    }
                                 }
                             }
                         }

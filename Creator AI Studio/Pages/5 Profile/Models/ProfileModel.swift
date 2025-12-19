@@ -115,6 +115,72 @@ struct UserImage: Codable, Identifiable {
     }
 }
 
+// MARK: - UserStats
+
+struct UserStats: Codable {
+    let id: String?
+    let user_id: String
+    var favorite_count: Int
+    var model_counts: [String: Int]  // JSONB in DB, decoded as dictionary
+    var video_model_counts: [String: Int]  // JSONB in DB, decoded as dictionary
+    let created_at: String?
+    let updated_at: String?
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case user_id
+        case favorite_count
+        case model_counts
+        case video_model_counts
+        case created_at
+        case updated_at
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        
+        id = try? container.decode(String.self, forKey: .id)
+        user_id = try container.decode(String.self, forKey: .user_id)
+        favorite_count = try container.decode(Int.self, forKey: .favorite_count)
+        created_at = try? container.decode(String.self, forKey: .created_at)
+        updated_at = try? container.decode(String.self, forKey: .updated_at)
+        
+        // Decode JSONB fields as dictionaries
+        if let modelCountsData = try? container.decode([String: Int].self, forKey: .model_counts) {
+            model_counts = modelCountsData
+        } else {
+            model_counts = [:]
+        }
+        
+        if let videoCountsData = try? container.decode([String: Int].self, forKey: .video_model_counts) {
+            video_model_counts = videoCountsData
+        } else {
+            video_model_counts = [:]
+        }
+    }
+    
+    // Encoding helper to convert dictionaries to JSONB
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(id, forKey: .id)
+        try container.encode(user_id, forKey: .user_id)
+        try container.encode(favorite_count, forKey: .favorite_count)
+        try container.encode(model_counts, forKey: .model_counts)
+        try container.encode(video_model_counts, forKey: .video_model_counts)
+    }
+    
+    // Regular initializer for creating new stats
+    init(id: String? = nil, user_id: String, favorite_count: Int, model_counts: [String: Int], video_model_counts: [String: Int], created_at: String? = nil, updated_at: String? = nil) {
+        self.id = id
+        self.user_id = user_id
+        self.favorite_count = favorite_count
+        self.model_counts = model_counts
+        self.video_model_counts = video_model_counts
+        self.created_at = created_at
+        self.updated_at = updated_at
+    }
+}
+
 // MARK: - ViewModel
 
 @MainActor
@@ -123,6 +189,16 @@ class ProfileViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var isLoadingMore = false
     @Published var hasMorePages = true
+
+    // New properties for counts and cached data
+    @Published var favoriteCount: Int = 0
+    @Published var cachedFavoriteImages: [UserImage] = []
+    @Published var isLoadingFavorites = false
+    @Published var isLoadingMoreFavorites = false
+    @Published var hasMoreFavoritePages = true
+    @Published var modelCounts: [String: Int] = [:] // model name -> count
+    @Published var videoModelCounts: [String: Int] = [:] // model name -> count
+    @Published var hasLoadedStats = false // Track if stats have been fetched
 
     private struct CachedUserMediaEntry: Codable {
         let images: [UserImage]
@@ -138,6 +214,10 @@ class ProfileViewModel: ObservableObject {
     // Cache for model-specific images to avoid repeated queries
     private var modelImagesCache: [String: (images: [UserImage], fetchedAt: Date)] = [:]
     private let modelCacheStaleInterval: TimeInterval = 10 * 60 // 10 minutes
+    
+    // Pagination for favorites
+    private var favoritesCurrentPage = 0
+    private var hasFetchedFavorites = false
     
     // Notification observers for new media saves
     private var imageSavedObserver: NSObjectProtocol?
@@ -312,6 +392,16 @@ class ProfileViewModel: ObservableObject {
         currentPage = 0
         hasMorePages = true
         hasFetchedFromDatabase = false
+        
+        // Reset favorites pagination
+        favoritesCurrentPage = 0
+        cachedFavoriteImages = []
+        hasFetchedFavorites = false
+        hasMoreFavoritePages = true
+        favoriteCount = 0
+        modelCounts = [:]
+        videoModelCounts = [:]
+        hasLoadedStats = false
 
         // Load cached data for this user if available
         loadCachedImages(for: userId)
@@ -645,6 +735,368 @@ class ProfileViewModel: ObservableObject {
         modelImagesCache.removeValue(forKey: modelName)
     }
 
+    // MARK: - Fetch User Stats (from user_stats table)
+    
+    /// Fetches user stats from the user_stats table (very cheap - just one row)
+    func fetchUserStats() async {
+        guard let userId = userId else { return }
+        
+        do {
+            let response: PostgrestResponse<[UserStats]> = try await client.database
+                .from("user_stats")
+                .select()
+                .eq("user_id", value: userId)
+                .limit(1)
+                .execute()
+            
+            if let stats = response.value.first {
+                // Update published properties from stats
+                print("📊 Current favoriteCount before update: \(favoriteCount)")
+                favoriteCount = stats.favorite_count
+                modelCounts = stats.model_counts
+                videoModelCounts = stats.video_model_counts
+                hasLoadedStats = true
+                print("✅ Fetched user stats: \(stats.favorite_count) favorites, \(stats.model_counts.count) image models, \(stats.video_model_counts.count) video models")
+                print("✅ Model counts: \(stats.model_counts)")
+                print("📊 favoriteCount after update: \(favoriteCount)")
+            } else {
+                // Stats don't exist yet, initialize them
+                print("⚠️ User stats not found, initializing...")
+                await initializeUserStats()
+            }
+        } catch {
+            print("❌ Failed to fetch user stats: \(error)")
+            print("❌ Error details: \(error.localizedDescription)")
+            
+            // Check if error is because table doesn't exist
+            let errorString = String(describing: error).lowercased()
+            if errorString.contains("user_stats") || errorString.contains("relation") || errorString.contains("does not exist") {
+                print("⚠️ user_stats table doesn't exist. Please run the DATABASE_MIGRATION_user_stats.sql migration in Supabase.")
+                print("⚠️ Falling back to computing counts from loaded images...")
+                
+                // Fallback: compute counts from all user_media (similar to initialization)
+                await computeStatsFromDatabase()
+            }
+        }
+    }
+    
+    /// Re-syncs user stats by recomputing from database (useful if stats are out of sync)
+    func resyncUserStats() async {
+        print("🔄 Re-syncing user stats from database...")
+        await initializeUserStats()
+    }
+    
+    /// Fallback method to compute stats directly from user_media when user_stats table doesn't exist
+    private func computeStatsFromDatabase() async {
+        guard let userId = userId else { return }
+        
+        do {
+            // Fetch all media to compute counts
+            let response: PostgrestResponse<[UserImage]> = try await client.database
+                .from("user_media")
+                .select("model,media_type,is_favorite")
+                .eq("user_id", value: userId)
+                .limit(10000) // High limit to get all
+                .execute()
+            
+            let allMedia = response.value ?? []
+            
+            // Compute counts
+            var computedFavoriteCount = 0
+            var computedModelCounts: [String: Int] = [:]
+            var computedVideoModelCounts: [String: Int] = [:]
+            
+            print("📊 Computing stats from \(allMedia.count) media items...")
+            for media in allMedia {
+                // Count favorites (handle both true and nil as false)
+                if media.is_favorite == true {
+                    computedFavoriteCount += 1
+                }
+                
+                // Count by model
+                if let model = media.model {
+                    if media.isImage {
+                        computedModelCounts[model, default: 0] += 1
+                    } else if media.isVideo {
+                        computedVideoModelCounts[model, default: 0] += 1
+                    }
+                }
+            }
+            
+            // Update published properties on main thread
+            print("📊 Before update - favoriteCount: \(self.favoriteCount), computed: \(computedFavoriteCount)")
+            await MainActor.run {
+                self.favoriteCount = computedFavoriteCount
+                self.modelCounts = computedModelCounts
+                self.videoModelCounts = computedVideoModelCounts
+                self.hasLoadedStats = true
+                
+                print("📊 After update - favoriteCount: \(self.favoriteCount)")
+                print("✅ Computed stats from database: \(computedFavoriteCount) favorites, \(computedModelCounts.count) image models, \(computedVideoModelCounts.count) video models")
+                print("✅ Model counts dictionary: \(computedModelCounts)")
+                print("✅ Video model counts dictionary: \(computedVideoModelCounts)")
+            }
+        } catch {
+            print("❌ Failed to compute stats from database: \(error)")
+        }
+    }
+    
+    /// Initializes user stats if they don't exist (computes counts from user_media)
+    private func initializeUserStats() async {
+        guard let userId = userId else { return }
+        
+        print("📊 Initializing user stats by computing counts from user_media...")
+        
+        // Compute counts from user_media (one-time expensive operation)
+        do {
+            // Fetch all media to compute counts
+            let response: PostgrestResponse<[UserImage]> = try await client.database
+                .from("user_media")
+                .select("model,media_type,is_favorite")
+                .eq("user_id", value: userId)
+                .limit(10000) // High limit to get all
+                .execute()
+            
+            let allMedia = response.value ?? []
+            
+            print("📊 Computing stats from \(allMedia.count) media items...")
+            
+            // Compute counts
+            var favoriteCount = 0
+            var modelCounts: [String: Int] = [:]
+            var videoModelCounts: [String: Int] = [:]
+            
+            for media in allMedia {
+                // Count favorites (handle both true and nil as false)
+                if media.is_favorite == true {
+                    favoriteCount += 1
+                }
+                
+                // Count by model
+                if let model = media.model {
+                    if media.isImage {
+                        modelCounts[model, default: 0] += 1
+                    } else if media.isVideo {
+                        videoModelCounts[model, default: 0] += 1
+                    }
+                }
+            }
+            
+            // Create stats record
+            let stats = UserStats(
+                id: nil,
+                user_id: userId,
+                favorite_count: favoriteCount,
+                model_counts: modelCounts,
+                video_model_counts: videoModelCounts,
+                created_at: nil,
+                updated_at: nil
+            )
+            
+            // Check if stats already exist (for re-sync)
+            let existingResponse: PostgrestResponse<[UserStats]> = try await client.database
+                .from("user_stats")
+                .select()
+                .eq("user_id", value: userId)
+                .limit(1)
+                .execute()
+            
+            if existingResponse.value.first != nil {
+                // Update existing stats
+                print("📊 Updating existing user stats...")
+                try await client.database
+                    .from("user_stats")
+                    .update(stats)
+                    .eq("user_id", value: userId)
+                    .execute()
+            } else {
+                // Insert new stats
+                print("📊 Inserting new user stats...")
+                try await client.database
+                    .from("user_stats")
+                    .insert(stats)
+                    .execute()
+            }
+            
+            // Update published properties
+            print("📊 Before update - favoriteCount: \(self.favoriteCount), computed: \(favoriteCount)")
+            self.favoriteCount = favoriteCount
+            self.modelCounts = modelCounts
+            self.videoModelCounts = videoModelCounts
+            self.hasLoadedStats = true
+            print("📊 After update - favoriteCount: \(self.favoriteCount)")
+            
+            print("✅ Initialized user stats: \(favoriteCount) favorites, \(modelCounts.count) image models, \(videoModelCounts.count) video models")
+        } catch {
+            print("❌ Failed to initialize user stats: \(error)")
+        }
+    }
+    
+    // MARK: - Update User Stats
+    
+    /// Updates user stats in the database (incremental updates)
+    private func updateUserStats() async {
+        guard let userId = userId else { return }
+        
+        do {
+            // Create a UserStats object for updating
+            let statsUpdate = UserStats(
+                id: nil,
+                user_id: userId,
+                favorite_count: favoriteCount,
+                model_counts: modelCounts,
+                video_model_counts: videoModelCounts,
+                created_at: nil,
+                updated_at: nil
+            )
+            
+            try await client.database
+                .from("user_stats")
+                .update(statsUpdate)
+                .eq("user_id", value: userId)
+                .execute()
+            
+            print("✅ Updated user stats in database")
+        } catch {
+            print("❌ Failed to update user stats: \(error)")
+        }
+    }
+    
+    /// Increments favorite count when an image is favorited
+    private func incrementFavoriteCount() async {
+        favoriteCount += 1
+        await updateUserStats()
+    }
+    
+    /// Decrements favorite count when an image is unfavorited
+    private func decrementFavoriteCount() async {
+        favoriteCount = max(0, favoriteCount - 1)
+        await updateUserStats()
+    }
+    
+    /// Updates model counts when an image is added
+    private func updateModelCountsForImage(_ image: UserImage, increment: Bool) async {
+        guard let model = image.model else { return }
+        
+        if image.isImage {
+            if increment {
+                modelCounts[model, default: 0] += 1
+            } else {
+                modelCounts[model, default: 0] = max(0, (modelCounts[model] ?? 0) - 1)
+                // Remove model from counts if count reaches 0
+                if modelCounts[model] == 0 {
+                    modelCounts.removeValue(forKey: model)
+                }
+            }
+        } else if image.isVideo {
+            if increment {
+                videoModelCounts[model, default: 0] += 1
+            } else {
+                videoModelCounts[model, default: 0] = max(0, (videoModelCounts[model] ?? 0) - 1)
+                // Remove model from counts if count reaches 0
+                if videoModelCounts[model] == 0 {
+                    videoModelCounts.removeValue(forKey: model)
+                }
+            }
+        }
+        
+        await updateUserStats()
+    }
+    
+    // MARK: - Fetch Favorites with Pagination
+    
+    /// Fetches the first page of favorites (called when favorites tab is clicked)
+    func fetchFavorites(forceRefresh: Bool = false) async {
+        guard let userId = userId else { return }
+        
+        print("📊 fetchFavorites called - current favoriteCount: \(favoriteCount), cachedFavoriteImages.count: \(cachedFavoriteImages.count)")
+        
+        // Reset pagination if forcing refresh
+        if forceRefresh {
+            favoritesCurrentPage = 0
+            cachedFavoriteImages = []
+            hasFetchedFavorites = false
+            hasMoreFavoritePages = true
+        }
+        
+        // If we've already fetched and not forcing refresh, skip
+        guard !hasFetchedFavorites else { 
+            print("⏭️ Already fetched favorites, skipping")
+            return 
+        }
+        
+        isLoadingFavorites = true
+        
+        do {
+            let response: PostgrestResponse<[UserImage]> = try await client.database
+                .from("user_media")
+                .select()
+                .eq("user_id", value: userId)
+                .eq("is_favorite", value: true)
+                .order("created_at", ascending: false)
+                .limit(pageSize)
+                .range(from: favoritesCurrentPage * pageSize, to: (favoritesCurrentPage + 1) * pageSize - 1)
+                .execute()
+            
+            let favorites = response.value ?? []
+            
+            // If we got fewer favorites than pageSize, we've reached the end
+            hasMoreFavoritePages = favorites.count == pageSize
+            
+            // Set the favorites (replace if it's the first page)
+            if favoritesCurrentPage == 0 {
+                cachedFavoriteImages = favorites
+            } else {
+                cachedFavoriteImages.append(contentsOf: favorites)
+            }
+            
+            favoritesCurrentPage += 1
+            hasFetchedFavorites = true
+            
+            print("✅ Fetched \(favorites.count) favorites (page \(favoritesCurrentPage - 1)), total cached: \(cachedFavoriteImages.count)")
+            print("📊 favoriteCount after fetchFavorites: \(favoriteCount) (should NOT change)")
+        } catch {
+            print("❌ Failed to fetch favorites: \(error)")
+        }
+        
+        isLoadingFavorites = false
+    }
+    
+    /// Loads the next page of favorites
+    func loadMoreFavorites() async {
+        guard let userId = userId else { return }
+        guard hasMoreFavoritePages, !isLoadingMoreFavorites else { return }
+        
+        isLoadingMoreFavorites = true
+        
+        do {
+            let response: PostgrestResponse<[UserImage]> = try await client.database
+                .from("user_media")
+                .select()
+                .eq("user_id", value: userId)
+                .eq("is_favorite", value: true)
+                .order("created_at", ascending: false)
+                .limit(pageSize)
+                .range(from: favoritesCurrentPage * pageSize, to: (favoritesCurrentPage + 1) * pageSize - 1)
+                .execute()
+            
+            let newFavorites = response.value ?? []
+            
+            // If we got fewer favorites than pageSize, we've reached the end
+            hasMoreFavoritePages = newFavorites.count == pageSize
+            
+            // Append new favorites
+            cachedFavoriteImages.append(contentsOf: newFavorites)
+            favoritesCurrentPage += 1
+            
+            print("✅ Loaded more favorites, page \(favoritesCurrentPage - 1), total: \(cachedFavoriteImages.count), hasMore: \(hasMoreFavoritePages)")
+        } catch {
+            print("❌ Failed to load more favorites: \(error)")
+        }
+        
+        isLoadingMoreFavorites = false
+    }
+
     // MARK: - Favorites Management
 
     /// Toggles the favorite status of an image
@@ -677,6 +1129,13 @@ class ProfileViewModel: ObservableObject {
                 .eq("id", value: imageId)
                 .eq("user_id", value: userId)
                 .execute()
+            
+            // Update stats
+            if newFavorite {
+                await incrementFavoriteCount()
+            } else {
+                await decrementFavoriteCount()
+            }
         } catch {
             print("❌ Failed to update favorite status: \(error)")
             // Revert local change on error
@@ -687,9 +1146,14 @@ class ProfileViewModel: ObservableObject {
         }
     }
 
-    /// Gets all favorited images
+    /// Gets all favorited images (uses cached favorites if available, otherwise filters from userImages)
     var favoriteImages: [UserImage] {
-        userImages.filter { $0.is_favorite == true }
+        // If we have cached favorites, use them (they contain paginated favorites)
+        if !cachedFavoriteImages.isEmpty {
+            return cachedFavoriteImages
+        }
+        // Otherwise, fall back to filtering from userImages (limited to first 50)
+        return userImages.filter { $0.is_favorite == true }
     }
 
     /// Gets unique list of models from user images (images only)
@@ -873,6 +1337,12 @@ class ProfileViewModel: ObservableObject {
                         print("❌ Could not extract storage path from URL: \(imageUrl)")
                     }
                     
+                    // Update stats before removing from local array
+                    await updateModelCountsForImage(image, increment: false)
+                    if image.is_favorite == true {
+                        await decrementFavoriteCount()
+                    }
+                    
                     // Success - remove from local array
                     await MainActor.run {
                         userImages.removeAll { $0.id == imageId }
@@ -926,7 +1396,7 @@ class ProfileViewModel: ObservableObject {
     
     /// Adds a new image to the local array and cache
     /// - Parameter image: The UserImage to add
-    func addImage(_ image: UserImage) {
+    func addImage(_ image: UserImage) async {
         guard let userId = userId else { return }
         
         // Check if image already exists (avoid duplicates)
@@ -945,6 +1415,12 @@ class ProfileViewModel: ObservableObject {
         
         // Update cache
         saveCachedImages(for: userId)
+        
+        // Update stats (increment model count, and favorite count if favorited)
+        await updateModelCountsForImage(image, increment: true)
+        if image.is_favorite == true {
+            await incrementFavoriteCount()
+        }
     }
     
     /// Fetches a single image by ID and adds it to the list
@@ -988,14 +1464,18 @@ class ProfileViewModel: ObservableObject {
                 
                 if let newImage = images.first {
                     print("✅ fetchAndAddImageById: Adding image to list (id: \(newImage.id), url: \(newImage.image_url))")
-                    await MainActor.run {
-                        // Check if already exists before adding
-                        if !userImages.contains(where: { $0.id == newImage.id }) {
-                            addImage(newImage)
+                    // Check if already exists before adding
+                    let alreadyExists = await MainActor.run {
+                        return userImages.contains(where: { $0.id == newImage.id })
+                    }
+                    
+                    if !alreadyExists {
+                        await addImage(newImage)
+                        await MainActor.run {
                             print("✅ fetchAndAddImageById: Image added successfully. Total images: \(userImages.count)")
-                        } else {
-                            print("⚠️ fetchAndAddImageById: Image already exists in list, skipping")
                         }
+                    } else {
+                        print("⚠️ fetchAndAddImageById: Image already exists in list, skipping")
                     }
                     return // Success, exit retry loop
                 } else {
@@ -1059,14 +1539,18 @@ class ProfileViewModel: ObservableObject {
                 
                 if let newImage = images.first {
                     print("✅ fetchAndAddImage: Adding image to list (id: \(newImage.id))")
-                    await MainActor.run {
-                        // Check if already exists before adding
-                        if !userImages.contains(where: { $0.id == newImage.id }) {
-                            addImage(newImage)
+                    // Check if already exists before adding
+                    let alreadyExists = await MainActor.run {
+                        return userImages.contains(where: { $0.id == newImage.id })
+                    }
+                    
+                    if !alreadyExists {
+                        await addImage(newImage)
+                        await MainActor.run {
                             print("✅ fetchAndAddImage: Image added successfully. Total images: \(userImages.count)")
-                        } else {
-                            print("⚠️ fetchAndAddImage: Image already exists in list, skipping")
                         }
+                    } else {
+                        print("⚠️ fetchAndAddImage: Image already exists in list, skipping")
                     }
                     return // Success, exit retry loop
                 } else {
@@ -1112,14 +1596,18 @@ class ProfileViewModel: ObservableObject {
             
             if let latestImage = images.first {
                 print("✅ fetchLatestImage: Found latest image (id: \(latestImage.id), url: \(latestImage.image_url))")
-                await MainActor.run {
-                    // Only add if it's not already in the list
-                    if !userImages.contains(where: { $0.id == latestImage.id }) {
-                        addImage(latestImage)
+                // Only add if it's not already in the list
+                let alreadyExists = await MainActor.run {
+                    return userImages.contains(where: { $0.id == latestImage.id })
+                }
+                
+                if !alreadyExists {
+                    await addImage(latestImage)
+                    await MainActor.run {
                         print("✅ fetchLatestImage: Image added successfully. Total images: \(userImages.count)")
-                    } else {
-                        print("⚠️ fetchLatestImage: Image already exists in list, skipping")
                     }
+                } else {
+                    print("⚠️ fetchLatestImage: Image already exists in list, skipping")
                 }
             } else {
                 print("⚠️ fetchLatestImage: No images found")

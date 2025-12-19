@@ -318,7 +318,7 @@ struct PhotoFilterDetailView: View {
 
                 }
             }
-            .padding(.horizontal, 24)
+            .padding(.horizontal)
             .padding(.bottom, 150)
 
             NavigationLink(isActive: $navigateToConfirmation) {

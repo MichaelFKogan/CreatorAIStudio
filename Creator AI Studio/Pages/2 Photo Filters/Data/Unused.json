@@ -1,0 +1,18 @@
+[
+  {
+    "display": {
+      "title": "Anime 1",
+      "imageName": "anime1-boy",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Wavespeed Ghibli"
+    }
+  },
+  {
+    "display": {
+      "title": "Anime 1",
+      "imageName": "anime1-girl",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Wavespeed Ghibli"
+    }
+  }
+]
