@@ -164,6 +164,27 @@ struct PhotoFilters: View {
                 )
                 .background(Color(.systemGroupedBackground))
                 
+                // Multi-Select toggle section
+                HStack {
+                    Spacer()
+                    
+                    Text("Multi-Select")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(.primary)
+                    
+                    Toggle("", isOn: $isMultiSelectMode)
+                        .labelsHidden()
+                        .controlSize(.mini)
+                        .onChange(of: isMultiSelectMode) { newValue in
+                            if !newValue {
+                                selectedFilterIds.removeAll()
+                            }
+                        }
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, 6)
+                .background(Color(.systemGroupedBackground))
+                
                 // Main content with ScrollViewReader
                 ScrollViewReader { proxy in
                     ScrollView {
@@ -232,7 +253,6 @@ struct PhotoFilters: View {
                                     if categoryName != viewModel.sortedCategoryNames.last {
                                         Divider()
                                             .padding(.horizontal, 16)
-                                            .padding(.top, 16)
                                             .padding(.bottom, 8)
                                     }
                                 }
@@ -261,82 +281,100 @@ struct PhotoFilters: View {
             .overlay(alignment: .bottom) {
                 // Integrated single bar with preview thumbnails and confirm button
                 if isMultiSelectMode && !selectedFilterIds.isEmpty {
-                    HStack(spacing: 12) {
-                        // Preview thumbnails (scrollable on the left)
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 12) {
-                                ForEach(selectedFilters) { filter in
-                                    ZStack(alignment: .topTrailing) {
-                                        // Filter thumbnail
-                                        Group {
-                                            if let urlString = filter.display.imageName.hasPrefix("http") ? filter.display.imageName : nil,
-                                               let url = URL(string: urlString) {
-                                                KFImage(url)
-                                                    .placeholder {
-                                                        Rectangle()
-                                                            .fill(Color.gray.opacity(0.2))
-                                                            .overlay(ProgressView())
-                                                    }
-                                                    .resizable()
-                                                    .scaledToFill()
-                                                    .frame(width: 50, height: 50)
-                                                    .clipped()
-                                                    .cornerRadius(8)
-                                            } else {
-                                                Image(filter.display.imageName)
-                                                    .resizable()
-                                                    .scaledToFill()
-                                                    .frame(width: 50, height: 50)
-                                                    .clipped()
-                                                    .cornerRadius(8)
+                    VStack(spacing: 0) {
+                        // Count and disclaimer text above thumbnails
+                        HStack {
+                            Text("\(selectedFilterIds.count) selected")
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundColor(.primary)
+                            
+                            Spacer()
+                            
+                            Text("Maximum 5")
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundColor(.secondary)
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.top, 8)
+                        .padding(.bottom, 4)
+                        
+                        // Preview thumbnails and confirm button row
+                        HStack(spacing: 12) {
+                            // Preview thumbnails (scrollable on the left)
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack(spacing: 12) {
+                                    ForEach(selectedFilters) { filter in
+                                        ZStack(alignment: .topTrailing) {
+                                            // Filter thumbnail
+                                            Group {
+                                                if let urlString = filter.display.imageName.hasPrefix("http") ? filter.display.imageName : nil,
+                                                   let url = URL(string: urlString) {
+                                                    KFImage(url)
+                                                        .placeholder {
+                                                            Rectangle()
+                                                                .fill(Color.gray.opacity(0.2))
+                                                                .overlay(ProgressView())
+                                                        }
+                                                        .resizable()
+                                                        .scaledToFill()
+                                                        .frame(width: 50, height: 50)
+                                                        .clipped()
+                                                        .cornerRadius(8)
+                                                } else {
+                                                    Image(filter.display.imageName)
+                                                        .resizable()
+                                                        .scaledToFill()
+                                                        .frame(width: 50, height: 50)
+                                                        .clipped()
+                                                        .cornerRadius(8)
+                                                }
                                             }
+                                            
+                                            // Remove button
+                                            Button(action: {
+                                                selectedFilterIds.remove(filter.id)
+                                            }) {
+                                                Image(systemName: "xmark.circle.fill")
+                                                    .font(.system(size: 16))
+                                                    .foregroundColor(.white)
+                                                    .background(
+                                                        Circle()
+                                                            .fill(Color.black.opacity(0.6))
+                                                    )
+                                            }
+                                            .offset(x: 4, y: -4)
                                         }
-                                        
-                                        // Remove button
-                                        Button(action: {
-                                            selectedFilterIds.remove(filter.id)
-                                        }) {
-                                            Image(systemName: "xmark.circle.fill")
-                                                .font(.system(size: 16))
-                                                .foregroundColor(.white)
-                                                .background(
-                                                    Circle()
-                                                        .fill(Color.black.opacity(0.6))
-                                                )
-                                        }
-                                        .offset(x: 4, y: -4)
                                     }
                                 }
+                                .padding(.leading, 16)
+                                .padding(.vertical, 8)
                             }
-                            .padding(.leading, 16)
-                            .padding(.vertical, 8)
-                        }
-                        
-                        // Confirm button (on the right)
-                        NavigationLink(destination: destinationView) {
-                            HStack(spacing: 6) {
-                                Text("Next")
-                                    .font(.system(size: 15, weight: .semibold))
-                                Image(systemName: "arrow.right")
-                                    .font(.system(size: 13, weight: .semibold))
-                            }
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 18)
-                            .padding(.vertical, 10)
-                            .background(
-                                RoundedRectangle(cornerRadius: 20)
-                                    .fill(
-                                        LinearGradient(
-                                            colors: [.green, .teal],
-                                            startPoint: .leading,
-                                            endPoint: .trailing
+                            
+                            // Confirm button (on the right)
+                            NavigationLink(destination: destinationView) {
+                                HStack(spacing: 6) {
+                                    Text("Next")
+                                        .font(.system(size: 15, weight: .semibold))
+                                    Image(systemName: "arrow.right")
+                                        .font(.system(size: 13, weight: .semibold))
+                                }
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 18)
+                                .padding(.vertical, 10)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 20)
+                                        .fill(
+                                            LinearGradient(
+                                                colors: [.green, .teal],
+                                                startPoint: .leading,
+                                                endPoint: .trailing
+                                            )
                                         )
-                                    )
-                            )
+                                )
+                            }
+                            .padding(.trailing, 16)
                         }
-                        .padding(.trailing, 16)
                     }
-                    .frame(height: 70)
                     .background(
                         Color(.systemGroupedBackground)
                             .shadow(color: Color.black.opacity(0.15), radius: 8, y: -2)
@@ -367,18 +405,6 @@ struct PhotoFilters: View {
 
                 ToolbarItem(placement: .navigationBarTrailing) {
                     HStack(spacing: 16) {
-                        // Multi-select toggle button
-                        Button(action: {
-                            isMultiSelectMode.toggle()
-                            if !isMultiSelectMode {
-                                selectedFilterIds.removeAll()
-                            }
-                        }) {
-                            Text(isMultiSelectMode ? "Cancel" : "Select")
-                                .font(.headline)
-                                .foregroundColor(isMultiSelectMode ? .blue : .gray)
-                        }
-                        
                         // Credits display
                         HStack(spacing: 6) {
                             Image(systemName: "diamond.fill")

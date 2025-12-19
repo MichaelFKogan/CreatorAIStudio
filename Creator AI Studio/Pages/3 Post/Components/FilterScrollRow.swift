@@ -39,9 +39,9 @@ struct FilterScrollRow: View {
     @State private var hasUserInteracted = false
 
     // Frame dimensions
-    private let frameWidth: CGFloat = 100
-    private let frameHeight: CGFloat = 100
-    private let thumbnailWidth: CGFloat = 90
+    private let frameWidth: CGFloat = 85
+    private let frameHeight: CGFloat = 85
+    private let thumbnailWidth: CGFloat = 75
 
     var body: some View {
         GeometryReader { geometry in
@@ -257,7 +257,7 @@ struct FilterScrollRow: View {
                 hapticGenerator.prepare()
             }
         }
-        .frame(height: 90)
+        .frame(height: 75)
     }
 
     private func checkCenteredFilter(centerX: CGFloat) {
@@ -451,7 +451,7 @@ struct FilterThumbnailCompact: View {
                             }
                             .resizable()
                             .scaledToFill()
-                            .frame(width: 90, height: 90)
+                            .frame(width: 75, height: 75)
                             .clipped()
                             .cornerRadius(12)
                             .padding(0)
@@ -513,7 +513,7 @@ struct FilterThumbnailCompact: View {
                         Image(effectiveImageName)
                             .resizable()
                             .scaledToFill()
-                            .frame(width: 90, height: 90)
+                            .frame(width: 75, height: 75)
                             .clipped()
                             .cornerRadius(12)
                             .padding(0)

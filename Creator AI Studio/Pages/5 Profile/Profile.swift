@@ -283,7 +283,7 @@ struct ProfileViewContent: View {
                                 }) {
                                     VStack(spacing: 2) {
                                         Image(systemName: "arrow.down.circle")
-                                            .font(.system(size: 20, weight: .medium))
+                                            .font(.system(size: 14, weight: .medium))
                                             .foregroundColor(.blue)
                                             .opacity(0.8)
                                         Text("Save")
@@ -308,7 +308,7 @@ struct ProfileViewContent: View {
                                 }) {
                                     VStack(spacing: 2) {
                                         Image(systemName: "square.and.arrow.up")
-                                            .font(.system(size: 20, weight: .medium))
+                                            .font(.system(size: 14, weight: .medium))
                                             .foregroundColor(.blue)
                                             .opacity(0.8)
                                         Text("Share")
@@ -330,7 +330,7 @@ struct ProfileViewContent: View {
                                 }) {
                                     VStack(spacing: 2) {
                                         Image(systemName: "trash")
-                                            .font(.system(size: 20, weight: .medium))
+                                            .font(.system(size: 14, weight: .medium))
                                             .foregroundColor(.red)
                                             .opacity(0.8)
                                         Text("Delete")
