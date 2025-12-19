@@ -549,7 +549,7 @@ struct ProfileViewContent: View {
                         icon: "photo.on.rectangle.angled",
                         isSelected: selectedTab == .all && selectedModel == nil
                             && selectedVideoModel == nil,
-                        count: viewModel.userImages.count
+                        count: viewModel.hasLoadedStats ? (viewModel.imageCount + viewModel.videoCount) : viewModel.userImages.count
                     ) {
                         selectedTab = .all
                         selectedModel = nil

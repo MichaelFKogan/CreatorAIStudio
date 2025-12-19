@@ -121,6 +121,8 @@ struct UserStats: Codable {
     let id: String?
     let user_id: String
     var favorite_count: Int
+    var image_count: Int
+    var video_count: Int
     var model_counts: [String: Int]  // JSONB in DB, decoded as dictionary
     var video_model_counts: [String: Int]  // JSONB in DB, decoded as dictionary
     let created_at: String?
@@ -130,6 +132,8 @@ struct UserStats: Codable {
         case id
         case user_id
         case favorite_count
+        case image_count
+        case video_count
         case model_counts
         case video_model_counts
         case created_at
@@ -142,6 +146,9 @@ struct UserStats: Codable {
         id = try? container.decode(String.self, forKey: .id)
         user_id = try container.decode(String.self, forKey: .user_id)
         favorite_count = try container.decode(Int.self, forKey: .favorite_count)
+        // Handle image_count and video_count - default to 0 if not present (for backward compatibility)
+        image_count = (try? container.decode(Int.self, forKey: .image_count)) ?? 0
+        video_count = (try? container.decode(Int.self, forKey: .video_count)) ?? 0
         created_at = try? container.decode(String.self, forKey: .created_at)
         updated_at = try? container.decode(String.self, forKey: .updated_at)
         
@@ -170,14 +177,33 @@ struct UserStats: Codable {
     }
     
     // Regular initializer for creating new stats
-    init(id: String? = nil, user_id: String, favorite_count: Int, model_counts: [String: Int], video_model_counts: [String: Int], created_at: String? = nil, updated_at: String? = nil) {
+    init(id: String? = nil, user_id: String, favorite_count: Int, image_count: Int = 0, video_count: Int = 0, model_counts: [String: Int], video_model_counts: [String: Int], created_at: String? = nil, updated_at: String? = nil) {
         self.id = id
         self.user_id = user_id
         self.favorite_count = favorite_count
+        self.image_count = image_count
+        self.video_count = video_count
         self.model_counts = model_counts
         self.video_model_counts = video_model_counts
         self.created_at = created_at
         self.updated_at = updated_at
+    }
+}
+
+// MARK: - MediaStats (lightweight struct for stats computation)
+
+/// Lightweight struct for computing stats - only includes fields needed for counting
+private struct MediaStats: Codable {
+    let model: String?
+    let media_type: String?
+    let is_favorite: Bool?
+    
+    var isImage: Bool {
+        media_type == "image" || media_type == nil
+    }
+    
+    var isVideo: Bool {
+        media_type == "video"
     }
 }
 
@@ -192,6 +218,8 @@ class ProfileViewModel: ObservableObject {
 
     // New properties for counts and cached data
     @Published var favoriteCount: Int = 0
+    @Published var imageCount: Int = 0
+    @Published var videoCount: Int = 0
     @Published var cachedFavoriteImages: [UserImage] = []
     @Published var isLoadingFavorites = false
     @Published var isLoadingMoreFavorites = false
@@ -399,6 +427,8 @@ class ProfileViewModel: ObservableObject {
         hasFetchedFavorites = false
         hasMoreFavoritePages = true
         favoriteCount = 0
+        imageCount = 0
+        videoCount = 0
         modelCounts = [:]
         videoModelCounts = [:]
         hasLoadedStats = false
@@ -750,15 +780,25 @@ class ProfileViewModel: ObservableObject {
                 .execute()
             
             if let stats = response.value.first {
+                // Check if image_count/video_count are 0 (likely from migration - need to recompute)
+                // This happens when the migration adds the columns with default 0 values
+                if stats.image_count == 0 && stats.video_count == 0 && (stats.favorite_count > 0 || !stats.model_counts.isEmpty || !stats.video_model_counts.isEmpty) {
+                    print("⚠️ Stats found but image_count/video_count are 0 - likely from migration. Auto-re-syncing...")
+                    await initializeUserStats()
+                    return
+                }
+                
                 // Update published properties from stats
-                print("📊 Current favoriteCount before update: \(favoriteCount)")
+                print("📊 Current counts before update: favorites=\(favoriteCount), images=\(imageCount), videos=\(videoCount)")
                 favoriteCount = stats.favorite_count
+                imageCount = stats.image_count
+                videoCount = stats.video_count
                 modelCounts = stats.model_counts
                 videoModelCounts = stats.video_model_counts
                 hasLoadedStats = true
-                print("✅ Fetched user stats: \(stats.favorite_count) favorites, \(stats.model_counts.count) image models, \(stats.video_model_counts.count) video models")
+                print("✅ Fetched user stats: \(stats.favorite_count) favorites, \(stats.image_count) images, \(stats.video_count) videos, \(stats.model_counts.count) image models, \(stats.video_model_counts.count) video models")
                 print("✅ Model counts: \(stats.model_counts)")
-                print("📊 favoriteCount after update: \(favoriteCount)")
+                print("📊 Counts after update: favorites=\(favoriteCount), images=\(imageCount), videos=\(videoCount)")
             } else {
                 // Stats don't exist yet, initialize them
                 print("⚠️ User stats not found, initializing...")
@@ -791,8 +831,8 @@ class ProfileViewModel: ObservableObject {
         guard let userId = userId else { return }
         
         do {
-            // Fetch all media to compute counts
-            let response: PostgrestResponse<[UserImage]> = try await client.database
+            // Fetch only the fields we need for stats computation (lightweight query)
+            let response: PostgrestResponse<[MediaStats]> = try await client.database
                 .from("user_media")
                 .select("model,media_type,is_favorite")
                 .eq("user_id", value: userId)
@@ -803,6 +843,8 @@ class ProfileViewModel: ObservableObject {
             
             // Compute counts
             var computedFavoriteCount = 0
+            var computedImageCount = 0
+            var computedVideoCount = 0
             var computedModelCounts: [String: Int] = [:]
             var computedVideoModelCounts: [String: Int] = [:]
             
@@ -811,6 +853,13 @@ class ProfileViewModel: ObservableObject {
                 // Count favorites (handle both true and nil as false)
                 if media.is_favorite == true {
                     computedFavoriteCount += 1
+                }
+                
+                // Count images and videos
+                if media.isImage {
+                    computedImageCount += 1
+                } else if media.isVideo {
+                    computedVideoCount += 1
                 }
                 
                 // Count by model
@@ -824,15 +873,18 @@ class ProfileViewModel: ObservableObject {
             }
             
             // Update published properties on main thread
-            print("📊 Before update - favoriteCount: \(self.favoriteCount), computed: \(computedFavoriteCount)")
+            print("📊 Before update - favorites=\(self.favoriteCount), images=\(self.imageCount), videos=\(self.videoCount)")
+            print("📊 Computed - favorites=\(computedFavoriteCount), images=\(computedImageCount), videos=\(computedVideoCount)")
             await MainActor.run {
                 self.favoriteCount = computedFavoriteCount
+                self.imageCount = computedImageCount
+                self.videoCount = computedVideoCount
                 self.modelCounts = computedModelCounts
                 self.videoModelCounts = computedVideoModelCounts
                 self.hasLoadedStats = true
                 
-                print("📊 After update - favoriteCount: \(self.favoriteCount)")
-                print("✅ Computed stats from database: \(computedFavoriteCount) favorites, \(computedModelCounts.count) image models, \(computedVideoModelCounts.count) video models")
+                print("📊 After update - favorites=\(self.favoriteCount), images=\(self.imageCount), videos=\(self.videoCount)")
+                print("✅ Computed stats from database: \(computedFavoriteCount) favorites, \(computedImageCount) images, \(computedVideoCount) videos, \(computedModelCounts.count) image models, \(computedVideoModelCounts.count) video models")
                 print("✅ Model counts dictionary: \(computedModelCounts)")
                 print("✅ Video model counts dictionary: \(computedVideoModelCounts)")
             }
@@ -849,8 +901,8 @@ class ProfileViewModel: ObservableObject {
         
         // Compute counts from user_media (one-time expensive operation)
         do {
-            // Fetch all media to compute counts
-            let response: PostgrestResponse<[UserImage]> = try await client.database
+            // Fetch only the fields we need for stats computation (lightweight query)
+            let response: PostgrestResponse<[MediaStats]> = try await client.database
                 .from("user_media")
                 .select("model,media_type,is_favorite")
                 .eq("user_id", value: userId)
@@ -863,6 +915,8 @@ class ProfileViewModel: ObservableObject {
             
             // Compute counts
             var favoriteCount = 0
+            var imageCount = 0
+            var videoCount = 0
             var modelCounts: [String: Int] = [:]
             var videoModelCounts: [String: Int] = [:]
             
@@ -870,6 +924,13 @@ class ProfileViewModel: ObservableObject {
                 // Count favorites (handle both true and nil as false)
                 if media.is_favorite == true {
                     favoriteCount += 1
+                }
+                
+                // Count images and videos
+                if media.isImage {
+                    imageCount += 1
+                } else if media.isVideo {
+                    videoCount += 1
                 }
                 
                 // Count by model
@@ -919,14 +980,17 @@ class ProfileViewModel: ObservableObject {
             }
             
             // Update published properties
-            print("📊 Before update - favoriteCount: \(self.favoriteCount), computed: \(favoriteCount)")
+            print("📊 Before update - favorites=\(self.favoriteCount), images=\(self.imageCount), videos=\(self.videoCount)")
+            print("📊 Computed - favorites=\(favoriteCount), images=\(imageCount), videos=\(videoCount)")
             self.favoriteCount = favoriteCount
+            self.imageCount = imageCount
+            self.videoCount = videoCount
             self.modelCounts = modelCounts
             self.videoModelCounts = videoModelCounts
             self.hasLoadedStats = true
-            print("📊 After update - favoriteCount: \(self.favoriteCount)")
+            print("📊 After update - favorites=\(self.favoriteCount), images=\(self.imageCount), videos=\(self.videoCount)")
             
-            print("✅ Initialized user stats: \(favoriteCount) favorites, \(modelCounts.count) image models, \(videoModelCounts.count) video models")
+            print("✅ Initialized user stats: \(favoriteCount) favorites, \(imageCount) images, \(videoCount) videos, \(modelCounts.count) image models, \(videoModelCounts.count) video models")
         } catch {
             print("❌ Failed to initialize user stats: \(error)")
         }
@@ -944,6 +1008,8 @@ class ProfileViewModel: ObservableObject {
                 id: nil,
                 user_id: userId,
                 favorite_count: favoriteCount,
+                image_count: imageCount,
+                video_count: videoCount,
                 model_counts: modelCounts,
                 video_model_counts: videoModelCounts,
                 created_at: nil,
@@ -1416,11 +1482,17 @@ class ProfileViewModel: ObservableObject {
         // Update cache
         saveCachedImages(for: userId)
         
-        // Update stats (increment model count, and favorite count if favorited)
+        // Update stats (increment model count, image/video count, and favorite count if favorited)
         await updateModelCountsForImage(image, increment: true)
+        if image.isImage {
+            imageCount += 1
+        } else if image.isVideo {
+            videoCount += 1
+        }
         if image.is_favorite == true {
             await incrementFavoriteCount()
         }
+        await updateUserStats()
     }
     
     /// Fetches a single image by ID and adds it to the list
