@@ -114,6 +114,7 @@ struct PhotoFilterDetailView: View {
                         ?? item.display.imageName,
                     rightImageName: item.display.imageName
                 )
+                .padding(.bottom, 8) // Add explicit bottom padding for consistent spacing
                 
                 // Additional selected filters (if multi-select with 2+ filters)
                 if let additionalFilters = additionalFilters, !additionalFilters.isEmpty {
@@ -434,6 +435,14 @@ struct DiagonalOverlappingImages: View {
     @State private var arrowWiggle: Bool = false
 
     var body: some View {
+        // Calculate height based on available width (screen width minus horizontal padding)
+        // This ensures consistent sizing across devices
+        let availableWidth = UIScreen.main.bounds.width - 40 // Account for horizontal padding (20 on each side)
+        let imageWidth = availableWidth * 0.53
+        let imageHeight = imageWidth * 1.38
+        let contentHeight = imageHeight + 40 // Extra space for shadows and arrow
+        let calculatedHeight = max(240, min(280, contentHeight)) // Clamp between 240 and 280
+        
         GeometryReader { geometry in
             let imageWidth = geometry.size.width * 0.53
             let imageHeight = imageWidth * 1.38
@@ -500,9 +509,9 @@ struct DiagonalOverlappingImages: View {
             .onAppear {
                 arrowWiggle = true
             }
-            .frame(width: geometry.size.width, height: imageHeight + 20)
+            .frame(width: geometry.size.width, height: geometry.size.height)
         }
-        .frame(height: 260)
+        .frame(height: calculatedHeight) // Use calculated height for consistency
         .padding(.horizontal, 20)
     }
 }
