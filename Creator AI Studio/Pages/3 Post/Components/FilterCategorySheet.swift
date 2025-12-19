@@ -1,4 +1,5 @@
 import SwiftUI
+import Kingfisher
 
 // MARK: - Compact Filters Grid (for sheet)
 
@@ -77,7 +78,7 @@ struct FilterCategorySheet: View {
     // Filter image models to only show those with Image to Image capability
     private var imageToImageModels: [InfoPacket] {
         imageModels.filter { model in
-            model.capabilities?.contains("Image to Image") ?? false
+            model.resolvedCapabilities?.contains("Image to Image") == true
         }
     }
 
@@ -121,18 +122,25 @@ struct FilterCategorySheet: View {
                         //         .padding(.vertical, 8)
                         // }
 
-                        // AI Models section (first row, always visible)
+                        // AI Models section (dropdown like other categories)
                         if !imageToImageModels.isEmpty {
                             CategorySection(
                                 title: "AI Models",
-                                emoji: "🤖",
+                                emoji: "🦾",
                                 filters: imageToImageModels,
                                 selectedFilter: selectedImageModel,
                                 onSelect: { model in
                                     onSelectModel(model)
                                 },
-                                isExpanded: true,
-                                isAlwaysExpanded: true
+                                isExpanded: expandedCategories.contains("AI Models"),
+                                isAlwaysExpanded: false,
+                                onToggle: {
+                                    if expandedCategories.contains("AI Models") {
+                                        expandedCategories.remove("AI Models")
+                                    } else {
+                                        expandedCategories.insert("AI Models")
+                                    }
+                                }
                             )
                             .padding(.top, 8)
 
