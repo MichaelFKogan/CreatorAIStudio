@@ -328,7 +328,11 @@ private struct ContentList: View {
     @ObservedObject var viewModel: VideoModelsViewModel
     let isGridView: Bool
 
-    private let gridColumns = [GridItem(.flexible()), GridItem(.flexible())]
+    // grid columns - using flexible with reduced spacing to prevent overlap on smaller devices
+    private let gridColumns = [
+        GridItem(.flexible(), spacing: 10),
+        GridItem(.flexible(), spacing: 10)
+    ]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -337,15 +341,16 @@ private struct ContentList: View {
                     icon: "video.slash", message: "No video models found")
             } else {
                 if isGridView {
-                    LazyVGrid(columns: gridColumns, spacing: 16) {
+                    LazyVGrid(columns: gridColumns, spacing: 10) {
                         ForEach(viewModel.filteredAndSortedVideoModels) {
                             item in
                             NavigationLink(destination: VideoModelDetailPage(item: item)) {
                                 VideoModelGridItem(item: item)
+                                    .frame(maxWidth: .infinity)
                             }
                         }
                     }
-                    .padding(.horizontal)
+                    .padding(.horizontal, 12)
                 } else {
                     VStack(spacing: 12) {
                         ForEach(viewModel.filteredAndSortedVideoModels) {
@@ -367,6 +372,7 @@ private struct ContentList: View {
 
 private struct VideoModelGridItem: View {
     let item: InfoPacket
+    @Environment(\.horizontalSizeClass) var horizontalSizeClass
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -374,7 +380,7 @@ private struct VideoModelGridItem: View {
                 Image(item.display.imageName)
                     .resizable()
                     .aspectRatio(contentMode: .fill)
-                    .frame(height: 180)
+                    .frame(maxWidth: .infinity)
                     .clipped()
                     .clipShape(RoundedRectangle(cornerRadius: 12))
 
@@ -401,6 +407,7 @@ private struct VideoModelGridItem: View {
                     }
                 }
             }
+            .aspectRatio(1, contentMode: .fit)
             .overlay(
                 RoundedRectangle(cornerRadius: 12)
                     .stroke(Color.gray.opacity(0.2), lineWidth: 1)

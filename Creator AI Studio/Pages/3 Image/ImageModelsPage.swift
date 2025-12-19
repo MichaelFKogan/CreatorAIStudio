@@ -332,8 +332,11 @@ private struct ContentList: View {
     @ObservedObject var viewModel: ImageModelsViewModel
     let isGridView: Bool
 
-    // grid columns can be shared
-    private let gridColumns = [GridItem(.flexible()), GridItem(.flexible())]
+    // grid columns - using flexible with reduced spacing to prevent overlap on smaller devices
+    private let gridColumns = [
+        GridItem(.flexible(), spacing: 10),
+        GridItem(.flexible(), spacing: 10)
+    ]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -341,15 +344,16 @@ private struct ContentList: View {
                 EmptyStateView(icon: "photo.slash", message: "No image models found")
             } else {
                 if isGridView {
-                    LazyVGrid(columns: gridColumns, spacing: 16) {
+                    LazyVGrid(columns: gridColumns, spacing: 10) {
                         ForEach(viewModel.filteredAndSortedImageModels) { item in
                             // Lightweight navigation (replace EmptyView with your detail view if needed)
                             NavigationLink(destination: ImageModelDetailPage(item: item)) {
                                 ImageModelGridItem(item: item, viewModel: viewModel)
+                                    .frame(maxWidth: .infinity)
                             }
                         }
                     }
-                    .padding(.horizontal)
+                    .padding(.horizontal, 12)
                 } else {
                     VStack(spacing: 12) {
                         ForEach(viewModel.filteredAndSortedImageModels) { item in
@@ -371,6 +375,7 @@ private struct ContentList: View {
 private struct ImageModelGridItem: View {
     let item: InfoPacket
     @ObservedObject var viewModel: ImageModelsViewModel
+    @Environment(\.horizontalSizeClass) var horizontalSizeClass
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -378,7 +383,7 @@ private struct ImageModelGridItem: View {
                 Image(item.display.imageName)
                     .resizable()
                     .aspectRatio(contentMode: .fill)
-                    .frame(height: 180)
+                    .frame(maxWidth: .infinity)
                     .clipped()
                     .clipShape(RoundedRectangle(cornerRadius: 12))
 
@@ -404,6 +409,7 @@ private struct ImageModelGridItem: View {
                     }
                 }
             }
+            .aspectRatio(1, contentMode: .fit)
             .overlay(
                 RoundedRectangle(cornerRadius: 12)
                     .stroke(Color.gray.opacity(0.2), lineWidth: 1)
