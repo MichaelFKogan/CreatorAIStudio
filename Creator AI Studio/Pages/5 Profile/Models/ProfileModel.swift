@@ -857,7 +857,14 @@ class ProfileViewModel: ObservableObject {
                         print("🚨 WARNING: refreshLatest adding image with INVALID URL - id: \(image.id)")
                     }
                 }
-                userImages.insert(contentsOf: freshItems, at: 0)
+                // Sort by created_at descending (newest first) to maintain correct chronological order
+                // ISO 8601 strings can be compared lexicographically
+                let sortedFreshItems = freshItems.sorted { (a, b) -> Bool in
+                    let aDate = a.created_at ?? ""
+                    let bDate = b.created_at ?? ""
+                    return aDate > bDate // Descending order (newest first)
+                }
+                userImages.insert(contentsOf: sortedFreshItems, at: 0)
             }
 
             // Update pagination marker to reflect total cached items
