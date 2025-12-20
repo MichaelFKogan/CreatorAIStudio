@@ -52,6 +52,8 @@ class PricingManager {
         // MARK: IMAGE PRICES
         // Initialize with current model prices (fixed pricing)
         prices = [
+            "GPT Image 1.5": 0.034,  // Medium quality 1024x1024 as default display price
+            "Wan2.5-Preview Image": 0.027,
             "Google Gemini Flash 2.5 (Nano Banana)": 0.039,
             "Seedream 4.5": 0.04,
             "Seedream 4.0": 0.03,

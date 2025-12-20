@@ -420,6 +420,34 @@ func sendImageToRunware(
             print("[Runware] Added default CFGScale: 4.0 for FLUX.2 [dev]")
         }
     }
+    
+    // MARK: - Provider-specific settings for OpenAI image models
+    
+    // GPT Image 1.5 supports quality and background parameters
+    if model.lowercased().contains("openai:4@1") {
+        var providerSettings: [String: Any] = [:]
+        var openaiSettings: [String: Any] = [:]
+        // quality: "low", "medium", "high", or "auto" (default: "auto")
+        openaiSettings["quality"] = "auto"
+        // background: "opaque", "transparent", or "auto" (default: "auto")
+        openaiSettings["background"] = "auto"
+        providerSettings["openai"] = openaiSettings
+        task["providerSettings"] = providerSettings
+        print("[Runware] Added OpenAI provider settings - quality: auto, background: auto")
+    }
+    
+    // MARK: - Provider-specific settings for Alibaba image models
+    
+    // Wan2.5-Preview Image supports promptExtend parameter
+    if model.lowercased().contains("alibaba:wan@2.5-image") {
+        var providerSettings: [String: Any] = [:]
+        var alibabaSettings: [String: Any] = [:]
+        // promptExtend: enables LLM-based prompt rewriting (default: true)
+        alibabaSettings["promptExtend"] = true
+        providerSettings["alibaba"] = alibabaSettings
+        task["providerSettings"] = providerSettings
+        print("[Runware] Added Alibaba provider settings - promptExtend: true")
+    }
 
     // MARK: - Wrap task in authentication array (required!)
 
@@ -993,6 +1021,27 @@ func submitImageToRunwareWithWebhook(
     if model.lowercased().contains("runware:400@1") {
         if task["steps"] == nil { task["steps"] = 30 }
         if task["CFGScale"] == nil { task["CFGScale"] = 4.0 }
+    }
+    
+    // GPT Image 1.5 provider settings (quality and background)
+    if model.lowercased().contains("openai:4@1") {
+        var providerSettings: [String: Any] = [:]
+        var openaiSettings: [String: Any] = [:]
+        openaiSettings["quality"] = "auto"
+        openaiSettings["background"] = "auto"
+        providerSettings["openai"] = openaiSettings
+        task["providerSettings"] = providerSettings
+        print("[Runware] Added OpenAI provider settings (webhook) - quality: auto, background: auto")
+    }
+    
+    // Wan2.5-Preview Image provider settings (promptExtend)
+    if model.lowercased().contains("alibaba:wan@2.5-image") {
+        var providerSettings: [String: Any] = [:]
+        var alibabaSettings: [String: Any] = [:]
+        alibabaSettings["promptExtend"] = true
+        providerSettings["alibaba"] = alibabaSettings
+        task["providerSettings"] = providerSettings
+        print("[Runware] Added Alibaba provider settings (webhook) - promptExtend: true")
     }
     
     let requestBody: [[String: Any]] = [

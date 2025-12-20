@@ -47,28 +47,21 @@ struct ImageModelDetailPage: View {
 
     // MARK: Constants
 
-    private let imageAspectOptions: [AspectRatioOption] = [
-        AspectRatioOption(
-            id: "3:4", label: "3:4", width: 3, height: 4,
-            platforms: ["Portrait"]
-        ),
-        AspectRatioOption(
-            id: "9:16", label: "9:16", width: 9, height: 16,
-            platforms: ["TikTok", "Reels"]
-        ),
-        AspectRatioOption(
-            id: "1:1", label: "1:1", width: 1, height: 1,
-            platforms: ["Instagram"]
-        ),
-        AspectRatioOption(
-            id: "4:3", label: "4:3", width: 4, height: 3,
-            platforms: ["Landscape"]
-        ),
-        AspectRatioOption(
-            id: "16:9", label: "16:9", width: 16, height: 9,
-            platforms: ["YouTube"]
-        ),
+// Replace the hardcoded imageAspectOptions with a computed property:
+private var imageAspectOptions: [AspectRatioOption] {
+    // Check for model-specific aspect ratios first
+    if let modelOptions = ModelConfigurationManager.shared.allowedAspectRatios(for: item), !modelOptions.isEmpty {
+        return modelOptions
+    }
+    // Fall back to default options for models without specific constraints
+    return [
+        AspectRatioOption(id: "3:4", label: "3:4", width: 3, height: 4, platforms: ["Portrait"]),
+        AspectRatioOption(id: "9:16", label: "9:16", width: 9, height: 16, platforms: ["TikTok", "Reels"]),
+        AspectRatioOption(id: "1:1", label: "1:1", width: 1, height: 1, platforms: ["Instagram"]),
+        AspectRatioOption(id: "4:3", label: "4:3", width: 4, height: 3, platforms: ["Landscape"]),
+        AspectRatioOption(id: "16:9", label: "16:9", width: 16, height: 9, platforms: ["YouTube"]),
     ]
+}
 
     private let examplePrompts: [String] = [
         "A serene landscape with mountains at sunset, photorealistic, 8k quality",

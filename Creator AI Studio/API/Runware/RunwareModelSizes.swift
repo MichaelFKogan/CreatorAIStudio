@@ -107,6 +107,27 @@ private let seedanceProFastSizes: [String: (Int, Int)] = [
     "auto": (0, 0),
 ]
 
+// GPT Image 1.5 - OpenAI's flagship image model
+// Supported dimensions: 1024×1024, 1536×1024, 1024×1536
+private let gptImage15Sizes: [String: (Int, Int)] = [
+    "2:3": (1024, 1536),
+    "1:1": (1024, 1024),
+    "3:2": (1536, 1024),
+    "auto": (0, 0),
+]
+
+// Wan2.5-Preview Image - Alibaba's image model
+// Min: 768×768 (589,824 pixels), Max: 1440×1440 (2,073,600 pixels)
+// Default: 1280×1280, aspect ratio between 1:4 and 4:1
+private let wan25PreviewImageSizes: [String: (Int, Int)] = [
+    "3:4": (1080, 1440),
+    "9:16": (810, 1440),
+    "1:1": (1280, 1280),
+    "4:3": (1440, 1080),
+    "16:9": (1440, 810),
+    "auto": (0, 0),
+]
+
 // MARK: - Model to Size Set Mapping
 
 /// Returns the appropriate allowed sizes dictionary for a given model identifier.
@@ -151,6 +172,12 @@ func getAllowedSizes(for model: String) -> [String: (Int, Int)] {
 
     // Seedance 1.0 Pro Fast
     if modelLower.contains("bytedance:2@2") { return seedanceProFastSizes }
+
+    // GPT Image 1.5 (OpenAI)
+    if modelLower.contains("openai:4@1") { return gptImage15Sizes }
+
+    // Wan2.5-Preview Image (Alibaba)
+    if modelLower.contains("alibaba:wan@2.5-image") { return wan25PreviewImageSizes }
 
     // Default fallback to Google Nano Banana sizes
     print("[Runware] Model '\(model)' not found in size mapping, using default (Google Nano Banana) sizes")

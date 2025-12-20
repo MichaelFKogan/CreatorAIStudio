@@ -8,6 +8,27 @@
   },
   {
     "display": {
+      "title": "GPT Image 1.5",
+      "imageName": "gptimage15",
+      "modelName": "GPT Image 1.5"
+    }
+  },
+  {
+    "display": {
+      "title": "Wan2.5-Preview Image",
+      "imageName": "wan25previewimage",
+      "modelName": "Wan2.5-Preview Image"
+    }
+  },
+  {
+    "display": {
+      "title": "Z-Image-Turbo",
+      "imageName": "zimageturbo",
+      "modelName": "Z-Image-Turbo"
+    }
+  },
+  {
+    "display": {
       "title": "Seedream 4.5",
       "imageName": "seedream45",
       "modelName": "Seedream 4.5"
@@ -18,13 +39,6 @@
       "title": "Seedream 4.0",
       "imageName": "seedream40",
       "modelName": "Seedream 4.0"
-    }
-  },
-  {
-    "display": {
-      "title": "Z-Image-Turbo",
-      "imageName": "zimageturbo",
-      "modelName": "Z-Image-Turbo"
     }
   },
   {

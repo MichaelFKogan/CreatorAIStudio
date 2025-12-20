@@ -37,6 +37,40 @@ class ModelConfigurationManager {
         
         // Initialize API configurations for all models
         apiConfigurations = [
+            "GPT Image 1.5": APIConfiguration(
+                provider: .runware,
+                endpoint: "https://api.runware.ai/v1",
+                runwareModel: "openai:4@1",
+                aspectRatio: nil,
+                wavespeedConfig: nil,
+                runwareConfig: RunwareConfig(
+                    imageToImageMethod: "referenceImages",
+                    strength: nil,
+                    additionalTaskParams: nil,
+                    requiresDimensions: true,
+                    imageCompressionQuality: 0.9,
+                    outputFormat: nil,
+                    outputType: nil,
+                    outputQuality: nil
+                )
+            ),
+            "Wan2.5-Preview Image": APIConfiguration(
+                provider: .runware,
+                endpoint: "https://api.runware.ai/v1",
+                runwareModel: "alibaba:wan@2.5-image",
+                aspectRatio: nil,
+                wavespeedConfig: nil,
+                runwareConfig: RunwareConfig(
+                    imageToImageMethod: nil,  // Text-to-image only
+                    strength: nil,
+                    additionalTaskParams: nil,
+                    requiresDimensions: true,
+                    imageCompressionQuality: 0.9,
+                    outputFormat: nil,
+                    outputType: nil,
+                    outputQuality: nil
+                )
+            ),
             "Google Gemini Flash 2.5 (Nano Banana)": APIConfiguration(
                 provider: .runware,
                 endpoint: "https://api.runware.ai/v1",
@@ -316,6 +350,8 @@ class ModelConfigurationManager {
         
         // Initialize capabilities mapping
         capabilitiesMap = [
+            "GPT Image 1.5": ["Text to Image", "Image to Image"],
+            "Wan2.5-Preview Image": ["Text to Image"],
             "Google Gemini Flash 2.5 (Nano Banana)": ["Text to Image", "Image to Image"],
             "Seedream 4.5": ["Text to Image", "Image to Image"],
             "Seedream 4.0": ["Text to Image", "Image to Image"],
@@ -342,6 +378,10 @@ class ModelConfigurationManager {
         
         // Initialize model descriptions mapping
         modelDescriptions = [
+
+            "GPT Image 1.5": "OpenAI's GPT Image 1.5 is the flagship image model powering ChatGPT Images, delivering significantly faster generation with enhanced instruction following and precise edits that preserve original details. Excels at believable transformations, dense text rendering, and detailed design tasks—ideal for practical creative workflows and production use cases.",
+            
+            "Wan2.5-Preview Image": "Alibaba's Wan2.5-Preview Image delivers high-fidelity single frame generation built from the Wan2.5 video architecture. This model focuses on detailed depth structure, strong prompt following, multilingual text rendering, and video-grade visual quality for production-ready stills.",
 
             "Google Gemini Flash 2.5 (Nano Banana)": "Google's lightweight and extremely fast image model optimized for speed-driven creativity. Perfect for quick edits, simple transformations, and fast turnarounds while still producing sharp, balanced results. Ideal for social content and rapid experimentation.",
 
@@ -371,6 +411,8 @@ class ModelConfigurationManager {
         
         // Initialize model image names mapping
         modelImageNames = [
+            "GPT Image 1.5": "gptimage15",
+            "Wan2.5-Preview Image": "wan25previewimage",
             "Google Gemini Flash 2.5 (Nano Banana)": "geminiflashimage25",
             "Seedream 4.5": "seedream45",
             "Seedream 4.0": "seedream40",
@@ -431,6 +473,19 @@ class ModelConfigurationManager {
         
         // Initialize allowed aspect ratios mapping for video models
         allowedAspectRatiosMap = [
+            // Add to allowedAspectRatiosMap initialization:
+"GPT Image 1.5": [
+    AspectRatioOption(id: "1:1", label: "1:1", width: 1, height: 1, platforms: ["Square"]),
+    AspectRatioOption(id: "3:2", label: "3:2", width: 3, height: 2, platforms: ["Landscape"]),
+    AspectRatioOption(id: "2:3", label: "2:3", width: 2, height: 3, platforms: ["Portrait"])
+],
+"Wan2.5-Preview Image": [
+    AspectRatioOption(id: "1:1", label: "1:1", width: 1, height: 1, platforms: ["Square"]),
+    AspectRatioOption(id: "4:3", label: "4:3", width: 4, height: 3, platforms: ["Landscape"]),
+    AspectRatioOption(id: "3:4", label: "3:4", width: 3, height: 4, platforms: ["Portrait"]),
+    AspectRatioOption(id: "16:9", label: "16:9", width: 16, height: 9, platforms: ["YouTube"]),
+    AspectRatioOption(id: "9:16", label: "9:16", width: 9, height: 16, platforms: ["TikTok", "Reels"])
+],
             "Sora 2": [
                 AspectRatioOption(id: "9:16", label: "9:16", width: 9, height: 16, platforms: ["TikTok", "Reels"]),
                 AspectRatioOption(id: "16:9", label: "16:9", width: 16, height: 9, platforms: ["YouTube"])
