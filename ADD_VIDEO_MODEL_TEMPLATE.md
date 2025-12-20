@@ -136,3 +136,4 @@ Before submitting, verify:
 - [ ] Image asset name is provided
 - [ ] Model description is written
 - [ ] Provider settings are documented (if applicable)
+

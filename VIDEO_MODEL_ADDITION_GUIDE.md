@@ -435,3 +435,4 @@ Creator AI Studio/
 
 **Last Updated:** Based on adding Wan2.5-Preview and Wan2.6 models
 **Version:** 1.0
+

@@ -676,7 +676,7 @@ struct PhotoConfirmationView: View {
                         InfoRow(
                             number: "3",
                             text:
-                                "Don't close the app until the image has finished generating"
+                                "Feel free to close the app while the image is generating."
                         )
                         InfoRow(
                             number: "4",
