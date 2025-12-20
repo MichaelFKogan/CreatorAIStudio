@@ -70,11 +70,27 @@ class JobStatusManager: ObservableObject {
         currentUserId = userId
         print("[JobStatusManager] Starting Realtime subscription for user: \(userId)")
         
+        // Clean up orphaned pending jobs (stuck in "pending" status for > 30 minutes)
+        // This handles jobs where webhook submission failed before the fix was applied
+        await cleanupOrphanedJobs()
+        
         // Fetch existing pending jobs
         await fetchPendingJobs(userId: userId)
         
         // Subscribe to Realtime updates
         await subscribeToRealtimeUpdates(userId: userId)
+    }
+    
+    /// Clean up orphaned pending jobs that are stuck
+    private func cleanupOrphanedJobs() async {
+        do {
+            let deletedCount = try await SupabaseManager.shared.cleanupOrphanedPendingJobs(olderThanMinutes: 30)
+            if deletedCount > 0 {
+                print("[JobStatusManager] 🧹 Cleaned up \(deletedCount) orphaned pending jobs")
+            }
+        } catch {
+            print("[JobStatusManager] ⚠️ Failed to cleanup orphaned jobs: \(error.localizedDescription)")
+        }
     }
     
     /// Stop listening for updates

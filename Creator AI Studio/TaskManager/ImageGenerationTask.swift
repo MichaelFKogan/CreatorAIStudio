@@ -328,6 +328,9 @@ class ImageGenerationTask: MediaGenerationTask {
         onProgress: @escaping (TaskProgress) async -> Void,
         onComplete: @escaping (TaskResult) async -> Void
     ) async {
+        // Track taskId outside of do block so we can clean up on failure
+        var createdTaskId: String? = nil
+        
         do {
             await onProgress(TaskProgress(progress: 0.1, message: "Preparing request..."))
             
@@ -364,6 +367,7 @@ class ImageGenerationTask: MediaGenerationTask {
             
             // Insert pending job into database
             try await SupabaseManager.shared.createPendingJob(pendingJob)
+            createdTaskId = taskId  // Track that job was created
             print("✅ Pending job created with taskId: \(taskId)")
             
             // MARK: Step 2 - Submit to API with webhook
@@ -401,6 +405,13 @@ class ImageGenerationTask: MediaGenerationTask {
             
         } catch {
             print("❌ Webhook submission error: \(error)")
+            
+            // Clean up the pending job if it was created before the failure
+            if let taskId = createdTaskId {
+                print("🧹 Cleaning up pending job after webhook failure: \(taskId)")
+                try? await SupabaseManager.shared.deletePendingJob(taskId: taskId)
+            }
+            
             await onComplete(.failure(error))
         }
     }

@@ -4,6 +4,11 @@ struct Settings: View {
     @EnvironmentObject var themeManager: ThemeManager
     @EnvironmentObject var authViewModel: AuthViewModel
     @State private var showCopiedAlert = false
+    @State private var showCacheClearedAlert = false
+    @State private var isClearing = false
+    
+    // ProfileViewModel for cache clearing
+    var profileViewModel: ProfileViewModel?
 
     var body: some View {
         List {
@@ -71,6 +76,24 @@ struct Settings: View {
                         set: { _ in themeManager.toggleTheme() }
                     ))
                 }
+                
+                // Clear Cache button
+                Button(action: {
+                    clearCache()
+                }) {
+                    HStack {
+                        Image(systemName: "trash")
+                            .foregroundColor(.orange)
+                        Text("Clear Gallery Cache")
+                            .foregroundColor(.primary)
+                        Spacer()
+                        if isClearing {
+                            ProgressView()
+                                .scaleEffect(0.8)
+                        }
+                    }
+                }
+                .disabled(isClearing)
 
 //                HStack {
 //                    Image(systemName: "paintbrush")
@@ -204,5 +227,24 @@ struct Settings: View {
         } message: {
             Text("User ID copied to clipboard")
         }
+        .alert("Cache Cleared", isPresented: $showCacheClearedAlert) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Gallery cache has been cleared. Pull to refresh on the Gallery page to reload your images.")
+        }
+    }
+    
+    private func clearCache() {
+        isClearing = true
+        
+        // Clear the profile cache
+        profileViewModel?.clearCache()
+        
+        // Haptic feedback
+        let generator = UINotificationFeedbackGenerator()
+        generator.notificationOccurred(.success)
+        
+        isClearing = false
+        showCacheClearedAlert = true
     }
 }

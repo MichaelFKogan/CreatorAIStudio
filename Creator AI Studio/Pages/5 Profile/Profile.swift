@@ -378,7 +378,7 @@ struct ProfileViewContent: View {
                                 }
 
                                 NavigationLink(
-                                    destination: Settings().environmentObject(
+                                    destination: Settings(profileViewModel: viewModel).environmentObject(
                                         authViewModel)
                                 ) {
                                     Image(systemName: "gearshape")
@@ -976,6 +976,16 @@ struct ImageGridView: View {
     private var gridColumns: [GridItem] {
         Array(repeating: GridItem(.flexible(), spacing: spacing), count: 3)
     }
+    
+    /// Filter out items with invalid/empty URLs to prevent empty rectangles in the grid
+    private var validUserImages: [UserImage] {
+        userImages.filter { userImage in
+            // Check if at least one valid URL exists
+            let hasValidImageUrl = !userImage.image_url.isEmpty && URL(string: userImage.image_url) != nil
+            let hasValidThumbnailUrl = userImage.thumbnail_url.map { !$0.isEmpty && URL(string: $0) != nil } ?? false
+            return hasValidImageUrl || hasValidThumbnailUrl
+        }
+    }
 
     var body: some View {
         GeometryReader { proxy in
@@ -994,8 +1004,8 @@ struct ImageGridView: View {
                     )
                 }
 
-                // Then show completed images
-                ForEach(userImages) { userImage in
+                // Then show completed images (filtered to exclude invalid URLs)
+                ForEach(validUserImages) { userImage in
                     // Helper to check if a URL string is valid and non-empty
                     let isValidUrl: (String?) -> Bool = { urlString in
                         guard let urlString = urlString, !urlString.isEmpty else { return false }
@@ -1215,10 +1225,10 @@ struct ImageGridView: View {
                         .onAppear {
                             // Trigger loading more when we're 10 items from the end
                             if let viewModel = viewModel,
-                                let index = userImages.firstIndex(where: {
+                                let index = validUserImages.firstIndex(where: {
                                     $0.id == userImage.id
                                 }),
-                                index >= userImages.count - 10
+                                index >= validUserImages.count - 10
                             {
                                 Task {
                                     if isFavoritesTab {
@@ -1429,10 +1439,10 @@ struct ImageGridView: View {
                         .onAppear {
                             // Trigger loading more when we're 10 items from the end
                             if let viewModel = viewModel,
-                                let index = userImages.firstIndex(where: {
+                                let index = validUserImages.firstIndex(where: {
                                     $0.id == userImage.id
                                 }),
-                                index >= userImages.count - 10
+                                index >= validUserImages.count - 10
                             {
                                 Task {
                                     if isFavoritesTab {
@@ -1459,7 +1469,7 @@ struct ImageGridView: View {
             .padding(.horizontal, 4)
         }
         .frame(
-            height: calculateHeight(for: placeholders.count + userImages.count))
+            height: calculateHeight(for: placeholders.count + validUserImages.count))
     }
 
     private func calculateHeight(for count: Int) -> CGFloat {

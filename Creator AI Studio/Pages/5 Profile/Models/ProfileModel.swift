@@ -579,11 +579,27 @@ class ProfileViewModel: ObservableObject {
         }
 
         if let entry = cachedUserImagesMap[userId] {
-            userImages = entry.images
+            // Filter out items with invalid/empty URLs to prevent display issues
+            let validImages = entry.images.filter { image in
+                let hasValidImageUrl = !image.image_url.isEmpty && URL(string: image.image_url) != nil
+                let hasValidThumbnailUrl = image.thumbnail_url.map { !$0.isEmpty && URL(string: $0) != nil } ?? false
+                return hasValidImageUrl || hasValidThumbnailUrl
+            }
+            
+            // If we filtered out invalid items, update the cache
+            if validImages.count != entry.images.count {
+                let removedCount = entry.images.count - validImages.count
+                print("🧹 Removed \(removedCount) invalid cached item(s) with empty/invalid URLs")
+                userImages = validImages
+                saveCachedImages(for: userId)  // Save the cleaned cache
+            } else {
+                userImages = entry.images
+            }
+            
             lastFetchedAt = entry.lastFetchedAt
             // Set the page based on cached count so pagination continues correctly
-            currentPage = Int(ceil(Double(entry.images.count) / Double(pageSize)))
-            hasMorePages = entry.images.count >= pageSize
+            currentPage = Int(ceil(Double(userImages.count) / Double(pageSize)))
+            hasMorePages = userImages.count >= pageSize
 
             // If the cache is fresh, skip the initial fetch to avoid egress
             if isCacheFresh {
@@ -595,6 +611,30 @@ class ProfileViewModel: ObservableObject {
             hasFetchedFromDatabase = false
             currentPage = 0
         }
+    }
+    
+    /// Clears the local cache for the current user, forcing a full refresh from the database
+    /// Call this when there are issues with cached data
+    func clearCache() {
+        guard let userId = userId else { return }
+        
+        // Clear in-memory cache
+        userImages = []
+        cachedUserImagesMap.removeValue(forKey: userId)
+        lastFetchedAt = nil
+        hasFetchedFromDatabase = false
+        currentPage = 0
+        hasMorePages = true
+        
+        // Clear model-specific caches
+        modelImagesCache.removeAll()
+        
+        // Persist the cleared cache
+        if let encoded = try? JSONEncoder().encode(cachedUserImagesMap) {
+            cachedUserImagesData = encoded
+        }
+        
+        print("🧹 Cache cleared for user: \(userId)")
     }
 
     private func saveCachedImages(for userId: String) {

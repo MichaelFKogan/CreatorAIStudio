@@ -427,4 +427,39 @@ class SupabaseManager {
         
         return count
     }
+    
+    /// Cleans up orphaned pending jobs that are stuck in "pending" status
+    /// These are jobs where the webhook submission failed but the job wasn't cleaned up
+    /// (This can happen due to network failures during webhook submission before the fix was applied)
+    /// - Parameter olderThanMinutes: Number of minutes after which to consider a pending job orphaned
+    /// - Returns: Number of deleted orphaned jobs
+    func cleanupOrphanedPendingJobs(olderThanMinutes: Int = 30) async throws -> Int {
+        let cutoffDate = Calendar.current.date(byAdding: .minute, value: -olderThanMinutes, to: Date())!
+        let cutoffString = ISO8601DateFormatter().string(from: cutoffDate)
+        
+        // Fetch orphaned jobs (stuck in pending status for too long)
+        let jobs: [PendingJob] = try await client.database
+            .from("pending_jobs")
+            .select()
+            .eq("status", value: "pending")
+            .lt("created_at", value: cutoffString)
+            .execute()
+            .value
+        
+        let count = jobs.count
+        
+        if count > 0 {
+            // Delete the orphaned jobs
+            try await client.database
+                .from("pending_jobs")
+                .delete()
+                .eq("status", value: "pending")
+                .lt("created_at", value: cutoffString)
+                .execute()
+            
+            print("[PendingJobs] 🧹 Cleaned up \(count) orphaned pending jobs (stuck for > \(olderThanMinutes) minutes)")
+        }
+        
+        return count
+    }
 }
