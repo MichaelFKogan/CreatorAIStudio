@@ -573,6 +573,8 @@ class ProfileViewModel: ObservableObject {
     }
 
     private func loadCachedImages(for userId: String) {
+        print("🟡 DEBUG loadCachedImages: Loading cache for userId: \(userId)")
+        
         // Ensure cache is decoded
         if cachedUserImagesMap.isEmpty {
             decodeCacheStore()
@@ -586,14 +588,26 @@ class ProfileViewModel: ObservableObject {
                 return hasValidImageUrl || hasValidThumbnailUrl
             }
             
-            // If we filtered out invalid items, update the cache
-            if validImages.count != entry.images.count {
-                let removedCount = entry.images.count - validImages.count
-                print("🧹 Removed \(removedCount) invalid cached item(s) with empty/invalid URLs")
-                userImages = validImages
+            // Deduplicate: Remove duplicate entries by ID (keep first occurrence)
+            var seenIds = Set<String>()
+            var duplicateCount = 0
+            let deduplicatedImages = validImages.filter { image in
+                if seenIds.contains(image.id) {
+                    duplicateCount += 1
+                    return false
+                }
+                seenIds.insert(image.id)
+                return true
+            }
+            
+            // If we filtered out invalid items or duplicates, update the cache
+            if deduplicatedImages.count != entry.images.count {
+                let removedCount = entry.images.count - deduplicatedImages.count
+                print("🧹 Removed \(removedCount) invalid/duplicate cached item(s) (duplicates: \(duplicateCount))")
+                userImages = deduplicatedImages
                 saveCachedImages(for: userId)  // Save the cleaned cache
             } else {
-                userImages = entry.images
+                userImages = deduplicatedImages
             }
             
             lastFetchedAt = entry.lastFetchedAt
@@ -640,8 +654,25 @@ class ProfileViewModel: ObservableObject {
     private func saveCachedImages(for userId: String) {
         let now = Date()
         lastFetchedAt = lastFetchedAt ?? now
+        
+        // Deduplicate before saving to cache (keep first occurrence of each ID)
+        var seenIds = Set<String>()
+        var duplicateCount = 0
+        let deduplicatedImages = userImages.filter { image in
+            if seenIds.contains(image.id) {
+                duplicateCount += 1
+                return false
+            }
+            seenIds.insert(image.id)
+            return true
+        }
+        
+        if duplicateCount > 0 {
+            print("🧹 Removed \(duplicateCount) duplicate(s) before saving cache")
+        }
+        
         cachedUserImagesMap[userId] = CachedUserMediaEntry(
-            images: userImages,
+            images: deduplicatedImages,
             lastFetchedAt: lastFetchedAt ?? now
         )
         if let encoded = try? JSONEncoder().encode(cachedUserImagesMap) {
@@ -821,7 +852,10 @@ class ProfileViewModel: ObservableObject {
             if !freshItems.isEmpty {
                 print("✅ refreshLatest: Adding \(freshItems.count) new image(s) to list")
                 for image in freshItems {
-                    print("  - Added image: id=\(image.id), url=\(image.image_url)")
+                    let urlValid = !image.image_url.isEmpty && URL(string: image.image_url) != nil
+                    if !urlValid {
+                        print("🚨 WARNING: refreshLatest adding image with INVALID URL - id: \(image.id)")
+                    }
                 }
                 userImages.insert(contentsOf: freshItems, at: 0)
             }
@@ -1790,6 +1824,12 @@ class ProfileViewModel: ObservableObject {
         // Check if image already exists (avoid duplicates)
         guard !userImages.contains(where: { $0.id == image.id }) else {
             return
+        }
+        
+        // Validate the image before adding
+        let hasValidUrl = !image.image_url.isEmpty && URL(string: image.image_url) != nil
+        if !hasValidUrl {
+            print("🚨 WARNING: Attempting to add image with INVALID URL - id: \(image.id), url: '\(image.image_url)'")
         }
         
         // Insert at the beginning (newest first)

@@ -977,13 +977,25 @@ struct ImageGridView: View {
         Array(repeating: GridItem(.flexible(), spacing: spacing), count: 3)
     }
     
-    /// Filter out items with invalid/empty URLs to prevent empty rectangles in the grid
+    /// Filter out items with invalid/empty URLs and duplicates to prevent empty rectangles in the grid
     private var validUserImages: [UserImage] {
-        userImages.filter { userImage in
+        // First filter by URL validity
+        let filtered = userImages.filter { userImage in
             // Check if at least one valid URL exists
             let hasValidImageUrl = !userImage.image_url.isEmpty && URL(string: userImage.image_url) != nil
             let hasValidThumbnailUrl = userImage.thumbnail_url.map { !$0.isEmpty && URL(string: $0) != nil } ?? false
             return hasValidImageUrl || hasValidThumbnailUrl
+        }
+        
+        // Then deduplicate by ID (keep first occurrence)
+        var seenIds = Set<String>()
+        return filtered.filter { userImage in
+            if seenIds.contains(userImage.id) {
+                // Only log duplicates if they're actually found (not on every render)
+                return false
+            }
+            seenIds.insert(userImage.id)
+            return true
         }
     }
 
