@@ -353,7 +353,7 @@ struct ProfileViewContent: View {
                                             .font(.caption2)
                                             .foregroundColor(.red)
                                     }
-                                    .padding(.top, 2)
+                                    .padding(.top, 4)
                                 }
                                 .buttonStyle(.plain)
                                 .disabled(isDeleting)

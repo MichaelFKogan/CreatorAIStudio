@@ -225,6 +225,7 @@ private struct ImageMainContent: View {
 
             SortAndViewToggle(viewModel: viewModel, isGridView: $isGridView)
                 .padding(.horizontal)
+                .padding(.top, 4)
 
             ContentList(viewModel: viewModel, isGridView: isGridView)
 

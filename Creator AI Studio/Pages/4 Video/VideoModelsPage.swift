@@ -19,9 +19,12 @@ struct VideoModelsPage: View {
                 // Leading title
                 ToolbarItem(placement: .navigationBarLeading) {
                     Text("Video Models")
-                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .font(
+                            .system(size: 28, weight: .bold, design: .rounded)
+                        )
                         .foregroundStyle(
-                            LinearGradient(colors: [.purple, .pink],
+                            LinearGradient(
+                                colors: [.purple, .pink],
                                 startPoint: .leading,
                                 endPoint: .trailing)
                         )
@@ -43,16 +46,19 @@ struct VideoModelsPageContent: View {
         NavigationView {
             ScrollView {
                 MainContent(viewModel: viewModel, isGridView: $isGridView)
-                    .padding(.bottom, 100) // Space for tab switcher
+                    .padding(.bottom, 100)  // Space for tab switcher
             }
             .navigationTitle("")
             .toolbar {
                 // Leading title
                 ToolbarItem(placement: .navigationBarLeading) {
                     Text("Video Models")
-                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .font(
+                            .system(size: 28, weight: .bold, design: .rounded)
+                        )
                         .foregroundStyle(
-                            LinearGradient(colors: [.purple, .pink],
+                            LinearGradient(
+                                colors: [.purple, .pink],
                                 startPoint: .leading,
                                 endPoint: .trailing)
                         )
@@ -68,7 +74,9 @@ struct VideoModelsPageContent: View {
 // MARK: VIEW MODEL
 
 final class VideoModelsViewModel: ObservableObject {
-    @Published var videoFilterIndex: Int = 0 { didSet { updateModelsIfNeeded() } }
+    @Published var videoFilterIndex: Int = 0 {
+        didSet { updateModelsIfNeeded() }
+    }
     @Published var sortOrder: Int = 0 { didSet { updateModelsIfNeeded() } }
     @Published private(set) var filteredAndSortedVideoModels: [InfoPacket] = []
 
@@ -82,10 +90,13 @@ final class VideoModelsViewModel: ObservableObject {
         updateModels()
     }
 
-        // MARK: - JSON LOADER
+    // MARK: - JSON LOADER
 
     static func loadVideoModels() -> [InfoPacket] {
-        guard let url = Bundle.main.url(forResource: "VideoModelData", withExtension: "json") else {
+        guard
+            let url = Bundle.main.url(
+                forResource: "VideoModelData", withExtension: "json")
+        else {
             print("JSON file not found")
             return []
         }
@@ -95,7 +106,11 @@ final class VideoModelsViewModel: ObservableObject {
             let decoder = JSONDecoder()
             var decoded = try decoder.decode([InfoPacket].self, from: data)
             // Automatically set type for all items loaded from VideoModelData.json
-            decoded = decoded.map { var item = $0; item.type = "Video Model"; return item }
+            decoded = decoded.map {
+                var item = $0
+                item.type = "Video Model"
+                return item
+            }
             return decoded
         } catch {
             print("Failed to decode JSON:", error)
@@ -122,11 +137,17 @@ final class VideoModelsViewModel: ObservableObject {
 
         switch videoFilterIndex {
         case 1:
-            models = models.filter { $0.resolvedCapabilities?.contains("Text to Video") == true }
+            models = models.filter {
+                $0.resolvedCapabilities?.contains("Text to Video") == true
+            }
         case 2:
-            models = models.filter { $0.resolvedCapabilities?.contains("Image to Video") == true }
+            models = models.filter {
+                $0.resolvedCapabilities?.contains("Image to Video") == true
+            }
         case 3:
-            models = models.filter { $0.resolvedCapabilities?.contains("Audio") == true }
+            models = models.filter {
+                $0.resolvedCapabilities?.contains("Audio") == true
+            }
         default:
             break
         }
@@ -138,8 +159,8 @@ final class VideoModelsViewModel: ObservableObject {
         default:
             break
         }
-            filteredAndSortedVideoModels = models
-            lastComputedInputs = (videoFilterIndex, sortOrder)
+        filteredAndSortedVideoModels = models
+        lastComputedInputs = (videoFilterIndex, sortOrder)
     }
 }
 
@@ -217,6 +238,7 @@ private struct MainContent: View {
 
             SortAndViewToggle(viewModel: viewModel, isGridView: $isGridView)
                 .padding(.horizontal)
+                .padding(.top, 4)
 
             ContentList(viewModel: viewModel, isGridView: isGridView)
         }
@@ -229,39 +251,49 @@ private struct FilterSection: View {
     @ObservedObject var viewModel: VideoModelsViewModel
 
     var body: some View {
-        HStack(spacing: 8) {
-            Text("Filter:")
-                .font(.caption)
-                .fontWeight(.semibold)
-                .foregroundColor(.secondary)
-
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 6) {
-                    FilterPill(title: "All", isSelected: viewModel.videoFilterIndex == 0) {
-                        viewModel.videoFilterIndex = 0
-                    }
-                    FilterPill(title: "Text to Video", isSelected: viewModel.videoFilterIndex == 1) {
-                        viewModel.videoFilterIndex = 1
-                    }
-                    FilterPill(title: "Image to Video", isSelected: viewModel.videoFilterIndex == 2) {
-                        viewModel.videoFilterIndex = 2
-                    }
-                    FilterPill(title: "Audio", isSelected: viewModel.videoFilterIndex == 3)
-                        {
-                        viewModel.videoFilterIndex = 3
+        VStack(spacing: 8) {
+            HStack {
+                Text("Filter:")
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.secondary)
+                Spacer()
+                if viewModel.hasActiveFilters {
+                    Button(action: viewModel.clearFilters) {
+                        Text("Clear")
+                            .font(.caption)
+                            .fontWeight(.medium)
+                            .foregroundColor(.blue)
                     }
                 }
-                .padding(.vertical, 2)
             }
 
-            if viewModel.hasActiveFilters {
-                Button(action: viewModel.clearFilters) {
-                    Text("Clear")
-                        .font(.caption)
-                        .fontWeight(.medium)
-                        .foregroundColor(.blue)
+            HStack(spacing: 8) {
+                FilterPill(
+                    title: "All", isSelected: viewModel.videoFilterIndex == 0
+                ) {
+                    viewModel.videoFilterIndex = 0
                 }
+                FilterPill(
+                    title: "Text to Video",
+                    isSelected: viewModel.videoFilterIndex == 1
+                ) {
+                    viewModel.videoFilterIndex = 1
+                }
+                FilterPill(
+                    title: "Image to Video",
+                    isSelected: viewModel.videoFilterIndex == 2
+                ) {
+                    viewModel.videoFilterIndex = 2
+                }
+                FilterPill(
+                    title: "Audio", isSelected: viewModel.videoFilterIndex == 3
+                ) {
+                    viewModel.videoFilterIndex = 3
+                }
+                Spacer()
             }
+            .padding(.vertical, 2)
         }
     }
 }
@@ -331,7 +363,7 @@ private struct ContentList: View {
     // grid columns - using flexible with reduced spacing to prevent overlap on smaller devices
     private let gridColumns = [
         GridItem(.flexible(), spacing: 10),
-        GridItem(.flexible(), spacing: 10)
+        GridItem(.flexible(), spacing: 10),
     ]
 
     var body: some View {
@@ -344,7 +376,9 @@ private struct ContentList: View {
                     LazyVGrid(columns: gridColumns, spacing: 10) {
                         ForEach(viewModel.filteredAndSortedVideoModels) {
                             item in
-                            NavigationLink(destination: VideoModelDetailPage(item: item)) {
+                            NavigationLink(
+                                destination: VideoModelDetailPage(item: item)
+                            ) {
                                 VideoModelGridItem(item: item)
                                     .frame(maxWidth: .infinity)
                             }
@@ -355,8 +389,11 @@ private struct ContentList: View {
                     VStack(spacing: 12) {
                         ForEach(viewModel.filteredAndSortedVideoModels) {
                             item in
-                            NavigationLink(destination: VideoModelDetailPage(item: item)) {
-                                VideoModelListItem(item: item, viewModel: viewModel)
+                            NavigationLink(
+                                destination: VideoModelDetailPage(item: item)
+                            ) {
+                                VideoModelListItem(
+                                    item: item, viewModel: viewModel)
                             }
                             .buttonStyle(.plain)
                         }
@@ -384,11 +421,16 @@ private struct VideoModelGridItem: View {
                     .clipped()
                     .clipShape(RoundedRectangle(cornerRadius: 12))
 
-                if let capabilities = item.resolvedCapabilities, !capabilities.isEmpty {
+                if let capabilities = item.resolvedCapabilities,
+                    !capabilities.isEmpty
+                {
                     VStack {
                         Spacer()
                         LinearGradient(
-                            colors: [Color.black.opacity(0.9), Color.black.opacity(0)],
+                            colors: [
+                                Color.black.opacity(0.9),
+                                Color.black.opacity(0),
+                            ],
                             startPoint: .bottom,
                             endPoint: .top
                         )
@@ -397,7 +439,10 @@ private struct VideoModelGridItem: View {
 
                     HStack {
                         Text(capabilities.joined(separator: " • "))
-                            .font(.system(size: 11, weight: .medium, design: .rounded))
+                            .font(
+                                .system(
+                                    size: 11, weight: .medium, design: .rounded)
+                            )
                             .foregroundColor(.white)
                             .multilineTextAlignment(.leading)
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -453,9 +498,14 @@ private struct VideoModelListItem: View {
                     .foregroundColor(.primary)
                     .lineLimit(2)
 
-                if viewModel.hasActiveFilters, let capabilities = item.resolvedCapabilities, !capabilities.isEmpty {
+                if viewModel.hasActiveFilters,
+                    let capabilities = item.resolvedCapabilities,
+                    !capabilities.isEmpty
+                {
                     Text(capabilities.joined(separator: " • "))
-                        .font(.system(size: 12, weight: .medium, design: .rounded))
+                        .font(
+                            .system(size: 12, weight: .medium, design: .rounded)
+                        )
                         .foregroundColor(.purple)
                 }
             }
@@ -541,6 +591,8 @@ private struct FilterPill: View {
             Text(title)
                 .font(.caption)
                 .fontWeight(.semibold)
+                .lineLimit(1)
+                .fixedSize(horizontal: true, vertical: false)
                 .padding(.vertical, 6)
                 .padding(.horizontal, 10)
                 .background(isSelected ? .purple : .purple.opacity(0.12))
