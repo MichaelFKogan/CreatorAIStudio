@@ -43,7 +43,8 @@ class PricingManager {
         "Seedance 1.0 Pro Fast": ("3:4", "480p", 5.0),  // Default to cheapest option
         "Kling VIDEO 2.6 Pro": ("9:16", "1080p", 5.0),  // Default to 5 seconds with audio
         "Wan2.5-Preview": ("9:16", "720p", 5.0),  // Default to 5 seconds
-        "Wan2.6": ("9:16", "720p", 5.0)  // Default to 5 seconds
+        "Wan2.6": ("9:16", "720p", 5.0),  // Default to 5 seconds
+        "KlingAI 2.5 Turbo Pro": ("9:16", "1080p", 5.0)  // Default to 5 seconds
     ]
 
     private init() {
@@ -166,6 +167,21 @@ class PricingManager {
                     "1:1": [
                         "720p": [5.0: 0.5, 10.0: 1.0, 15.0: 1.5],
                         "1080p": [5.0: 0.75, 10.0: 1.5, 15.0: 2.25]
+                    ]
+                ]
+            ),
+            // KlingAI 2.5 Turbo Pro pricing from Runware pricing page
+            // 1080p: 5s = $0.35, 10s = $0.70
+            "KlingAI 2.5 Turbo Pro": VideoPricingConfiguration(
+                pricing: [
+                    "16:9": [
+                        "1080p": [5.0: 0.35, 10.0: 0.70]
+                    ],
+                    "9:16": [
+                        "1080p": [5.0: 0.35, 10.0: 0.70]
+                    ],
+                    "1:1": [
+                        "1080p": [5.0: 0.35, 10.0: 0.70]
                     ]
                 ]
             ),

@@ -22,9 +22,9 @@
   },
   {
     "display": {
-      "title": "FLUX.2 [dev]",
-      "imageName": "flux2dev",
-      "modelName": "FLUX.2 [dev]"
+      "title": "Z-Image-Turbo",
+      "imageName": "zimageturbo",
+      "modelName": "Z-Image-Turbo"
     }
   },
   {
@@ -43,9 +43,9 @@
   },
   {
     "display": {
-      "title": "Z-Image-Turbo",
-      "imageName": "zimageturbo",
-      "modelName": "Z-Image-Turbo"
+      "title": "FLUX.2 [dev]",
+      "imageName": "flux2dev",
+      "modelName": "FLUX.2 [dev]"
     }
   }
 ]
