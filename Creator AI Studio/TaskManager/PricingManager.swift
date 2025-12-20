@@ -363,16 +363,45 @@ class PricingManager {
     }
 
     /// Gets dimensions for a given aspect ratio and resolution
-    /// Returns the standard dimensions for Seedance 1.0 Pro Fast
+    /// Returns model-specific dimensions if model is provided, otherwise defaults to Seedance 1.0 Pro Fast dimensions
     ///
     /// - Parameters:
     ///   - aspectRatio: Aspect ratio string (e.g., "16:9", "9:16")
     ///   - resolution: Resolution string (e.g., "480p", "720p", "1080p")
+    ///   - model: Optional model identifier (e.g., "google:3@3") for model-specific dimensions
     /// - Returns: Tuple of (width, height) or nil if not found
     static func dimensionsForAspectRatioAndResolution(
-        aspectRatio: String, resolution: String
+        aspectRatio: String, resolution: String, model: String? = nil
     ) -> (width: Int, height: Int)? {
-        // Seedance 1.0 Pro Fast dimensions from documentation
+        // Google Veo 3.1 Fast (google:3@3) - requires exact dimensions
+        if let model = model, model.lowercased().contains("google:3@3") {
+            let veoDimensions: [String: [String: (Int, Int)]] = [
+                "720p": [
+                    "16:9": (1280, 720),
+                    "9:16": (720, 1280),
+                ],
+                "1080p": [
+                    "16:9": (1920, 1080),
+                    "9:16": (1080, 1920),
+                ],
+            ]
+            return veoDimensions[resolution]?[aspectRatio]
+        }
+        
+        // Kling VIDEO 2.6 Pro (klingai:kling-video@2.6-pro) - requires exact dimensions
+        // Supported: 1920x1080 (16:9), 1080x1920 (9:16), 1440x1440 (1:1)
+        if let model = model, model.lowercased().contains("kling-video@2.6-pro") || model.lowercased().contains("klingai:kling-video@2.6-pro") {
+            let klingDimensions: [String: [String: (Int, Int)]] = [
+                "1080p": [
+                    "16:9": (1920, 1080),
+                    "9:16": (1080, 1920),
+                    "1:1": (1440, 1440),
+                ],
+            ]
+            return klingDimensions[resolution]?[aspectRatio]
+        }
+        
+        // Default: Seedance 1.0 Pro Fast dimensions from documentation
         let dimensions: [String: [String: (Int, Int)]] = [
             "480p": [
                 "16:9": (864, 480),

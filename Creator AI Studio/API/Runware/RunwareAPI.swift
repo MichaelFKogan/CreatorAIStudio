@@ -530,7 +530,7 @@ func sendVideoToRunware(
     // If resolution is provided, use PricingManager helper to get dimensions
     if let ratio = aspectRatio?.trimmingCharacters(in: .whitespacesAndNewlines),
        let res = resolution?.trimmingCharacters(in: .whitespacesAndNewlines),
-       let dimensions = PricingManager.dimensionsForAspectRatioAndResolution(aspectRatio: ratio, resolution: res) {
+       let dimensions = PricingManager.dimensionsForAspectRatioAndResolution(aspectRatio: ratio, resolution: res, model: model) {
         width = dimensions.width
         height = dimensions.height
         print("[Runware] Aspect ratio: \(ratio), Resolution: \(res) -> \(width)x\(height)")
@@ -1099,7 +1099,7 @@ func submitVideoToRunwareWithWebhook(
     
     if let ratio = aspectRatio?.trimmingCharacters(in: .whitespacesAndNewlines),
        let res = resolution?.trimmingCharacters(in: .whitespacesAndNewlines),
-       let dimensions = PricingManager.dimensionsForAspectRatioAndResolution(aspectRatio: ratio, resolution: res) {
+       let dimensions = PricingManager.dimensionsForAspectRatioAndResolution(aspectRatio: ratio, resolution: res, model: model) {
         width = dimensions.width
         height = dimensions.height
     } else if let ratio = aspectRatio?.trimmingCharacters(in: .whitespacesAndNewlines) {
