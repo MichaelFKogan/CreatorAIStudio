@@ -241,6 +241,8 @@ private struct MainContent: View {
                 .padding(.top, 4)
 
             ContentList(viewModel: viewModel, isGridView: isGridView)
+
+            Color.clear.frame(height: 160)
         }
     }
 }

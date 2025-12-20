@@ -41,7 +41,9 @@ class PricingManager {
         "Sora 2": ("9:16", "720p", 8.0),  // Sora 2 defaults to 8 seconds
         "Google Veo 3.1 Fast": ("9:16", "1080p", 8.0),  // Only option available
         "Seedance 1.0 Pro Fast": ("3:4", "480p", 5.0),  // Default to cheapest option
-        "Kling VIDEO 2.6 Pro": ("9:16", "1080p", 5.0)  // Default to 5 seconds with audio
+        "Kling VIDEO 2.6 Pro": ("9:16", "1080p", 5.0),  // Default to 5 seconds with audio
+        "Wan2.5-Preview": ("9:16", "720p", 5.0),  // Default to 5 seconds
+        "Wan2.6": ("9:16", "720p", 5.0)  // Default to 5 seconds
     ]
 
     private init() {
@@ -130,6 +132,40 @@ class PricingManager {
                     ],
                     "1:1": [
                         "1080p": [5.0: 0.70, 10.0: 1.40]
+                    ]
+                ]
+            ),
+            // Wan2.5-Preview pricing from Runware pricing page
+            "Wan2.5-Preview": VideoPricingConfiguration(
+                pricing: [
+                    "16:9": [
+                        "720p": [5.0: 0.473],
+                        "1080p": [5.0: 0.738]
+                    ],
+                    "9:16": [
+                        "720p": [5.0: 0.473],
+                        "1080p": [5.0: 0.738]
+                    ],
+                    "1:1": [
+                        "720p": [5.0: 0.473],
+                        "1080p": [5.0: 0.738]
+                    ]
+                ]
+            ),
+            // Wan2.6 pricing from Runware pricing page
+            "Wan2.6": VideoPricingConfiguration(
+                pricing: [
+                    "16:9": [
+                        "720p": [5.0: 0.5, 10.0: 1.0, 15.0: 1.5],
+                        "1080p": [5.0: 0.75, 10.0: 1.5, 15.0: 2.25]
+                    ],
+                    "9:16": [
+                        "720p": [5.0: 0.5, 10.0: 1.0, 15.0: 1.5],
+                        "1080p": [5.0: 0.75, 10.0: 1.5, 15.0: 2.25]
+                    ],
+                    "1:1": [
+                        "720p": [5.0: 0.5, 10.0: 1.0, 15.0: 1.5],
+                        "1080p": [5.0: 0.75, 10.0: 1.5, 15.0: 2.25]
                     ]
                 ]
             ),

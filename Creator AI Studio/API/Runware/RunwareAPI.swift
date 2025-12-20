@@ -633,6 +633,31 @@ func sendVideoToRunware(
             print("[Runware] Added KlingAI provider settings - sound: \(generateAudio)")
         }
     }
+    
+    // MARK: - Provider-specific settings for Alibaba models
+    
+    // Wan2.5-Preview and Wan2.6 support promptExtend, audio, and shotType parameters
+    if model.lowercased().contains("alibaba:wan@") {
+        var providerSettings = task["providerSettings"] as? [String: Any] ?? [:]
+        var alibabaSettings: [String: Any] = [:]
+        
+        // promptExtend defaults to true (enables LLM-based prompt rewriting)
+        alibabaSettings["promptExtend"] = true
+        
+        // audio defaults to true (enables automatic audio generation)
+        // Use generateAudio parameter if provided, otherwise default to true
+        alibabaSettings["audio"] = generateAudio ?? true
+        
+        // shotType only applies to Wan2.6 (defaults to "single")
+        // For Wan2.5-Preview, this parameter is not supported
+        if model.lowercased().contains("alibaba:wan@2.6") {
+            alibabaSettings["shotType"] = "single"  // Can be "single" or "multi"
+        }
+        
+        providerSettings["alibaba"] = alibabaSettings
+        task["providerSettings"] = providerSettings
+        print("[Runware] Added Alibaba provider settings - promptExtend: true, audio: \(alibabaSettings["audio"] ?? true), shotType: \(alibabaSettings["shotType"] ?? "N/A")")
+    }
 
     // MARK: - Wrap task in authentication array (required!)
 
@@ -1105,6 +1130,29 @@ func submitVideoToRunwareWithWebhook(
             task["providerSettings"] = providerSettings
             print("[Runware] Added KlingAI provider settings (webhook) - sound: \(generateAudio)")
         }
+    }
+    
+    // Alibaba provider settings (promptExtend, audio, shotType)
+    if model.lowercased().contains("alibaba:wan@") {
+        var providerSettings = task["providerSettings"] as? [String: Any] ?? [:]
+        var alibabaSettings: [String: Any] = [:]
+        
+        // promptExtend defaults to true (enables LLM-based prompt rewriting)
+        alibabaSettings["promptExtend"] = true
+        
+        // audio defaults to true (enables automatic audio generation)
+        // Use generateAudio parameter if provided, otherwise default to true
+        alibabaSettings["audio"] = generateAudio ?? true
+        
+        // shotType only applies to Wan2.6 (defaults to "single")
+        // For Wan2.5-Preview, this parameter is not supported
+        if model.lowercased().contains("alibaba:wan@2.6") {
+            alibabaSettings["shotType"] = "single"  // Can be "single" or "multi"
+        }
+        
+        providerSettings["alibaba"] = alibabaSettings
+        task["providerSettings"] = providerSettings
+        print("[Runware] Added Alibaba provider settings (webhook) - promptExtend: true, audio: \(alibabaSettings["audio"] ?? true), shotType: \(alibabaSettings["shotType"] ?? "N/A")")
     }
     
     let requestBody: [[String: Any]] = [

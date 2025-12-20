@@ -353,7 +353,7 @@ struct ProfileViewContent: View {
                                             .font(.caption2)
                                             .foregroundColor(.red)
                                     }
-                                    .padding(.top, 4)
+                                    .padding(.top, 3)
                                 }
                                 .buttonStyle(.plain)
                                 .disabled(isDeleting)
@@ -996,8 +996,31 @@ struct ImageGridView: View {
 
                 // Then show completed images
                 ForEach(userImages) { userImage in
-                    if let displayUrl = userImage.isVideo
-                        ? userImage.thumbnail_url : userImage.image_url,
+                    // Helper to check if a URL string is valid and non-empty
+                    let isValidUrl: (String?) -> Bool = { urlString in
+                        guard let urlString = urlString, !urlString.isEmpty else { return false }
+                        return URL(string: urlString) != nil
+                    }
+                    
+                    // Determine the display URL - prefer thumbnail for videos, fallback to image_url
+                    let displayUrl: String? = {
+                        if userImage.isVideo {
+                            // For videos, prefer thumbnail_url, fallback to image_url
+                            if isValidUrl(userImage.thumbnail_url) {
+                                return userImage.thumbnail_url
+                            } else if isValidUrl(userImage.image_url) {
+                                return userImage.image_url
+                            }
+                        } else {
+                            // For images, use image_url
+                            if isValidUrl(userImage.image_url) {
+                                return userImage.image_url
+                            }
+                        }
+                        return nil
+                    }()
+                    
+                    if let displayUrl = displayUrl,
                         let url = URL(string: displayUrl)
                     {
                         ZStack {
