@@ -474,18 +474,18 @@ class ModelConfigurationManager {
         // Initialize allowed aspect ratios mapping for video models
         allowedAspectRatiosMap = [
             // Add to allowedAspectRatiosMap initialization:
-"GPT Image 1.5": [
-    AspectRatioOption(id: "1:1", label: "1:1", width: 1, height: 1, platforms: ["Square"]),
-    AspectRatioOption(id: "3:2", label: "3:2", width: 3, height: 2, platforms: ["Landscape"]),
-    AspectRatioOption(id: "2:3", label: "2:3", width: 2, height: 3, platforms: ["Portrait"])
-],
-"Wan2.5-Preview Image": [
-    AspectRatioOption(id: "1:1", label: "1:1", width: 1, height: 1, platforms: ["Square"]),
-    AspectRatioOption(id: "4:3", label: "4:3", width: 4, height: 3, platforms: ["Landscape"]),
-    AspectRatioOption(id: "3:4", label: "3:4", width: 3, height: 4, platforms: ["Portrait"]),
-    AspectRatioOption(id: "16:9", label: "16:9", width: 16, height: 9, platforms: ["YouTube"]),
-    AspectRatioOption(id: "9:16", label: "9:16", width: 9, height: 16, platforms: ["TikTok", "Reels"])
-],
+            "GPT Image 1.5": [
+                AspectRatioOption(id: "2:3", label: "2:3", width: 2, height: 3, platforms: ["Portrait"]),
+                AspectRatioOption(id: "1:1", label: "1:1", width: 1, height: 1, platforms: ["Square"]),
+                AspectRatioOption(id: "3:2", label: "3:2", width: 3, height: 2, platforms: ["Landscape"])
+            ],
+            "Wan2.5-Preview Image": [
+                AspectRatioOption(id: "3:4", label: "3:4", width: 3, height: 4, platforms: ["Portrait"]),
+                AspectRatioOption(id: "9:16", label: "9:16", width: 9, height: 16, platforms: ["TikTok", "Reels"]),
+                AspectRatioOption(id: "1:1", label: "1:1", width: 1, height: 1, platforms: ["Square"]),
+                AspectRatioOption(id: "4:3", label: "4:3", width: 4, height: 3, platforms: ["Landscape"]),
+                AspectRatioOption(id: "16:9", label: "16:9", width: 16, height: 9, platforms: ["YouTube"])
+            ],
             "Sora 2": [
                 AspectRatioOption(id: "9:16", label: "9:16", width: 9, height: 16, platforms: ["TikTok", "Reels"]),
                 AspectRatioOption(id: "16:9", label: "16:9", width: 16, height: 9, platforms: ["YouTube"])
