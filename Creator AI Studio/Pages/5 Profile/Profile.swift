@@ -190,15 +190,11 @@ struct ProfileViewContent: View {
         var result: [(String, Int, String)] = []
 
         for modelName in modelNames {
-            // Use count from videoModelCounts if available, otherwise filter from userVideos
-            let count: Int
-            if let dbCount = viewModel.videoModelCounts[modelName], dbCount > 0 {
-                count = dbCount
-            } else {
-                count = viewModel.filteredVideos(by: modelName, favoritesOnly: false).count
-            }
+            // Always use the actual filtered count from loaded videos for accuracy
+            // The database count (videoModelCounts) may be stale if videos were added via webhook
+            let count = viewModel.filteredVideos(by: modelName, favoritesOnly: false).count
             
-            print("🎬 DEBUG: Video Model '\(modelName)' has \(count) videos")
+            print("🎬 DEBUG: Video Model '\(modelName)' has \(count) videos (from filteredVideos)")
             guard count > 0 else { continue }
 
             // Find the model image from VideoModelData using display.imageName
@@ -246,6 +242,7 @@ struct ProfileViewContent: View {
                         .id("scrollTop")
                     }
 
+// MARK: SCROLL TOP
                     // Scroll to top button overlay
                     VStack {
                         Spacer()
