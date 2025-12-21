@@ -7,6 +7,7 @@
 
 import SwiftUI
 import AVKit
+import AVFoundation
 
 struct SplashScreenView: View {
     @State private var player: AVPlayer?
@@ -19,7 +20,7 @@ struct SplashScreenView: View {
                 .ignoresSafeArea()
             
             if let player = player {
-                VideoPlayer(player: player)
+                VideoPlayerView(player: player)
                     .ignoresSafeArea()
                     .onAppear {
                         player.play()
@@ -75,6 +76,24 @@ struct SplashScreenView: View {
                 hasFinished = true
             }
         }
+    }
+}
+
+// MARK: - Video Player View Without Controls
+
+struct VideoPlayerView: UIViewControllerRepresentable {
+    let player: AVPlayer
+    
+    func makeUIViewController(context: Context) -> AVPlayerViewController {
+        let controller = AVPlayerViewController()
+        controller.player = player
+        controller.showsPlaybackControls = false
+        controller.videoGravity = .resizeAspect
+        return controller
+    }
+    
+    func updateUIViewController(_ uiViewController: AVPlayerViewController, context: Context) {
+        // No updates needed
     }
 }
 

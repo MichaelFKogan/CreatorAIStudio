@@ -119,12 +119,13 @@ private let gptImage15Sizes: [String: (Int, Int)] = [
 // Wan2.5-Preview Image - Alibaba's image model
 // Min: 768×768 (589,824 pixels), Max: 1440×1440 (2,073,600 pixels)
 // Default: 1280×1280, aspect ratio between 1:4 and 4:1
+// Both dimensions must be within 768-1440 range
 private let wan25PreviewImageSizes: [String: (Int, Int)] = [
-    "3:4": (1080, 1440),
-    "9:16": (810, 1440),
-    "1:1": (1280, 1280),
-    "4:3": (1440, 1080),
-    "16:9": (1440, 810),
+    "3:4": (960, 1280),      // 960×1280 = 1,228,800 pixels (exact 3:4 ratio)
+    "9:16": (768, 1365),     // 768×1365 = 1,048,320 pixels (1365 < 1440 ✓)
+    "1:1": (1280, 1280),     // 1280×1280 = 1,638,400 pixels
+    "4:3": (1280, 960),      // 1280×960 = 1,228,800 pixels (exact 4:3 ratio)
+    "16:9": (1365, 768),     // 1365×768 = 1,048,320 pixels (1365 < 1440 ✓)
     "auto": (0, 0),
 ]
 
@@ -176,8 +177,8 @@ func getAllowedSizes(for model: String) -> [String: (Int, Int)] {
     // GPT Image 1.5 (OpenAI)
     if modelLower.contains("openai:4@1") { return gptImage15Sizes }
 
-    // Wan2.5-Preview Image (Alibaba)
-    if modelLower.contains("alibaba:wan@2.5-image") { return wan25PreviewImageSizes }
+    // Wan2.5-Preview Image (Alibaba) - Runware model ID: runware:201@10
+    if modelLower.contains("runware:201@10") { return wan25PreviewImageSizes }
 
     // Default fallback to Google Nano Banana sizes
     print("[Runware] Model '\(model)' not found in size mapping, using default (Google Nano Banana) sizes")

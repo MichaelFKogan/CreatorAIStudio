@@ -438,16 +438,8 @@ func sendImageToRunware(
     
     // MARK: - Provider-specific settings for Alibaba image models
     
-    // Wan2.5-Preview Image supports promptExtend parameter
-    if model.lowercased().contains("alibaba:wan@2.5-image") {
-        var providerSettings: [String: Any] = [:]
-        var alibabaSettings: [String: Any] = [:]
-        // promptExtend: enables LLM-based prompt rewriting (default: true)
-        alibabaSettings["promptExtend"] = true
-        providerSettings["alibaba"] = alibabaSettings
-        task["providerSettings"] = providerSettings
-        print("[Runware] Added Alibaba provider settings - promptExtend: true")
-    }
+    // Wan2.5-Preview Image (runware:201@10) - no provider settings needed
+    // Note: This model does not support promptExtend or other Alibaba provider settings
 
     // MARK: - Wrap task in authentication array (required!)
 
@@ -957,6 +949,9 @@ func submitImageToRunwareWithWebhook(
        let (w, h) = allowedSizes[ratio] {
         width = w
         height = h
+        print("[Runware] Aspect ratio: \(ratio) -> \(width)x\(height)")
+    } else {
+        print("[Runware] Using default 1024x1024")
     }
     
     // Build task body with webhook URL
@@ -1011,7 +1006,12 @@ func submitImageToRunwareWithWebhook(
     
     // Add additional config parameters
     if let outputFormat = runwareConfig?.outputFormat { task["outputFormat"] = outputFormat }
-    if let outputType = runwareConfig?.outputType { task["outputType"] = outputType }
+    // Wan2.5-Preview Image (runware:201@10) requires outputType as array
+    if model.lowercased().contains("runware:201@10") {
+        task["outputType"] = ["dataURI", "URL"]
+    } else if let outputType = runwareConfig?.outputType {
+        task["outputType"] = outputType
+    }
     if let outputQuality = runwareConfig?.outputQuality { task["outputQuality"] = outputQuality }
     if let additionalParams = runwareConfig?.additionalTaskParams {
         for (key, value) in additionalParams { task[key] = value }
@@ -1034,20 +1034,24 @@ func submitImageToRunwareWithWebhook(
         print("[Runware] Added OpenAI provider settings (webhook) - quality: auto, background: auto")
     }
     
-    // Wan2.5-Preview Image provider settings (promptExtend)
-    if model.lowercased().contains("alibaba:wan@2.5-image") {
-        var providerSettings: [String: Any] = [:]
-        var alibabaSettings: [String: Any] = [:]
-        alibabaSettings["promptExtend"] = true
-        providerSettings["alibaba"] = alibabaSettings
-        task["providerSettings"] = providerSettings
-        print("[Runware] Added Alibaba provider settings (webhook) - promptExtend: true")
-    }
+    // Wan2.5-Preview Image (runware:201@10) - no provider settings needed
+    // Note: This model does not support promptExtend or other Alibaba provider settings
     
     let requestBody: [[String: Any]] = [
         ["taskType": "authentication", "apiKey": runwareApiKey],
         task,
     ]
+    
+    // Debug: print request body (without API key for security)
+    if let requestJSON = try? JSONSerialization.data(withJSONObject: requestBody),
+       let requestString = String(data: requestJSON, encoding: .utf8) {
+        let maskedRequest = requestString.replacingOccurrences(
+            of: "\"apiKey\":\"[^\"]+\"",
+            with: "\"apiKey\":\"***\"",
+            options: .regularExpression
+        )
+        print("[Runware] Image webhook request body: \(maskedRequest)")
+    }
     
     let url = URL(string: "https://api.runware.ai/v1")!
     var request = URLRequest(url: url)
@@ -1059,6 +1063,10 @@ func submitImageToRunwareWithWebhook(
     
     guard let http = response as? HTTPURLResponse,
           (200 ... 299).contains(http.statusCode) else {
+        // Log error response body
+        if let errorString = String(data: data, encoding: .utf8) {
+            print("[Runware] Error response body: \(errorString)")
+        }
         throw NSError(
             domain: "RunwareAPI",
             code: (response as? HTTPURLResponse)?.statusCode ?? -1,

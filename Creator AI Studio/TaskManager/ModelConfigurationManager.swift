@@ -57,7 +57,7 @@ class ModelConfigurationManager {
             "Wan2.5-Preview Image": APIConfiguration(
                 provider: .runware,
                 endpoint: "https://api.runware.ai/v1",
-                runwareModel: "alibaba:wan@2.5-image",
+                runwareModel: "runware:201@10",
                 aspectRatio: nil,
                 wavespeedConfig: nil,
                 runwareConfig: RunwareConfig(
@@ -66,9 +66,9 @@ class ModelConfigurationManager {
                     additionalTaskParams: nil,
                     requiresDimensions: true,
                     imageCompressionQuality: 0.9,
-                    outputFormat: nil,
-                    outputType: nil,
-                    outputQuality: nil
+                    outputFormat: "JPEG",
+                    outputType: nil,  // Will be set as array in API code
+                    outputQuality: 85
                 )
             ),
             "Google Gemini Flash 2.5 (Nano Banana)": APIConfiguration(
