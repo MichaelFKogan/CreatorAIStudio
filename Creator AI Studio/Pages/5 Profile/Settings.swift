@@ -64,36 +64,36 @@ struct Settings: View {
                 }
             }
 
-            // App preferences
-            Section("Preferences") {
-                HStack {
-                    Image(systemName: themeManager.isDarkMode ? "moon.fill" : "sun.max.fill")
-                        .foregroundColor(.blue)
-                    Text("Dark Mode")
-                    Spacer()
-                    Toggle("", isOn: Binding(
-                        get: { themeManager.isDarkMode },
-                        set: { _ in themeManager.toggleTheme() }
-                    ))
-                }
+            // // App preferences
+            // Section("Preferences") {
+            //     HStack {
+            //         Image(systemName: themeManager.isDarkMode ? "moon.fill" : "sun.max.fill")
+            //             .foregroundColor(.blue)
+            //         Text("Dark Mode")
+            //         Spacer()
+            //         Toggle("", isOn: Binding(
+            //             get: { themeManager.isDarkMode },
+            //             set: { _ in themeManager.toggleTheme() }
+            //         ))
+            //     }
                 
-                // Clear Cache button
-                Button(action: {
-                    clearCache()
-                }) {
-                    HStack {
-                        Image(systemName: "trash")
-                            .foregroundColor(.orange)
-                        Text("Clear Gallery Cache")
-                            .foregroundColor(.primary)
-                        Spacer()
-                        if isClearing {
-                            ProgressView()
-                                .scaleEffect(0.8)
-                        }
-                    }
-                }
-                .disabled(isClearing)
+            //     // Clear Cache button
+            //     Button(action: {
+            //         clearCache()
+            //     }) {
+            //         HStack {
+            //             Image(systemName: "trash")
+            //                 .foregroundColor(.orange)
+            //             Text("Clear Gallery Cache")
+            //                 .foregroundColor(.primary)
+            //             Spacer()
+            //             if isClearing {
+            //                 ProgressView()
+            //                     .scaleEffect(0.8)
+            //             }
+            //         }
+            //     }
+            //     .disabled(isClearing)
 
 //                HStack {
 //                    Image(systemName: "paintbrush")
@@ -124,7 +124,7 @@ struct Settings: View {
 //                    Spacer()
 //                    Toggle("", isOn: .constant(true))
 //                }
-            }
+            // }
 
             // Support
             Section("Support") {

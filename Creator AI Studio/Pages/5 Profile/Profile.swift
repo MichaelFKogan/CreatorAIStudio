@@ -1,4 +1,5 @@
 import AVKit
+import AuthenticationServices // Add this for Apple Sign-In
 import Kingfisher
 import Photos
 import SwiftUI
@@ -12,35 +13,38 @@ struct Profile: View {
 
     var body: some View {
         NavigationStack {
-            VStack {
+            ZStack {
+                // Always show gallery content (with placeholders if not signed in)
                 if authViewModel.isCheckingSession {
                     // Show loading while checking session
                     ProgressView("Loading…")
                         .padding()
-                } else if let user = authViewModel.user {
-                    // User is logged in - show gallery
-                    ProfileViewContent(viewModel: viewModel)
+                } else {
+                    ProfileViewContent(viewModel: viewModel, isSignedIn: authViewModel.user != nil)
                         .environmentObject(authViewModel)
                         .onAppear {
-                            let userIdChanged = viewModel.userId != user.id.uuidString
-                            if userIdChanged {
-                                viewModel.userId = user.id.uuidString
-                            }
-                            Task {
-                                // Fetch stats FIRST so UI shows correct counts immediately
-                                // This is very cheap - just one row from user_stats table
-                                if !viewModel.hasLoadedStats || userIdChanged {
-                                    await viewModel.fetchUserStats()
+                            if let user = authViewModel.user {
+                                let userIdChanged = viewModel.userId != user.id.uuidString
+                                if userIdChanged {
+                                    viewModel.userId = user.id.uuidString
                                 }
-                                // Then fetch images
-                                await viewModel.fetchUserImages(
-                                    forceRefresh: false)
-                                //                            print("📸 Fetched \(viewModel.images.count) images")
+                                Task {
+                                    // Fetch stats FIRST so UI shows correct counts immediately
+                                    // This is very cheap - just one row from user_stats table
+                                    if !viewModel.hasLoadedStats || userIdChanged {
+                                        await viewModel.fetchUserStats()
+                                    }
+                                    // Then fetch images
+                                    await viewModel.fetchUserImages(
+                                        forceRefresh: false)
+                                }
                             }
                         }
-                } else {
-                    // User is not logged in - show sign in view
-                    SignInView()
+                }
+                
+                // Show sign-in overlay when not signed in
+                if !authViewModel.isCheckingSession && authViewModel.user == nil {
+                    SignInOverlay()
                         .environmentObject(authViewModel)
                 }
             }
@@ -49,8 +53,8 @@ struct Profile: View {
 
             .navigationTitle("")
             .toolbar {
-                // Only show "Gallery" title when user is logged in
-                if !authViewModel.isCheckingSession && authViewModel.user != nil {
+                // Always show "Gallery" title
+                if !authViewModel.isCheckingSession {
                     ToolbarItem(placement: .navigationBarLeading) {
                         Text("Gallery")
                             .font(
@@ -75,6 +79,7 @@ struct Profile: View {
 struct ProfileViewContent: View {
     @ObservedObject var viewModel: ProfileViewModel
     @EnvironmentObject var authViewModel: AuthViewModel
+    let isSignedIn: Bool
     @StateObject private var notificationManager = NotificationManager.shared
     //    @StateObject private var presetViewModel = PresetViewModel()
     @State private var selectedUserImage: UserImage? = nil
@@ -744,8 +749,11 @@ struct ProfileViewContent: View {
     @ViewBuilder
     private var filteredContent: some View {
         let filteredImages = getFilteredImages()
-
-        if filteredImages.isEmpty
+        
+        // If not signed in, show placeholder grid
+        if !isSignedIn {
+            PlaceholderGrid()
+        } else if filteredImages.isEmpty
             && notificationManager.activePlaceholders.isEmpty
         {
             EmptyGalleryView(
@@ -2408,7 +2416,7 @@ struct VideoModelsSheet: View {
 //        }
 //    }
 //}
-
+//
 //// MARK: - Preset Row
 //
 //private struct PresetRow: View {
@@ -2751,6 +2759,515 @@ struct VideoModelsSheet: View {
 //        }
 //    }
 //}
+
+// MARK: - PLACEHOLDER GRID (for unsigned-in users)
+
+struct PlaceholderGrid: View {
+    let spacing: CGFloat = 2
+    private let placeholderCount = 9 // 3x3 grid
+    
+    private var gridColumns: [GridItem] {
+        Array(repeating: GridItem(.flexible(), spacing: spacing), count: 3)
+    }
+    
+    var body: some View {
+        GeometryReader { proxy in
+            let totalSpacing = spacing * 2
+            let contentWidth = max(0, proxy.size.width - totalSpacing - 8)
+            let itemWidth = max(44, contentWidth / 3)
+            let itemHeight = itemWidth * 1.4
+            
+            LazyVGrid(columns: gridColumns, spacing: spacing) {
+                ForEach(0..<placeholderCount, id: \.self) { _ in
+                    UnsignedInPlaceholderCard(
+                        itemWidth: itemWidth,
+                        itemHeight: itemHeight
+                    )
+                }
+            }
+            .padding(.horizontal, 4)
+        }
+        .frame(height: calculateHeight(for: placeholderCount))
+    }
+    
+    private func calculateHeight(for count: Int) -> CGFloat {
+        let rows = ceil(Double(count) / 3.0)
+        let itemWidth = (UIScreen.main.bounds.width - 16) / 3
+        return CGFloat(rows) * (itemWidth * 1.4 + spacing)
+    }
+}
+
+// MARK: - UNSIGNED IN PLACEHOLDER CARD
+
+struct UnsignedInPlaceholderCard: View {
+    let itemWidth: CGFloat
+    let itemHeight: CGFloat
+    
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 6)
+                .fill(Color.gray.opacity(0.15))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 6)
+                        .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                )
+            
+            VStack(spacing: 8) {
+                Image(systemName: "lock.fill")
+                    .font(.system(size: 24))
+                    .foregroundColor(.gray.opacity(0.5))
+            }
+        }
+        .frame(width: itemWidth, height: itemHeight)
+    }
+}
+
+// MARK: - SIGN IN OVERLAY
+
+struct SignInOverlay: View {
+    @EnvironmentObject var authViewModel: AuthViewModel
+    @State private var showEmailSignIn = false
+    @State private var isSignUp = false
+    
+    var body: some View {
+        ZStack {
+            // Semi-transparent background
+            Color.black.opacity(0.7)
+                .ignoresSafeArea()
+                .onTapGesture {
+                    // Allow dismissing by tapping outside (optional)
+                }
+            
+            // Sign-in card
+            VStack(spacing: 24) {
+                // // Close button
+                // HStack {
+                //     Spacer()
+                //     Button(action: {
+                //         // Optional: dismiss overlay
+                //         // For now, we'll keep it visible until sign-in
+                //     }) {
+                //         Image(systemName: "xmark.circle.fill")
+                //             .font(.system(size: 28))
+                //             .foregroundColor(.white.opacity(0.8))
+                //     }
+                // }
+                // .padding(.top, 8)
+                // .padding(.trailing, 8)
+                
+                // Welcome section
+                VStack(spacing: 12) {
+                    Image(systemName: "photo.on.rectangle.angled")
+                        .font(.system(size: 56))
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [.blue, .purple],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                    
+                    Text("Welcome to Gallery")
+                        .font(.system(size: 26, weight: .bold, design: .rounded))
+                        .foregroundColor(.white)
+                    
+                    Text("Sign in to view and manage your creations")
+                        .font(.subheadline)
+                        .foregroundColor(.white.opacity(0.8))
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 32)
+                }
+                
+                // Sign in buttons
+                VStack(spacing: 14) {
+                    // Apple Sign In
+                    Button(action: {
+                        handleAppleSignIn()
+                    }) {
+                        HStack {
+                            Spacer()
+                            Image(systemName: "applelogo")
+                                .font(.system(size: 18, weight: .semibold))
+                            Text("Continue with Apple")
+                                .font(.system(size: 16, weight: .semibold))
+                            Spacer()
+                        }
+                        .padding(.vertical, 14)
+                        .foregroundColor(.white)
+                        .background(Color.black)
+                        .cornerRadius(12)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                        )
+                    }
+                    
+                    // Google Sign In
+                    Button(action: {
+                        authViewModel.isSignedIn = true
+                    }) {
+                        HStack {
+                            Spacer()
+                            Image(systemName: "globe")
+                                .font(.system(size: 18, weight: .semibold))
+                            Text("Continue with Google")
+                                .font(.system(size: 16, weight: .semibold))
+                            Spacer()
+                        }
+                        .padding(.vertical, 14)
+                        .foregroundColor(.black)
+                        .background(Color.white)
+                        .cornerRadius(12)
+                    }
+                    
+                    // Email Sign In
+                    Button(action: {
+                        showEmailSignIn = true
+                    }) {
+                        HStack {
+                            Spacer()
+                            Image(systemName: "envelope.fill")
+                                .font(.system(size: 18, weight: .semibold))
+                            Text("Continue with Email")
+                                .font(.system(size: 16, weight: .semibold))
+                            Spacer()
+                        }
+                        .padding(.vertical, 14)
+                        .foregroundColor(.black)
+                        .background(Color.white)
+                        .cornerRadius(12)
+                    }
+                }
+                .padding(.horizontal, 32)
+                
+                // Terms and Privacy
+                VStack(spacing: 4) {
+                    Text("By continuing you agree to our")
+                        .font(.footnote)
+                        .foregroundColor(.white.opacity(0.7))
+                    
+                    HStack(spacing: 4) {
+                        Link("Terms of Service", destination: URL(string: "https://yourapp.com/terms")!)
+                            .font(.footnote)
+                            .underline()
+                            .foregroundColor(.white.opacity(0.9))
+                        Text("and")
+                            .font(.footnote)
+                            .foregroundColor(.white.opacity(0.7))
+                        Link("Privacy Policy", destination: URL(string: "https://yourapp.com/privacy")!)
+                            .font(.footnote)
+                            .underline()
+                            .foregroundColor(.white.opacity(0.9))
+                    }
+                }
+                .padding(.top, 8)
+                .padding(.bottom, 20)
+            }
+            .padding(.vertical, 32)
+            .padding(.horizontal, 24)
+            .background(
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(Color(.systemBackground))
+                    .shadow(color: .black.opacity(0.3), radius: 20, x: 0, y: 10)
+            )
+            .padding(.horizontal, 24)
+        }
+        .sheet(isPresented: $showEmailSignIn) {
+            EmbeddedEmailSignInView(isSignUp: $isSignUp, isPresented: $showEmailSignIn)
+                .environmentObject(authViewModel)
+        }
+    }
+    
+    // MARK: - Apple Sign In
+    func handleAppleSignIn() {
+        let request = ASAuthorizationAppleIDProvider().createRequest()
+        request.requestedScopes = [.email, .fullName]
+        
+        let controller = ASAuthorizationController(authorizationRequests: [request])
+        controller.delegate = AppleSignInCoordinator(authViewModel: authViewModel)
+        controller.performRequests()
+    }
+}
+
+// MARK: - EMBEDDED SIGN IN VIEW
+
+struct EmbeddedSignInView: View {
+    @EnvironmentObject var authViewModel: AuthViewModel
+    @State private var showEmailSignIn = false
+    @State private var isSignUp = false
+    
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 32) {
+                Spacer(minLength: 60)
+                
+                // Welcome section
+                VStack(spacing: 12) {
+                    Image(systemName: "photo.on.rectangle.angled")
+                        .font(.system(size: 64))
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [.blue, .purple],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                    
+                    Text("Welcome to Gallery")
+                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .foregroundColor(.primary)
+                    
+                    Text("Sign in to view and manage your creations")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 32)
+                }
+                .padding(.top, 40)
+                
+                // Sign in buttons
+                VStack(spacing: 16) {
+                    // Apple Sign In
+                    Button(action: {
+                        handleAppleSignIn()
+                    }) {
+                        HStack {
+                            Spacer()
+                            Image(systemName: "applelogo")
+                                .font(.system(size: 18, weight: .semibold))
+                            Text("Continue with Apple")
+                                .font(.system(size: 16, weight: .semibold))
+                            Spacer()
+                        }
+                        .padding(.vertical, 14)
+                        .foregroundColor(.white)
+                        .background(Color.black)
+                        .cornerRadius(12)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                        )
+                    }
+                    
+                    // Google Sign In
+                    Button(action: {
+                        authViewModel.isSignedIn = true
+                    }) {
+                        HStack {
+                            Spacer()
+                            Image(systemName: "globe")
+                                .font(.system(size: 18, weight: .semibold))
+                            Text("Continue with Google")
+                                .font(.system(size: 16, weight: .semibold))
+                            Spacer()
+                        }
+                        .padding(.vertical, 14)
+                        .foregroundColor(.primary)
+                        .background(Color.gray.opacity(0.1))
+                        .cornerRadius(12)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                        )
+                    }
+                    
+                    // Email Sign In
+                    Button(action: {
+                        showEmailSignIn = true
+                    }) {
+                        HStack {
+                            Spacer()
+                            Image(systemName: "envelope.fill")
+                                .font(.system(size: 18, weight: .semibold))
+                            Text("Continue with Email")
+                                .font(.system(size: 16, weight: .semibold))
+                            Spacer()
+                        }
+                        .padding(.vertical, 14)
+                        .foregroundColor(.primary)
+                        .background(Color.gray.opacity(0.1))
+                        .cornerRadius(12)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                        )
+                    }
+                }
+                .padding(.horizontal, 24)
+                
+                // Terms and Privacy
+                VStack(spacing: 4) {
+                    Text("By continuing you agree to our")
+                        .font(.footnote)
+                        .foregroundColor(.secondary)
+                    
+                    HStack(spacing: 4) {
+                        Link("Terms of Service", destination: URL(string: "https://yourapp.com/terms")!)
+                            .font(.footnote)
+                            .underline()
+                        Text("and")
+                            .font(.footnote)
+                            .foregroundColor(.secondary)
+                        Link("Privacy Policy", destination: URL(string: "https://yourapp.com/privacy")!)
+                            .font(.footnote)
+                            .underline()
+                    }
+                }
+                .padding(.top, 20)
+                .padding(.bottom, 100)
+            }
+        }
+        .sheet(isPresented: $showEmailSignIn) {
+            EmbeddedEmailSignInView(isSignUp: $isSignUp, isPresented: $showEmailSignIn)
+                .environmentObject(authViewModel)
+        }
+    }
+    
+    // MARK: - Apple Sign In
+    func handleAppleSignIn() {
+        let request = ASAuthorizationAppleIDProvider().createRequest()
+        request.requestedScopes = [.email, .fullName]
+        
+        let controller = ASAuthorizationController(authorizationRequests: [request])
+        controller.delegate = AppleSignInCoordinator(authViewModel: authViewModel)
+        controller.performRequests()
+    }
+}
+
+// MARK: - EMBEDDED EMAIL SIGN IN VIEW
+
+struct EmbeddedEmailSignInView: View {
+    @EnvironmentObject var authViewModel: AuthViewModel
+    @Binding var isSignUp: Bool
+    @Binding var isPresented: Bool
+    @State private var email = ""
+    @State private var password = ""
+    @State private var message: String? = nil
+    @State private var messageColor: Color = .red
+    
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: 24) {
+                    // Email Field
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Email")
+                            .font(.headline)
+                            .foregroundColor(.primary)
+                        TextField("Email", text: $email)
+                            .padding()
+                            .background(Color.gray.opacity(0.1))
+                            .cornerRadius(8)
+                            .autocapitalization(.none)
+                            .keyboardType(.emailAddress)
+                    }
+                    
+                    // Password Field
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Password")
+                            .font(.headline)
+                            .foregroundColor(.primary)
+                        SecureField("Password", text: $password)
+                            .padding()
+                            .background(Color.gray.opacity(0.1))
+                            .cornerRadius(8)
+                    }
+                    
+                    // Message Area
+                    if let message = message {
+                        Text(message)
+                            .font(.footnote)
+                            .foregroundColor(messageColor)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal)
+                    }
+                    
+                    // Sign In / Sign Up button
+                    Button(isSignUp ? "Sign Up" : "Sign In") {
+                        Task {
+                            guard !email.isEmpty, !password.isEmpty else {
+                                showMessage("Please enter both email and password.", color: .red)
+                                return
+                            }
+                            
+                            if isSignUp {
+                                await authViewModel.signUpWithEmail(email: email, password: password)
+                            } else {
+                                await authViewModel.signInWithEmail(email: email, password: password)
+                            }
+                            
+                            if authViewModel.isSignedIn {
+                                showMessage("Signed in successfully ✅", color: .green)
+                                // Close sheet after successful sign in
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                    isPresented = false
+                                }
+                            } else {
+                                showMessage("Incorrect email or password.", color: .red)
+                            }
+                        }
+                    }
+                    .fontWeight(.semibold)
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.large)
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 8)
+                    
+                    // Toggle Sign Up / Sign In
+                    Button(isSignUp ? "Already have an account? Sign In" : "Don't have an account? Sign Up") {
+                        withAnimation {
+                            isSignUp.toggle()
+                            message = nil
+                        }
+                    }
+                    .font(.footnote)
+                    .padding(.top, 4)
+                    .foregroundColor(.blue)
+                    
+                    // Terms & Privacy (only for sign up)
+                    if isSignUp {
+                        VStack(spacing: 4) {
+                            Text("By signing up you agree to our")
+                                .font(.footnote)
+                                .foregroundColor(.secondary)
+                            
+                            HStack(spacing: 4) {
+                                Link("Terms of Service", destination: URL(string: "https://yourapp.com/terms")!)
+                                    .font(.footnote)
+                                    .underline()
+                                Text("and")
+                                    .font(.footnote)
+                                    .foregroundColor(.secondary)
+                                Link("Privacy Policy", destination: URL(string: "https://yourapp.com/privacy")!)
+                                    .font(.footnote)
+                                    .underline()
+                            }
+                        }
+                        .padding(.top, 20)
+                    }
+                }
+                .padding()
+                .padding(.top, 20)
+            }
+            .navigationTitle(isSignUp ? "Create Account" : "Sign In")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        isPresented = false
+                    }
+                }
+            }
+        }
+    }
+    
+    private func showMessage(_ text: String, color: Color) {
+        withAnimation {
+            message = text
+            messageColor = color
+        }
+    }
+}
 
 // MARK: - URL Identifiable
 
