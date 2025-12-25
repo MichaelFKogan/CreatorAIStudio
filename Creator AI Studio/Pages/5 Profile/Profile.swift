@@ -129,24 +129,28 @@ struct ProfileViewContent: View {
         case videoModels = "Video Models"
     }
 
-    // Compute models with metadata - returns immediately without caching
-    private func computeModelsWithMetadata() -> [(
-        model: String, count: Int, imageName: String
-    )] {
-        // Use modelCounts if available (from database query), otherwise fall back to uniqueModels
+    // MARK: - Cached Computations
+    
+    @State private var cachedImageModelsMetadata: [(model: String, count: Int, imageName: String)]? = nil
+    @State private var cachedVideoModelsMetadata: [(model: String, count: Int, imageName: String)]? = nil
+    
+    // Compute models with metadata - cached to avoid repeated computation
+    private func computeModelsWithMetadata() -> [(model: String, count: Int, imageName: String)] {
+        // Use cached result if available and modelCounts haven't changed
+        if let cached = cachedImageModelsMetadata, !viewModel.modelCounts.isEmpty {
+            return cached
+        }
+        
         let modelNames: [String]
         if !viewModel.modelCounts.isEmpty {
             modelNames = Array(viewModel.modelCounts.keys).sorted()
-            print("🔍 DEBUG: Computing models from modelCounts: \(modelNames.count) models")
         } else {
             modelNames = viewModel.uniqueModels
-            print("🔍 DEBUG: Computing models from uniqueModels: \(modelNames.count) models")
         }
 
         var result: [(String, Int, String)] = []
 
         for modelName in modelNames {
-            // Use count from modelCounts if available, otherwise filter from userImages
             let count: Int
             if let dbCount = viewModel.modelCounts[modelName], dbCount > 0 {
                 count = dbCount
@@ -154,253 +158,72 @@ struct ProfileViewContent: View {
                 count = viewModel.filteredImages(by: modelName, favoritesOnly: false).count
             }
             
-            print("🔍 DEBUG: Model '\(modelName)' has \(count) images")
             guard count > 0 else { continue }
 
-            // Find the model image from ImageModelData using display.imageName
-            var imageName = "photo.on.rectangle.angled"  // fallback
-            if let modelInfo = allImageModels.first(where: {
-                $0.display.modelName == modelName
-            }) {
-                imageName = modelInfo.display.imageName
-                print(
-                    "🔍 DEBUG: Found model info by modelName: \(modelName) -> \(imageName)"
-                )
-            } else if let modelInfo = allImageModels.first(where: {
-                $0.display.title == modelName
-            }) {
-                imageName = modelInfo.display.imageName
-                print(
-                    "🔍 DEBUG: Found model info by title: \(modelName) -> \(imageName)"
-                )
-            } else {
-                print(
-                    "⚠️ DEBUG: No model info found for: \(modelName), using fallback"
-                )
-            }
-
+            let imageName = findImageModelImageName(for: modelName)
             result.append((modelName, count, imageName))
         }
 
-        // Sort by count descending
         let sorted = result.sorted { $0.1 > $1.1 }
-        print("🔍 DEBUG: Computed \(sorted.count) models")
+        cachedImageModelsMetadata = sorted
         return sorted
     }
 
-    // Compute video models with metadata - returns immediately without caching
-    private func computeVideoModelsWithMetadata() -> [(
-        model: String, count: Int, imageName: String
-    )] {
-        // Use videoModelCounts if available (from database query), otherwise fall back to uniqueVideoModels
+    // Compute video models with metadata - cached to avoid repeated computation
+    private func computeVideoModelsWithMetadata() -> [(model: String, count: Int, imageName: String)] {
+        // Use cached result if available
+        if let cached = cachedVideoModelsMetadata {
+            return cached
+        }
+        
         let modelNames: [String]
         if !viewModel.videoModelCounts.isEmpty {
             modelNames = Array(viewModel.videoModelCounts.keys).sorted()
-            print("🎬 DEBUG: Computing video models from videoModelCounts: \(modelNames.count) models")
         } else {
             modelNames = viewModel.uniqueVideoModels
-            print("🎬 DEBUG: Computing video models from uniqueVideoModels: \(modelNames.count) models")
         }
 
         var result: [(String, Int, String)] = []
 
         for modelName in modelNames {
-            // Always use the actual filtered count from loaded videos for accuracy
-            // The database count (videoModelCounts) may be stale if videos were added via webhook
             let count = viewModel.filteredVideos(by: modelName, favoritesOnly: false).count
-            
-            print("🎬 DEBUG: Video Model '\(modelName)' has \(count) videos (from filteredVideos)")
             guard count > 0 else { continue }
 
-            // Find the model image from VideoModelData using display.imageName
-            var imageName = "video.fill"  // fallback
-            if let modelInfo = allVideoModels.first(where: {
-                $0.display.modelName == modelName
-            }) {
-                imageName = modelInfo.display.imageName
-                print(
-                    "🎬 DEBUG: Found video model info by modelName: \(modelName) -> \(imageName)"
-                )
-            } else if let modelInfo = allVideoModels.first(where: {
-                $0.display.title == modelName
-            }) {
-                imageName = modelInfo.display.imageName
-                print(
-                    "🎬 DEBUG: Found video model info by title: \(modelName) -> \(imageName)"
-                )
-            } else {
-                print(
-                    "⚠️ DEBUG: No video model info found for: \(modelName), using fallback"
-                )
-            }
-
+            let imageName = findVideoModelImageName(for: modelName)
             result.append((modelName, count, imageName))
         }
 
-        // Sort by count descending
         let sorted = result.sorted { $0.1 > $1.1 }
-        print("🎬 DEBUG: Computed \(sorted.count) video models")
+        cachedVideoModelsMetadata = sorted
         return sorted
+    }
+    
+    private func findImageModelImageName(for modelName: String) -> String {
+        if let modelInfo = allImageModels.first(where: { $0.display.modelName == modelName }) {
+            return modelInfo.display.imageName
+        } else if let modelInfo = allImageModels.first(where: { $0.display.title == modelName }) {
+            return modelInfo.display.imageName
+        }
+        return "photo.on.rectangle.angled"
+    }
+    
+    private func findVideoModelImageName(for modelName: String) -> String {
+        if let modelInfo = allVideoModels.first(where: { $0.display.modelName == modelName }) {
+            return modelInfo.display.imageName
+        } else if let modelInfo = allVideoModels.first(where: { $0.display.title == modelName }) {
+            return modelInfo.display.imageName
+        }
+        return "video.fill"
     }
 
     var body: some View {
         NavigationStack {
             ScrollViewReader { proxy in
                 ZStack {
-                    ScrollView {
-                        VStack(spacing: 16) {
-                            filterSection
-
-                            contentSection
-                        }
-                        .padding(.top, 10)
-                        .id("scrollTop")
-                    }
-
-// MARK: SCROLL TOP
-                    // Scroll to top button overlay
-                    VStack {
-                        Spacer()
-                        HStack {
-                            Spacer()
-                            Button(action: {
-                                withAnimation(.easeInOut(duration: 0.5)) {
-                                    proxy.scrollTo("scrollTop", anchor: .top)
-                                }
-                            }) {
-                                ZStack {
-                                    Circle()
-                                        .fill(Color.blue.opacity(0.9))
-                                        .frame(width: 50, height: 50)
-                                        // .overlay(
-                                        //     Circle()
-                                        //         .stroke(Color.black, lineWidth: 2)
-                                        // )
-                                        .shadow(
-                                            color: .black.opacity(0.5),
-                                            radius: 4, x: 0, y: 2)
-
-                                    Image(systemName: "arrow.up")
-                                        .font(
-                                            .system(size: 20, weight: .semibold)
-                                        )
-                                        .foregroundColor(.white)
-                                }
-                            }
-                            .padding(.trailing, 16)
-                            .padding(.bottom, 75)
-                        }
-                    }
+                    mainScrollView
+                    scrollToTopButton(proxy: proxy)
                 }
-                //                .navigationTitle("Profile")
-                .toolbar {
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        if isSelectionMode {
-                            HStack(spacing: 12) {
-                                // Save button
-                                Button(action: {
-                                    if selectedImageIds.isEmpty {
-                                        noSelectionAlertMessage =
-                                            "Please select at least one image to save."
-                                        showNoSelectionAlert = true
-                                    } else {
-                                        Task {
-                                            await saveSelectedImages()
-                                        }
-                                    }
-                                }) {
-                                    VStack(spacing: 2) {
-                                        Image(systemName: "arrow.down.circle")
-                                            .font(.system(size: 14, weight: .medium))
-                                            .foregroundColor(.blue)
-                                            .opacity(0.8)
-                                        Text("Save")
-                                            .font(.caption2)
-                                            .foregroundColor(.blue)
-                                    }
-                                }
-                                .buttonStyle(.plain)
-                                .disabled(isSaving || isDeleting)
-
-                                // Share button
-                                Button(action: {
-                                    if selectedImageIds.isEmpty {
-                                        noSelectionAlertMessage =
-                                            "Please select at least one image to share."
-                                        showNoSelectionAlert = true
-                                    } else {
-                                        Task {
-                                            await shareSelectedImages()
-                                        }
-                                    }
-                                }) {
-                                    VStack(spacing: 2) {
-                                        Image(systemName: "square.and.arrow.up")
-                                            .font(.system(size: 14, weight: .medium))
-                                            .foregroundColor(.blue)
-                                            .opacity(0.8)
-                                        Text("Share")
-                                            .font(.caption2)
-                                            .foregroundColor(.blue)
-                                    }
-                                }
-                                .disabled(isSharing || isDeleting)
-
-                                // Delete button
-                                Button(action: {
-                                    if selectedImageIds.isEmpty {
-                                        noSelectionAlertMessage =
-                                            "Please select at least one image to delete."
-                                        showNoSelectionAlert = true
-                                    } else {
-                                        showDeleteConfirmation = true
-                                    }
-                                }) {
-                                    VStack(spacing: 2) {
-                                        Image(systemName: "trash")
-                                            .font(.system(size: 14, weight: .medium))
-                                            .foregroundColor(.red)
-                                            .opacity(0.8)
-                                        Text("Delete")
-                                            .font(.caption2)
-                                            .foregroundColor(.red)
-                                    }
-                                    .padding(.top, 3)
-                                }
-                                .buttonStyle(.plain)
-                                .disabled(isDeleting)
-
-                                Button(action: {
-                                    isSelectionMode = false
-                                    selectedImageIds.removeAll()
-                                }) {
-                                    Text("Cancel")
-                                        .font(.body)
-                                        .foregroundColor(.blue)
-                                }
-                            }
-                        } else {
-                            HStack(spacing: 16) {
-                                Button(action: {
-                                    isSelectionMode = true
-                                }) {
-                                    Text("Select")
-                                        .font(.body)
-                                        .foregroundColor(.gray)
-                                }
-
-                                NavigationLink(
-                                    destination: Settings(profileViewModel: viewModel).environmentObject(
-                                        authViewModel)
-                                ) {
-                                    Image(systemName: "gearshape")
-                                        .font(.body)
-                                        .foregroundColor(.gray)
-                                }
-                            }
-                        }
-                    }
-                }
+                .toolbar { toolbarContent }
             }
             //            .onAppear {
             //                if let userId = authViewModel.user?.id.uuidString {
@@ -414,6 +237,7 @@ struct ProfileViewContent: View {
                 oldCount, newCount in
                 // When notification count decreases (notification dismissed), refresh images
                 if newCount < oldCount {
+                    invalidateCaches()
                     Task {
                         await viewModel.fetchUserImages(forceRefresh: true)
                     }
@@ -425,6 +249,18 @@ struct ProfileViewContent: View {
                     oldNotifications: oldNotifications,
                     newNotifications: newNotifications
                 )
+            }
+            .onChange(of: viewModel.userImages.count) {
+                _ in
+                invalidateCaches()
+            }
+            .onChange(of: viewModel.modelCounts) {
+                _ in
+                cachedImageModelsMetadata = nil
+            }
+            .onChange(of: viewModel.videoModelCounts) {
+                _ in
+                cachedVideoModelsMetadata = nil
             }
             // Listen for webhook-based image completions
             .onReceive(
@@ -485,6 +321,188 @@ struct ProfileViewContent: View {
             .sheet(isPresented: $showShareSheet) {
                 ShareSheet(activityItems: shareItems)
             }
+        }
+    }
+
+    // MARK: - View Components
+    
+    private var mainScrollView: some View {
+        ScrollView {
+            VStack(spacing: 16) {
+                filterSection
+                contentSection
+            }
+            .padding(.top, 10)
+            .id("scrollTop")
+        }
+    }
+    
+    private func scrollToTopButton(proxy: ScrollViewProxy) -> some View {
+        VStack {
+            Spacer()
+            HStack {
+                Spacer()
+                Button(action: {
+                    withAnimation(.easeInOut(duration: 0.5)) {
+                        proxy.scrollTo("scrollTop", anchor: .top)
+                    }
+                }) {
+                    scrollToTopButtonContent
+                }
+                .padding(.trailing, 16)
+                .padding(.bottom, 75)
+            }
+        }
+    }
+    
+    private var scrollToTopButtonContent: some View {
+        ZStack {
+            Circle()
+                .fill(Color.blue.opacity(0.9))
+                .frame(width: 50, height: 50)
+                .shadow(color: .black.opacity(0.5), radius: 4, x: 0, y: 2)
+            
+            Image(systemName: "arrow.up")
+                .font(.system(size: 20, weight: .semibold))
+                .foregroundColor(.white)
+        }
+    }
+    
+    @ToolbarContentBuilder
+    private var toolbarContent: some ToolbarContent {
+        ToolbarItem(placement: .navigationBarTrailing) {
+            if isSelectionMode {
+                selectionModeToolbar
+            } else {
+                normalModeToolbar
+            }
+        }
+    }
+    
+    private var selectionModeToolbar: some View {
+        HStack(spacing: 12) {
+            saveButton
+            shareButton
+            deleteButton
+            cancelButton
+        }
+    }
+    
+    private var normalModeToolbar: some View {
+        HStack(spacing: 16) {
+            Button(action: { isSelectionMode = true }) {
+                Text("Select")
+                    .font(.body)
+                    .foregroundColor(.gray)
+            }
+            
+            NavigationLink(
+                destination: Settings(profileViewModel: viewModel)
+                    .environmentObject(authViewModel)
+            ) {
+                Image(systemName: "gearshape")
+                    .font(.body)
+                    .foregroundColor(.gray)
+            }
+        }
+    }
+    
+    private var saveButton: some View {
+        Button(action: handleSaveAction) {
+            VStack(spacing: 2) {
+                Image(systemName: "arrow.down.circle")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.blue)
+                    .opacity(0.8)
+                Text("Save")
+                    .font(.caption2)
+                    .foregroundColor(.blue)
+            }
+        }
+        .buttonStyle(.plain)
+        .disabled(isSaving || isDeleting)
+    }
+    
+    private var shareButton: some View {
+        Button(action: handleShareAction) {
+            VStack(spacing: 2) {
+                Image(systemName: "square.and.arrow.up")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.blue)
+                    .opacity(0.8)
+                Text("Share")
+                    .font(.caption2)
+                    .foregroundColor(.blue)
+            }
+        }
+        .disabled(isSharing || isDeleting)
+    }
+    
+    private var deleteButton: some View {
+        Button(action: handleDeleteAction) {
+            VStack(spacing: 2) {
+                Image(systemName: "trash")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.red)
+                    .opacity(0.8)
+                Text("Delete")
+                    .font(.caption2)
+                    .foregroundColor(.red)
+            }
+            .padding(.top, 3)
+        }
+        .buttonStyle(.plain)
+        .disabled(isDeleting)
+    }
+    
+    private var cancelButton: some View {
+        Button(action: {
+            isSelectionMode = false
+            selectedImageIds.removeAll()
+        }) {
+            Text("Cancel")
+                .font(.body)
+                .foregroundColor(.blue)
+        }
+    }
+    
+    // MARK: - Cache Management
+    
+    private func invalidateCaches() {
+        cachedImageModelsMetadata = nil
+        cachedVideoModelsMetadata = nil
+    }
+    
+    // MARK: - Actions
+    
+    private func handleSaveAction() {
+        if selectedImageIds.isEmpty {
+            noSelectionAlertMessage = "Please select at least one image to save."
+            showNoSelectionAlert = true
+        } else {
+            Task {
+                await saveSelectedImages()
+            }
+        }
+    }
+    
+    private func handleShareAction() {
+        if selectedImageIds.isEmpty {
+            noSelectionAlertMessage = "Please select at least one image to share."
+            showNoSelectionAlert = true
+        } else {
+            Task {
+                await shareSelectedImages()
+            }
+        }
+    }
+    
+    private func handleDeleteAction() {
+        if selectedImageIds.isEmpty {
+            noSelectionAlertMessage = "Please select at least one image to delete."
+            showNoSelectionAlert = true
+        } else {
+            showDeleteConfirmation = true
         }
     }
 
@@ -993,10 +1011,22 @@ struct ImageGridView: View {
     }
     
     /// Filter out items with invalid/empty URLs and duplicates to prevent empty rectangles in the grid
+    /// Cached to avoid recomputation on every render
     private var validUserImages: [UserImage] {
+        // Cache the result to avoid recomputing on every render
+        struct Cache {
+            static var lastUserImages: [UserImage] = []
+            static var cachedResult: [UserImage] = []
+        }
+        
+        // Return cached result if userImages haven't changed
+        if userImages.count == Cache.lastUserImages.count,
+           userImages.map(\.id) == Cache.lastUserImages.map(\.id) {
+            return Cache.cachedResult
+        }
+        
         // First filter by URL validity
         let filtered = userImages.filter { userImage in
-            // Check if at least one valid URL exists
             let hasValidImageUrl = !userImage.image_url.isEmpty && URL(string: userImage.image_url) != nil
             let hasValidThumbnailUrl = userImage.thumbnail_url.map { !$0.isEmpty && URL(string: $0) != nil } ?? false
             return hasValidImageUrl || hasValidThumbnailUrl
@@ -1004,513 +1034,298 @@ struct ImageGridView: View {
         
         // Then deduplicate by ID (keep first occurrence)
         var seenIds = Set<String>()
-        return filtered.filter { userImage in
+        let result = filtered.filter { userImage in
             if seenIds.contains(userImage.id) {
-                // Only log duplicates if they're actually found (not on every render)
                 return false
             }
             seenIds.insert(userImage.id)
             return true
         }
+        
+        // Update cache
+        Cache.lastUserImages = userImages
+        Cache.cachedResult = result
+        return result
     }
 
     var body: some View {
         GeometryReader { proxy in
-            let totalSpacing = spacing * 2
-            let contentWidth = max(0, proxy.size.width - totalSpacing - 8)
-            let itemWidth = max(44, contentWidth / 3)  // minimum thumbnail size
+            let itemWidth = calculateItemWidth(proxy: proxy)
             let itemHeight = itemWidth * 1.4
 
             LazyVGrid(columns: gridColumns, spacing: spacing) {
-                // Show placeholders first (in-progress generations)
-                ForEach(placeholders) { placeholder in
-                    PlaceholderImageCard(
-                        placeholder: placeholder,
-                        itemWidth: itemWidth,
-                        itemHeight: itemHeight
-                    )
-                }
-
-                // Then show completed images (filtered to exclude invalid URLs)
-                ForEach(validUserImages) { userImage in
-                    // Helper to check if a URL string is valid and non-empty
-                    let isValidUrl: (String?) -> Bool = { urlString in
-                        guard let urlString = urlString, !urlString.isEmpty else { return false }
-                        return URL(string: urlString) != nil
-                    }
-                    
-                    // Determine the display URL - prefer thumbnail for videos, fallback to image_url
-                    let displayUrl: String? = {
-                        if userImage.isVideo {
-                            // For videos, prefer thumbnail_url, fallback to image_url
-                            if isValidUrl(userImage.thumbnail_url) {
-                                return userImage.thumbnail_url
-                            } else if isValidUrl(userImage.image_url) {
-                                return userImage.image_url
-                            }
-                        } else {
-                            // For images, use image_url
-                            if isValidUrl(userImage.image_url) {
-                                return userImage.image_url
-                            }
-                        }
-                        return nil
-                    }()
-                    
-                    if let displayUrl = displayUrl,
-                        let url = URL(string: displayUrl)
-                    {
-                        ZStack {
-                            Button {
-                                onSelect(userImage)
-                            } label: {
-                                ZStack {
-                                    KFImage(url)
-                                        .placeholder {
-                                            Rectangle()
-                                                .fill(Color.gray.opacity(0.2))
-                                                .overlay(ProgressView())
-                                        }
-                                        .resizable()
-                                        .scaledToFill()
-                                        .frame(
-                                            width: itemWidth, height: itemHeight
-                                        )
-                                        .clipped()
-                                        .overlay(
-                                            // Selection overlay
-                                            Group {
-                                                if isSelectionMode {
-                                                    Rectangle()
-                                                        .fill(
-                                                            Color.black.opacity(
-                                                                selectedImageIds
-                                                                    .contains(
-                                                                        userImage
-                                                                            .id)
-                                                                    ? 0.3 : 0))
-                                                }
-                                            }
-                                        )
-                                        .overlay(
-                                            // Checkmark overlay
-                                            Group {
-                                                if isSelectionMode {
-                                                    VStack {
-                                                        HStack {
-                                                            Spacer()
-                                                            ZStack {
-                                                                Circle()
-                                                                    .fill(
-                                                                        selectedImageIds
-                                                                            .contains(
-                                                                                userImage
-                                                                                    .id
-                                                                            )
-                                                                            ? Color
-                                                                                .blue
-                                                                            : Color
-                                                                                .white
-                                                                                .opacity(
-                                                                                    0.3
-                                                                                )
-                                                                    )
-                                                                    .frame(
-                                                                        width:
-                                                                            22,
-                                                                        height:
-                                                                            22)
-                                                                    .overlay(
-                                                                        Circle()
-                                                                            .stroke(
-                                                                                Color.white,
-                                                                                lineWidth: 1
-                                                                            )
-                                                                    )
-                                                                if selectedImageIds
-                                                                    .contains(
-                                                                        userImage
-                                                                            .id)
-                                                                {
-                                                                    Image(
-                                                                        systemName:
-                                                                            "checkmark"
-                                                                    )
-                                                                    .font(
-                                                                        .system(
-                                                                            size:
-                                                                                14,
-                                                                            weight:
-                                                                                .bold
-                                                                        )
-                                                                    )
-                                                                    .foregroundColor(
-                                                                        .white)
-                                                                }
-                                                            }
-                                                            .padding(6)
-                                                        }
-                                                        Spacer()
-                                                    }
-                                                }
-                                            }
-                                        )
-
-                                    // Video play icon overlay
-                                    if userImage.isVideo {
-                                        ZStack {
-                                            Circle()
-                                                .fill(Color.black.opacity(0.6))
-                                                .frame(width: 40, height: 40)
-
-                                            Image(systemName: "play.fill")
-                                                .font(.system(size: 18))
-                                                .foregroundColor(.white)
-                                        }
-                                    }
-                                }
-                            }
-                            .buttonStyle(.plain)
-
-                            // Heart icon and bookmark icon overlay (only show when not in selection mode)
-                            if !isSelectionMode {
-                                VStack {
-                                    HStack {
-                                        Spacer()
-                                        VStack(spacing: 4) {
-                                            ZStack {
-                                                Color.clear
-                                                    .frame(
-                                                        width: 32, height: 32
-                                                    )
-                                                    .contentShape(Rectangle())
-                                                    .onTapGesture {
-                                                        if let viewModel =
-                                                            viewModel
-                                                        {
-                                                            Task {
-                                                                await viewModel
-                                                                    .toggleFavorite(
-                                                                        imageId:
-                                                                            userImage
-                                                                            .id)
-                                                            }
-                                                        } else {
-                                                            // Fallback to local state if no viewModel
-                                                            let imageId =
-                                                                userImage.id
-                                                            if favoritedImageIds
-                                                                .contains(
-                                                                    imageId)
-                                                            {
-                                                                favoritedImageIds
-                                                                    .remove(
-                                                                        imageId)
-                                                            } else {
-                                                                favoritedImageIds
-                                                                    .insert(
-                                                                        imageId)
-                                                            }
-                                                        }
-                                                    }
-
-                                                // Heart icon
-                                                Image(
-                                                    systemName: (userImage
-                                                        .is_favorite ?? false)
-                                                        ? "heart.fill" : "heart"
-                                                )
-                                                .font(
-                                                    .system(
-                                                        size: 16,
-                                                        weight: .semibold)
-                                                )
-                                                .foregroundColor(
-                                                    (userImage.is_favorite
-                                                        ?? false)
-                                                        ? .red : .white
-                                                )
-                                                .shadow(
-                                                    color: .black.opacity(0.5),
-                                                    radius: 2, x: 0, y: 1
-                                                )
-                                                .allowsHitTesting(false)
-                                            }
-
-                                            // // Bookmark icon (blue) if preset is enabled
-                                            // if hasMatchingPreset(for: userImage) {
-                                            //     ZStack {
-                                            //         Circle()
-                                            //             .fill(Color.black)
-                                            //             .frame(width: 28, height: 28)
-
-                                            //         Image(systemName: "bookmark.fill")
-                                            //             .font(.system(size: 12, weight: .semibold))
-                                            //             .foregroundColor(.blue)
-                                            //     }
-                                            //     .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 1)
-                                            // }
-                                        }
-                                    }
-                                    Spacer()
-                                }
-                            }
-                        }
-                        .onAppear {
-                            // Trigger loading more when we're 10 items from the end
-                            if let viewModel = viewModel,
-                                let index = validUserImages.firstIndex(where: {
-                                    $0.id == userImage.id
-                                }),
-                                index >= validUserImages.count - 10
-                            {
-                                Task {
-                                    if isFavoritesTab {
-                                        await viewModel.loadMoreFavorites()
-                                    } else {
-                                        await viewModel.loadMoreImages()
-                                    }
-                                }
-                            }
-                        }
-
-                    } else if let url = URL(string: userImage.image_url) {
-                        // Fallback for videos without thumbnails
-                        ZStack {
-                            Button {
-                                onSelect(userImage)
-                            } label: {
-                                ZStack {
-                                    KFImage(url)
-                                        .placeholder {
-                                            Rectangle()
-                                                .fill(Color.gray.opacity(0.2))
-                                                .overlay(
-                                                    Image(
-                                                        systemName: "video.fill"
-                                                    )
-                                                    .font(.largeTitle)
-                                                    .foregroundColor(.gray)
-                                                )
-                                        }
-                                        .resizable()
-                                        .scaledToFill()
-                                        .frame(
-                                            width: itemWidth, height: itemHeight
-                                        )
-                                        .clipped()
-                                        .overlay(
-                                            // Selection overlay
-                                            Group {
-                                                if isSelectionMode {
-                                                    Rectangle()
-                                                        .fill(
-                                                            Color.black.opacity(
-                                                                selectedImageIds
-                                                                    .contains(
-                                                                        userImage
-                                                                            .id)
-                                                                    ? 0.3 : 0))
-                                                }
-                                            }
-                                        )
-                                        .overlay(
-                                            // Checkmark overlay
-                                            Group {
-                                                if isSelectionMode {
-                                                    VStack {
-                                                        HStack {
-                                                            Spacer()
-                                                            ZStack {
-                                                                Circle()
-                                                                    .fill(
-                                                                        selectedImageIds
-                                                                            .contains(
-                                                                                userImage
-                                                                                    .id
-                                                                            )
-                                                                            ? Color
-                                                                                .blue
-                                                                            : Color
-                                                                                .white
-                                                                                .opacity(
-                                                                                    0.3
-                                                                                )
-                                                                    )
-                                                                    .frame(
-                                                                        width:
-                                                                            22,
-                                                                        height:
-                                                                            22)
-                                                                    .overlay(
-                                                                        Circle()
-                                                                            .stroke(
-                                                                                Color.white,
-                                                                                lineWidth: 1
-                                                                            )
-                                                                    )
-                                                                if selectedImageIds
-                                                                    .contains(
-                                                                        userImage
-                                                                            .id)
-                                                                {
-                                                                    Image(
-                                                                        systemName:
-                                                                            "checkmark"
-                                                                    )
-                                                                    .font(
-                                                                        .system(
-                                                                            size:
-                                                                                14,
-                                                                            weight:
-                                                                                .bold
-                                                                        )
-                                                                    )
-                                                                    .foregroundColor(
-                                                                        .white)
-                                                                }
-                                                            }
-                                                            .padding(6)
-                                                        }
-                                                        Spacer()
-                                                    }
-                                                }
-                                            }
-                                        )
-
-                                    if userImage.isVideo {
-                                        ZStack {
-                                            Circle()
-                                                .fill(Color.black.opacity(0.6))
-                                                .frame(width: 40, height: 40)
-
-                                            Image(systemName: "play.fill")
-                                                .font(.system(size: 18))
-                                                .foregroundColor(.white)
-                                        }
-                                    }
-                                }
-                            }
-                            .buttonStyle(.plain)
-
-                            // Heart icon and bookmark icon overlay (only show when not in selection mode)
-                            if !isSelectionMode {
-                                VStack {
-                                    HStack {
-                                        Spacer()
-                                        VStack(spacing: 4) {
-                                            ZStack {
-                                                Color.clear
-                                                    .frame(
-                                                        width: 32, height: 32
-                                                    )
-                                                    .contentShape(Rectangle())
-                                                    .onTapGesture {
-                                                        if let viewModel =
-                                                            viewModel
-                                                        {
-                                                            Task {
-                                                                await viewModel
-                                                                    .toggleFavorite(
-                                                                        imageId:
-                                                                            userImage
-                                                                            .id)
-                                                            }
-                                                        } else {
-                                                            // Fallback to local state if no viewModel
-                                                            let imageId =
-                                                                userImage.id
-                                                            if favoritedImageIds
-                                                                .contains(
-                                                                    imageId)
-                                                            {
-                                                                favoritedImageIds
-                                                                    .remove(
-                                                                        imageId)
-                                                            } else {
-                                                                favoritedImageIds
-                                                                    .insert(
-                                                                        imageId)
-                                                            }
-                                                        }
-                                                    }
-
-                                                // Heart icon
-                                                Image(
-                                                    systemName: (userImage
-                                                        .is_favorite ?? false)
-                                                        ? "heart.fill" : "heart"
-                                                )
-                                                .font(
-                                                    .system(
-                                                        size: 16,
-                                                        weight: .semibold)
-                                                )
-                                                .foregroundColor(
-                                                    (userImage.is_favorite
-                                                        ?? false)
-                                                        ? .red : .white
-                                                )
-                                                .shadow(
-                                                    color: .black.opacity(0.5),
-                                                    radius: 2, x: 0, y: 1
-                                                )
-                                                .allowsHitTesting(false)
-                                            }
-
-                                            // // Bookmark icon (blue) if preset is enabled
-                                            // if hasMatchingPreset(for: userImage) {
-                                            //     ZStack {
-                                            //         Circle()
-                                            //             .fill(Color.gray.opacity(0.7))
-                                            //             .frame(width: 24, height: 24)
-
-                                            //         Image(systemName: "bookmark.fill")
-                                            //             .font(.system(size: 12, weight: .semibold))
-                                            //             .foregroundColor(.blue)
-                                            //     }
-                                            //     .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 1)
-                                            // }
-                                        }
-                                    }
-                                    Spacer()
-                                }
-                            }
-                        }
-                        .onAppear {
-                            // Trigger loading more when we're 10 items from the end
-                            if let viewModel = viewModel,
-                                let index = validUserImages.firstIndex(where: {
-                                    $0.id == userImage.id
-                                }),
-                                index >= validUserImages.count - 10
-                            {
-                                Task {
-                                    if isFavoritesTab {
-                                        await viewModel.loadMoreFavorites()
-                                    } else {
-                                        await viewModel.loadMoreImages()
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // Loading indicator for pagination
-                if let viewModel = viewModel, viewModel.isLoadingMore {
-                    HStack {
-                        Spacer()
-                        ProgressView()
-                            .padding()
-                        Spacer()
-                    }
-                }
+                placeholderItems(itemWidth: itemWidth, itemHeight: itemHeight)
+                imageItems(itemWidth: itemWidth, itemHeight: itemHeight)
+                loadingIndicator
             }
             .padding(.horizontal, 4)
         }
-        .frame(
-            height: calculateHeight(for: placeholders.count + validUserImages.count))
+        .frame(height: calculateHeight(for: placeholders.count + validUserImages.count))
+    }
+    
+    // MARK: - Grid Components
+    
+    private func calculateItemWidth(proxy: GeometryProxy) -> CGFloat {
+        let totalSpacing = spacing * 2
+        let contentWidth = max(0, proxy.size.width - totalSpacing - 8)
+        return max(44, contentWidth / 3)
+    }
+    
+    @ViewBuilder
+    private func placeholderItems(itemWidth: CGFloat, itemHeight: CGFloat) -> some View {
+        ForEach(placeholders) { placeholder in
+            PlaceholderImageCard(
+                placeholder: placeholder,
+                itemWidth: itemWidth,
+                itemHeight: itemHeight
+            )
+        }
+    }
+    
+    @ViewBuilder
+    private func imageItems(itemWidth: CGFloat, itemHeight: CGFloat) -> some View {
+        ForEach(validUserImages) { userImage in
+            imageGridItem(
+                userImage: userImage,
+                itemWidth: itemWidth,
+                itemHeight: itemHeight
+            )
+        }
+    }
+    
+    @ViewBuilder
+    private func imageGridItem(userImage: UserImage, itemWidth: CGFloat, itemHeight: CGFloat) -> some View {
+        if let displayUrl = getDisplayUrl(for: userImage),
+           let url = URL(string: displayUrl) {
+            imageItemWithUrl(
+                userImage: userImage,
+                url: url,
+                itemWidth: itemWidth,
+                itemHeight: itemHeight
+            )
+        } else if let url = URL(string: userImage.image_url) {
+            fallbackImageItem(
+                userImage: userImage,
+                url: url,
+                itemWidth: itemWidth,
+                itemHeight: itemHeight
+            )
+        }
+    }
+    
+    private func getDisplayUrl(for userImage: UserImage) -> String? {
+        let isValidUrl: (String?) -> Bool = { urlString in
+            guard let urlString = urlString, !urlString.isEmpty else { return false }
+            return URL(string: urlString) != nil
+        }
+        
+        if userImage.isVideo {
+            if isValidUrl(userImage.thumbnail_url) {
+                return userImage.thumbnail_url
+            } else if isValidUrl(userImage.image_url) {
+                return userImage.image_url
+            }
+        } else {
+            if isValidUrl(userImage.image_url) {
+                return userImage.image_url
+            }
+        }
+        return nil
+    }
+    
+    private func imageItemWithUrl(userImage: UserImage, url: URL, itemWidth: CGFloat, itemHeight: CGFloat) -> some View {
+        ZStack {
+            imageButton(userImage: userImage, url: url, itemWidth: itemWidth, itemHeight: itemHeight)
+            if !isSelectionMode {
+                favoriteOverlay(userImage: userImage)
+            }
+        }
+        .onAppear {
+            handleItemAppear(userImage: userImage)
+        }
+    }
+    
+    private func fallbackImageItem(userImage: UserImage, url: URL, itemWidth: CGFloat, itemHeight: CGFloat) -> some View {
+        ZStack {
+            fallbackImageButton(userImage: userImage, url: url, itemWidth: itemWidth, itemHeight: itemHeight)
+            if !isSelectionMode {
+                favoriteOverlay(userImage: userImage)
+            }
+        }
+        .onAppear {
+            handleItemAppear(userImage: userImage)
+        }
+    }
+    
+    private func imageButton(userImage: UserImage, url: URL, itemWidth: CGFloat, itemHeight: CGFloat) -> some View {
+        Button {
+            onSelect(userImage)
+        } label: {
+            ZStack {
+                KFImage(url)
+                    .placeholder {
+                        Rectangle()
+                            .fill(Color.gray.opacity(0.2))
+                            .overlay(ProgressView())
+                    }
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: itemWidth, height: itemHeight)
+                    .clipped()
+                    .overlay(selectionOverlay(userImage: userImage))
+                    .overlay(checkmarkOverlay(userImage: userImage))
+                
+                if userImage.isVideo {
+                    videoPlayIcon
+                }
+            }
+        }
+        .buttonStyle(.plain)
+    }
+    
+    private func fallbackImageButton(userImage: UserImage, url: URL, itemWidth: CGFloat, itemHeight: CGFloat) -> some View {
+        Button {
+            onSelect(userImage)
+        } label: {
+            ZStack {
+                KFImage(url)
+                    .placeholder {
+                        Rectangle()
+                            .fill(Color.gray.opacity(0.2))
+                            .overlay(
+                                Image(systemName: "video.fill")
+                                    .font(.largeTitle)
+                                    .foregroundColor(.gray)
+                            )
+                    }
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: itemWidth, height: itemHeight)
+                    .clipped()
+                    .overlay(selectionOverlay(userImage: userImage))
+                    .overlay(checkmarkOverlay(userImage: userImage))
+                
+                if userImage.isVideo {
+                    videoPlayIcon
+                }
+            }
+        }
+        .buttonStyle(.plain)
+    }
+    
+    @ViewBuilder
+    private func selectionOverlay(userImage: UserImage) -> some View {
+        if isSelectionMode {
+            Rectangle()
+                .fill(Color.black.opacity(selectedImageIds.contains(userImage.id) ? 0.3 : 0))
+        }
+    }
+    
+    @ViewBuilder
+    private func checkmarkOverlay(userImage: UserImage) -> some View {
+        if isSelectionMode {
+            VStack {
+                HStack {
+                    Spacer()
+                    checkmarkCircle(userImage: userImage)
+                        .padding(6)
+                }
+                Spacer()
+            }
+        }
+    }
+    
+    private func checkmarkCircle(userImage: UserImage) -> some View {
+        ZStack {
+            Circle()
+                .fill(selectedImageIds.contains(userImage.id) ? Color.blue : Color.white.opacity(0.3))
+                .frame(width: 22, height: 22)
+                .overlay(Circle().stroke(Color.white, lineWidth: 1))
+            
+            if selectedImageIds.contains(userImage.id) {
+                Image(systemName: "checkmark")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundColor(.white)
+            }
+        }
+    }
+    
+    private var videoPlayIcon: some View {
+        ZStack {
+            Circle()
+                .fill(Color.black.opacity(0.6))
+                .frame(width: 40, height: 40)
+            
+            Image(systemName: "play.fill")
+                .font(.system(size: 18))
+                .foregroundColor(.white)
+        }
+    }
+    
+    private func favoriteOverlay(userImage: UserImage) -> some View {
+        VStack {
+            HStack {
+                Spacer()
+                VStack(spacing: 4) {
+                    ZStack {
+                        Color.clear
+                            .frame(width: 32, height: 32)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                handleFavoriteTap(userImage: userImage)
+                            }
+                        
+                        Image(systemName: (userImage.is_favorite ?? false) ? "heart.fill" : "heart")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundColor((userImage.is_favorite ?? false) ? .red : .white)
+                            .shadow(color: .black.opacity(0.5), radius: 2, x: 0, y: 1)
+                            .allowsHitTesting(false)
+                    }
+                }
+            }
+            Spacer()
+        }
+    }
+    
+    private func handleFavoriteTap(userImage: UserImage) {
+        if let viewModel = viewModel {
+            Task {
+                await viewModel.toggleFavorite(imageId: userImage.id)
+            }
+        } else {
+            let imageId = userImage.id
+            if favoritedImageIds.contains(imageId) {
+                favoritedImageIds.remove(imageId)
+            } else {
+                favoritedImageIds.insert(imageId)
+            }
+        }
+    }
+    
+    private func handleItemAppear(userImage: UserImage) {
+        guard let viewModel = viewModel,
+              let index = validUserImages.firstIndex(where: { $0.id == userImage.id }),
+              index >= validUserImages.count - 10 else { return }
+        
+        Task {
+            if isFavoritesTab {
+                await viewModel.loadMoreFavorites()
+            } else {
+                await viewModel.loadMoreImages()
+            }
+        }
+    }
+    
+    @ViewBuilder
+    private var loadingIndicator: some View {
+        if let viewModel = viewModel, viewModel.isLoadingMore {
+            HStack {
+                Spacer()
+                ProgressView()
+                    .padding()
+                Spacer()
+            }
+        }
     }
 
     private func calculateHeight(for count: Int) -> CGFloat {

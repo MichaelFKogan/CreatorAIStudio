@@ -8,6 +8,8 @@ struct PhotoReviewView: View {
     @State private var selectedFilter: InfoPacket? = nil
 
     @Environment(\.dismiss) var dismiss
+    @EnvironmentObject var authViewModel: AuthViewModel
+    @State private var showSignInSheet: Bool = false
 
     @State private var selectedStyle: String = "Anime"
     @State private var title: String = ""
@@ -151,6 +153,10 @@ struct PhotoReviewView: View {
         }
         .navigationBarTitleDisplayMode(.inline)
         .onAppear(perform: setDefaultFilter)
+        .sheet(isPresented: $showSignInSheet) {
+            SignInView()
+                .environmentObject(authViewModel)
+        }
     }
 
     // MARK: - Actions

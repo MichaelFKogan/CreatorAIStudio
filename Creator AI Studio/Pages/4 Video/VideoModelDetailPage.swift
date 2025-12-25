@@ -39,6 +39,7 @@ struct VideoModelDetailPage: View {
     @State private var selectedDurationIndex: Int = 0
     @State private var selectedResolutionIndex: Int = 0
     @State private var generateAudio: Bool = true // Default to ON for audio generation
+    @State private var showSignInSheet: Bool = false
 
     @EnvironmentObject var authViewModel: AuthViewModel
 
@@ -316,6 +317,20 @@ struct VideoModelDetailPage: View {
                             .padding(.bottom, -16)
                         }
 
+                        // Login disclaimer (shown when not logged in)
+                        if authViewModel.user == nil {
+                            HStack(spacing: 6) {
+                                Image(systemName: "exclamationmark.circle.fill")
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.red)
+                                Text("You need to be logged in to generate a video")
+                                    .font(.caption)
+                                    .foregroundColor(.red)
+                            }
+                            .padding(.horizontal)
+                            .padding(.bottom, 4)
+                        }
+                        
                         LazyView(
                             GenerateButtonVideo(
                                 prompt: prompt,
@@ -325,8 +340,40 @@ struct VideoModelDetailPage: View {
                                 selectedSize: videoAspectOptions[selectedAspectIndex].id,
                                 selectedResolution: hasVariableResolution ? videoResolutionOptions[selectedResolutionIndex].id : nil,
                                 selectedDuration: "\(Int(videoDurationOptions[selectedDurationIndex].duration))s",
+                                isLoggedIn: authViewModel.user != nil,
+                                onSignInTap: {
+                                    showSignInSheet = true
+                                },
                                 action: generate
                             ))
+                        
+                        // Sign In Button (shown when not logged in)
+                        if authViewModel.user == nil {
+                            Button(action: {
+                                showSignInSheet = true
+                            }) {
+                                HStack {
+                                    Image(systemName: "person.circle.fill")
+                                        .font(.system(size: 16))
+                                    Text("Sign In / Sign Up")
+                                        .font(.system(size: 16, weight: .semibold, design: .rounded))
+                                }
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(
+                                    LinearGradient(
+                                        colors: [Color.purple.opacity(0.8), Color.pink],
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    )
+                                )
+                                .cornerRadius(12)
+                                .shadow(color: Color.purple.opacity(0.3), radius: 8, x: 0, y: 4)
+                            }
+                            .padding(.horizontal)
+                            .padding(.top, 8)
+                        }
 
                         Divider().padding(.horizontal)
 
@@ -460,6 +507,10 @@ struct VideoModelDetailPage: View {
             Button("OK", role: .cancel) {}
         } message: {
             Text(ocrAlertMessage)
+        }
+        .sheet(isPresented: $showSignInSheet) {
+            SignInView()
+                .environmentObject(authViewModel)
         }
         .onAppear {
             // Validate and reset indices if they're out of bounds for model-specific options
@@ -1238,11 +1289,19 @@ private struct GenerateButtonVideo: View {
     let selectedSize: String
     let selectedResolution: String?
     let selectedDuration: String
+    let isLoggedIn: Bool
+    let onSignInTap: () -> Void
     let action: () -> Void
 
     var body: some View {
         VStack(spacing: 8) {
-            Button(action: action) {
+            Button(action: {
+                if !isLoggedIn {
+                    onSignInTap()
+                } else {
+                    action()
+                }
+            }) {
                 HStack {
                     if isGenerating {
                         ProgressView().progressViewStyle(
@@ -1260,7 +1319,7 @@ private struct GenerateButtonVideo: View {
                 .frame(maxWidth: .infinity)
                 .padding()
                 .background(
-                    isGenerating
+                    isGenerating || !isLoggedIn
                         ? LinearGradient(
                             colors: [Color.gray, Color.gray],
                             startPoint: .leading, endPoint: .trailing
@@ -1273,13 +1332,14 @@ private struct GenerateButtonVideo: View {
                 .foregroundColor(.white)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
                 .shadow(
-                    color: isGenerating ? Color.clear : Color.purple.opacity(0.4),
+                    color: (isGenerating || !isLoggedIn) ? Color.clear : Color.purple.opacity(0.4),
                     radius: 8, x: 0, y: 4
                 )
             }
             .scaleEffect(isGenerating ? 0.98 : 1.0)
             .animation(.easeInOut(duration: 0.2), value: isGenerating)
-            .disabled(isGenerating)
+            .disabled(isGenerating || !isLoggedIn)
+            .opacity(!isLoggedIn ? 0.6 : 1.0)
             .padding(.horizontal)
             .background(Color(UIColor.systemBackground))
             
