@@ -13,7 +13,12 @@ struct Profile: View {
     var body: some View {
         NavigationStack {
             VStack {
-                if let user = authViewModel.user {
+                if authViewModel.isCheckingSession {
+                    // Show loading while checking session
+                    ProgressView("Loading…")
+                        .padding()
+                } else if let user = authViewModel.user {
+                    // User is logged in - show gallery
                     ProfileViewContent(viewModel: viewModel)
                         .environmentObject(authViewModel)
                         .onAppear {
@@ -34,7 +39,9 @@ struct Profile: View {
                             }
                         }
                 } else {
-                    Text("Loading user…")
+                    // User is not logged in - show sign in view
+                    SignInView()
+                        .environmentObject(authViewModel)
                 }
             }
 
@@ -42,18 +49,21 @@ struct Profile: View {
 
             .navigationTitle("")
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Text("Gallery")
-                        .font(
-                            .system(size: 28, weight: .bold, design: .rounded)
-                        )
-                        .foregroundStyle(
-                            LinearGradient(
-                                colors: [.gray, .white],
-                                startPoint: .leading,
-                                endPoint: .trailing
+                // Only show "Gallery" title when user is logged in
+                if !authViewModel.isCheckingSession && authViewModel.user != nil {
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        Text("Gallery")
+                            .font(
+                                .system(size: 28, weight: .bold, design: .rounded)
                             )
-                        )
+                            .foregroundStyle(
+                                LinearGradient(
+                                    colors: [.gray, .white],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                    }
                 }
             }
         }
@@ -1099,9 +1109,16 @@ struct ImageGridView: View {
                                                                     )
                                                                     .frame(
                                                                         width:
-                                                                            24,
+                                                                            22,
                                                                         height:
-                                                                            24)
+                                                                            22)
+                                                                    .overlay(
+                                                                        Circle()
+                                                                            .stroke(
+                                                                                Color.white,
+                                                                                lineWidth: 1
+                                                                            )
+                                                                    )
                                                                 if selectedImageIds
                                                                     .contains(
                                                                         userImage
@@ -1314,9 +1331,16 @@ struct ImageGridView: View {
                                                                     )
                                                                     .frame(
                                                                         width:
-                                                                            24,
+                                                                            22,
                                                                         height:
-                                                                            24)
+                                                                            22)
+                                                                    .overlay(
+                                                                        Circle()
+                                                                            .stroke(
+                                                                                Color.white,
+                                                                                lineWidth: 1
+                                                                            )
+                                                                    )
                                                                 if selectedImageIds
                                                                     .contains(
                                                                         userImage

@@ -185,17 +185,6 @@ struct Settings: View {
                         .foregroundColor(.gray)
                 }
 
-                NavigationLink(destination: Developer()) {
-                    HStack {
-                        Image(systemName: "terminal.fill")
-                            .foregroundColor(.green)
-                        Text("Developer")
-                            .foregroundColor(.green)
-                        Spacer()
-//                        Image(systemName: "chevron.right")
-//                            .foregroundColor(.gray)
-                    }
-                }
             }
 
             // Sign out

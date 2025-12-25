@@ -262,7 +262,7 @@ struct PhotoFilters: View {
                                     if categoryName != viewModel.sortedCategoryNames.last {
                                         Divider()
                                             .padding(.horizontal, 16)
-                                            .padding(.bottom, 8)
+                                            .padding(.vertical, 16)
                                     }
                                 }
                             }

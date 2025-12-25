@@ -461,71 +461,11 @@ struct Post: View {
 
                             Spacer()
 
-                            // Right side: Photo library and switch camera buttons
+                            // Right side: Menu button
                             VStack {
                                 Spacer()
 
                                 VStack(spacing: 16) {
-                                    // MARK: ✅ ❌
-                                    // X (retake) and checkmark (confirm) buttons - visible only when photo is captured AND filter is selected
-                                    if shouldShowCapturedImage,
-                                        cameraService.capturedImage != nil
-                                    {
-                                        // X Button - Retake photo
-                                        Button {
-                                            // Clear the captured image and return to camera preview
-                                            shouldShowCapturedImage = false
-                                            cameraService.capturedImage = nil
-                                            // Ensure camera session is running when returning to preview
-                                            // Restart session to ensure it's active
-                                            DispatchQueue.main.asyncAfter(
-                                                deadline: .now() + 0.1
-                                            ) {
-                                                self.cameraService
-                                                    .startSession()
-                                            }
-                                        } label: {
-                                            Image(systemName: "xmark")
-                                                .font(
-                                                    .system(
-                                                        size: 20, weight: .bold)
-                                                )
-                                                .foregroundColor(.red)
-                                        }
-                                        .frame(width: 55, height: 55)
-                                        .background(
-                                            RoundedRectangle(cornerRadius: 14)
-                                                .fill(.ultraThinMaterial)
-                                                .environment(
-                                                    \.colorScheme, .dark)
-                                        )
-
-                                        // Checkmark Button - Confirm and proceed
-                                        Button {
-                                            // Check if filter/model is selected before navigating
-                                            if isFilterOrModelSelected {
-                                                navigateToPhotoReview = true
-                                            } else {
-                                                // Show selection sheet if nothing is selected
-                                                showFilterModelSelectionSheet = true
-                                            }
-                                        } label: {
-                                            Image(systemName: "checkmark")
-                                                .font(
-                                                    .system(
-                                                        size: 20, weight: .bold)
-                                                )
-                                                .foregroundColor(.green)
-                                        }
-                                        .frame(width: 55, height: 55)
-                                        .background(
-                                            RoundedRectangle(cornerRadius: 14)
-                                                .fill(.ultraThinMaterial)
-                                                .environment(
-                                                    \.colorScheme, .dark)
-                                        )
-                                    }
-
                                     // MARK: MENU
                                     Button {
                                         showFilterCategorySheet = true
@@ -639,23 +579,56 @@ struct Post: View {
                         .padding(.bottom, 20)
 
                         HStack(spacing: 50) {
-                            // MARK: 🖼️ LIBRARY
-                            Button {
-                                showLibraryPicker = true
-                            } label: {
-                                Image(
-                                    systemName:
-                                        "photo.on.rectangle.angled"
+                            // MARK: Left button - Library or X (retake)
+                            if shouldShowCapturedImage,
+                                cameraService.capturedImage != nil
+                            {
+                                // X Button - Retake photo
+                                Button {
+                                    // Clear the captured image and return to camera preview
+                                    shouldShowCapturedImage = false
+                                    cameraService.capturedImage = nil
+                                    // Ensure camera session is running when returning to preview
+                                    // Restart session to ensure it's active
+                                    DispatchQueue.main.asyncAfter(
+                                        deadline: .now() + 0.1
+                                    ) {
+                                        self.cameraService
+                                            .startSession()
+                                    }
+                                } label: {
+                                    Image(systemName: "xmark")
+                                        .font(
+                                            .system(
+                                                size: 20, weight: .bold)
+                                        )
+                                        .foregroundColor(.red)
+                                }
+                                .frame(width: 55, height: 55)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 14)
+                                        .fill(.ultraThinMaterial)
+                                        .environment(\.colorScheme, .dark)
                                 )
-                                .font(.system(size: 20, weight: .bold))
-                                .foregroundColor(.white)
+                            } else {
+                                // MARK: 🖼️ LIBRARY
+                                Button {
+                                    showLibraryPicker = true
+                                } label: {
+                                    Image(
+                                        systemName:
+                                            "photo.on.rectangle.angled"
+                                    )
+                                    .font(.system(size: 20, weight: .bold))
+                                    .foregroundColor(.white)
+                                }
+                                .frame(width: 55, height: 55)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 14)
+                                        .fill(.ultraThinMaterial)
+                                        .environment(\.colorScheme, .dark)
+                                )
                             }
-                            .frame(width: 55, height: 55)
-                            .background(
-                                RoundedRectangle(cornerRadius: 14)
-                                    .fill(.ultraThinMaterial)
-                                    .environment(\.colorScheme, .dark)
-                            )
 
                             // MARK: CAPTURE
                             Button {
@@ -684,24 +657,53 @@ struct Post: View {
                             }
                             .disabled(shouldShowCapturedImage)
 
-                            // MARK: 🔄 SWITCH
-                            Button {
-                                cameraService.switchCamera()
-                            } label: {
-                                Image(
-                                    systemName:
-                                        "arrow.triangle.2.circlepath"
+                            // MARK: Right button - Switch camera or Checkmark (confirm)
+                            if shouldShowCapturedImage,
+                                cameraService.capturedImage != nil
+                            {
+                                // Checkmark Button - Confirm and proceed
+                                Button {
+                                    // Check if filter/model is selected before navigating
+                                    if isFilterOrModelSelected {
+                                        navigateToPhotoReview = true
+                                    } else {
+                                        // Show selection sheet if nothing is selected
+                                        showFilterModelSelectionSheet = true
+                                    }
+                                } label: {
+                                    Image(systemName: "checkmark")
+                                        .font(
+                                            .system(
+                                                size: 20, weight: .bold)
+                                        )
+                                        .foregroundColor(.green)
+                                }
+                                .frame(width: 55, height: 55)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 14)
+                                        .fill(.ultraThinMaterial)
+                                        .environment(\.colorScheme, .dark)
                                 )
-                                .font(.system(size: 20, weight: .bold))
-                                .foregroundColor(.white)
+                            } else {
+                                // MARK: 🔄 SWITCH
+                                Button {
+                                    cameraService.switchCamera()
+                                } label: {
+                                    Image(
+                                        systemName:
+                                            "arrow.triangle.2.circlepath"
+                                    )
+                                    .font(.system(size: 20, weight: .bold))
+                                    .foregroundColor(.white)
+                                }
+                                .frame(width: 55, height: 55)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 14)
+                                        .fill(.ultraThinMaterial)
+                                        .environment(\.colorScheme, .dark)
+                                )
+                                .accessibilityLabel("Switch camera")
                             }
-                            .frame(width: 55, height: 55)
-                            .background(
-                                RoundedRectangle(cornerRadius: 14)
-                                    .fill(.ultraThinMaterial)
-                                    .environment(\.colorScheme, .dark)
-                            )
-                            .accessibilityLabel("Switch camera")
                         }
                         .padding(.horizontal, 20)
 
