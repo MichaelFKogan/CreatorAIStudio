@@ -110,28 +110,69 @@ struct PhotoReviewView: View {
                 .font(.subheadline)
                 .padding(.horizontal)
 
-                //                // Accept Button
-                //                Button(action: handleAcceptPhoto) {
-                //                    HStack {
-                //                        if isProcessing {
-                //                            ProgressView()
-                //                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                //                                .scaleEffect(0.8)
-                //                        } else {
-                //                            Image(systemName: "checkmark")
-                //                                .font(.system(size: 18, weight: .bold))
-                //                        }
-                //                        Text(isProcessing ? "Processing..." : "Transform Photo")
-                //                            .font(.headline)
-                //                            .fontWeight(.semibold)
-                //                    }
-                //                    .foregroundColor(.white)
-                //                    .frame(maxWidth: .infinity)
-                //                    .padding()
-                //                    .background(Color.accentColor)
-                //                    .cornerRadius(12)
-                //                    .padding(.horizontal)
-                //                }
+                // Login disclaimer (shown when not logged in)
+                if authViewModel.user == nil {
+                    VStack {
+                        HStack(spacing: 6) {
+                            Image(systemName: "exclamationmark.circle.fill")
+                                .font(.system(size: 14))
+                                .foregroundColor(.red)
+                            Text("You must be logged in to upload your photo")
+                                .font(.caption)
+                                .foregroundColor(.red)
+                        }
+
+                        // Sign In / Sign Up text link (shown when not logged in)
+                        HStack {
+                            Spacer()
+                            Button(action: {
+                                showSignInSheet = true
+                            }) {
+                                Text("Sign In / Sign Up")
+                                    .font(
+                                        .system(
+                                            size: 15, weight: .medium,
+                                            design: .rounded)
+                                    )
+                                    .foregroundColor(.blue)
+                            }
+                            Spacer()
+                        }
+                    }
+                    .padding(.horizontal)
+                    .padding(.bottom, 12)
+                }
+
+                // Upload Your Photo Button
+                Button(action: {
+                    // TODO: Handle photo upload action
+                }) {
+                    HStack {
+                        if isProcessing {
+                            ProgressView()
+                                .progressViewStyle(
+                                    CircularProgressViewStyle(tint: .white)
+                                )
+                                .scaleEffect(0.8)
+                        } else {
+                            Image(systemName: "arrow.up.circle.fill")
+                                .font(.system(size: 18, weight: .bold))
+                        }
+                        Text(
+                            isProcessing ? "Uploading..." : "Upload Your Photo"
+                        )
+                        .font(.headline)
+                        .fontWeight(.semibold)
+                    }
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.accentColor)
+                    .cornerRadius(12)
+                    .padding(.horizontal)
+                }
+                .disabled(isProcessing || authViewModel.user == nil)
+                .opacity(authViewModel.user == nil ? 0.6 : 1.0)
 
                 // Cancel Button
                 Button(action: {
@@ -156,6 +197,7 @@ struct PhotoReviewView: View {
         .sheet(isPresented: $showSignInSheet) {
             SignInView()
                 .environmentObject(authViewModel)
+                .presentationDragIndicator(.visible)
         }
     }
 

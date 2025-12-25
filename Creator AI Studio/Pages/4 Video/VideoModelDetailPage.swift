@@ -38,13 +38,13 @@ struct VideoModelDetailPage: View {
     @State private var selectedGenerationMode: Int = 0
     @State private var selectedDurationIndex: Int = 0
     @State private var selectedResolutionIndex: Int = 0
-    @State private var generateAudio: Bool = true // Default to ON for audio generation
+    @State private var generateAudio: Bool = true  // Default to ON for audio generation
     @State private var showSignInSheet: Bool = false
 
     @EnvironmentObject var authViewModel: AuthViewModel
 
     // MARK: Constants - Default fallback options
-    
+
     private let defaultDurationOptions: [DurationOption] = [
         DurationOption(
             id: "5",
@@ -75,7 +75,7 @@ struct VideoModelDetailPage: View {
             label: "12 seconds",
             duration: 12.0,
             description: "Maximum duration"
-        )
+        ),
     ]
 
     private let defaultAspectOptions: [AspectRatioOption] = [
@@ -100,39 +100,47 @@ struct VideoModelDetailPage: View {
             platforms: ["YouTube"]
         ),
     ]
-    
+
     // MARK: Computed Properties - Model-specific options
-    
+
     private var videoDurationOptions: [DurationOption] {
-        ModelConfigurationManager.shared.allowedDurations(for: item) ?? defaultDurationOptions
+        ModelConfigurationManager.shared.allowedDurations(for: item)
+            ?? defaultDurationOptions
     }
-    
+
     private var videoAspectOptions: [AspectRatioOption] {
-        ModelConfigurationManager.shared.allowedAspectRatios(for: item) ?? defaultAspectOptions
+        ModelConfigurationManager.shared.allowedAspectRatios(for: item)
+            ?? defaultAspectOptions
     }
-    
+
     private let defaultResolutionOptions: [ResolutionOption] = [
-        ResolutionOption(id: "480p", label: "480p", description: "Standard quality"),
-        ResolutionOption(id: "720p", label: "720p", description: "High quality"),
-        ResolutionOption(id: "1080p", label: "1080p", description: "Full HD")
+        ResolutionOption(
+            id: "480p", label: "480p", description: "Standard quality"),
+        ResolutionOption(
+            id: "720p", label: "720p", description: "High quality"),
+        ResolutionOption(id: "1080p", label: "1080p", description: "Full HD"),
     ]
-    
+
     private var videoResolutionOptions: [ResolutionOption] {
-        ModelConfigurationManager.shared.allowedResolutions(for: item) ?? defaultResolutionOptions
+        ModelConfigurationManager.shared.allowedResolutions(for: item)
+            ?? defaultResolutionOptions
     }
-    
+
     /// Checks if the current model supports variable resolution selection
     private var hasVariableResolution: Bool {
         guard let modelName = item.display.modelName else { return false }
         return PricingManager.shared.hasVariablePricing(for: modelName)
     }
-    
+
     /// Checks if the current model supports audio generation
     private var supportsAudio: Bool {
-        guard let capabilities = ModelConfigurationManager.shared.capabilities(for: item) else { return false }
+        guard
+            let capabilities = ModelConfigurationManager.shared.capabilities(
+                for: item)
+        else { return false }
         return capabilities.contains("Audio")
     }
-    
+
     /// Checks if the current model requires audio (cannot be disabled)
     /// Some models like Sora 2 only support video with audio
     private var audioRequired: Bool {
@@ -204,41 +212,46 @@ struct VideoModelDetailPage: View {
     ]
 
     private var costString: String {
-        NSDecimalNumber(decimal: currentPrice ?? item.resolvedCost ?? 0).stringValue
+        NSDecimalNumber(decimal: currentPrice ?? item.resolvedCost ?? 0)
+            .stringValue
     }
 
     private var creditsString: String {
         "\((currentPrice ?? item.resolvedCost ?? 0).credits)"
     }
-    
+
     /// Computed property to get the current price based on selected aspect ratio, duration, and audio
     /// Returns variable pricing if available, otherwise falls back to base price
     /// This automatically updates the UI when aspect ratio, duration, or audio selections change
     private var currentPrice: Decimal? {
-        guard let modelName = item.display.modelName else { return item.resolvedCost }
-        
+        guard let modelName = item.display.modelName else {
+            return item.resolvedCost
+        }
+
         // Check if model has variable pricing
         guard PricingManager.shared.hasVariablePricing(for: modelName) else {
             return item.resolvedCost
         }
-        
+
         // Ensure indices are valid
         guard selectedAspectIndex < videoAspectOptions.count,
-              selectedDurationIndex < videoDurationOptions.count else {
+            selectedDurationIndex < videoDurationOptions.count
+        else {
             return item.resolvedCost
         }
-        
+
         // Get selected options
         let selectedAspectOption = videoAspectOptions[selectedAspectIndex]
         let selectedDurationOption = videoDurationOptions[selectedDurationIndex]
-        
+
         // Get selected resolution
         guard selectedResolutionIndex < videoResolutionOptions.count else {
             return item.resolvedCost
         }
-        let selectedResolutionOption = videoResolutionOptions[selectedResolutionIndex]
+        let selectedResolutionOption = videoResolutionOptions[
+            selectedResolutionIndex]
         let resolution = selectedResolutionOption.id
-        
+
         // Get variable price for this combination
         if var variablePrice = PricingManager.shared.variablePrice(
             for: modelName,
@@ -250,13 +263,15 @@ struct VideoModelDetailPage: View {
             // Base price includes audio (since audio is ON by default)
             // Subtract audio addon when audio is turned OFF
             if supportsAudio && !generateAudio {
-                if let audioAddon = PricingManager.shared.audioPriceAddon(for: modelName, duration: selectedDurationOption.duration) {
+                if let audioAddon = PricingManager.shared.audioPriceAddon(
+                    for: modelName, duration: selectedDurationOption.duration)
+                {
                     variablePrice -= audioAddon
                 }
             }
             return variablePrice
         }
-        
+
         // Fallback to base price if variable pricing not found for this combination
         return item.resolvedCost
     }
@@ -273,7 +288,8 @@ struct VideoModelDetailPage: View {
                 ScrollView {
                     VStack(spacing: 24) {
                         LazyView(
-                            BannerSectionVideo(item: item, creditsString: creditsString))
+                            BannerSectionVideo(
+                                item: item, creditsString: creditsString))
 
                         Divider().padding(.horizontal)
 
@@ -282,7 +298,7 @@ struct VideoModelDetailPage: View {
                                 prompt: $prompt,
                                 isFocused: $isPromptFocused,
                                 isExamplePromptsPresented:
-                                $isExamplePromptsPresented,
+                                    $isExamplePromptsPresented,
                                 examplePrompts: examplePrompts,
                                 examplePromptsTransform: transformPrompts,
                                 onCameraTap: {
@@ -291,7 +307,9 @@ struct VideoModelDetailPage: View {
                                 isProcessingOCR: $isProcessingOCR
                             ))
 
-                        if ModelConfigurationManager.shared.capabilities(for: item)?.contains("Image to Video") == true {
+                        if ModelConfigurationManager.shared.capabilities(
+                            for: item)?.contains("Image to Video") == true
+                        {
                             LazyView(
                                 ReferenceImagesSection(
                                     referenceImages: $referenceImages,
@@ -319,61 +337,64 @@ struct VideoModelDetailPage: View {
 
                         // Login disclaimer (shown when not logged in)
                         if authViewModel.user == nil {
-                            HStack(spacing: 6) {
-                                Image(systemName: "exclamationmark.circle.fill")
+                            VStack(spacing: 4) {
+                                HStack(spacing: 6) {
+                                    Spacer()
+                                    Image(
+                                        systemName:
+                                            "exclamationmark.circle.fill"
+                                    )
                                     .font(.system(size: 14))
                                     .foregroundColor(.red)
-                                Text("You need to be logged in to generate a video")
+                                    Text(
+                                        "You must be logged in to generate a video"
+                                    )
                                     .font(.caption)
                                     .foregroundColor(.red)
+                                    Spacer()
+                                }
+
+                                // Sign In / Sign Up text link (shown when not logged in)
+                                HStack {
+                                    Spacer()
+                                    Button(action: {
+                                        showSignInSheet = true
+                                    }) {
+                                        Text("Sign In / Sign Up")
+                                            .font(
+                                                .system(
+                                                    size: 15, weight: .medium,
+                                                    design: .rounded)
+                                            )
+                                            .foregroundColor(.blue)
+                                    }
+                                    Spacer()
+                                }
                             }
                             .padding(.horizontal)
-                            .padding(.bottom, 4)
                         }
-                        
+
                         LazyView(
                             GenerateButtonVideo(
                                 prompt: prompt,
                                 isGenerating: $isGenerating,
                                 keyboardHeight: $keyboardHeight,
                                 creditsString: creditsString,
-                                selectedSize: videoAspectOptions[selectedAspectIndex].id,
-                                selectedResolution: hasVariableResolution ? videoResolutionOptions[selectedResolutionIndex].id : nil,
-                                selectedDuration: "\(Int(videoDurationOptions[selectedDurationIndex].duration))s",
+                                selectedSize: videoAspectOptions[
+                                    selectedAspectIndex
+                                ].id,
+                                selectedResolution: hasVariableResolution
+                                    ? videoResolutionOptions[
+                                        selectedResolutionIndex
+                                    ].id : nil,
+                                selectedDuration:
+                                    "\(Int(videoDurationOptions[selectedDurationIndex].duration))s",
                                 isLoggedIn: authViewModel.user != nil,
                                 onSignInTap: {
                                     showSignInSheet = true
                                 },
                                 action: generate
                             ))
-                        
-                        // Sign In Button (shown when not logged in)
-                        if authViewModel.user == nil {
-                            Button(action: {
-                                showSignInSheet = true
-                            }) {
-                                HStack {
-                                    Image(systemName: "person.circle.fill")
-                                        .font(.system(size: 16))
-                                    Text("Sign In / Sign Up")
-                                        .font(.system(size: 16, weight: .semibold, design: .rounded))
-                                }
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(
-                                    LinearGradient(
-                                        colors: [Color.purple.opacity(0.8), Color.pink],
-                                        startPoint: .leading,
-                                        endPoint: .trailing
-                                    )
-                                )
-                                .cornerRadius(12)
-                                .shadow(color: Color.purple.opacity(0.3), radius: 8, x: 0, y: 4)
-                            }
-                            .padding(.horizontal)
-                            .padding(.top, 8)
-                        }
 
                         Divider().padding(.horizontal)
 
@@ -390,7 +411,7 @@ struct VideoModelDetailPage: View {
                                 options: videoAspectOptions,
                                 selectedIndex: $selectedAspectIndex
                             ))
-                        
+
                         // Only show resolution selector for models with variable pricing
                         if hasVariableResolution {
                             LazyView(
@@ -407,30 +428,35 @@ struct VideoModelDetailPage: View {
                             ))
 
                         Divider().padding(.horizontal)
-                        
+
                         // Pricing Table - Only show for models with variable pricing
                         if let modelName = item.display.modelName,
-                           PricingManager.shared.hasVariablePricing(for: modelName) {
+                            PricingManager.shared.hasVariablePricing(
+                                for: modelName)
+                        {
                             LazyView(
                                 PricingTableSectionVideo(modelName: modelName)
                             )
-                            
+
                             Divider().padding(.horizontal)
                         }
 
                         // Example Gallery Section - Only show if model name exists
-                        if let modelName = item.display.modelName, !modelName.isEmpty {
+                        if let modelName = item.display.modelName,
+                            !modelName.isEmpty
+                        {
                             LazyView(
                                 ModelGallerySection(
                                     modelName: modelName,
-                                    userId: authViewModel.user?.id.uuidString.lowercased()
+                                    userId: authViewModel.user?.id.uuidString
+                                        .lowercased()
                                 )
                             )
 
                             Divider().padding(.horizontal)
                         }
 
-                        Color.clear.frame(height: 130) // bottom padding for floating button
+                        Color.clear.frame(height: 130)  // bottom padding for floating button
                     }
                 }
                 .scrollDismissesKeyboard(.interactively)
@@ -499,7 +525,8 @@ struct VideoModelDetailPage: View {
             }
         }
         .sheet(isPresented: $showPromptCameraSheet) {
-            SimpleCameraPicker(isPresented: $showPromptCameraSheet) { capturedImage in
+            SimpleCameraPicker(isPresented: $showPromptCameraSheet) {
+                capturedImage in
                 processOCR(from: capturedImage)
             }
         }
@@ -511,6 +538,7 @@ struct VideoModelDetailPage: View {
         .sheet(isPresented: $showSignInSheet) {
             SignInView()
                 .environmentObject(authViewModel)
+                .presentationDragIndicator(.visible)
         }
         .onAppear {
             // Validate and reset indices if they're out of bounds for model-specific options
@@ -523,11 +551,13 @@ struct VideoModelDetailPage: View {
             if selectedResolutionIndex >= videoResolutionOptions.count {
                 selectedResolutionIndex = 0
             }
-            
+
             // Set model-specific default duration
             // Sora 2 defaults to 8 seconds (index 1)
             if let modelName = item.display.modelName, modelName == "Sora 2" {
-                if let defaultIndex = videoDurationOptions.firstIndex(where: { $0.duration == 8.0 }) {
+                if let defaultIndex = videoDurationOptions.firstIndex(where: {
+                    $0.duration == 8.0
+                }) {
                     selectedDurationIndex = defaultIndex
                 }
             }
@@ -536,11 +566,13 @@ struct VideoModelDetailPage: View {
             // Reset indices when model changes (if item changes)
             selectedAspectIndex = 0
             selectedResolutionIndex = 0
-            
+
             // Set model-specific default duration
             // Sora 2 defaults to 8 seconds
             if let modelName = newModelName, modelName == "Sora 2" {
-                if let defaultIndex = videoDurationOptions.firstIndex(where: { $0.duration == 8.0 }) {
+                if let defaultIndex = videoDurationOptions.firstIndex(where: {
+                    $0.duration == 8.0
+                }) {
                     selectedDurationIndex = defaultIndex
                 } else {
                     selectedDurationIndex = 0
@@ -563,7 +595,8 @@ struct VideoModelDetailPage: View {
         isGenerating = true
         let selectedAspectOption = videoAspectOptions[selectedAspectIndex]
         let selectedDurationOption = videoDurationOptions[selectedDurationIndex]
-        let selectedResolutionOption = videoResolutionOptions[selectedResolutionIndex]
+        let selectedResolutionOption = videoResolutionOptions[
+            selectedResolutionIndex]
         var modifiedItem = item
         modifiedItem.prompt = prompt
         // Use resolvedAPIConfig as base, then modify aspectRatio
@@ -573,7 +606,7 @@ struct VideoModelDetailPage: View {
 
         let imageToUse = referenceImages.first
         guard let userId = authViewModel.user?.id.uuidString.lowercased(),
-              !userId.isEmpty
+            !userId.isEmpty
         else {
             isGenerating = false
             return
@@ -586,14 +619,17 @@ struct VideoModelDetailPage: View {
                 userId: userId,
                 duration: selectedDurationOption.duration,
                 aspectRatio: selectedAspectOption.id,
-                resolution: hasVariableResolution ? selectedResolutionOption.id : nil,
+                resolution: hasVariableResolution
+                    ? selectedResolutionOption.id : nil,
                 generateAudio: supportsAudio ? generateAudio : nil,
                 onVideoGenerated: { _ in
                     isGenerating = false
                 },
                 onError: { error in
                     isGenerating = false
-                    print("Video generation failed: \(error.localizedDescription)")
+                    print(
+                        "Video generation failed: \(error.localizedDescription)"
+                    )
                 }
             )
         }
@@ -612,7 +648,8 @@ struct VideoModelDetailPage: View {
         isProcessingOCR = true
 
         Task { @MainActor in
-            let recognizedText = await TextRecognitionService.recognizeText(from: image)
+            let recognizedText = await TextRecognitionService.recognizeText(
+                from: image)
 
             isProcessingOCR = false
 
@@ -626,7 +663,8 @@ struct VideoModelDetailPage: View {
                 }
             } else {
                 // Show alert if no text was found
-                ocrAlertMessage = "No text was found in the image. Please try again with a clearer image."
+                ocrAlertMessage =
+                    "No text was found in the image. Please try again with a clearer image."
                 showOCRAlert = true
             }
         }
@@ -666,14 +704,16 @@ private struct BannerSectionVideo: View {
                     .background(Capsule().fill(Color.purple.opacity(0.8)))
 
                     HStack(spacing: 4) {
-                        Text("\(creditsString) credits").font(.title3).fontWeight(.bold)
+                        Text("\(creditsString) credits").font(.title3)
+                            .fontWeight(.bold)
                             .foregroundColor(.purple)
                         Text("per video").font(.caption).foregroundColor(
                             .secondary)
                     }
 
-                    if let capabilities = ModelConfigurationManager.shared.capabilities(for: item),
-                       !capabilities.isEmpty
+                    if let capabilities = ModelConfigurationManager.shared
+                        .capabilities(for: item),
+                        !capabilities.isEmpty
                     {
                         Text(capabilities.joined(separator: " • "))
                             .font(
@@ -691,7 +731,9 @@ private struct BannerSectionVideo: View {
             .frame(height: 120)
 
             // Model Description
-            if let description = item.resolvedModelDescription, !description.isEmpty {
+            if let description = item.resolvedModelDescription,
+                !description.isEmpty
+            {
                 Text(description)
                     .font(.system(size: 14))
                     .foregroundColor(.secondary)
@@ -742,12 +784,14 @@ private struct PromptSectionVideo: View {
                         Group {
                             if isProcessingOCR {
                                 ProgressView()
-                                    .progressViewStyle(CircularProgressViewStyle(tint: .purple))
+                                    .progressViewStyle(
+                                        CircularProgressViewStyle(tint: .purple)
+                                    )
                                     .scaleEffect(0.8)
                             } else {
                                 Image(systemName: "viewfinder")
-                                .font(.system(size: 22))
-                                .foregroundColor(.purple)
+                                    .font(.system(size: 22))
+                                    .foregroundColor(.purple)
                             }
                         }
                     }
@@ -871,22 +915,22 @@ private struct DurationSectionVideo: View {
 private struct PricingTableSectionVideo: View {
     let modelName: String
     @State private var isExpanded: Bool = false
-    
+
     private var pricingConfig: VideoPricingConfiguration? {
         PricingManager.shared.pricingConfiguration(for: modelName)
     }
-    
+
     /// Check if this model has audio pricing (different prices for audio on/off)
     private var hasAudioPricing: Bool {
         PricingManager.shared.hasAudioPricing(for: modelName)
     }
-    
+
     /// Check if this model requires audio (audio-only, like Sora 2)
     private var isAudioRequired: Bool {
         let audioRequiredModels = ["Sora 2"]
         return audioRequiredModels.contains(modelName)
     }
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             // Header with expand/collapse
@@ -905,21 +949,24 @@ private struct PricingTableSectionVideo: View {
                             .fontWeight(.medium)
                             .foregroundColor(.primary)
                     }
-                    
+
                     Spacer()
-                    
+
                     HStack(spacing: 4) {
                         Text(isExpanded ? "Hide" : "View All")
                             .font(.caption)
                             .foregroundColor(.purple)
-                        Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundColor(.purple)
+                        Image(
+                            systemName: isExpanded
+                                ? "chevron.up" : "chevron.down"
+                        )
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(.purple)
                     }
                 }
             }
             .buttonStyle(PlainButtonStyle())
-            
+
             if isExpanded, let config = pricingConfig {
                 if hasAudioPricing {
                     // Show separate tables for audio/no-audio pricing
@@ -945,7 +992,7 @@ private struct PricingTableSectionVideo: View {
 private struct PricingTableContentWithAudio: View {
     let config: VideoPricingConfiguration
     let modelName: String
-    
+
     // Get sorted unique values
     private var aspectRatios: [String] {
         Array(config.pricing.keys).sorted { lhs, rhs in
@@ -955,7 +1002,7 @@ private struct PricingTableContentWithAudio: View {
             return lhsIdx < rhsIdx
         }
     }
-    
+
     private var resolutions: [String] {
         var resSet = Set<String>()
         for (_, resDict) in config.pricing {
@@ -970,7 +1017,7 @@ private struct PricingTableContentWithAudio: View {
             return lhsIdx < rhsIdx
         }
     }
-    
+
     private var durations: [Double] {
         var durSet = Set<Double>()
         for (_, resDict) in config.pricing {
@@ -982,12 +1029,13 @@ private struct PricingTableContentWithAudio: View {
         }
         return durSet.sorted()
     }
-    
+
     /// Get audio addon for a specific duration
     private func audioAddon(for duration: Double) -> Decimal {
-        PricingManager.shared.audioPriceAddon(for: modelName, duration: duration) ?? 0
+        PricingManager.shared.audioPriceAddon(
+            for: modelName, duration: duration) ?? 0
     }
-    
+
     var body: some View {
         VStack(spacing: 20) {
             // With Audio table (first)
@@ -998,9 +1046,9 @@ private struct PricingTableContentWithAudio: View {
                 resolutions: resolutions,
                 durations: durations,
                 config: config,
-                audioAddonProvider: { _ in 0 } // Base price includes audio
+                audioAddonProvider: { _ in 0 }  // Base price includes audio
             )
-            
+
             // Without Audio table
             AudioPricingCard(
                 title: "Without Audio",
@@ -1009,7 +1057,7 @@ private struct PricingTableContentWithAudio: View {
                 resolutions: resolutions,
                 durations: durations,
                 config: config,
-                audioAddonProvider: { duration in -audioAddon(for: duration) } // Subtract audio addon per duration
+                audioAddonProvider: { duration in -audioAddon(for: duration) }  // Subtract audio addon per duration
             )
         }
     }
@@ -1026,7 +1074,7 @@ private struct AudioPricingCard: View {
     let config: VideoPricingConfiguration
     /// Closure that returns the price adjustment for a given duration
     let audioAddonProvider: (Double) -> Decimal
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             // Audio type header
@@ -1043,7 +1091,7 @@ private struct AudioPricingCard: View {
             .background(
                 Capsule().fill(Color.purple.opacity(0.12))
             )
-            
+
             // For each resolution, show a sub-section
             ForEach(resolutions, id: \.self) { resolution in
                 VStack(alignment: .leading, spacing: 4) {
@@ -1052,14 +1100,14 @@ private struct AudioPricingCard: View {
                         .font(.system(size: 11, weight: .medium))
                         .foregroundColor(.secondary)
                         .padding(.leading, 4)
-                    
+
                     // Table header
                     HStack(spacing: 0) {
                         Text("Size")
                             .font(.system(size: 11, weight: .medium))
                             .foregroundColor(.secondary)
                             .frame(width: 50, alignment: .leading)
-                        
+
                         ForEach(durations, id: \.self) { duration in
                             Text("\(Int(duration))s")
                                 .font(.system(size: 11, weight: .medium))
@@ -1069,27 +1117,44 @@ private struct AudioPricingCard: View {
                     }
                     .padding(.horizontal, 12)
                     .padding(.vertical, 4)
-                    
+
                     // Table rows
                     VStack(spacing: 0) {
-                        ForEach(Array(aspectRatios.enumerated()), id: \.element) { index, aspectRatio in
+                        ForEach(Array(aspectRatios.enumerated()), id: \.element)
+                        { index, aspectRatio in
                             HStack(spacing: 0) {
                                 Text(aspectRatio)
-                                    .font(.system(size: 12, weight: .medium, design: .monospaced))
+                                    .font(
+                                        .system(
+                                            size: 12, weight: .medium,
+                                            design: .monospaced)
+                                    )
                                     .foregroundColor(.primary)
                                     .frame(width: 50, alignment: .leading)
-                                
+
                                 ForEach(durations, id: \.self) { duration in
-                                    if let basePrice = config.price(aspectRatio: aspectRatio, resolution: resolution, duration: duration) {
-                                        let adjustedPrice = basePrice + audioAddonProvider(duration)
+                                    if let basePrice = config.price(
+                                        aspectRatio: aspectRatio,
+                                        resolution: resolution,
+                                        duration: duration)
+                                    {
+                                        let adjustedPrice =
+                                            basePrice
+                                            + audioAddonProvider(duration)
                                         Text("\(adjustedPrice.credits)")
-                                            .font(.system(size: 12, weight: .medium, design: .rounded))
+                                            .font(
+                                                .system(
+                                                    size: 12, weight: .medium,
+                                                    design: .rounded)
+                                            )
                                             .foregroundColor(.purple)
                                             .frame(maxWidth: .infinity)
                                     } else {
                                         Text("-")
                                             .font(.system(size: 12))
-                                            .foregroundColor(.secondary.opacity(0.5))
+                                            .foregroundColor(
+                                                .secondary.opacity(0.5)
+                                            )
                                             .frame(maxWidth: .infinity)
                                     }
                                 }
@@ -1123,7 +1188,7 @@ private struct AudioPricingCard: View {
 private struct PricingTableContent: View {
     let config: VideoPricingConfiguration
     var showAudioLabel: Bool = false
-    
+
     // Get sorted unique values
     private var aspectRatios: [String] {
         Array(config.pricing.keys).sorted { lhs, rhs in
@@ -1133,7 +1198,7 @@ private struct PricingTableContent: View {
             return lhsIdx < rhsIdx
         }
     }
-    
+
     private var resolutions: [String] {
         var resSet = Set<String>()
         for (_, resDict) in config.pricing {
@@ -1148,7 +1213,7 @@ private struct PricingTableContent: View {
             return lhsIdx < rhsIdx
         }
     }
-    
+
     private var durations: [Double] {
         var durSet = Set<Double>()
         for (_, resDict) in config.pricing {
@@ -1160,7 +1225,7 @@ private struct PricingTableContent: View {
         }
         return durSet.sorted()
     }
-    
+
     var body: some View {
         VStack(spacing: 16) {
             // Show "With Audio" header for audio-required models
@@ -1179,7 +1244,7 @@ private struct PricingTableContent: View {
                     Capsule().fill(Color.purple.opacity(0.12))
                 )
             }
-            
+
             ForEach(resolutions, id: \.self) { resolution in
                 ResolutionPricingCard(
                     resolution: resolution,
@@ -1199,7 +1264,7 @@ private struct ResolutionPricingCard: View {
     let aspectRatios: [String]
     let durations: [Double]
     let config: VideoPricingConfiguration
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             // Resolution header
@@ -1216,14 +1281,14 @@ private struct ResolutionPricingCard: View {
             .background(
                 Capsule().fill(Color.purple.opacity(0.12))
             )
-            
+
             // Table header
             HStack(spacing: 0) {
                 Text("Size")
                     .font(.system(size: 11, weight: .medium))
                     .foregroundColor(.secondary)
                     .frame(width: 50, alignment: .leading)
-                
+
                 ForEach(durations, id: \.self) { duration in
                     Text("\(Int(duration))s")
                         .font(.system(size: 11, weight: .medium))
@@ -1233,20 +1298,32 @@ private struct ResolutionPricingCard: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 4)
-            
+
             // Table rows
             VStack(spacing: 0) {
-                ForEach(Array(aspectRatios.enumerated()), id: \.element) { index, aspectRatio in
+                ForEach(Array(aspectRatios.enumerated()), id: \.element) {
+                    index, aspectRatio in
                     HStack(spacing: 0) {
                         Text(aspectRatio)
-                            .font(.system(size: 12, weight: .medium, design: .monospaced))
+                            .font(
+                                .system(
+                                    size: 12, weight: .medium,
+                                    design: .monospaced)
+                            )
                             .foregroundColor(.primary)
                             .frame(width: 50, alignment: .leading)
-                        
+
                         ForEach(durations, id: \.self) { duration in
-                            if let price = config.price(aspectRatio: aspectRatio, resolution: resolution, duration: duration) {
+                            if let price = config.price(
+                                aspectRatio: aspectRatio,
+                                resolution: resolution, duration: duration)
+                            {
                                 Text("\(price.credits)")
-                                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                                    .font(
+                                        .system(
+                                            size: 12, weight: .medium,
+                                            design: .rounded)
+                                    )
                                     .foregroundColor(.purple)
                                     .frame(maxWidth: .infinity)
                             } else {
@@ -1332,7 +1409,8 @@ private struct GenerateButtonVideo: View {
                 .foregroundColor(.white)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
                 .shadow(
-                    color: (isGenerating || !isLoggedIn) ? Color.clear : Color.purple.opacity(0.4),
+                    color: (isGenerating || !isLoggedIn)
+                        ? Color.clear : Color.purple.opacity(0.4),
                     radius: 8, x: 0, y: 4
                 )
             }
@@ -1342,7 +1420,7 @@ private struct GenerateButtonVideo: View {
             .opacity(!isLoggedIn ? 0.6 : 1.0)
             .padding(.horizontal)
             .background(Color(UIColor.systemBackground))
-            
+
             // Compact summary of selected options
             HStack(spacing: 0) {
                 // Size column
@@ -1353,7 +1431,7 @@ private struct GenerateButtonVideo: View {
                         .font(.system(size: 12, weight: .medium))
                 }
                 .frame(maxWidth: .infinity)
-                
+
                 // Resolution column (if available)
                 if let resolution = selectedResolution {
                     HStack(spacing: 4) {
@@ -1364,7 +1442,7 @@ private struct GenerateButtonVideo: View {
                     }
                     .frame(maxWidth: .infinity)
                 }
-                
+
                 // Duration column
                 HStack(spacing: 4) {
                     Image(systemName: "timer")
@@ -1421,7 +1499,7 @@ private struct AudioToggleSectionVideo: View {
     @Binding var generateAudio: Bool
     let isRequired: Bool
     @State private var showWarning: Bool = false
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
@@ -1435,13 +1513,15 @@ private struct AudioToggleSectionVideo: View {
                             .fontWeight(.medium)
                             .foregroundColor(.primary)
                     }
-                    Text("Generate synchronized audio, dialogue, and sound effects")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                    Text(
+                        "Generate synchronized audio, dialogue, and sound effects"
+                    )
+                    .font(.caption)
+                    .foregroundColor(.secondary)
                 }
-                
+
                 Spacer()
-                
+
                 if isRequired {
                     // Custom non-interactive toggle that triggers warning on tap
                     Toggle("", isOn: .constant(true))
@@ -1456,8 +1536,11 @@ private struct AudioToggleSectionVideo: View {
                                         showWarning = true
                                     }
                                     // Reset after a delay
-                                    DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-                                        withAnimation(.easeInOut(duration: 0.3)) {
+                                    DispatchQueue.main.asyncAfter(
+                                        deadline: .now() + 2.0
+                                    ) {
+                                        withAnimation(.easeInOut(duration: 0.3))
+                                        {
                                             showWarning = false
                                         }
                                     }
@@ -1477,18 +1560,24 @@ private struct AudioToggleSectionVideo: View {
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 12)
-                    .stroke(generateAudio ? Color.purple.opacity(0.3) : Color.gray.opacity(0.2), lineWidth: 1)
+                    .stroke(
+                        generateAudio
+                            ? Color.purple.opacity(0.3)
+                            : Color.gray.opacity(0.2), lineWidth: 1)
             )
-            
+
             // Disclaimer for models that require audio
             if isRequired {
                 HStack(spacing: 6) {
                     Image(systemName: "info.circle.fill")
                         .font(.system(size: 12))
-                        .foregroundColor(showWarning ? .red : .purple.opacity(0.7))
-                    Text("Audio required. This model can only generate video with audio")
-                        .font(.caption)
-                        .foregroundColor(showWarning ? .red : .secondary)
+                        .foregroundColor(
+                            showWarning ? .red : .purple.opacity(0.7))
+                    Text(
+                        "Audio required. This model can only generate video with audio"
+                    )
+                    .font(.caption)
+                    .foregroundColor(showWarning ? .red : .secondary)
                 }
                 .padding(.horizontal, 4)
                 .scaleEffect(showWarning ? 1.02 : 1.0)

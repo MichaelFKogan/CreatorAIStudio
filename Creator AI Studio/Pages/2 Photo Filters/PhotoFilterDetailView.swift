@@ -5,13 +5,13 @@
 //  Created by Mike K on 10/16/25.
 //
 
+import Kingfisher
 import PhotosUI
 import SwiftUI
-import Kingfisher
 
 struct PhotoFilterDetailView: View {
     let item: InfoPacket
-    let additionalFilters: [InfoPacket]? // Additional filters for multi-select (if 2+ selected)
+    let additionalFilters: [InfoPacket]?  // Additional filters for multi-select (if 2+ selected)
     @State private var prompt: String = ""
     @State private var isGenerating: Bool = false
     @State private var selectedImages: [UIImage] = []
@@ -20,20 +20,24 @@ struct PhotoFilterDetailView: View {
     @State private var showActionSheet: Bool = false
     @State private var createArrowMove: Bool = false
     @State private var navigateToConfirmation: Bool = false
-    
+    @State private var showSignInSheet: Bool = false
+
+    @EnvironmentObject var authViewModel: AuthViewModel
+
     init(item: InfoPacket, additionalFilters: [InfoPacket]? = nil) {
         self.item = item
         self.additionalFilters = additionalFilters
     }
 
     func allMoreStyles(for packet: InfoPacket) -> [InfoPacket] {
-        guard let moreStyles = packet.resolvedMoreStyles, !moreStyles.isEmpty else {
+        guard let moreStyles = packet.resolvedMoreStyles, !moreStyles.isEmpty
+        else {
             return []
         }
-        
+
         let viewModel = PhotoFiltersViewModel.shared
         var result: [InfoPacket] = []
-        
+
         // Iterate through each style group (each inner array contains category names)
         for styleGroup in moreStyles {
             // Each styleGroup is [String] - typically contains one category name
@@ -41,29 +45,32 @@ struct PhotoFilterDetailView: View {
             for categoryName in styleGroup {
                 // Get all filters from this category
                 let categoryFilters = viewModel.filters(for: categoryName)
-                
+
                 // Add filters from this category, excluding the current item
                 for filter in categoryFilters {
                     // Avoid duplicates and exclude the current item
-                    if filter.id != packet.id && !result.contains(where: { $0.id == filter.id }) {
+                    if filter.id != packet.id
+                        && !result.contains(where: { $0.id == filter.id })
+                    {
                         result.append(filter)
                     }
                 }
             }
         }
-        
+
         return result
     }
 
     // Calculate total credits (item + additional filters)
     private var totalCredits: Int {
         let itemCredits = item.resolvedCost?.credits ?? 0
-        let additionalCredits = additionalFilters?.reduce(0) { total, filter in
-            total + (filter.resolvedCost?.credits ?? 0)
-        } ?? 0
+        let additionalCredits =
+            additionalFilters?.reduce(0) { total, filter in
+                total + (filter.resolvedCost?.credits ?? 0)
+            } ?? 0
         return itemCredits + additionalCredits
     }
-    
+
     private var creditsDisplayView: some View {
         HStack(spacing: 12) {
             // Credits Display
@@ -114,45 +121,65 @@ struct PhotoFilterDetailView: View {
                         ?? item.display.imageName,
                     rightImageName: item.display.imageName
                 )
-                .padding(.bottom, 8) // Add explicit bottom padding for consistent spacing
-                
+                .padding(.bottom, 8)  // Add explicit bottom padding for consistent spacing
+
                 // Additional selected filters (if multi-select with 2+ filters)
-                if let additionalFilters = additionalFilters, !additionalFilters.isEmpty {
+                if let additionalFilters = additionalFilters,
+                    !additionalFilters.isEmpty
+                {
                     VStack(alignment: .leading, spacing: 12) {
                         HStack {
                             Image(systemName: "checkmark.circle.fill")
                                 .foregroundColor(.blue)
                             Text("Additional Selected Filters")
-                                .font(.system(size: 18, weight: .semibold, design: .rounded))
+                                .font(
+                                    .system(
+                                        size: 18, weight: .semibold,
+                                        design: .rounded))
                             Spacer()
                         }
-                        
+
                         // Grid of additional filter images (2 columns = 50% width each, square)
                         LazyVGrid(
-                            columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: 2),
+                            columns: Array(
+                                repeating: GridItem(.flexible(), spacing: 12),
+                                count: 2),
                             spacing: 12
                         ) {
                             ForEach(additionalFilters) { filter in
                                 GeometryReader { geometry in
                                     Group {
-                                        if let urlString = filter.display.imageName.hasPrefix("http") ? filter.display.imageName : nil,
-                                           let url = URL(string: urlString) {
+                                        if let urlString =
+                                            filter.display.imageName.hasPrefix(
+                                                "http")
+                                            ? filter.display.imageName : nil,
+                                            let url = URL(string: urlString)
+                                        {
                                             KFImage(url)
                                                 .placeholder {
                                                     Rectangle()
-                                                        .fill(Color.gray.opacity(0.2))
+                                                        .fill(
+                                                            Color.gray.opacity(
+                                                                0.2)
+                                                        )
                                                         .overlay(ProgressView())
                                                 }
                                                 .resizable()
                                                 .scaledToFill()
-                                                .frame(width: geometry.size.width, height: geometry.size.width)
+                                                .frame(
+                                                    width: geometry.size.width,
+                                                    height: geometry.size.width
+                                                )
                                                 .clipped()
                                                 .cornerRadius(12)
                                         } else {
                                             Image(filter.display.imageName)
                                                 .resizable()
                                                 .scaledToFill()
-                                                .frame(width: geometry.size.width, height: geometry.size.width)
+                                                .frame(
+                                                    width: geometry.size.width,
+                                                    height: geometry.size.width
+                                                )
                                                 .clipped()
                                                 .cornerRadius(12)
                                         }
@@ -170,12 +197,16 @@ struct PhotoFilterDetailView: View {
                                                 .padding(.vertical, 4)
                                                 .background(
                                                     Capsule()
-                                                        .fill(Color.black.opacity(0.6))
+                                                        .fill(
+                                                            Color.black.opacity(
+                                                                0.6))
                                                 )
                                                 .padding(8)
                                         }
                                     )
-                                    .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
+                                    .shadow(
+                                        color: Color.black.opacity(0.1),
+                                        radius: 4, x: 0, y: 2)
                                 }
                                 .aspectRatio(1, contentMode: .fit)
                             }
@@ -186,18 +217,25 @@ struct PhotoFilterDetailView: View {
                 // Card 1: Photo Upload Section
                 VStack(alignment: .leading) {
 
-                // Multi-select indicator
-                if let additionalFilters = additionalFilters, !additionalFilters.isEmpty {
-                    HStack {
-                        Image(systemName: "photo.on.rectangle")
-                            .foregroundColor(.blue)
-                        Text("\(additionalFilters.count + 1) filter\(additionalFilters.count + 1 == 1 ? "" : "s") selected")
-                            .font(.system(size: 16, weight: .medium, design: .rounded))
+                    // Multi-select indicator
+                    if let additionalFilters = additionalFilters,
+                        !additionalFilters.isEmpty
+                    {
+                        HStack {
+                            Image(systemName: "photo.on.rectangle")
+                                .foregroundColor(.blue)
+                            Text(
+                                "\(additionalFilters.count + 1) filter\(additionalFilters.count + 1 == 1 ? "" : "s") selected"
+                            )
+                            .font(
+                                .system(
+                                    size: 16, weight: .medium, design: .rounded)
+                            )
                             .foregroundColor(.secondary)
-                        Spacer()
+                            Spacer()
+                        }
+                        .padding(.horizontal)
                     }
-                    .padding(.horizontal)
-                }
 
                     //                    HStack {
                     //                        Image(systemName: "photo.badge.plus")
@@ -219,9 +257,46 @@ struct PhotoFilterDetailView: View {
                     let createButtonWidth = pageInnerWidth - addPhotoWidth - 16  // account for spacing
                     let controlHeight: CGFloat = 250
 
-                    HStack(alignment: .center, spacing: 16) {
+                    // Login disclaimer (shown when not logged in)
+                    if authViewModel.user == nil {
+                        VStack(spacing: 4) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "exclamationmark.circle.fill")
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.red)
+                                Text(
+                                    "You need to be logged in to upload your photo"
+                                )
+                                .font(.caption)
+                                .foregroundColor(.red)
+                            }
 
-                        SpinningPlusButton(showActionSheet: $showActionSheet)
+                            // Sign In / Sign Up text link (shown when not logged in)
+                            HStack {
+                                Spacer()
+                                Button(action: {
+                                    showSignInSheet = true
+                                }) {
+                                    Text("Sign In / Sign Up")
+                                        .font(
+                                            .system(
+                                                size: 15, weight: .medium,
+                                                design: .rounded)
+                                        )
+                                        .foregroundColor(.blue)
+                                }
+                                Spacer()
+                            }
+                        }
+                        .padding(.horizontal)
+                        .padding(.bottom, 8)
+                    }
+
+                    HStack(alignment: .center, spacing: 16) {
+                        SpinningPlusButton(
+                            showActionSheet: $showActionSheet,
+                            isLoggedIn: authViewModel.user != nil
+                        )
                     }
                     .padding(.horizontal, 16)
                     .cornerRadius(16)
@@ -229,20 +304,24 @@ struct PhotoFilterDetailView: View {
                         color: Color.black.opacity(0.05), radius: 8, x: 0, y: 2)
 
                     // Disclaimer text for multi-select
-                    if let additionalFilters = additionalFilters, !additionalFilters.isEmpty {
+                    if let additionalFilters = additionalFilters,
+                        !additionalFilters.isEmpty
+                    {
                         HStack(spacing: 8) {
                             Image(systemName: "info.circle")
                                 .font(.caption)
                                 .foregroundColor(.blue)
-                            Text("You will not be charged yet. Upload a photo and go to the next page to confirm.")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                                .fixedSize(horizontal: false, vertical: true)
+                            Text(
+                                "You will not be charged yet. Upload a photo and go to the next page to confirm."
+                            )
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
                             Spacer()
                         }
                         .padding(.horizontal, 16)
                         .padding(.top, 8)
-                    }                        
+                    }
 
                     // MARK: - Cost Section
                     HStack {
@@ -258,7 +337,11 @@ struct PhotoFilterDetailView: View {
                                 .font(.system(size: 11))
 
                             Text("\(totalCredits)")
-                                .font(.system(size: 16, weight: .semibold, design: .rounded))
+                                .font(
+                                    .system(
+                                        size: 16, weight: .semibold,
+                                        design: .rounded)
+                                )
                                 .foregroundColor(.primary)
                             Text("credits")
                                 .font(.caption2)
@@ -281,7 +364,6 @@ struct PhotoFilterDetailView: View {
                         )
                     }
                     .padding(.trailing, 6)
-                
 
                     // Example Images Section
                     if let exampleImages = item.resolvedExampleImages,
@@ -299,7 +381,10 @@ struct PhotoFilterDetailView: View {
                                 Image(systemName: "paintbrush")
                                     .foregroundColor(.blue)
                                 Text("More Styles")
-                                    .font(.system(size: 22, weight: .bold, design: .rounded))
+                                    .font(
+                                        .system(
+                                            size: 22, weight: .bold,
+                                            design: .rounded))
                                 Spacer()
                             }
 
@@ -324,7 +409,9 @@ struct PhotoFilterDetailView: View {
 
             NavigationLink(isActive: $navigateToConfirmation) {
                 if !selectedImages.isEmpty {
-                    PhotoConfirmationView(item: item, images: selectedImages, additionalFilters: additionalFilters)
+                    PhotoConfirmationView(
+                        item: item, images: selectedImages,
+                        additionalFilters: additionalFilters)
                 }
             } label: {
                 EmptyView()
@@ -362,6 +449,11 @@ struct PhotoFilterDetailView: View {
             prompt = item.prompt ?? ""
             // kick off the subtle arrow motion next to the Create text
             createArrowMove = true
+        }
+        .sheet(isPresented: $showSignInSheet) {
+            SignInView()
+                .environmentObject(authViewModel)
+                .presentationDragIndicator(.visible)
         }
     }
 }
@@ -437,12 +529,12 @@ struct DiagonalOverlappingImages: View {
     var body: some View {
         // Calculate height based on available width (screen width minus horizontal padding)
         // This ensures consistent sizing across devices
-        let availableWidth = UIScreen.main.bounds.width - 40 // Account for horizontal padding (20 on each side)
+        let availableWidth = UIScreen.main.bounds.width - 40  // Account for horizontal padding (20 on each side)
         let imageWidth = availableWidth * 0.53
         let imageHeight = imageWidth * 1.38
-        let contentHeight = imageHeight + 40 // Extra space for shadows and arrow
-        let calculatedHeight = max(240, min(280, contentHeight)) // Clamp between 240 and 280
-        
+        let contentHeight = imageHeight + 40  // Extra space for shadows and arrow
+        let calculatedHeight = max(240, min(280, contentHeight))  // Clamp between 240 and 280
+
         GeometryReader { geometry in
             let imageWidth = geometry.size.width * 0.53
             let imageHeight = imageWidth * 1.38
@@ -511,24 +603,28 @@ struct DiagonalOverlappingImages: View {
             }
             .frame(width: geometry.size.width, height: geometry.size.height)
         }
-        .frame(height: calculatedHeight) // Use calculated height for consistency
+        .frame(height: calculatedHeight)  // Use calculated height for consistency
         .padding(.horizontal, 20)
     }
 }
 
 struct SpinningPlusButton: View {
     @Binding var showActionSheet: Bool
+    let isLoggedIn: Bool
     @State private var rotation: Double = 0
     @State private var shine = false
     @State private var isAnimating = false
 
     var body: some View {
         Button(action: {
-            showActionSheet = true
+            if isLoggedIn {
+                showActionSheet = true
+            }
         }) {
             HStack {
                 Image(systemName: "arrow.right")
-                    .font(.system(size: 20, weight: .bold, design: .rounded)).opacity(0)
+                    .font(.system(size: 20, weight: .bold, design: .rounded))
+                    .opacity(0)
                     .foregroundColor(.black)
                 Spacer()
                 Text("Upload Your Photo")
@@ -563,8 +659,11 @@ struct SpinningPlusButton: View {
             .scaleEffect(isAnimating ? 1.04 : 1.0)
             .animation(
                 .easeInOut(duration: 1.4).repeatForever(autoreverses: true),
-                value: isAnimating)
+                value: isAnimating
+            )
+            .opacity(isLoggedIn ? 1.0 : 0.6)
         }
+        .disabled(!isLoggedIn)
         .onAppear {
             isAnimating = true
             // Initial spin
@@ -648,7 +747,7 @@ struct ExampleImagesSection: View {
                 Image(systemName: "photo.on.rectangle.angled")
                     .foregroundColor(.blue)
                 Text("Example Gallery")
-                .font(.system(size: 22, weight: .bold, design: .rounded))
+                    .font(.system(size: 22, weight: .bold, design: .rounded))
                 Spacer()
             }
 
@@ -911,23 +1010,25 @@ struct ImageSourceSelectionSheetForSingleImage: View {
                 .buttonStyle(PlainButtonStyle())
                 .onChange(of: selectedPhotoItems) { newItems in
                     guard !newItems.isEmpty else { return }
-                    
+
                     Task {
                         var loadedImages: [UIImage] = []
-                        
+
                         // Load all selected images
                         for item in newItems {
-                            if let data = try? await item.loadTransferable(type: Data.self),
-                               let image = UIImage(data: data) {
+                            if let data = try? await item.loadTransferable(
+                                type: Data.self),
+                                let image = UIImage(data: data)
+                            {
                                 loadedImages.append(image)
                             }
                         }
-                        
+
                         await MainActor.run {
                             selectedImages = loadedImages
                             selectedPhotoItems.removeAll()
                             showActionSheet = false
-                            
+
                             // Navigate to confirmation if we have images
                             if !selectedImages.isEmpty {
                                 navigateToConfirmation = true
@@ -939,7 +1040,9 @@ struct ImageSourceSelectionSheetForSingleImage: View {
                 Spacer()
             }
             .padding()
-            .navigationTitle("Add Photo\(selectedPhotoItems.count > 1 ? "s" : "")")
+            .navigationTitle(
+                "Add Photo\(selectedPhotoItems.count > 1 ? "s" : "")"
+            )
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {

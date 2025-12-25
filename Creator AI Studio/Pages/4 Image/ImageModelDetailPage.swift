@@ -40,7 +40,7 @@ struct ImageModelDetailPage: View {
     @State private var showSignInSheet: Bool = false
 
     @EnvironmentObject var authViewModel: AuthViewModel
-    
+
     init(item: InfoPacket, capturedImage: UIImage? = nil) {
         self._item = State(initialValue: item)
         self.capturedImage = capturedImage
@@ -48,21 +48,33 @@ struct ImageModelDetailPage: View {
 
     // MARK: Constants
 
-// Replace the hardcoded imageAspectOptions with a computed property:
-private var imageAspectOptions: [AspectRatioOption] {
-    // Check for model-specific aspect ratios first
-    if let modelOptions = ModelConfigurationManager.shared.allowedAspectRatios(for: item), !modelOptions.isEmpty {
-        return modelOptions
+    // Replace the hardcoded imageAspectOptions with a computed property:
+    private var imageAspectOptions: [AspectRatioOption] {
+        // Check for model-specific aspect ratios first
+        if let modelOptions = ModelConfigurationManager.shared
+            .allowedAspectRatios(for: item), !modelOptions.isEmpty
+        {
+            return modelOptions
+        }
+        // Fall back to default options for models without specific constraints
+        return [
+            AspectRatioOption(
+                id: "3:4", label: "3:4", width: 3, height: 4,
+                platforms: ["Portrait"]),
+            AspectRatioOption(
+                id: "9:16", label: "9:16", width: 9, height: 16,
+                platforms: ["TikTok", "Reels"]),
+            AspectRatioOption(
+                id: "1:1", label: "1:1", width: 1, height: 1,
+                platforms: ["Instagram"]),
+            AspectRatioOption(
+                id: "4:3", label: "4:3", width: 4, height: 3,
+                platforms: ["Landscape"]),
+            AspectRatioOption(
+                id: "16:9", label: "16:9", width: 16, height: 9,
+                platforms: ["YouTube"]),
+        ]
     }
-    // Fall back to default options for models without specific constraints
-    return [
-        AspectRatioOption(id: "3:4", label: "3:4", width: 3, height: 4, platforms: ["Portrait"]),
-        AspectRatioOption(id: "9:16", label: "9:16", width: 9, height: 16, platforms: ["TikTok", "Reels"]),
-        AspectRatioOption(id: "1:1", label: "1:1", width: 1, height: 1, platforms: ["Instagram"]),
-        AspectRatioOption(id: "4:3", label: "4:3", width: 4, height: 3, platforms: ["Landscape"]),
-        AspectRatioOption(id: "16:9", label: "16:9", width: 16, height: 9, platforms: ["YouTube"]),
-    ]
-}
 
     private let examplePrompts: [String] = [
         "A serene landscape with mountains at sunset, photorealistic, 8k quality",
@@ -152,7 +164,7 @@ private var imageAspectOptions: [AspectRatioOption] {
                                 prompt: $prompt,
                                 isFocused: $isPromptFocused,
                                 isExamplePromptsPresented:
-                                $isExamplePromptsPresented,
+                                    $isExamplePromptsPresented,
                                 examplePrompts: examplePrompts,
                                 examplePromptsTransform: transformPrompts,
                                 onCameraTap: {
@@ -161,7 +173,9 @@ private var imageAspectOptions: [AspectRatioOption] {
                                 isProcessingOCR: $isProcessingOCR
                             ))
 
-                        if ModelConfigurationManager.shared.capabilities(for: item)?.contains("Image to Image") == true {
+                        if ModelConfigurationManager.shared.capabilities(
+                            for: item)?.contains("Image to Image") == true
+                        {
                             LazyView(
                                 ReferenceImagesSection(
                                     referenceImages: $referenceImages,
@@ -189,18 +203,44 @@ private var imageAspectOptions: [AspectRatioOption] {
 
                         // Login disclaimer (shown when not logged in)
                         if authViewModel.user == nil {
-                            HStack(spacing: 6) {
-                                Image(systemName: "exclamationmark.circle.fill")
+                            VStack(spacing: 4) {
+                                HStack(spacing: 6) {
+                                    Spacer()
+                                    Image(
+                                        systemName:
+                                            "exclamationmark.circle.fill"
+                                    )
                                     .font(.system(size: 14))
                                     .foregroundColor(.red)
-                                Text("You need to be logged in to generate an image")
+                                    Text(
+                                        "You must be logged in to generate an image"
+                                    )
                                     .font(.caption)
                                     .foregroundColor(.red)
+                                    Spacer()
+                                }
+                                
+
+                                // Sign In / Sign Up text link (shown when not logged in)
+                                HStack {
+                                    Spacer()
+                                    Button(action: {
+                                        showSignInSheet = true
+                                    }) {
+                                        Text("Sign In / Sign Up")
+                                            .font(
+                                                .system(
+                                                    size: 15, weight: .medium,
+                                                    design: .rounded)
+                                            )
+                                            .foregroundColor(.blue)
+                                    }
+                                    Spacer()
+                                }
                             }
                             .padding(.horizontal)
-                            .padding(.bottom, 4)
                         }
-                        
+
                         LazyView(
                             GenerateButton(
                                 prompt: prompt,
@@ -213,34 +253,6 @@ private var imageAspectOptions: [AspectRatioOption] {
                                 },
                                 action: generate
                             ))
-                        
-                        // Sign In Button (shown when not logged in)
-                        if authViewModel.user == nil {
-                            Button(action: {
-                                showSignInSheet = true
-                            }) {
-                                HStack {
-                                    Image(systemName: "person.circle.fill")
-                                        .font(.system(size: 16))
-                                    Text("Sign In / Sign Up")
-                                        .font(.system(size: 16, weight: .semibold, design: .rounded))
-                                }
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(
-                                    LinearGradient(
-                                        colors: [Color.blue.opacity(0.8), Color.cyan],
-                                        startPoint: .leading,
-                                        endPoint: .trailing
-                                    )
-                                )
-                                .cornerRadius(12)
-                                .shadow(color: Color.blue.opacity(0.3), radius: 8, x: 0, y: 4)
-                            }
-                            .padding(.horizontal)
-                            .padding(.top, 8)
-                        }
 
                         Divider().padding(.horizontal)
 
@@ -318,18 +330,21 @@ private var imageAspectOptions: [AspectRatioOption] {
                         // LazyView(CostCardSection(costString: costString))
 
                         // Example Gallery Section - Only show if model name exists
-                        if let modelName = item.display.modelName, !modelName.isEmpty {
+                        if let modelName = item.display.modelName,
+                            !modelName.isEmpty
+                        {
                             LazyView(
                                 ModelGallerySection(
                                     modelName: modelName,
-                                    userId: authViewModel.user?.id.uuidString.lowercased()
+                                    userId: authViewModel.user?.id.uuidString
+                                        .lowercased()
                                 )
                             )
 
                             Divider().padding(.horizontal)
                         }
 
-                        Color.clear.frame(height: 130) // bottom padding for floating button
+                        Color.clear.frame(height: 130)  // bottom padding for floating button
                     }
                 }
                 .scrollDismissesKeyboard(.interactively)
@@ -404,7 +419,8 @@ private var imageAspectOptions: [AspectRatioOption] {
             }
         }
         .sheet(isPresented: $showPromptCameraSheet) {
-            SimpleCameraPicker(isPresented: $showPromptCameraSheet) { capturedImage in
+            SimpleCameraPicker(isPresented: $showPromptCameraSheet) {
+                capturedImage in
                 processOCR(from: capturedImage)
             }
         }
@@ -416,6 +432,7 @@ private var imageAspectOptions: [AspectRatioOption] {
         .sheet(isPresented: $showSignInSheet) {
             SignInView()
                 .environmentObject(authViewModel)
+                .presentationDragIndicator(.visible)
         }
     }
 
@@ -439,7 +456,7 @@ private var imageAspectOptions: [AspectRatioOption] {
 
         let imageToUse = referenceImages.first ?? createPlaceholderImage()
         guard let userId = authViewModel.user?.id.uuidString.lowercased(),
-              !userId.isEmpty
+            !userId.isEmpty
         else {
             isGenerating = false
             return
@@ -474,7 +491,8 @@ private var imageAspectOptions: [AspectRatioOption] {
         isProcessingOCR = true
 
         Task { @MainActor in
-            let recognizedText = await TextRecognitionService.recognizeText(from: image)
+            let recognizedText = await TextRecognitionService.recognizeText(
+                from: image)
 
             isProcessingOCR = false
 
@@ -488,7 +506,8 @@ private var imageAspectOptions: [AspectRatioOption] {
                 }
             } else {
                 // Show alert if no text was found
-                ocrAlertMessage = "No text was found in the image. Please try again with a clearer image."
+                ocrAlertMessage =
+                    "No text was found in the image. Please try again with a clearer image."
                 showOCRAlert = true
             }
         }
@@ -534,8 +553,9 @@ struct BannerSection: View {
                             .secondary)
                     }
 
-                    if let capabilities = ModelConfigurationManager.shared.capabilities(for: item),
-                       !capabilities.isEmpty
+                    if let capabilities = ModelConfigurationManager.shared
+                        .capabilities(for: item),
+                        !capabilities.isEmpty
                     {
                         Text(capabilities.joined(separator: " • "))
                             .font(
@@ -553,7 +573,9 @@ struct BannerSection: View {
             .frame(height: 120)
 
             // Model Description
-            if let description = item.resolvedModelDescription, !description.isEmpty {
+            if let description = item.resolvedModelDescription,
+                !description.isEmpty
+            {
                 Text(description)
                     .font(.system(size: 14))
                     .foregroundColor(.secondary)
@@ -604,12 +626,14 @@ struct PromptSection: View {
                         Group {
                             if isProcessingOCR {
                                 ProgressView()
-                                    .progressViewStyle(CircularProgressViewStyle(tint: .blue))
+                                    .progressViewStyle(
+                                        CircularProgressViewStyle(tint: .blue)
+                                    )
                                     .scaleEffect(0.8)
                             } else {
                                 Image(systemName: "viewfinder")
-                                .font(.system(size: 22))
-                                .foregroundColor(.blue)
+                                    .font(.system(size: 22))
+                                    .foregroundColor(.blue)
                             }
                         }
                     }
@@ -780,7 +804,8 @@ struct GenerateButton: View {
                 .foregroundColor(.white)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
                 .shadow(
-                    color: (isGenerating || !isLoggedIn) ? Color.clear : Color.blue.opacity(0.4),
+                    color: (isGenerating || !isLoggedIn)
+                        ? Color.clear : Color.blue.opacity(0.4),
                     radius: 8, x: 0, y: 4
                 )
             }
@@ -885,16 +910,19 @@ struct ModelGallerySection: View {
                 ModelGalleryGridView(
                     userImages: modelImages,
                     isLoadingMore: isLoadingMore,
-                    hasMorePages: viewModel.hasMoreModelPages(modelName: modelName ?? ""),
+                    hasMorePages: viewModel.hasMoreModelPages(
+                        modelName: modelName ?? ""),
                     onSelect: { userImage in
                         selectedUserImage = userImage
                     },
                     onLoadMore: {
-                        guard let modelName = modelName, !modelName.isEmpty else { return }
+                        guard let modelName = modelName, !modelName.isEmpty
+                        else { return }
                         guard !isLoadingMore else { return }
                         isLoadingMore = true
                         Task {
-                            let newImages = await viewModel.loadMoreModelImages(modelName: modelName)
+                            let newImages = await viewModel.loadMoreModelImages(
+                                modelName: modelName)
                             await MainActor.run {
                                 modelImages.append(contentsOf: newImages)
                                 isLoadingMore = false
@@ -925,8 +953,8 @@ struct ModelGallerySection: View {
 
     private func loadModelImages() {
         guard let modelName = modelName, !modelName.isEmpty,
-              let userId = userId, !userId.isEmpty,
-              !hasLoaded
+            let userId = userId, !userId.isEmpty,
+            !hasLoaded
         else {
             // If no model name or user ID, mark as loaded to prevent retries
             hasLoaded = true
@@ -973,10 +1001,12 @@ struct ModelGalleryGridView: View {
         GeometryReader { proxy in
             let horizontalPadding: CGFloat = 16
             let totalHorizontalSpacing = spacing * 2  // 2 gaps between 3 columns
-            let availableWidth = proxy.size.width - (horizontalPadding * 2) - totalHorizontalSpacing
+            let availableWidth =
+                proxy.size.width - (horizontalPadding * 2)
+                - totalHorizontalSpacing
             let itemWidth = max(44, availableWidth / 3)
             let itemHeight = itemWidth * 1.4
-            
+
             // ✅ OPTIMIZED: Calculate target size with scale factor for retina displays
             let scale = UIScreen.main.scale
             let targetSize = CGSize(
@@ -998,10 +1028,11 @@ struct ModelGalleryGridView: View {
                                 // This resizes images on-the-fly to exact thumbnail size, saving ~80-90% bandwidth
                                 KFImage(url)
                                     .setProcessor(
-                                        DownsamplingImageProcessor(size: targetSize)
+                                        DownsamplingImageProcessor(
+                                            size: targetSize)
                                     )
-                                    .cacheMemoryOnly() // ✅ Use memory cache for thumbnails (faster, less disk I/O)
-                                    .fade(duration: 0.2) // Smooth fade-in
+                                    .cacheMemoryOnly()  // ✅ Use memory cache for thumbnails (faster, less disk I/O)
+                                    .fade(duration: 0.2)  // Smooth fade-in
                                     .placeholder {
                                         Rectangle()
                                             .fill(Color.gray.opacity(0.2))
@@ -1030,10 +1061,13 @@ struct ModelGalleryGridView: View {
                         .buttonStyle(.plain)
                         .onAppear {
                             // Trigger loading more when we're 10 items from the end
-                            if let index = userImages.firstIndex(where: { $0.id == userImage.id }),
-                               index >= userImages.count - 10,
-                               hasMorePages,
-                               !isLoadingMore {
+                            if let index = userImages.firstIndex(where: {
+                                $0.id == userImage.id
+                            }),
+                                index >= userImages.count - 10,
+                                hasMorePages,
+                                !isLoadingMore
+                            {
                                 onLoadMore()
                             }
                         }
@@ -1046,7 +1080,8 @@ struct ModelGalleryGridView: View {
                                 // ✅ OPTIMIZED: Same downsampling for fallback images
                                 KFImage(url)
                                     .setProcessor(
-                                        DownsamplingImageProcessor(size: targetSize)
+                                        DownsamplingImageProcessor(
+                                            size: targetSize)
                                     )
                                     .cacheMemoryOnly()
                                     .fade(duration: 0.2)
@@ -1081,16 +1116,19 @@ struct ModelGalleryGridView: View {
                         .buttonStyle(.plain)
                         .onAppear {
                             // Trigger loading more when we're 10 items from the end
-                            if let index = userImages.firstIndex(where: { $0.id == userImage.id }),
-                               index >= userImages.count - 10,
-                               hasMorePages,
-                               !isLoadingMore {
+                            if let index = userImages.firstIndex(where: {
+                                $0.id == userImage.id
+                            }),
+                                index >= userImages.count - 10,
+                                hasMorePages,
+                                !isLoadingMore
+                            {
                                 onLoadMore()
                             }
                         }
                     }
                 }
-                
+
                 // Loading indicator at the bottom when loading more
                 if isLoadingMore {
                     HStack {
@@ -1104,14 +1142,19 @@ struct ModelGalleryGridView: View {
             }
             .padding(.horizontal, 16)
         }
-        .frame(height: calculateHeight(for: userImages.count, isLoadingMore: isLoadingMore))
+        .frame(
+            height: calculateHeight(
+                for: userImages.count, isLoadingMore: isLoadingMore))
     }
 
-    private func calculateHeight(for count: Int, isLoadingMore: Bool) -> CGFloat {
+    private func calculateHeight(for count: Int, isLoadingMore: Bool) -> CGFloat
+    {
         let rows = ceil(Double(count) / 3.0)
         let horizontalPadding: CGFloat = 16
         let totalHorizontalSpacing = spacing * 2
-        let availableWidth = UIScreen.main.bounds.width - (horizontalPadding * 2) - totalHorizontalSpacing
+        let availableWidth =
+            UIScreen.main.bounds.width - (horizontalPadding * 2)
+            - totalHorizontalSpacing
         let itemWidth = availableWidth / 3
         let baseHeight = CGFloat(rows) * (itemWidth * 1.4 + spacing)
         // Add extra height for loading indicator if loading more

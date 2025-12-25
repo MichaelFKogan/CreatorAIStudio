@@ -7,7 +7,7 @@ struct PhotoConfirmationView: View {
 
     let item: InfoPacket
     let images: [UIImage]
-    let additionalFilters: [InfoPacket]? // Additional filters for multi-select
+    let additionalFilters: [InfoPacket]?  // Additional filters for multi-select
 
     @State private var shimmer: Bool = false
     @State private var sparklePulse: Bool = false
@@ -26,14 +26,19 @@ struct PhotoConfirmationView: View {
     @State private var showSignInSheet: Bool = false
     
     // Primary initializer for multiple images
-    init(item: InfoPacket, images: [UIImage], additionalFilters: [InfoPacket]? = nil) {
+    init(
+        item: InfoPacket, images: [UIImage],
+        additionalFilters: [InfoPacket]? = nil
+    ) {
         self.item = item
         self.images = images
         self.additionalFilters = additionalFilters
     }
     
     // Convenience initializer for single image (backward compatibility)
-    init(item: InfoPacket, image: UIImage, additionalFilters: [InfoPacket]? = nil) {
+    init(
+        item: InfoPacket, image: UIImage, additionalFilters: [InfoPacket]? = nil
+    ) {
         self.item = item
         self.images = [image]
         self.additionalFilters = additionalFilters
@@ -59,7 +64,8 @@ struct PhotoConfirmationView: View {
     // Each image gets generated with each filter
     private var totalCredits: Int {
         let itemCredits = item.resolvedCost?.credits ?? 0
-        let additionalCredits = additionalFilters?.reduce(0) { total, filter in
+        let additionalCredits =
+            additionalFilters?.reduce(0) { total, filter in
             total + (filter.resolvedCost?.credits ?? 0)
         } ?? 0
         let totalFilterCost = itemCredits + additionalCredits
@@ -113,75 +119,84 @@ struct PhotoConfirmationView: View {
         .sheet(isPresented: $showSignInSheet) {
             SignInView()
                 .environmentObject(authViewModel)
+                .presentationDragIndicator(.visible)
         }
     }
 
     // MARK: - View Sections
-    
+
     private var animatedTitleSection: some View {
-        ZStack {
+                ZStack {
             titleText
             sparkleIcons
         }
         .padding(.top, 20)
         .onAppear { sparklePulse = true }
     }
-    
+
     private var titleText: some View {
-        Text(images.count > 1 ? "Confirm Your Photos" : "Confirm Your Photo")
+                    Text(images.count > 1 ? "Confirm Your Photos" : "Confirm Your Photo")
             .font(.system(size: 28, weight: .bold, design: .rounded))
-            .foregroundColor(.primary)
+                        .foregroundColor(.primary)
             .overlay(shimmerOverlay)
             .onAppear {
-                withAnimation(.linear(duration: 2.0).repeatForever(autoreverses: false)) {
+                withAnimation(
+                    .linear(duration: 2.0).repeatForever(autoreverses: false)
+                ) {
                     shimmer.toggle()
                 }
             }
     }
-    
+
     private var shimmerOverlay: some View {
-        LinearGradient(
-            gradient: Gradient(colors: [
-                Color.white.opacity(0.0),
-                Color.white.opacity(0.9),
-                Color.white.opacity(0.0),
-            ]),
-            startPoint: .top,
-            endPoint: .bottom
-        )
-        .rotationEffect(.degrees(20))
-        .offset(x: shimmer ? 300 : -300)
-        .mask(
-            Text(images.count > 1 ? "Confirm Your Photos" : "Confirm Your Photo")
-                .font(.system(size: 28, weight: .bold, design: .rounded))
-        )
+                            LinearGradient(
+                                gradient: Gradient(colors: [
+                                    Color.white.opacity(0.0),
+                                    Color.white.opacity(0.9),
+                                    Color.white.opacity(0.0),
+                                ]),
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                            .rotationEffect(.degrees(20))
+                            .offset(x: shimmer ? 300 : -300)
+                            .mask(
+            Text(
+                images.count > 1 ? "Confirm Your Photos" : "Confirm Your Photo"
+            )
+                                    .font(.system(size: 28, weight: .bold, design: .rounded))
+                            )
     }
-    
+
     private var sparkleIcons: some View {
         Group {
-            Image(systemName: "sparkles")
-                .foregroundColor(.yellow.opacity(0.9))
-                .offset(x: -80, y: -10)
-                .scaleEffect(sparklePulse ? 1.2 : 0.8)
-                .opacity(sparklePulse ? 1 : 0.7)
-                .animation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true), value: sparklePulse)
+                    Image(systemName: "sparkles")
+                        .foregroundColor(.yellow.opacity(0.9))
+                        .offset(x: -80, y: -10)
+                        .scaleEffect(sparklePulse ? 1.2 : 0.8)
+                        .opacity(sparklePulse ? 1 : 0.7)
+                        .animation(
+                    .easeInOut(duration: 1.0).repeatForever(autoreverses: true),
+                    value: sparklePulse)
 
-            Image(systemName: "star.fill")
-                .foregroundColor(.yellow)
-                .offset(x: 80, y: -5)
-                .scaleEffect(sparklePulse ? 0.9 : 0.6)
-                .opacity(sparklePulse ? 0.95 : 0.6)
-                .animation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true).delay(0.3), value: sparklePulse)
+                    Image(systemName: "star.fill")
+                        .foregroundColor(.yellow)
+                        .offset(x: 80, y: -5)
+                        .scaleEffect(sparklePulse ? 0.9 : 0.6)
+                        .opacity(sparklePulse ? 0.95 : 0.6)
+                        .animation(
+                    .easeInOut(duration: 1.2).repeatForever(autoreverses: true)
+                        .delay(0.3), value: sparklePulse)
         }
     }
 
     private var diagonalImageSection: some View {
-        GeometryReader { geometry in
-            let imageWidth = geometry.size.width * 0.48
-            let imageHeight = imageWidth * 1.38
-            let arrowYOffset = -imageHeight * 0.15
+                GeometryReader { geometry in
+                    let imageWidth = geometry.size.width * 0.48
+                    let imageHeight = imageWidth * 1.38
+                    let arrowYOffset = -imageHeight * 0.15
 
-            ZStack(alignment: .center) {
+                    ZStack(alignment: .center) {
                 rightImageExample(width: imageWidth, height: imageHeight)
                 leftUserImage(width: imageWidth, height: imageHeight)
                 animatedArrow(yOffset: arrowYOffset)
@@ -192,196 +207,227 @@ struct PhotoConfirmationView: View {
         .frame(height: 260)
         .padding(.horizontal, 20)
     }
-    
-    private func rightImageExample(width: CGFloat, height: CGFloat) -> some View {
-        Group {
-            if item.display.imageName.hasPrefix("http://") || item.display.imageName.hasPrefix("https://"),
-               let url = URL(string: item.display.imageName) {
-                KFImage(url)
-                    .placeholder { Rectangle().fill(Color.gray.opacity(0.2)).overlay(ProgressView()) }
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
+
+    private func rightImageExample(width: CGFloat, height: CGFloat) -> some View
+    {
+                        Group {
+                            if item.display.imageName.hasPrefix("http://")
+                                || item.display.imageName.hasPrefix("https://"),
+                                let url = URL(string: item.display.imageName)
+                            {
+                                KFImage(url)
+                                    .placeholder {
+                        Rectangle().fill(Color.gray.opacity(0.2)).overlay(
+                            ProgressView())
+                                    }
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
                     .frame(width: width, height: height)
                     .clipShape(RoundedRectangle(cornerRadius: 16))
                     .overlay(imageBorder)
-                    .shadow(color: Color.black.opacity(0.25), radius: 12, x: 4, y: 4)
-            } else {
-                Image(item.display.imageName)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
+                    .shadow(
+                        color: Color.black.opacity(0.25), radius: 12, x: 4, y: 4
+                    )
+                            } else {
+                                Image(item.display.imageName)
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
                     .frame(width: width, height: height)
                     .clipShape(RoundedRectangle(cornerRadius: 16))
                     .overlay(imageBorder)
-                    .shadow(color: Color.black.opacity(0.25), radius: 12, x: 4, y: 4)
-            }
-        }
-        .rotationEffect(.degrees(8))
+                    .shadow(
+                        color: Color.black.opacity(0.25), radius: 12, x: 4, y: 4
+                    )
+                            }
+                        }
+                        .rotationEffect(.degrees(8))
         .offset(x: width * 0.50)
     }
-    
+
     private func leftUserImage(width: CGFloat, height: CGFloat) -> some View {
-        Image(uiImage: firstImage)
-            .resizable()
-            .aspectRatio(contentMode: .fill)
+                        Image(uiImage: firstImage)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
             .frame(width: width, height: height)
-            .clipShape(RoundedRectangle(cornerRadius: 16))
+                            .clipShape(RoundedRectangle(cornerRadius: 16))
             .overlay(imageBorder)
             .shadow(color: Color.black.opacity(0.25), radius: 12, x: -4, y: 4)
             .rotationEffect(.degrees(-6))
             .offset(x: -width * 0.50)
     }
-    
+
     private var imageBorder: some View {
-        RoundedRectangle(cornerRadius: 16)
-            .stroke(
-                LinearGradient(
-                    colors: [.white, .gray],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing),
-                lineWidth: 2
-            )
+                                RoundedRectangle(cornerRadius: 16)
+                                    .stroke(
+                                        LinearGradient(
+                                            colors: [.white, .gray],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing),
+                                        lineWidth: 2
+                                    )
     }
-    
+
     private func animatedArrow(yOffset: CGFloat) -> some View {
-        Image("arrow")
-            .resizable()
-            .aspectRatio(contentMode: .fit)
-            .frame(width: 62, height: 62)
-            .rotationEffect(.degrees(arrowWiggle ? 6 : -6))
-            .animation(.easeInOut(duration: 0.6).repeatForever(autoreverses: true), value: arrowWiggle)
+                        Image("arrow")
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 62, height: 62)
+                            .rotationEffect(.degrees(arrowWiggle ? 6 : -6))
+                            .animation(
+                .easeInOut(duration: 0.6).repeatForever(autoreverses: true),
+                value: arrowWiggle
+            )
             .offset(x: 0, y: yOffset)
     }
 
     private var filterTitleSection: some View {
-        Text(item.display.title)
+                Text(item.display.title)
             .font(.system(size: 20, weight: .semibold, design: .rounded))
-            .foregroundColor(.primary)
-            .padding(.top, 8)
-            .padding(.horizontal)
+                    .foregroundColor(.primary)
+                    .padding(.top, 8)
+                    .padding(.horizontal)
     }
-    
+
     @ViewBuilder
     private var additionalFiltersSection: some View {
-        if let additionalFilters = additionalFilters, !additionalFilters.isEmpty {
-            VStack(alignment: .leading, spacing: 12) {
+        if let additionalFilters = additionalFilters, !additionalFilters.isEmpty
+        {
+                    VStack(alignment: .leading, spacing: 12) {
                 additionalFiltersHeader
                 additionalFiltersGrid
             }
         }
     }
-    
+
     private var additionalFiltersHeader: some View {
-        HStack {
-            Image(systemName: "checkmark.circle.fill")
-                .foregroundColor(.blue)
-            Text("Additional Selected Filters")
-                .font(.system(size: 18, weight: .semibold, design: .rounded))
-            Spacer()
-        }
-        .padding(.horizontal)
+                        HStack {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundColor(.blue)
+                            Text("Additional Selected Filters")
+                                .font(.system(size: 18, weight: .semibold, design: .rounded))
+                            Spacer()
+                        }
+                        .padding(.horizontal)
     }
-    
+                        
     private var additionalFiltersGrid: some View {
-        LazyVGrid(
-            columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: 2),
-            spacing: 12
-        ) {
+                        LazyVGrid(
+            columns: Array(
+                repeating: GridItem(.flexible(), spacing: 12), count: 2),
+                            spacing: 12
+                        ) {
             ForEach(additionalFilters ?? []) { filter in
                 additionalFilterCard(filter: filter)
             }
         }
         .padding(.horizontal)
     }
-    
+
     private func additionalFilterCard(filter: InfoPacket) -> some View {
-        GeometryReader { geometry in
-            Group {
-                if let urlString = filter.display.imageName.hasPrefix("http") ? filter.display.imageName : nil,
-                   let url = URL(string: urlString) {
-                    KFImage(url)
-                        .placeholder { Rectangle().fill(Color.gray.opacity(0.2)).overlay(ProgressView()) }
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: geometry.size.width, height: geometry.size.width)
-                        .clipped()
-                        .cornerRadius(12)
-                } else {
-                    Image(filter.display.imageName)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: geometry.size.width, height: geometry.size.width)
-                        .clipped()
-                        .cornerRadius(12)
-                }
-            }
+                                GeometryReader { geometry in
+                                    Group {
+                if let urlString = filter.display.imageName.hasPrefix("http")
+                    ? filter.display.imageName : nil,
+                    let url = URL(string: urlString)
+                {
+                                            KFImage(url)
+                                                .placeholder {
+                            Rectangle().fill(Color.gray.opacity(0.2)).overlay(
+                                ProgressView())
+                                                }
+                                                .resizable()
+                                                .scaledToFill()
+                        .frame(
+                            width: geometry.size.width,
+                            height: geometry.size.width
+                        )
+                                                .clipped()
+                                                .cornerRadius(12)
+                                        } else {
+                                            Image(filter.display.imageName)
+                                                .resizable()
+                                                .scaledToFill()
+                        .frame(
+                            width: geometry.size.width,
+                            height: geometry.size.width
+                        )
+                                                .clipped()
+                                                .cornerRadius(12)
+                                        }
+                                    }
             .overlay(filterTitleOverlay(filter: filter))
             .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
         }
         .aspectRatio(1, contentMode: .fit)
     }
-    
+
     private func filterTitleOverlay(filter: InfoPacket) -> some View {
-        VStack {
-            Spacer()
-            Text(filter.display.title)
-                .font(.caption2)
-                .fontWeight(.semibold)
-                .foregroundColor(.white)
-                .lineLimit(1)
-                .truncationMode(.tail)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
+                                        VStack {
+                                            Spacer()
+                                            Text(filter.display.title)
+                                                .font(.caption2)
+                                                .fontWeight(.semibold)
+                                                .foregroundColor(.white)
+                                                .lineLimit(1)
+                                                .truncationMode(.tail)
+                                                .padding(.horizontal, 8)
+                                                .padding(.vertical, 4)
                 .background(Capsule().fill(Color.black.opacity(0.6)))
-                .padding(8)
+                                                .padding(8)
         }
     }
 
     @ViewBuilder
     private var generatedImageSection: some View {
-        if let generated = generatedImage {
-            VStack {
-                Text("Generated Image")
-                    .font(.headline)
-                Image(uiImage: generated)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(maxWidth: 300)
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
-                    .shadow(radius: 8)
+                if let generated = generatedImage {
+                    VStack {
+                        Text("Generated Image")
+                            .font(.headline)
+                        Image(uiImage: generated)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(maxWidth: 300)
+                            .clipShape(RoundedRectangle(cornerRadius: 16))
+                            .shadow(radius: 8)
             }
         }
     }
 
     @ViewBuilder
     private var multiSelectIndicators: some View {
-        if let additionalFilters = additionalFilters, !additionalFilters.isEmpty {
-            HStack {
-                Image(systemName: "photo.on.rectangle")
-                    .foregroundColor(.blue)
-                Text("\(additionalFilters.count + 1) filter\(additionalFilters.count + 1 == 1 ? "" : "s") selected")
-                    .font(.system(size: 16, weight: .medium, design: .rounded))
-                    .foregroundColor(.secondary)
-                Spacer()
-            }
-            .padding(.horizontal)
+        if let additionalFilters = additionalFilters, !additionalFilters.isEmpty
+        {
+                    HStack {
+                        Image(systemName: "photo.on.rectangle")
+                            .foregroundColor(.blue)
+                Text(
+                    "\(additionalFilters.count + 1) filter\(additionalFilters.count + 1 == 1 ? "" : "s") selected"
+                )
+                            .font(.system(size: 16, weight: .medium, design: .rounded))
+                            .foregroundColor(.secondary)
+                        Spacer()
+                    }
+                    .padding(.horizontal)
+                }
+                
+                if images.count > 1 {
+                    HStack {
+                        Image(systemName: "photo.stack")
+                            .foregroundColor(.blue)
+                Text(
+                    "\(images.count) photo\(images.count == 1 ? "" : "s") selected"
+                )
+                            .font(.system(size: 16, weight: .medium, design: .rounded))
+                            .foregroundColor(.secondary)
+                        Spacer()
+                    }
+                    .padding(.horizontal)
         }
-        
-        if images.count > 1 {
-            HStack {
-                Image(systemName: "photo.stack")
-                    .foregroundColor(.blue)
-                Text("\(images.count) photo\(images.count == 1 ? "" : "s") selected")
-                    .font(.system(size: 16, weight: .medium, design: .rounded))
-                    .foregroundColor(.secondary)
-                Spacer()
-            }
-            .padding(.horizontal)
-        }
-    }
+                }
 
     @ViewBuilder
     private var sizeSelectorSection: some View {
-        if item.resolvedAPIConfig.provider == .wavespeed {
+                if item.resolvedAPIConfig.provider == .wavespeed {
             wavespeedSizeSelector
         } else {
             AspectRatioSection(
@@ -390,132 +436,141 @@ struct PhotoConfirmationView: View {
             )
         }
     }
-    
+
     private var wavespeedSizeSelector: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text("Size")
-                .font(.caption)
-                .foregroundColor(.secondary)
-                .padding(.top, -6)
-            
-            Button(action: {
-                sizeButtonTapped = true
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Size")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .padding(.top, -6)
+
+                        Button(action: {
+                            sizeButtonTapped = true
                 DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-                    sizeButtonTapped = false
-                }
-            }) {
-                HStack(spacing: 12) {
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 6)
-                            .fill(Color.gray.opacity(0.2))
-                        RoundedRectangle(cornerRadius: 3)
-                            .stroke(Color.blue, lineWidth: 2)
-                            .padding(4)
+                                sizeButtonTapped = false
+                            }
+                        }) {
+                            HStack(spacing: 12) {
+                                ZStack {
+                                    RoundedRectangle(cornerRadius: 6)
+                                        .fill(Color.gray.opacity(0.2))
+                                    RoundedRectangle(cornerRadius: 3)
+                                        .stroke(Color.blue, lineWidth: 2)
+                                        .padding(4)
+                                }
+                                .frame(width: 40, height: 40)
+
+                                Text("Auto")
+                                    .font(.subheadline)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.primary)
+
+                                Spacer()
+                            }
+                            .padding(.vertical, 8)
+                            .padding(.horizontal, 12)
+                            .background(Color(UIColor.systemBackground))
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12).stroke(
+                                    Color.blue.opacity(0.3), lineWidth: 1))
+                        }
+                        .buttonStyle(.plain)
+
+                        HStack(spacing: 4) {
+                            Image(systemName: "info.circle")
+                                .font(.caption2)
+                    .foregroundColor(sizeButtonTapped ? .red : .secondary)
+                            Text(
+                                "This filter does not allow you to change the aspect ratio. The image size will be automatically matched to your uploaded image."
+                            )
+                            .font(.caption2)
+                .foregroundColor(sizeButtonTapped ? .red : .secondary)
+                        }
+                        .padding(.top, 4)
+                        .padding(.leading, 4)
                     }
-                    .frame(width: 40, height: 40)
-
-                    Text("Auto")
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.primary)
-
-                    Spacer()
-                }
-                .padding(.vertical, 8)
-                .padding(.horizontal, 12)
-                .background(Color(UIColor.systemBackground))
-                .clipShape(RoundedRectangle(cornerRadius: 12))
-                .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.blue.opacity(0.3), lineWidth: 1))
-            }
-            .buttonStyle(.plain)
-
-            HStack(spacing: 4) {
-                Image(systemName: "info.circle")
-                    .font(.caption2)
-                    .foregroundColor(sizeButtonTapped ? .red : .secondary)
-                Text("This filter does not allow you to change the aspect ratio. The image size will be automatically matched to your uploaded image.")
-                    .font(.caption2)
-                    .foregroundColor(sizeButtonTapped ? .red : .secondary)
-            }
-            .padding(.top, 4)
-            .padding(.leading, 4)
-        }
-        .padding(.horizontal)
+                    .padding(.horizontal)
     }
 
     private var generateButtonSection: some View {
-        VStack(spacing: 0) {
+        VStack(spacing: 4) {
             if authViewModel.user == nil {
                 loginDisclaimer
+
+                signInTextLink
+                    .padding(.bottom, 12)
             }
-            
+
             generateButton
                 .onAppear {
                     setupGenerateButtonAnimations()
                 }
-            
-            if authViewModel.user == nil {
-                signInButton
-            }
         }
+        .padding(.horizontal)
+        .padding(.bottom, 12)
     }
-    
+
     private var loginDisclaimer: some View {
         HStack(spacing: 6) {
+            Spacer()
             Image(systemName: "exclamationmark.circle.fill")
                 .font(.system(size: 14))
                 .foregroundColor(.red)
-            Text("You need to be logged in to generate an image")
+            Text("You must be logged in to generate an image")
                 .font(.caption)
                 .foregroundColor(.red)
+            Spacer()
         }
-        .padding(.horizontal, 24)
-        .padding(.bottom, 4)
     }
-    
+
     private var generateButton: some View {
         Button(action: handleGenerate) {
-            HStack(spacing: 12) {
-                if isLoading {
-                    ProgressView()
-                        .progressViewStyle(CircularProgressViewStyle(tint: .black))
-                        .scaleEffect(1.2)
-                }
-                Text(isLoading ? generateButtonText : "Generate")
+                    HStack(spacing: 12) {
+                        if isLoading {
+                            ProgressView()
+                                .progressViewStyle(
+                                    CircularProgressViewStyle(tint: .black)
+                                )
+                                .scaleEffect(1.2)
+                        }
+                        Text(isLoading ? generateButtonText : "Generate")
                     .font(.system(size: 18, weight: .bold, design: .rounded))
-                    .foregroundColor(.black)
-                if !isLoading {
-                    Image(systemName: "photo.on.rectangle")
-                        .font(.system(size: 18))
-                        .fontWeight(.bold)
-                        .foregroundColor(.black)
-                        .rotationEffect(.degrees(rotation))
-                        .drawingGroup()
-                }
-            }
-            .padding(.vertical, 16)
-            .frame(maxWidth: .infinity)
-            .background(.white)
-            .cornerRadius(12)
+                            .foregroundColor(.black)
+                        if !isLoading {
+                            Image(systemName: "photo.on.rectangle")
+                                .font(.system(size: 18))
+                                .fontWeight(.bold)
+                                .foregroundColor(.black)
+                                .rotationEffect(.degrees(rotation))
+                                .drawingGroup()
+                        }
+                    }
+                    .padding(.vertical, 16)
+                    .frame(maxWidth: .infinity)
+                    .background(.white)
+                    .cornerRadius(12)
             .overlay(generateButtonOverlay)
-            .shadow(
-                color: isLoading ? Color.purple.opacity(0.4) : Color.purple.opacity(0.3),
-                radius: isLoading ? 12 : 8, x: 0, y: 4
-            )
+                    .shadow(
+                        color: isLoading
+                    ? Color.purple.opacity(0.4) : Color.purple.opacity(0.3),
+                        radius: isLoading ? 12 : 8, x: 0, y: 4
+                    )
             .scaleEffect(isLoading ? 0.98 : (generatePulse ? 1.05 : 1.0))
-            .animation(
-                isLoading
-                    ? .easeInOut(duration: 0.3)
-                    : .easeInOut(duration: 1.2).repeatForever(autoreverses: true),
-                value: isLoading ? isLoading : generatePulse
-            )
-            .opacity(isLoading ? 0.85 : 1.0)
-        }
+                    .animation(
+                        isLoading
+                            ? .easeInOut(duration: 0.3)
+                            : .easeInOut(duration: 1.2).repeatForever(
+                                autoreverses: true),
+                        value: isLoading ? isLoading : generatePulse
+                    )
+                    .opacity(isLoading ? 0.85 : 1.0)
+                }
         .disabled(isLoading || authViewModel.user == nil)
         .opacity(authViewModel.user == nil ? 0.6 : 1.0)
-        .padding(.horizontal, 24)
+                .padding(.horizontal, 24)
     }
-    
+
     private var generateButtonOverlay: some View {
         RoundedRectangle(cornerRadius: 12)
             .stroke(
@@ -527,103 +582,99 @@ struct PhotoConfirmationView: View {
             )
             .animation(.easeInOut(duration: 0.3), value: isLoading)
     }
-    
-    private var signInButton: some View {
-        Button(action: { showSignInSheet = true }) {
-            HStack {
-                Image(systemName: "person.circle.fill")
-                    .font(.system(size: 16))
+
+    private var signInTextLink: some View {
+        HStack {
+            Spacer()
+            Button(action: {
+                showSignInSheet = true
+            }) {
                 Text("Sign In / Sign Up")
-                    .font(.system(size: 16, weight: .semibold, design: .rounded))
+                    .font(.system(size: 15, weight: .medium, design: .rounded))
+                    .foregroundColor(.blue)
             }
-            .foregroundColor(.white)
-            .frame(maxWidth: .infinity)
-            .padding()
-            .background(
-                LinearGradient(
-                    colors: [Color.blue.opacity(0.8), Color.cyan],
-                    startPoint: .leading,
-                    endPoint: .trailing
-                )
-            )
-            .cornerRadius(12)
-            .shadow(color: Color.blue.opacity(0.3), radius: 8, x: 0, y: 4)
+            Spacer()
         }
-        .padding(.horizontal, 24)
-        .padding(.top, 8)
     }
 
     private var costDisplaySection: some View {
-        HStack {
-            Spacer()
+                HStack {
+                    Spacer()
             creditsBadge
         }
         .padding(.horizontal, 24)
     }
-    
-    private var creditsBadge: some View {
-        HStack(spacing: 6) {
-            Image(systemName: "diamond.fill")
-                .foregroundStyle(
-                    LinearGradient(
-                        colors: [.blue, .purple],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing)
-                )
-                .font(.system(size: 11))
 
-            Text("\(totalCredits)")
+    private var creditsBadge: some View {
+                    HStack(spacing: 6) {
+                        Image(systemName: "diamond.fill")
+                            .foregroundStyle(
+                                LinearGradient(
+                                    colors: [.blue, .purple],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing)
+                            )
+                            .font(.system(size: 11))
+
+                        Text("\(totalCredits)")
                 .font(.system(size: 16, weight: .semibold, design: .rounded))
-                .foregroundColor(.primary)
-            Text("credits")
-                .font(.caption2)
-                .foregroundColor(.secondary)
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 6)
-        .background(
-            RoundedRectangle(cornerRadius: 20)
-                .fill(Color.secondary.opacity(0.1))
-        )
+                            .foregroundColor(.primary)
+                        Text("credits")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(
+                        RoundedRectangle(cornerRadius: 20)
+                            .fill(Color.secondary.opacity(0.1))
+                    )
         .overlay(costDisplayOverlay)
     }
-    
+
     private var costDisplayOverlay: some View {
-        RoundedRectangle(cornerRadius: 20)
-            .strokeBorder(
-                LinearGradient(
-                    colors: [.blue, .purple],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing)
-            )
-    }
+                        RoundedRectangle(cornerRadius: 20)
+                            .strokeBorder(
+                                LinearGradient(
+                                    colors: [.blue, .purple],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing)
+                    )
+                }
 
     private var infoSection: some View {
-        VStack(spacing: 12) {
-            HStack(spacing: 8) {
-                Image(systemName: "sparkles")
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [.blue, .purple],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing)
-                    )
-                    .font(.system(size: 16))
-                Text("What to expect")
-                    .font(.system(size: 16, weight: .semibold, design: .rounded))
-                    .foregroundColor(.primary)
-            }
+                VStack(spacing: 12) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "sparkles")
+                            .foregroundStyle(
+                                LinearGradient(
+                                    colors: [.blue, .purple],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing)
+                            )
+                            .font(.system(size: 16))
+                        Text("What to expect")
+                            .font(
+                        .system(size: 16, weight: .semibold, design: .rounded)
+                            )
+                            .foregroundColor(.primary)
+                    }
 
-            VStack(alignment: .leading, spacing: 10) {
+                    VStack(alignment: .leading, spacing: 10) {
                 InfoRow(number: "1", text: "AI will transform your photo")
                 InfoRow(number: "2", text: "Processing takes 30-60 seconds")
-                InfoRow(number: "3", text: "Feel free to close the app while the image is generating.")
-                InfoRow(number: "4", text: "You'll get a notification when ready")
+                        InfoRow(
+                            number: "3",
+                            text:
+                                "Feel free to close the app while the image is generating."
+                        )
+                        InfoRow(
+                    number: "4", text: "You'll get a notification when ready")
+                    }
+                    .padding(.horizontal, 24)
+                }
+                .padding(.bottom, 60)
             }
-            .padding(.horizontal, 24)
-        }
-        .padding(.bottom, 60)
-    }
 
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
@@ -633,7 +684,7 @@ struct PhotoConfirmationView: View {
     }
 
     // MARK: - Actions
-    
+
     private func setupGenerateButtonAnimations() {
         generatePulse = true
         isAnimating = true
@@ -646,10 +697,12 @@ struct PhotoConfirmationView: View {
             }
         }
     }
-    
+
     private func handleGenerate() {
         guard !isLoading else { return }
-        guard let userId = authViewModel.user?.id.uuidString.lowercased(), !userId.isEmpty else {
+        guard let userId = authViewModel.user?.id.uuidString.lowercased(),
+            !userId.isEmpty
+        else {
             isLoading = false
             showSignInSheet = true
             return
@@ -667,42 +720,45 @@ struct PhotoConfirmationView: View {
         if let additionalFilters = additionalFilters {
             allFilters.append(contentsOf: additionalFilters)
         }
-        
+
         Task { @MainActor in
             var taskIds: [UUID] = []
             var completedCount = 0
             let totalCount = images.count * allFilters.count
-            
+
             for image in images {
                 for filter in allFilters {
                     var modifiedFilter = filter
                     var config = modifiedFilter.resolvedAPIConfig
                     config.aspectRatio = selectedAspectOption.id
                     modifiedFilter.apiConfig = config
-                    
-                    let taskId = ImageGenerationCoordinator.shared.startImageGeneration(
-                        item: modifiedFilter,
-                        image: image,
-                        userId: userId,
-                        onImageGenerated: { downloadedImage in
-                            completedCount += 1
-                            generatedImage = downloadedImage
-                            if completedCount == totalCount {
-                                isLoading = false
+
+                    let taskId = ImageGenerationCoordinator.shared
+                        .startImageGeneration(
+                            item: modifiedFilter,
+                            image: image,
+                            userId: userId,
+                            onImageGenerated: { downloadedImage in
+                                completedCount += 1
+                                generatedImage = downloadedImage
+                                if completedCount == totalCount {
+                                    isLoading = false
+                                }
+                            },
+                            onError: { error in
+                                completedCount += 1
+                                print(
+                                    "Image generation failed: \(error.localizedDescription)"
+                                )
+                                if completedCount == totalCount {
+                                    isLoading = false
+                                }
                             }
-                        },
-                        onError: { error in
-                            completedCount += 1
-                            print("Image generation failed: \(error.localizedDescription)")
-                            if completedCount == totalCount {
-                                isLoading = false
-                            }
-                        }
-                    )
+                        )
                     taskIds.append(taskId)
                 }
             }
-            
+
             currentTaskIds = taskIds
         }
     }

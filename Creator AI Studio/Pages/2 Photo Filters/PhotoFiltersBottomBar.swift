@@ -5,6 +5,8 @@ struct PhotoFiltersBottomBar: View {
     @Binding var showPhotoPicker: Bool
     @Binding var selectedPhotoItem: PhotosPickerItem?
     let cost: Double
+    
+    @EnvironmentObject var authViewModel: AuthViewModel
 
     var body: some View {
         VStack(spacing: 0) {
@@ -23,7 +25,10 @@ struct PhotoFiltersBottomBar: View {
                 CostBadge(cost: cost)
                     .padding(.horizontal, 16)
 
-                SpinningPlusButton(showActionSheet: $showPhotoPicker)
+                SpinningPlusButton(
+                    showActionSheet: $showPhotoPicker,
+                    isLoggedIn: authViewModel.user != nil
+                )
                     .photosPicker(
                         isPresented: $showPhotoPicker,
                         selection: $selectedPhotoItem,
