@@ -40,6 +40,26 @@ struct Profile: View {
                                 }
                             }
                         }
+                        .onChange(of: authViewModel.user) { oldUser, newUser in
+                            // When user signs in or changes, fetch images
+                            if let user = newUser {
+                                let userIdChanged = viewModel.userId != user.id.uuidString
+                                // Only fetch if this is a new sign-in or user changed
+                                if oldUser == nil || userIdChanged {
+                                    if userIdChanged {
+                                        viewModel.userId = user.id.uuidString
+                                    }
+                                    Task {
+                                        // Fetch stats FIRST so UI shows correct counts immediately
+                                        if !viewModel.hasLoadedStats || userIdChanged {
+                                            await viewModel.fetchUserStats()
+                                        }
+                                        // Then fetch images
+                                        await viewModel.fetchUserImages(forceRefresh: false)
+                                    }
+                                }
+                            }
+                        }
                 }
                 
                 // Show sign-in overlay when not signed in
@@ -81,7 +101,6 @@ struct ProfileViewContent: View {
     @EnvironmentObject var authViewModel: AuthViewModel
     let isSignedIn: Bool
     @StateObject private var notificationManager = NotificationManager.shared
-    //    @StateObject private var presetViewModel = PresetViewModel()
     @State private var selectedUserImage: UserImage? = nil
     @State private var selectedTab: GalleryTab = .all
     @State private var selectedModel: String? = nil
@@ -225,14 +244,6 @@ struct ProfileViewContent: View {
                 }
                 .toolbar { toolbarContent }
             }
-            //            .onAppear {
-            //                if let userId = authViewModel.user?.id.uuidString {
-            //                    Task {
-            //                        presetViewModel.userId = userId
-            //                        await presetViewModel.fetchPresets()
-            //                    }
-            //                }
-            //            }
             .onChange(of: notificationManager.notifications.count) {
                 oldCount, newCount in
                 // When notification count decreases (notification dismissed), refresh images
@@ -611,16 +622,6 @@ struct ProfileViewContent: View {
                         }
                     }
 
-                    // // Presets pill
-                    // GalleryTabPill(
-                    //     title: "Presets",
-                    //     icon: "slider.horizontal.3",
-                    //     isSelected: false,
-                    //     count: presetViewModel.presets.count
-                    // ) {
-                    //     showPresetsSheet = true
-                    // }
-
                     imageModelsButton
 
                     videoModelsButton
@@ -633,18 +634,13 @@ struct ProfileViewContent: View {
 
     private var imageModelsButton: some View {
         Button {
-            print("🔍 DEBUG: Image Models button tapped")
             showImageModelsPopover = true
         } label: {
             imageModelsButtonLabel
         }
         .sheet(isPresented: $showImageModelsPopover) {
-            let models = computeModelsWithMetadata()
-            print(
-                "🔍 DEBUG: Sheet builder - Passing \(models.count) models to sheet"
-            )
-            return ImageModelsSheet(
-                models: models,
+            ImageModelsSheet(
+                models: computeModelsWithMetadata(),
                 selectedModel: $selectedModel,
                 selectedVideoModel: $selectedVideoModel,
                 selectedTab: $selectedTab,
@@ -696,18 +692,13 @@ struct ProfileViewContent: View {
 
     private var videoModelsButton: some View {
         Button {
-            print("🎬 DEBUG: Video Models button tapped")
             showVideoModelsPopover = true
         } label: {
             videoModelsButtonLabel
         }
         .sheet(isPresented: $showVideoModelsPopover) {
-            let models = computeVideoModelsWithMetadata()
-            print(
-                "🎬 DEBUG: Sheet builder - Passing \(models.count) video models to sheet"
-            )
-            return VideoModelsSheet(
-                models: models,
+            VideoModelsSheet(
+                models: computeVideoModelsWithMetadata(),
                 selectedModel: $selectedModel,
                 selectedVideoModel: $selectedVideoModel,
                 selectedTab: $selectedTab,
@@ -1011,41 +1002,25 @@ struct ImageGridView: View {
     }
     
     /// Filter out items with invalid/empty URLs and duplicates to prevent empty rectangles in the grid
-    /// Cached to avoid recomputation on every render
+    /// Optimized with efficient filtering and deduplication
     private var validUserImages: [UserImage] {
-        // Cache the result to avoid recomputing on every render
-        struct Cache {
-            static var lastUserImages: [UserImage] = []
-            static var cachedResult: [UserImage] = []
-        }
+        // Use Set for O(1) lookup during deduplication
+        var seenIds = Set<String>()
         
-        // Return cached result if userImages haven't changed
-        if userImages.count == Cache.lastUserImages.count,
-           userImages.map(\.id) == Cache.lastUserImages.map(\.id) {
-            return Cache.cachedResult
-        }
-        
-        // First filter by URL validity
-        let filtered = userImages.filter { userImage in
+        // Single pass: filter by URL validity and deduplicate simultaneously
+        return userImages.compactMap { userImage in
+            // Skip if already seen
+            guard !seenIds.contains(userImage.id) else { return nil }
+            
+            // Check URL validity
             let hasValidImageUrl = !userImage.image_url.isEmpty && URL(string: userImage.image_url) != nil
             let hasValidThumbnailUrl = userImage.thumbnail_url.map { !$0.isEmpty && URL(string: $0) != nil } ?? false
-            return hasValidImageUrl || hasValidThumbnailUrl
-        }
-        
-        // Then deduplicate by ID (keep first occurrence)
-        var seenIds = Set<String>()
-        let result = filtered.filter { userImage in
-            if seenIds.contains(userImage.id) {
-                return false
-            }
+            
+            guard hasValidImageUrl || hasValidThumbnailUrl else { return nil }
+            
             seenIds.insert(userImage.id)
-            return true
+            return userImage
         }
-        
-        // Update cache
-        Cache.lastUserImages = userImages
-        Cache.cachedResult = result
-        return result
     }
 
     var body: some View {
@@ -1882,11 +1857,6 @@ struct ImageModelsSheet: View {
         NavigationStack {
             ScrollView {
                 LazyVStack(spacing: 0) {
-                    // Text("🔍 Models in sheet: \(models.count)")
-                    //     .font(.caption)
-                    //     .foregroundColor(.red)
-                    //     .padding()
-
                     ForEach(models, id: \.model) { modelData in
                         Button {
                             selectedTab = .imageModels
@@ -1972,14 +1942,6 @@ struct ImageModelsSheet: View {
             }
             .navigationTitle("Image Models")
             .navigationBarTitleDisplayMode(.inline)
-            .onAppear {
-                print("🔍 DEBUG: Sheet appeared with \(models.count) models")
-                for model in models {
-                    print(
-                        "🔍 DEBUG: Sheet model: \(model.model) - \(model.count) images - image: \(model.imageName)"
-                    )
-                }
-            }
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Done") {
@@ -2090,16 +2052,6 @@ struct VideoModelsSheet: View {
             }
             .navigationTitle("Video Models")
             .navigationBarTitleDisplayMode(.inline)
-            .onAppear {
-                print(
-                    "🎬 DEBUG: Video Models Sheet appeared with \(models.count) models"
-                )
-                for model in models {
-                    print(
-                        "🎬 DEBUG: Sheet model: \(model.model) - \(model.count) videos - image: \(model.imageName)"
-                    )
-                }
-            }
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Done") {
@@ -2110,470 +2062,6 @@ struct VideoModelsSheet: View {
         }
     }
 }
-//
-//// MARK: - PRESETS LIST SHEET
-//
-//struct PresetsListSheet: View {
-//    @ObservedObject var presetViewModel: PresetViewModel
-//    @Binding var isPresented: Bool
-////    @State private var presetToDelete: Preset? = nil
-//    @State private var showDeleteConfirmation = false
-//    @State private var isEditMode = false
-////    @State private var selectedPreset: Preset? = nil
-//
-//    var body: some View {
-//        NavigationStack {
-//            Group {
-//                if presetViewModel.isLoading && presetViewModel.presets.isEmpty {
-//                    ProgressView("Loading presets…")
-//                        .padding()
-//                } else if presetViewModel.presets.isEmpty {
-//                    ScrollView {
-//                        EmptyPresetsView()
-//                            .padding(.vertical, 60)
-//                    }
-//                } else {
-//                    if isEditMode {
-//                        // Edit mode with drag and drop using List
-//                        List {
-//                            ForEach(presetViewModel.presets) { preset in
-//                                PresetRow(
-//                                    preset: preset,
-//                                    isEditMode: true,
-//                                    onDelete: {
-//                                        presetToDelete = preset
-//                                        showDeleteConfirmation = true
-//                                    }
-//                                )
-//                                .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
-//                                .listRowBackground(Color.clear)
-//                            }
-//                            .onMove { source, destination in
-//                                presetViewModel.reorderPresets(from: source, to: destination)
-//                            }
-//                        }
-//                        .listStyle(.plain)
-//                        .environment(\.editMode, .constant(.active))
-//                    } else {
-//                        // Normal mode with tap navigation
-//                        ScrollView {
-//                            LazyVStack(spacing: 0) {
-//                                ForEach(presetViewModel.presets) { preset in
-//                                    Button {
-//                                        selectedPreset = preset
-//                                    } label: {
-//                                        PresetRow(preset: preset, isEditMode: false, onDelete: nil)
-//                                            .padding(.horizontal)
-//                                            .padding(.vertical, 8)
-//                                    }
-//                                    .buttonStyle(.plain)
-//                                }
-//                            }
-//                            .padding(.vertical)
-//                        }
-//                    }
-//                }
-//            }
-//            .navigationTitle("Presets")
-//            .navigationBarTitleDisplayMode(.inline)
-//            .toolbar {
-//                ToolbarItem(placement: .navigationBarTrailing) {
-//                    if !presetViewModel.presets.isEmpty {
-//                        Button(isEditMode ? "Done" : "Edit") {
-//                            isEditMode.toggle()
-//                        }
-//                    }
-//                }
-//                // ToolbarItem(placement: .navigationBarTrailing) {
-//                //     Button("Done") {
-//                //         isPresented = false
-//                //     }
-//                // }
-//            }
-//            .alert("Delete Preset", isPresented: $showDeleteConfirmation) {
-//                Button("Cancel", role: .cancel) {
-//                    presetToDelete = nil
-//                }
-//                Button("Delete", role: .destructive) {
-//                    if let preset = presetToDelete {
-//                        Task {
-//                            do {
-//                                try await presetViewModel.deletePreset(presetId: preset.id)
-//                            } catch {
-//                                print("❌ Failed to delete preset: \(error)")
-//                            }
-//                        }
-//                    }
-//                    presetToDelete = nil
-//                }
-//            } message: {
-//                if let preset = presetToDelete {
-//                    Text("Are you sure you want to delete \"\(preset.title)\"?")
-//                }
-//            }
-//            .sheet(item: $selectedPreset) { preset in
-//                PresetDetailView(
-//                    preset: preset,
-//                    presetViewModel: presetViewModel,
-//                    isPresented: Binding(
-//                        get: { selectedPreset != nil },
-//                        set: { if !$0 { selectedPreset = nil } }
-//                    )
-//                )
-//                .presentationDetents([.large])
-//                .presentationDragIndicator(.visible)
-//            }
-//            .onAppear {
-//                Task {
-//                    await presetViewModel.fetchPresets(forceRefresh: true)
-//                }
-//            }
-//        }
-//    }
-//}
-//
-//// MARK: - Preset Row
-//
-//private struct PresetRow: View {
-////    let preset: Preset
-//    let isEditMode: Bool
-//    let onDelete: (() -> Void)?
-//
-//    var body: some View {
-//        HStack(spacing: 12) {
-//            // // Drag handle in edit mode
-//            // if isEditMode {
-//            //     Image(systemName: "line.3.horizontal")
-//            //         .font(.system(size: 16, weight: .medium))
-//            //         .foregroundColor(.secondary)
-//            //         .padding(.trailing, 4)
-//            // }
-//
-//            // Icon or image
-//            ZStack {
-//                RoundedRectangle(cornerRadius: 8)
-//                    .fill(Color.blue.opacity(0.1))
-//                    .frame(width: 60, height: 60)
-//
-//                if let imageUrl = preset.imageUrl, let url = URL(string: imageUrl) {
-//                    KFImage(url)
-//                        .placeholder {
-//                            Image(systemName: "slider.horizontal.3")
-//                                .font(.system(size: 24))
-//                                .foregroundColor(.blue)
-//                        }
-//                        .resizable()
-//                        .aspectRatio(contentMode: .fill)
-//                        .frame(width: 60, height: 60)
-//                        .clipShape(RoundedRectangle(cornerRadius: 8))
-//                } else {
-//                    Image(systemName: "slider.horizontal.3")
-//                        .font(.system(size: 24))
-//                        .foregroundColor(.blue)
-//                }
-//            }
-//            .frame(width: 60, height: 60)
-//
-//            // Preset details
-//            VStack(alignment: .leading, spacing: 6) {
-//                Text(preset.title)
-//                    .font(.system(size: 16, weight: .semibold, design: .rounded))
-//                    .foregroundColor(.primary)
-//                    .lineLimit(1)
-//
-//                if let modelName = preset.modelName, !modelName.isEmpty {
-//                    HStack(spacing: 4) {
-//                        Image(systemName: "cpu")
-//                            .font(.system(size: 11))
-//                            .foregroundColor(.secondary)
-//                        Text(modelName)
-//                            .font(.system(size: 13, weight: .medium, design: .rounded))
-//                            .foregroundColor(.secondary)
-//                            .lineLimit(1)
-//                    }
-//                }
-//
-//                if let prompt = preset.prompt, !prompt.isEmpty {
-//                    Text(prompt)
-//                        .font(.system(size: 12, design: .rounded))
-//                        .foregroundColor(.secondary)
-//                        .lineLimit(2)
-//                }
-//            }
-//
-//            Spacer()
-//
-//            // Delete button in edit mode, chevron in normal mode
-//            if isEditMode {
-//                Button(action: {
-//                    onDelete?()
-//                }) {
-//                    Image(systemName: "minus.circle.fill")
-//                        .font(.system(size: 24))
-//                        .foregroundColor(.red)
-//                }
-//                .buttonStyle(.plain)
-//            } else {
-//                Image(systemName: "chevron.right")
-//                    .font(.system(size: 12, weight: .medium))
-//                    .foregroundColor(.secondary)
-//            }
-//        }
-//        .padding(12)
-//        .background(Color.gray.opacity(0.06))
-//        .clipShape(RoundedRectangle(cornerRadius: 12))
-//        .overlay(
-//            RoundedRectangle(cornerRadius: 12)
-//                .stroke(Color.gray.opacity(0.2), lineWidth: 1)
-//        )
-//    }
-//}
-//
-//// MARK: - Preset Detail View
-//
-//struct PresetDetailView: View {
-//    let preset: Preset
-//    @ObservedObject var presetViewModel: PresetViewModel
-//    @Binding var isPresented: Bool
-//
-//    @State private var title: String
-//    @State private var modelName: String
-//    @State private var prompt: String
-//    @State private var isSaving = false
-//    @State private var showDeleteConfirmation = false
-//    @State private var showError = false
-//    @State private var errorMessage = ""
-//    @FocusState private var focusedField: Field?
-//
-//    enum Field {
-//        case title, modelName, prompt
-//    }
-//
-//    init(preset: Preset, presetViewModel: PresetViewModel, isPresented: Binding<Bool>) {
-//        self.preset = preset
-//        self.presetViewModel = presetViewModel
-//        self._isPresented = isPresented
-//        _title = State(initialValue: preset.title)
-//        _modelName = State(initialValue: preset.modelName ?? "")
-//        _prompt = State(initialValue: preset.prompt ?? "")
-//    }
-//
-//    var body: some View {
-//        NavigationStack {
-//            ScrollView {
-//                VStack(spacing: 24) {
-//                    // Image preview
-//                    if let imageUrl = preset.imageUrl, let url = URL(string: imageUrl) {
-//                        KFImage(url)
-//                            .placeholder {
-//                                RoundedRectangle(cornerRadius: 12)
-//                                    .fill(Color.gray.opacity(0.2))
-//                                    .overlay(
-//                                        Image(systemName: "photo")
-//                                            .font(.system(size: 40))
-//                                            .foregroundColor(.gray)
-//                                    )
-//                            }
-//                            .resizable()
-//                            .aspectRatio(contentMode: .fit)
-//                            .frame(maxHeight: 300)
-//                            .clipShape(RoundedRectangle(cornerRadius: 12))
-//                            .padding(.horizontal)
-//                    }
-//
-//                    // Edit fields
-//                    VStack(alignment: .leading, spacing: 20) {
-//                        // Title field
-//                        VStack(alignment: .leading, spacing: 8) {
-//                            Text("Title")
-//                                .font(.headline)
-//                                .foregroundColor(.primary)
-//
-//                            TextField("Preset title", text: $title)
-//                                .textFieldStyle(.roundedBorder)
-//                                .focused($focusedField, equals: .title)
-//                        }
-//
-//                        // Model name field
-//                        VStack(alignment: .leading, spacing: 8) {
-//                            Text("Model Name")
-//                                .font(.headline)
-//                                .foregroundColor(.primary)
-//
-//                            TextField("Image model", text: $modelName)
-//                                .textFieldStyle(.roundedBorder)
-//                                .focused($focusedField, equals: .modelName)
-//                        }
-//
-//                        // Prompt field
-//                        VStack(alignment: .leading, spacing: 8) {
-//                            Text("Prompt")
-//                                .font(.headline)
-//                                .foregroundColor(.primary)
-//
-//                            ZStack(alignment: .topLeading) {
-//                                // Hidden text to measure content height
-//                                Text(prompt.isEmpty ? " " : prompt)
-//                                    .font(.system(size: 17))
-//                                    .padding(8)
-//                                    .opacity(0)
-//                                    .fixedSize(horizontal: false, vertical: true)
-//                                    .frame(maxWidth: .infinity, alignment: .leading)
-//
-//                                // Actual TextEditor
-//                                TextEditor(text: $prompt)
-//                                    .scrollDisabled(true)
-//                                    .padding(8)
-//                                    .background(Color.gray.opacity(0.1))
-//                                    .focused($focusedField, equals: .prompt)
-//                            }
-//                            .frame(minHeight: 120)
-//                            .fixedSize(horizontal: false, vertical: true)
-//                            .clipShape(RoundedRectangle(cornerRadius: 8))
-//                            .overlay(
-//                                RoundedRectangle(cornerRadius: 8)
-//                                    .stroke(focusedField == .prompt ? Color.blue : Color.gray.opacity(0.3), lineWidth: 1)
-//                            )
-//                        }
-//                    }
-//                    .padding(.horizontal)
-//
-//                    // Save button
-//                    Button(action: {
-//                        Task {
-//                            await savePreset()
-//                        }
-//                    }) {
-//                        HStack {
-//                            if isSaving {
-//                                ProgressView()
-//                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
-//                            }
-//                            Text(isSaving ? "Saving..." : "Save Changes")
-//                                .font(.headline)
-//                        }
-//                        .frame(maxWidth: .infinity)
-//                        .padding()
-//                        .background(title.isEmpty ? Color.gray : Color.blue)
-//                        .foregroundColor(.white)
-//                        .clipShape(RoundedRectangle(cornerRadius: 12))
-//                    }
-//                    .disabled(title.isEmpty || isSaving)
-//                    .padding(.horizontal)
-//
-//                    // Delete button
-//                    Button(action: {
-//                        showDeleteConfirmation = true
-//                    }) {
-//                        HStack {
-//                            Image(systemName: "trash")
-//                            Text("Delete Preset")
-//                                .font(.headline)
-//                        }
-//                        .frame(maxWidth: .infinity)
-//                        .padding()
-//                        .background(Color.red.opacity(0.1))
-//                        .foregroundColor(.red)
-//                        .clipShape(RoundedRectangle(cornerRadius: 12))
-//                    }
-//                    .padding(.horizontal)
-//                    .padding(.bottom)
-//                }
-//                .padding(.vertical)
-//            }
-//            .navigationTitle("Edit Preset")
-//            .navigationBarTitleDisplayMode(.inline)
-//            .presentationDetents([.large])
-//            .presentationDragIndicator(.visible)
-//            .toolbar {
-//                ToolbarItem(placement: .navigationBarTrailing) {
-//                    Button("Done") {
-//                        isPresented = false
-//                    }
-//                }
-//            }
-//            .alert("Delete Preset", isPresented: $showDeleteConfirmation) {
-//                Button("Cancel", role: .cancel) {}
-//                Button("Delete", role: .destructive) {
-//                    Task {
-//                        await deletePreset()
-//                    }
-//                }
-//            } message: {
-//                Text("Are you sure you want to delete \"\(preset.title)\"? This action cannot be undone.")
-//            }
-//            .alert("Error", isPresented: $showError) {
-//                Button("OK", role: .cancel) {}
-//            } message: {
-//                Text(errorMessage)
-//            }
-//        }
-//    }
-//
-//    private func savePreset() async {
-//        isSaving = true
-//
-//        do {
-//            try await presetViewModel.updatePreset(
-//                presetId: preset.id,
-//                title: title.trimmingCharacters(in: .whitespacesAndNewlines),
-//                modelName: modelName.isEmpty ? nil : modelName.trimmingCharacters(in: .whitespacesAndNewlines),
-//                prompt: prompt.isEmpty ? nil : prompt.trimmingCharacters(in: .whitespacesAndNewlines),
-//                imageUrl: preset.imageUrl
-//            )
-//
-//            await MainActor.run {
-//                isSaving = false
-//                isPresented = false
-//            }
-//        } catch {
-//            await MainActor.run {
-//                isSaving = false
-//                errorMessage = "Failed to update preset: \(error.localizedDescription)"
-//                showError = true
-//            }
-//        }
-//    }
-//
-//    private func deletePreset() async {
-//        do {
-//            try await presetViewModel.deletePreset(presetId: preset.id)
-//
-//            await MainActor.run {
-//                isPresented = false
-//            }
-//        } catch {
-//            await MainActor.run {
-//                errorMessage = "Failed to delete preset: \(error.localizedDescription)"
-//                showError = true
-//            }
-//        }
-//    }
-//}
-//
-//// MARK: - Empty Presets View
-//
-//private struct EmptyPresetsView: View {
-//    var body: some View {
-//        VStack(spacing: 16) {
-//            Image(systemName: "slider.horizontal.3")
-//                .font(.system(size: 48))
-//                .foregroundColor(.gray.opacity(0.5))
-//
-//            VStack(spacing: 8) {
-//                Text("No Presets Yet")
-//                    .font(.headline)
-//                    .foregroundColor(.primary)
-//
-//                Text("Save presets from your images to quickly reuse your favorite settings")
-//                    .font(.subheadline)
-//                    .foregroundColor(.secondary)
-//                    .multilineTextAlignment(.center)
-//                    .padding(.horizontal, 32)
-//            }
-//        }
-//    }
-//}
 
 // MARK: - PLACEHOLDER GRID (for unsigned-in users)
 

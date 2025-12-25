@@ -6,6 +6,8 @@ struct Settings: View {
     @State private var showCopiedAlert = false
     @State private var showCacheClearedAlert = false
     @State private var isClearing = false
+    @State private var isSigningOut = false
+    @State private var showSignedOutAlert = false
     
     // ProfileViewModel for cache clearing
     var profileViewModel: ProfileViewModel?
@@ -190,8 +192,17 @@ struct Settings: View {
             // Sign out
             Section {
                 Button(action: {
+                    isSigningOut = true
                     Task {
                         await authViewModel.signOut()
+                        isSigningOut = false
+                        
+                        // Haptic feedback
+                        let generator = UINotificationFeedbackGenerator()
+                        generator.notificationOccurred(.success)
+                        
+                        // Show success alert
+                        showSignedOutAlert = true
                     }
                 }) {
                     HStack {
@@ -199,8 +210,15 @@ struct Settings: View {
                             .foregroundColor(.red)
                         Text("Sign Out")
                             .foregroundColor(.red)
+                        Spacer()
+                        if isSigningOut {
+                            ProgressView()
+                                .scaleEffect(0.8)
+                                .tint(.red)
+                        }
                     }
                 }
+                .disabled(isSigningOut)
             }
 
             // Add spacing at the bottom
@@ -220,6 +238,11 @@ struct Settings: View {
             Button("OK", role: .cancel) {}
         } message: {
             Text("Gallery cache has been cleared. Pull to refresh on the Gallery page to reload your images.")
+        }
+        .alert("Signed Out", isPresented: $showSignedOutAlert) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("You have been successfully signed out.")
         }
     }
     
