@@ -95,25 +95,23 @@ struct FilterThumbnail: View {
 
                                     // Price badge (always visible if cost exists)
                                     if let cost = cost {
-                                        // Text("$\(NSDecimalNumber(decimal: cost).stringValue)")
-                                        Text("\(cost.credits)")
-                                            .font(
-                                                .system(
-                                                    size: 10, weight: .medium)
-                                            )
-                                            .foregroundColor(.white)
-                                            .padding(.horizontal, 5)
-                                            .padding(.vertical, 3)
-                                            .background(
-                                                Capsule()
-                                                    .fill(
-                                                        Color.black.opacity(0.7)
-                                                    )
-                                            )
-                                            .shadow(
-                                                color: .black.opacity(0.3),
-                                                radius: 2, x: 0,
-                                                y: 1)
+                                        PriceDisplayView(
+                                            price: cost,
+                                            font: .system(size: 10, weight: .medium),
+                                            foregroundColor: .white
+                                        )
+                                        .padding(.horizontal, 5)
+                                        .padding(.vertical, 3)
+                                        .background(
+                                            Capsule()
+                                                .fill(
+                                                    Color.black.opacity(0.7)
+                                                )
+                                        )
+                                        .shadow(
+                                            color: .black.opacity(0.3),
+                                            radius: 2, x: 0,
+                                            y: 1)
                                     }
                                 }
                                 .padding(3),
@@ -160,25 +158,23 @@ struct FilterThumbnail: View {
 
                                     // Price badge (always visible if cost exists)
                                     if let cost = cost {
-                                        // Text("$\(NSDecimalNumber(decimal: cost).stringValue)")
-                                        Text("\(cost.credits)")
-                                            .font(
-                                                .system(
-                                                    size: 10, weight: .medium)
-                                            )
-                                            .foregroundColor(.white)
-                                            .padding(.horizontal, 5)
-                                            .padding(.vertical, 3)
-                                            .background(
-                                                Capsule()
-                                                    .fill(
-                                                        Color.black.opacity(0.7)
-                                                    )
-                                            )
-                                            .shadow(
-                                                color: .black.opacity(0.3),
-                                                radius: 2, x: 0,
-                                                y: 1)
+                                        PriceDisplayView(
+                                            price: cost,
+                                            font: .system(size: 10, weight: .medium),
+                                            foregroundColor: .white
+                                        )
+                                        .padding(.horizontal, 5)
+                                        .padding(.vertical, 3)
+                                        .background(
+                                            Capsule()
+                                                .fill(
+                                                    Color.black.opacity(0.7)
+                                                )
+                                        )
+                                        .shadow(
+                                            color: .black.opacity(0.3),
+                                            radius: 2, x: 0,
+                                            y: 1)
                                     }
                                 }
                                 .padding(3),

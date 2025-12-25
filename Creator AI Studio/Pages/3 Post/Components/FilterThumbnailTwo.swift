@@ -82,10 +82,11 @@ struct FilterThumbnailTwo: View {
 
                                     // Price badge (always visible if cost exists)
                                     if let cost = cost {
-                                        // Text("$\(NSDecimalNumber(decimal: cost).stringValue)")
-                                        Text("\(cost.credits)")
-                                        .font(.system(size: 10, weight: .medium))
-                                        .foregroundColor(.white)
+                                        PriceDisplayView(
+                                            price: cost,
+                                            font: .system(size: 10, weight: .medium),
+                                            foregroundColor: .white
+                                        )
                                         .padding(.horizontal, 4)
                                         .padding(.vertical, 3)
                                         .background(

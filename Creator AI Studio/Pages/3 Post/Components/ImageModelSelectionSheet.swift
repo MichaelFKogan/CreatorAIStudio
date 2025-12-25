@@ -102,9 +102,9 @@ private struct SortAndViewToggle: View {
                 isGridView.toggle()
             } label: {
                 HStack {
-                    Image(systemName: isGridView ? "square.grid.2x2" : "line.3.horizontal")
+                    Image(systemName: isGridView ? "line.3.horizontal" : "square.grid.2x2")
                         .font(.caption)
-                    Text(isGridView ? "Grid View" : "List View")
+                    Text(isGridView ? "List View" : "Grid View")
                         .font(.system(size: 14))
                         .fontWeight(.semibold)
                 }
@@ -235,9 +235,11 @@ private struct ImageModelGridItem: View {
                 
                 Spacer()
                 
-                Text("$\(NSDecimalNumber(decimal: item.resolvedCost ?? 0).stringValue)")
-                    .font(.system(size: 12, weight: .semibold, design: .rounded))
-                    .foregroundColor(.blue)
+                PriceDisplayView(
+                    price: item.resolvedCost,
+                    font: .system(size: 12, weight: .semibold, design: .rounded),
+                    foregroundColor: .blue
+                )
             }
         }
     }
@@ -266,9 +268,11 @@ private struct ImageModelListItem: View {
             Spacer()
             
             VStack(alignment: .trailing) {
-                Text("$\(NSDecimalNumber(decimal: item.resolvedCost ?? 0).stringValue)")
-                    .font(.system(size: 14, weight: .semibold, design: .rounded))
-                    .foregroundColor(.blue)
+                PriceDisplayView(
+                    price: item.resolvedCost,
+                    font: .system(size: 14, weight: .semibold, design: .rounded),
+                    foregroundColor: .blue
+                )
                 Text("per image")
                     .font(.caption2)
                     .foregroundColor(.secondary)

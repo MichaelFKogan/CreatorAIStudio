@@ -1,5 +1,16 @@
 import Foundation
 
+// MARK: - PRICE DISPLAY MODE
+
+/// Enum to control how prices are displayed throughout the app
+enum PriceDisplayMode: String {
+    case dollars
+    case credits
+    
+    /// Conversion rate: 1 credit = $0.01 (100 credits = $1.00)
+    static let creditsPerDollar: Decimal = 100
+}
+
 // MARK: - VIDEO PRICING CONFIGURATION
 
 /// Structure to represent video pricing configuration
@@ -433,5 +444,100 @@ class PricingManager {
         ]
 
         return dimensions[resolution]?[aspectRatio]
+    }
+}
+
+// MARK: - PRICE DISPLAY FORMATTING
+
+extension PricingManager {
+    /// The current price display mode (dollars or credits)
+    /// Change this to switch between display modes app-wide
+    static var displayMode: PriceDisplayMode {
+        get {
+            // Load from UserDefaults for persistence
+            if let rawValue = UserDefaults.standard.string(forKey: "priceDisplayMode"),
+               let mode = PriceDisplayMode(rawValue: rawValue) {
+                return mode
+            }
+            // return .credits // Default to credits
+            return .dollars // Default to credits
+        }
+        set {
+            // Save to UserDefaults for persistence
+            UserDefaults.standard.set(newValue.rawValue, forKey: "priceDisplayMode")
+        }
+    }
+    
+    /// Converts a dollar amount to credits
+    /// - Parameter dollars: The dollar amount as Decimal
+    /// - Returns: The equivalent number of credits
+    static func dollarsToCredits(_ dollars: Decimal) -> Int {
+        let credits = dollars * PriceDisplayMode.creditsPerDollar
+        return NSDecimalNumber(decimal: credits).intValue
+    }
+    
+    /// Formats a price according to the current display mode
+    /// - Parameter price: The price as Decimal (in dollars)
+    /// - Returns: Formatted string (e.g., "$0.50" or "50")
+    static func formatPrice(_ price: Decimal) -> String {
+        switch displayMode {
+        case .dollars:
+            return formatDollars(price)
+        case .credits:
+            return formatCredits(price)
+        }
+    }
+    
+    /// Formats a price as dollars
+    /// - Parameter price: The price as Decimal
+    /// - Returns: Formatted dollar string (e.g., "$0.50")
+    static func formatDollars(_ price: Decimal) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.currencySymbol = "$"
+        formatter.maximumFractionDigits = 10
+        formatter.minimumFractionDigits = 0
+        return formatter.string(from: NSDecimalNumber(decimal: price)) ?? "$\(NSDecimalNumber(decimal: price).stringValue)"
+    }
+    
+    /// Formats a price as credits (without "credits" label)
+    /// - Parameter price: The price as Decimal (in dollars)
+    /// - Returns: Formatted credits string (e.g., "50")
+    static func formatCredits(_ price: Decimal) -> String {
+        let credits = dollarsToCredits(price)
+        return "\(credits)"
+    }
+    
+    /// Formats a price with unit label (e.g., "50 credits" or "$0.50")
+    /// - Parameter price: The price as Decimal
+    /// - Returns: Formatted string with unit
+    static func formatPriceWithUnit(_ price: Decimal) -> String {
+        switch displayMode {
+        case .dollars:
+            return formatDollars(price)
+        case .credits:
+            let credits = dollarsToCredits(price)
+            return "\(credits) credits"
+        }
+    }
+    
+    /// Formats an optional price
+    /// - Parameter price: Optional price as Decimal
+    /// - Returns: Formatted string or "0" if nil
+    static func formatPrice(_ price: Decimal?) -> String {
+        guard let price = price else {
+            return displayMode == .dollars ? "$0" : "0"
+        }
+        return formatPrice(price)
+    }
+    
+    /// Formats an optional price with unit label
+    /// - Parameter price: Optional price as Decimal
+    /// - Returns: Formatted string with unit or "0" if nil
+    static func formatPriceWithUnit(_ price: Decimal?) -> String {
+        guard let price = price else {
+            return displayMode == .dollars ? "$0" : "0 credits"
+        }
+        return formatPriceWithUnit(price)
     }
 }

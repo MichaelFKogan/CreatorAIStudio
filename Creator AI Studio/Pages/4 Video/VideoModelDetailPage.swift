@@ -216,8 +216,13 @@ struct VideoModelDetailPage: View {
             .stringValue
     }
 
+    private var priceString: String {
+        PricingManager.formatPrice(currentPrice ?? item.resolvedCost ?? 0)
+    }
+    
     private var creditsString: String {
-        "\((currentPrice ?? item.resolvedCost ?? 0).credits)"
+        // Keep for backward compatibility, but use new formatter
+        priceString
     }
 
     /// Computed property to get the current price based on selected aspect ratio, duration, and audio
@@ -289,7 +294,7 @@ struct VideoModelDetailPage: View {
                     VStack(spacing: 24) {
                         LazyView(
                             BannerSectionVideo(
-                                item: item, creditsString: creditsString))
+                                item: item, price: currentPrice))
 
                         Divider().padding(.horizontal)
 
@@ -379,7 +384,7 @@ struct VideoModelDetailPage: View {
                                 prompt: prompt,
                                 isGenerating: $isGenerating,
                                 keyboardHeight: $keyboardHeight,
-                                creditsString: creditsString,
+                                price: currentPrice,
                                 selectedSize: videoAspectOptions[
                                     selectedAspectIndex
                                 ].id,
@@ -675,7 +680,7 @@ struct VideoModelDetailPage: View {
 
 private struct BannerSectionVideo: View {
     let item: InfoPacket
-    let creditsString: String
+    let price: Decimal?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -704,9 +709,13 @@ private struct BannerSectionVideo: View {
                     .background(Capsule().fill(Color.purple.opacity(0.8)))
 
                     HStack(spacing: 4) {
-                        Text("\(creditsString) credits").font(.title3)
-                            .fontWeight(.bold)
-                            .foregroundColor(.purple)
+                        PriceDisplayView(
+                            price: price ?? item.resolvedCost ?? 0,
+                            showUnit: true,
+                            font: .title3,
+                            fontWeight: .bold,
+                            foregroundColor: .white
+                        )
                         Text("per video").font(.caption).foregroundColor(
                             .secondary)
                     }
@@ -1141,14 +1150,12 @@ private struct AudioPricingCard: View {
                                         let adjustedPrice =
                                             basePrice
                                             + audioAddonProvider(duration)
-                                        Text("\(adjustedPrice.credits)")
-                                            .font(
-                                                .system(
-                                                    size: 12, weight: .medium,
-                                                    design: .rounded)
-                                            )
-                                            .foregroundColor(.purple)
-                                            .frame(maxWidth: .infinity)
+                                        PriceDisplayView(
+                                            price: adjustedPrice,
+                                            font: .system(size: 12, weight: .medium, design: .rounded),
+                                            foregroundColor: .white
+                                        )
+                                        .frame(maxWidth: .infinity)
                                     } else {
                                         Text("-")
                                             .font(.system(size: 12))
@@ -1318,14 +1325,12 @@ private struct ResolutionPricingCard: View {
                                 aspectRatio: aspectRatio,
                                 resolution: resolution, duration: duration)
                             {
-                                Text("\(price.credits)")
-                                    .font(
-                                        .system(
-                                            size: 12, weight: .medium,
-                                            design: .rounded)
-                                    )
-                                    .foregroundColor(.purple)
-                                    .frame(maxWidth: .infinity)
+                                PriceDisplayView(
+                                    price: price,
+                                    font: .system(size: 12, weight: .medium, design: .rounded),
+                                    foregroundColor: .white
+                                )
+                                .frame(maxWidth: .infinity)
                             } else {
                                 Text("-")
                                     .font(.system(size: 12))
@@ -1362,7 +1367,7 @@ private struct GenerateButtonVideo: View {
     let prompt: String
     @Binding var isGenerating: Bool
     @Binding var keyboardHeight: CGFloat
-    let creditsString: String
+    let price: Decimal?
     let selectedSize: String
     let selectedResolution: String?
     let selectedDuration: String
@@ -1387,11 +1392,18 @@ private struct GenerateButtonVideo: View {
                     } else {
                         Image(systemName: "video.fill")
                     }
-                    Text(
-                        isGenerating
-                            ? "Generating..."
-                            : "Generate Video - \(creditsString) credits"
-                    ).fontWeight(.semibold)
+                    HStack(spacing: 4) {
+                        Text(isGenerating ? "Generating..." : "Generate Video - ")
+                            .fontWeight(.semibold)
+                        if !isGenerating {
+                            PriceDisplayView(
+                                price: price ?? 0,
+                                showUnit: true,
+                                fontWeight: .semibold,
+                                foregroundColor: .white
+                            )
+                        }
+                    }
                 }
                 .frame(maxWidth: .infinity)
                 .padding()

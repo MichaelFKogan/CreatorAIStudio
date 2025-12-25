@@ -61,32 +61,32 @@ struct PhotoFilterDetailView: View {
         return result
     }
 
-    // Calculate total credits (item + additional filters)
-    private var totalCredits: Int {
-        let itemCredits = item.resolvedCost?.credits ?? 0
-        let additionalCredits =
-            additionalFilters?.reduce(0) { total, filter in
-                total + (filter.resolvedCost?.credits ?? 0)
+    // Calculate total price (item + additional filters)
+    private var totalPrice: Decimal {
+        let itemPrice = item.resolvedCost ?? 0
+        let additionalPrice =
+            additionalFilters?.reduce(Decimal(0)) { total, filter in
+                total + (filter.resolvedCost ?? 0)
             } ?? 0
-        return itemCredits + additionalCredits
+        return itemPrice + additionalPrice
     }
 
     private var creditsDisplayView: some View {
         HStack(spacing: 12) {
-            // Credits Display
+            // Price Display
             HStack(spacing: 6) {
-                Image(systemName: "diamond.fill")
-                    .foregroundStyle(diamondGradient)
-                    .font(.system(size: 9))
+                if PricingManager.displayMode == .credits {
+                    Image(systemName: "diamond.fill")
+                        .foregroundStyle(diamondGradient)
+                        .font(.system(size: 9))
+                }
 
-                Text("\(totalCredits)")
-                    .font(
-                        .system(size: 16, weight: .semibold, design: .rounded)
-                    )
-                    .foregroundColor(.primary)
-                Text("credits")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
+                PriceDisplayView(
+                    price: totalPrice,
+                    showUnit: true,
+                    font: .system(size: 16, weight: .semibold, design: .rounded),
+                    foregroundColor: .primary
+                )
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
@@ -327,25 +327,23 @@ struct PhotoFilterDetailView: View {
                     HStack {
                         Spacer()
                         HStack(spacing: 6) {
-                            Image(systemName: "diamond.fill")
-                                .foregroundStyle(
-                                    LinearGradient(
-                                        colors: [.blue, .purple],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing)
-                                )
-                                .font(.system(size: 11))
+                            if PricingManager.displayMode == .credits {
+                                Image(systemName: "diamond.fill")
+                                    .foregroundStyle(
+                                        LinearGradient(
+                                            colors: [.blue, .purple],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing)
+                                    )
+                                    .font(.system(size: 11))
+                            }
 
-                            Text("\(totalCredits)")
-                                .font(
-                                    .system(
-                                        size: 16, weight: .semibold,
-                                        design: .rounded)
-                                )
-                                .foregroundColor(.primary)
-                            Text("credits")
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
+                            PriceDisplayView(
+                                price: totalPrice,
+                                showUnit: true,
+                                font: .system(size: 16, weight: .semibold, design: .rounded),
+                                foregroundColor: .primary
+                            )
                         }
                         .padding(.horizontal, 12)
                         .padding(.vertical, 6)

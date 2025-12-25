@@ -138,7 +138,11 @@ struct ImageModelDetailPage: View {
     ]
 
     private var costString: String {
-        NSDecimalNumber(decimal: item.cost ?? 0).stringValue
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.maximumFractionDigits = 4
+        formatter.minimumFractionDigits = 0
+        return formatter.string(from: NSDecimalNumber(decimal: item.resolvedCost ?? 0)) ?? "0"
     }
 
     private var isMidjourney: Bool {
@@ -548,7 +552,7 @@ struct BannerSection: View {
 
                     HStack(spacing: 4) {
                         Text("$\(costString)").font(.title3).fontWeight(.bold)
-                            .foregroundColor(.blue)
+                            .foregroundColor(.white)
                         Text("per image").font(.caption).foregroundColor(
                             .secondary)
                     }

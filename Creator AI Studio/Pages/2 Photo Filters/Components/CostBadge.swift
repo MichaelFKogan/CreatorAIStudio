@@ -3,18 +3,7 @@ import SwiftUI
 // MARK: - Cost Badge
 
 struct CostBadge: View {
-    let cost: Double
-
-    // Helper function to format cost with full precision
-    private func formatCost(_ cost: Double) -> String {
-        // Use NumberFormatter to show all significant digits
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.currencySymbol = "$"
-        formatter.maximumFractionDigits = 10 // Allow up to 10 decimal places for precision
-        formatter.minimumFractionDigits = 0 // Don't force trailing zeros
-        return formatter.string(from: NSNumber(value: cost)) ?? "$\(cost)"
-    }
+    let cost: Decimal
 
     var body: some View {
         HStack {
@@ -29,22 +18,21 @@ struct CostBadge: View {
                     Text("×")
                         .font(.caption)
                         .foregroundColor(.secondary)
-                    Text(formatCost(cost))
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.teal)
+                    PriceDisplayView(
+                        price: cost,
+                        font: .subheadline,
+                        fontWeight: .semibold,
+                        foregroundColor: .teal
+                    )
                 }
             }
             Spacer()
-            Text(formatCost(cost))
-                .font(
-                    .system(
-                        size: 16, weight: .semibold,
-                        design: .rounded
-                    )
-                )
-                .fontWeight(.bold)
-                .foregroundColor(.teal)
+            PriceDisplayView(
+                price: cost,
+                font: .system(size: 16, weight: .semibold, design: .rounded),
+                fontWeight: .bold,
+                foregroundColor: .teal
+            )
         }
         .padding()
         .background(Color.teal.opacity(0.08))

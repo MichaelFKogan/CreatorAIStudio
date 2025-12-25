@@ -294,46 +294,8 @@ struct Post: View {
                                         .overlay(
                                             // Cost badge in top right
                                             Group {
-                                                if let cost = displayFilter
-                                                    .resolvedCost
-                                                {
-                                                    // Text( "$\(NSDecimalNumber(decimal: cost).stringValue)")
-                                                    Text("\(cost.credits)")
-                                                        .font(
-                                                            .system(
-                                                                size: 13,
-                                                                weight:
-                                                                    .semibold,
-                                                                design:
-                                                                    .rounded
-                                                            )
-                                                        )
-                                                        .foregroundColor(
-                                                            .white
-                                                        )
-                                                        .padding(
-                                                            .horizontal, 10
-                                                        )
-                                                        .padding(
-                                                            .vertical, 5
-                                                        )
-                                                        .background(
-                                                            Capsule()
-                                                                .fill(
-                                                                    Color
-                                                                        .black
-                                                                        .opacity(
-                                                                            0.75
-                                                                        )
-                                                                )
-                                                        )
-                                                        .shadow(
-                                                            color: .black
-                                                                .opacity(
-                                                                    0.4),
-                                                            radius: 4, x: 0,
-                                                            y: 2
-                                                        )
+                                                if displayFilter.resolvedCost != nil {
+                                                    PriceBadge(price: displayFilter.resolvedCost)
                                                         .padding(12)
                                                         .opacity(
                                                             isScrollingActive

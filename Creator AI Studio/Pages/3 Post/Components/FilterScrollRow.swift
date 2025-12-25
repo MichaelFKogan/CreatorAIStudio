@@ -588,10 +588,11 @@ struct FilterThumbnailCompact: View {
                                 VStack(alignment: .trailing, spacing: 3) {
                                     // Price badge (always visible if cost exists)
                                     if let cost = cost {
-                                        // Text( "$\(NSDecimalNumber(decimal: cost).stringValue)")
-                                        Text("\(cost.credits)")
-                                        .font(.system(size: 9, weight: .semibold))
-                                        .foregroundColor(.white)
+                                        PriceDisplayView(
+                                            price: cost,
+                                            font: .system(size: 9, weight: .semibold),
+                                            foregroundColor: .white
+                                        )
                                         .padding(.horizontal, 5)
                                         .padding(.vertical, 2)
                                         .background(
@@ -650,10 +651,11 @@ struct FilterThumbnailCompact: View {
                                 VStack(alignment: .trailing, spacing: 3) {
                                     // Price badge (always visible if cost exists)
                                     if let cost = cost {
-                                        // Text("$\(NSDecimalNumber(decimal: cost).stringValue)")
-                                        Text("\(cost.credits)")
-                                        .font(.system(size: 9, weight: .semibold))
-                                        .foregroundColor(.white)
+                                        PriceDisplayView(
+                                            price: cost,
+                                            font: .system(size: 9, weight: .semibold),
+                                            foregroundColor: .white
+                                        )
                                         .padding(.horizontal, 5)
                                         .padding(.vertical, 2)
                                         .background( Capsule().fill(Color.black.opacity(0.7)))

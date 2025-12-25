@@ -60,17 +60,17 @@ struct PhotoConfirmationView: View {
         }
     }
     
-    // Calculate total credits: sum of all filter costs × number of images
+    // Calculate total price: sum of all filter costs × number of images
     // Each image gets generated with each filter
-    private var totalCredits: Int {
-        let itemCredits = item.resolvedCost?.credits ?? 0
-        let additionalCredits =
-            additionalFilters?.reduce(0) { total, filter in
-            total + (filter.resolvedCost?.credits ?? 0)
+    private var totalPrice: Decimal {
+        let itemPrice = item.resolvedCost ?? 0
+        let additionalPrice =
+            additionalFilters?.reduce(Decimal(0)) { total, filter in
+            total + (filter.resolvedCost ?? 0)
         } ?? 0
-        let totalFilterCost = itemCredits + additionalCredits
+        let totalFilterCost = itemPrice + additionalPrice
         // Each image will be generated with each filter
-        return totalFilterCost * images.count
+        return totalFilterCost * Decimal(images.count)
     }
 
     // MARK: - Aspect Ratio Options
@@ -607,21 +607,23 @@ struct PhotoConfirmationView: View {
 
     private var creditsBadge: some View {
                     HStack(spacing: 6) {
-                        Image(systemName: "diamond.fill")
-                            .foregroundStyle(
-                                LinearGradient(
-                                    colors: [.blue, .purple],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing)
-                            )
-                            .font(.system(size: 11))
+                        if PricingManager.displayMode == .credits {
+                            Image(systemName: "diamond.fill")
+                                .foregroundStyle(
+                                    LinearGradient(
+                                        colors: [.blue, .purple],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing)
+                                )
+                                .font(.system(size: 11))
+                        }
 
-                        Text("\(totalCredits)")
-                .font(.system(size: 16, weight: .semibold, design: .rounded))
-                            .foregroundColor(.primary)
-                        Text("credits")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
+                        PriceDisplayView(
+                            price: totalPrice,
+                            showUnit: true,
+                            font: .system(size: 16, weight: .semibold, design: .rounded),
+                            foregroundColor: .primary
+                        )
                     }
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)

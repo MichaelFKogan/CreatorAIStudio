@@ -2170,7 +2170,7 @@ struct SignInOverlay: View {
                             )
                         )
                     
-                    Text("Welcome to Gallery")
+                    Text("Welcome to Runspeed AI")
                         .font(.system(size: 26, weight: .bold, design: .rounded))
                         .foregroundColor(.white)
                     
@@ -2316,7 +2316,7 @@ struct EmbeddedSignInView: View {
                             )
                         )
                     
-                    Text("Welcome to Gallery")
+                    Text("Welcome to Runspeed AI")
                         .font(.system(size: 28, weight: .bold, design: .rounded))
                         .foregroundColor(.primary)
                     

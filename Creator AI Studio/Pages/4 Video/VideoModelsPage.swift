@@ -316,11 +316,11 @@ private struct SortAndViewToggle: View {
                 HStack {
                     Image(
                         systemName: isGridView
-                            ? "square.grid.2x2" : "line.3.horizontal"
+                            ? "line.3.horizontal" : "square.grid.2x2"
                     )
                     .font(.system(size: 14))
                     .fontWeight(.semibold)
-                    Text(isGridView ? "Grid View" : "List View")
+                    Text(isGridView ? "List View" : "Grid View")
                         .font(.system(size: 14))
                         .fontWeight(.semibold)
                 }
@@ -470,11 +470,12 @@ private struct VideoModelGridItem: View {
 
                 Spacer()
 
-                Text("\(item.resolvedCost.credits) credits")
-                    .font(
-                        .system(size: 12, weight: .semibold, design: .rounded)
-                    )
-                    .foregroundColor(.purple)
+                PriceDisplayView(
+                    price: item.resolvedCost,
+                    showUnit: true,
+                    font: .system(size: 12, weight: .semibold, design: .rounded),
+                    foregroundColor: .purple
+                )
             }
         }
     }
@@ -515,13 +516,15 @@ private struct VideoModelListItem: View {
             Spacer()
 
             VStack(alignment: .trailing) {
-                Text("\(item.resolvedCost.credits)")
-                    .font(.caption)
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(Color.secondary.opacity(0.4))
-                    .clipShape(Capsule())
+                PriceDisplayView(
+                    price: item.resolvedCost,
+                    font: .caption,
+                    foregroundColor: .white
+                )
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(Color.secondary.opacity(0.4))
+                .clipShape(Capsule())
                 Text("per video")
                     .font(.caption2)
                     .foregroundColor(.secondary)

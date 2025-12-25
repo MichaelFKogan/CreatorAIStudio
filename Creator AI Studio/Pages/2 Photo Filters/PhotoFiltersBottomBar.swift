@@ -4,7 +4,7 @@ import SwiftUI
 struct PhotoFiltersBottomBar: View {
     @Binding var showPhotoPicker: Bool
     @Binding var selectedPhotoItem: PhotosPickerItem?
-    let cost: Double
+    let cost: Decimal
     
     @EnvironmentObject var authViewModel: AuthViewModel
 
