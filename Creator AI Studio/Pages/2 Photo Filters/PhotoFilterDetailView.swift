@@ -72,40 +72,48 @@ struct PhotoFilterDetailView: View {
     }
 
     private var creditsDisplayView: some View {
-        HStack(spacing: 12) {
-            // Price Display
-            HStack(spacing: 6) {
-                if PricingManager.displayMode == .credits {
-                    Image(systemName: "diamond.fill")
-                        .foregroundStyle(diamondGradient)
-                        .font(.system(size: 9))
-                }
-
-                PriceDisplayView(
-                    price: totalPrice,
-                    showUnit: true,
-                    font: .system(size: 16, weight: .semibold, design: .rounded),
-                    foregroundColor: .primary
+        HStack(spacing: 6) {
+            Image(systemName: "diamond.fill")
+                .foregroundStyle(
+                    LinearGradient(
+                        colors: [.teal, .teal],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
                 )
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-            .background(
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(Color.secondary.opacity(0.1))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 20)
-                    .strokeBorder(diamondGradient)
-            )
+                .font(.system(size: 8))
+            Text("250")
+                .font(
+                    .system(
+                        size: 14, weight: .semibold,
+                        design: .rounded
+                    )
+                )
+                .foregroundColor(.white)
+            Text("credits")
+                .font(.caption2)
+                .foregroundColor(.white.opacity(0.9))
         }
-    }
-
-    private var diamondGradient: LinearGradient {
-        LinearGradient(
-            colors: [.blue, .purple],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+        .background(
+            RoundedRectangle(cornerRadius: 20)
+                .fill(Color.secondary.opacity(0.1))
+                .shadow(
+                    color: Color.black.opacity(0.2), radius: 4,
+                    x: 0, y: 2
+                )
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 20)
+                .strokeBorder(
+                    LinearGradient(
+                        colors: [.mint, .mint],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    ),
+                    lineWidth: 1.5
+                )
         )
     }
 

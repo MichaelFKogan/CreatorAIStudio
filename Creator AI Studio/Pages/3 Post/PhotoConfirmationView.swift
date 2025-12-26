@@ -600,12 +600,12 @@ struct PhotoConfirmationView: View {
     private var costDisplaySection: some View {
                 HStack {
                     Spacer()
-            creditsBadge
+            costBadge
         }
         .padding(.horizontal, 24)
     }
 
-    private var creditsBadge: some View {
+    private var costBadge: some View {
                     HStack(spacing: 6) {
                         if PricingManager.displayMode == .credits {
                             Image(systemName: "diamond.fill")
@@ -631,18 +631,62 @@ struct PhotoConfirmationView: View {
                         RoundedRectangle(cornerRadius: 20)
                             .fill(Color.secondary.opacity(0.1))
                     )
-        .overlay(costDisplayOverlay)
-    }
-
-    private var costDisplayOverlay: some View {
+                    .overlay(
                         RoundedRectangle(cornerRadius: 20)
                             .strokeBorder(
                                 LinearGradient(
                                     colors: [.blue, .purple],
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing)
+                            )
                     )
-                }
+    }
+
+    private var creditsBadge: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "diamond.fill")
+                .foregroundStyle(
+                    LinearGradient(
+                        colors: [.teal, .teal],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .font(.system(size: 8))
+            Text("250")
+                .font(
+                    .system(
+                        size: 14, weight: .semibold,
+                        design: .rounded
+                    )
+                )
+                .foregroundColor(.white)
+            Text("credits")
+                .font(.caption2)
+                .foregroundColor(.white.opacity(0.9))
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+        .background(
+            RoundedRectangle(cornerRadius: 20)
+                .fill(Color.secondary.opacity(0.1))
+                .shadow(
+                    color: Color.black.opacity(0.2), radius: 4,
+                    x: 0, y: 2
+                )
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 20)
+                .strokeBorder(
+                    LinearGradient(
+                        colors: [.mint, .mint],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    ),
+                    lineWidth: 1.5
+                )
+        )
+    }
 
     private var infoSection: some View {
                 VStack(spacing: 12) {
@@ -664,7 +708,7 @@ struct PhotoConfirmationView: View {
 
                     VStack(alignment: .leading, spacing: 10) {
                 InfoRow(number: "1", text: "AI will transform your photo")
-                InfoRow(number: "2", text: "Processing takes 30-60 seconds")
+                InfoRow(number: "2", text: "Processing usually takes 30-60 seconds, but may take longer")
                         InfoRow(
                             number: "3",
                             text:
