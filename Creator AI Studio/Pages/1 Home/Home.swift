@@ -46,7 +46,7 @@ struct Home: View {
 
                     // MARK: Credits Badge and Settings
                     ToolbarItem(placement: .navigationBarTrailing) {
-                        HStack(spacing: 16) {
+                        HStack(spacing: 8) {
                             // Credits Badge
                             HStack(spacing: 6) {
                                 Image(systemName: "diamond.fill")
