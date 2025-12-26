@@ -10,7 +10,7 @@ import SwiftUI
 
 struct SignInView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
-    @State private var isSignUp = false
+    @State private var navigateToSignUp = false
     @State private var navigateToEmail = false
 
     var body: some View {
@@ -21,73 +21,156 @@ struct SignInView: View {
                     .ignoresSafeArea()
 
                 ScrollView {
-                    VStack(spacing: 24) {
-                        Text("Welcome")
-                            .font(.largeTitle)
-                            .bold()
-                            .foregroundColor(.primary)
-                            .padding(.top, 40)
-                            .padding(.bottom, 8)
-
-                        Spacer(minLength: 40)
-
-                        VStack(spacing: 16) {
-                            SignInButton(
-                                title: "Continue with Apple",
-                                icon: "applelogo",
-                                background: Color.white
-                            ) {
-                                handleAppleSignIn()
+                    VStack(spacing: 0) {
+                        Spacer(minLength: 60)
+                        
+                        // Sign-in card
+                        VStack(spacing: 24) {
+                            // Welcome section
+                            VStack(spacing: 12) {
+                                Image(systemName: "photo.on.rectangle.angled")
+                                    .font(.system(size: 56))
+                                    .foregroundStyle(
+                                        LinearGradient(
+                                            colors: [.blue, .purple],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+                                
+                                Text("Welcome to Runspeed AI")
+                                    .font(.system(size: 26, weight: .bold, design: .rounded))
+                                    .foregroundColor(.white)
+                                
+                                Text("Sign in to view and manage your creations")
+                                    .font(.subheadline)
+                                    .foregroundColor(.white.opacity(0.8))
+                                    .multilineTextAlignment(.center)
+                                    .padding(.horizontal, 32)
                             }
-
-                            SignInButton(
-                                title: "Continue with Google",
-                                icon: "globe",
-                                background: Color.white
-                            ) {
-                                authViewModel.isSignedIn = true
-                            }
-
-                            NavigationLink(
-                                destination: EmailSignInView(
-                                    isSignUp: $isSignUp,
-                                    navigateBack: $navigateToEmail
-                                )
-                                .environmentObject(authViewModel),
-                                isActive: $navigateToEmail
-                            ) {
-                                SignInButton(
-                                    title: "Continue with Email",
-                                    icon: "envelope.fill",
-                                    background: Color.white
+                            
+                            // Sign in buttons
+                            VStack(spacing: 14) {
+                                // Apple Sign In
+                                Button(action: {
+                                    handleAppleSignIn()
+                                }) {
+                                    HStack {
+                                        Spacer()
+                                        Image(systemName: "applelogo")
+                                            .font(.system(size: 18, weight: .semibold))
+                                        Text("Continue with Apple")
+                                            .font(.system(size: 16, weight: .semibold))
+                                        Spacer()
+                                    }
+                                    .padding(.vertical, 14)
+                                    .foregroundColor(.white)
+                                    .background(Color.black)
+                                    .cornerRadius(12)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                                    )
+                                }
+                                
+                                // Google Sign In
+                                Button(action: {
+                                    authViewModel.isSignedIn = true
+                                }) {
+                                    HStack {
+                                        Spacer()
+                                        Image(systemName: "globe")
+                                            .font(.system(size: 18, weight: .semibold))
+                                        Text("Continue with Google")
+                                            .font(.system(size: 16, weight: .semibold))
+                                        Spacer()
+                                    }
+                                    .padding(.vertical, 14)
+                                    .foregroundColor(.white)
+                                    .background(Color.black)
+                                    .cornerRadius(12)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                                    )
+                                }
+                                
+                                // Email Sign In
+                                NavigationLink(
+                                    destination: EmailSignInView(
+                                        isSignUp: .constant(false),
+                                        navigateBack: $navigateToEmail
+                                    )
+                                    .environmentObject(authViewModel),
+                                    isActive: $navigateToEmail
                                 ) {
-                                    navigateToEmail = true
+                                    HStack {
+                                        Spacer()
+                                        Image(systemName: "envelope.fill")
+                                            .font(.system(size: 18, weight: .semibold))
+                                        Text("Continue with Email")
+                                            .font(.system(size: 16, weight: .semibold))
+                                        Spacer()
+                                    }
+                                    .padding(.vertical, 14)
+                                    .foregroundColor(.white)
+                                    .background(Color.black)
+                                    .cornerRadius(12)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                                    )
                                 }
                             }
-                        }
-                        .padding(.horizontal)
-
-                        VStack(spacing: 4) {
-                            Text("By continuing you agree to our")
-                                .font(.footnote)
-                                .foregroundColor(.secondary)
-
-                            HStack(spacing: 4) {
-                                Link("Terms of Service", destination: URL(string: "https://yourapp.com/terms")!)
+                            .padding(.horizontal, 32)
+                            
+                            // Terms and Privacy
+                            VStack(spacing: 4) {
+                                Text("By continuing you agree to our")
                                     .font(.footnote)
-                                    .underline()
-                                Text("and")
+                                    .foregroundColor(.white.opacity(0.7))
+                                
+                                HStack(spacing: 4) {
+                                    Link("Terms of Service", destination: URL(string: "https://yourapp.com/terms")!)
+                                        .font(.footnote)
+                                        .underline()
+                                        .foregroundColor(.white.opacity(0.9))
+                                    Text("and")
+                                        .font(.footnote)
+                                        .foregroundColor(.white.opacity(0.7))
+                                    Link("Privacy Policy", destination: URL(string: "https://yourapp.com/privacy")!)
+                                        .font(.footnote)
+                                        .underline()
+                                        .foregroundColor(.white.opacity(0.9))
+                                }
+                            }
+                            .padding(.top, 8)
+                            
+                            // Sign Up link
+                            NavigationLink(
+                                destination: SignUpView()
+                                    .environmentObject(authViewModel),
+                                isActive: $navigateToSignUp
+                            ) {
+                                Text("Don't have an account? Sign Up")
                                     .font(.footnote)
-                                    .foregroundColor(.secondary)
-                                Link("Privacy Policy", destination: URL(string: "https://yourapp.com/privacy")!)
-                                    .font(.footnote)
+                                    .foregroundColor(.white.opacity(0.9))
                                     .underline()
                             }
+                            .padding(.top, 12)
+                            .padding(.bottom, 20)
                         }
-                        .padding(.top, 20)
-                        .padding(.bottom, 100) // Extra padding for tab bar
+                        .padding(.vertical, 32)
+                        .padding(.horizontal, 24)
+                        .background(
+                            RoundedRectangle(cornerRadius: 20)
+                                .fill(Color(.systemBackground))
+                                .shadow(color: .black.opacity(0.3), radius: 20, x: 0, y: 10)
+                        )
+                        .padding(.horizontal, 24)
+                        
+                        Spacer(minLength: 100)
                     }
-                    .padding()
                 }
             }
         }
@@ -286,6 +369,185 @@ struct SignInButton: View {
             .background(background)
             .cornerRadius(12)
         }
+    }
+}
+
+// MARK: - Sign Up View
+
+struct SignUpView: View {
+    @EnvironmentObject var authViewModel: AuthViewModel
+    @State private var navigateToEmail = false
+    
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                // 🔹 Black background
+                Color.black
+                    .ignoresSafeArea()
+                
+                ScrollView {
+                    VStack(spacing: 0) {
+                        Spacer(minLength: 60)
+                        
+                        // Sign-up card
+                        VStack(spacing: 24) {
+                            // Welcome section
+                            VStack(spacing: 12) {
+                                Image(systemName: "photo.on.rectangle.angled")
+                                    .font(.system(size: 56))
+                                    .foregroundStyle(
+                                        LinearGradient(
+                                            colors: [.blue, .purple],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+                                
+                                Text("Create Your Account")
+                                    .font(.system(size: 26, weight: .bold, design: .rounded))
+                                    .foregroundColor(.white)
+                                
+                                Text("Sign up to start creating amazing images")
+                                    .font(.subheadline)
+                                    .foregroundColor(.white.opacity(0.8))
+                                    .multilineTextAlignment(.center)
+                                    .padding(.horizontal, 32)
+                            }
+                            
+                            // Sign up buttons
+                            VStack(spacing: 14) {
+                                // Apple Sign Up
+                                Button(action: {
+                                    handleAppleSignUp()
+                                }) {
+                                    HStack {
+                                        Spacer()
+                                        Image(systemName: "applelogo")
+                                            .font(.system(size: 18, weight: .semibold))
+                                        Text("Continue with Apple")
+                                            .font(.system(size: 16, weight: .semibold))
+                                        Spacer()
+                                    }
+                                    .padding(.vertical, 14)
+                                    .foregroundColor(.white)
+                                    .background(Color.black)
+                                    .cornerRadius(12)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                                    )
+                                }
+                                
+                                // Google Sign Up
+                                Button(action: {
+                                    authViewModel.isSignedIn = true
+                                }) {
+                                    HStack {
+                                        Spacer()
+                                        Image(systemName: "globe")
+                                            .font(.system(size: 18, weight: .semibold))
+                                        Text("Continue with Google")
+                                            .font(.system(size: 16, weight: .semibold))
+                                        Spacer()
+                                    }
+                                    .padding(.vertical, 14)
+                                    .foregroundColor(.white)
+                                    .background(Color.black)
+                                    .cornerRadius(12)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                                    )
+                                }
+                                
+                                // Email Sign Up
+                                NavigationLink(
+                                    destination: EmailSignInView(
+                                        isSignUp: .constant(true),
+                                        navigateBack: $navigateToEmail
+                                    )
+                                    .environmentObject(authViewModel),
+                                    isActive: $navigateToEmail
+                                ) {
+                                    HStack {
+                                        Spacer()
+                                        Image(systemName: "envelope.fill")
+                                            .font(.system(size: 18, weight: .semibold))
+                                        Text("Continue with Email")
+                                            .font(.system(size: 16, weight: .semibold))
+                                        Spacer()
+                                    }
+                                    .padding(.vertical, 14)
+                                    .foregroundColor(.white)
+                                    .background(Color.black)
+                                    .cornerRadius(12)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                                    )
+                                }
+                            }
+                            .padding(.horizontal, 32)
+                            
+                            // Terms and Privacy
+                            VStack(spacing: 4) {
+                                Text("By signing up you agree to our")
+                                    .font(.footnote)
+                                    .foregroundColor(.white.opacity(0.7))
+                                
+                                HStack(spacing: 4) {
+                                    Link("Terms of Service", destination: URL(string: "https://yourapp.com/terms")!)
+                                        .font(.footnote)
+                                        .underline()
+                                        .foregroundColor(.white.opacity(0.9))
+                                    Text("and")
+                                        .font(.footnote)
+                                        .foregroundColor(.white.opacity(0.7))
+                                    Link("Privacy Policy", destination: URL(string: "https://yourapp.com/privacy")!)
+                                        .font(.footnote)
+                                        .underline()
+                                        .foregroundColor(.white.opacity(0.9))
+                                }
+                            }
+                            .padding(.top, 8)
+                            
+                            // Sign In link
+                            NavigationLink(
+                                destination: SignInView()
+                                    .environmentObject(authViewModel)
+                            ) {
+                                Text("Already have an account? Sign In")
+                                    .font(.footnote)
+                                    .foregroundColor(.white.opacity(0.9))
+                                    .underline()
+                            }
+                            .padding(.top, 12)
+                            .padding(.bottom, 20)
+                        }
+                        .padding(.vertical, 32)
+                        .padding(.horizontal, 24)
+                        .background(
+                            RoundedRectangle(cornerRadius: 20)
+                                .fill(Color(.systemBackground))
+                                .shadow(color: .black.opacity(0.3), radius: 20, x: 0, y: 10)
+                        )
+                        .padding(.horizontal, 24)
+                        
+                        Spacer(minLength: 100)
+                    }
+                }
+            }
+        }
+    }
+    
+    // MARK: - Apple Sign Up
+    func handleAppleSignUp() {
+        let request = ASAuthorizationAppleIDProvider().createRequest()
+        request.requestedScopes = [.email, .fullName]
+        
+        let controller = ASAuthorizationController(authorizationRequests: [request])
+        controller.delegate = AppleSignInCoordinator(authViewModel: authViewModel)
+        controller.performRequests()
     }
 }
 

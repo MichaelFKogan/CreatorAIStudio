@@ -8,6 +8,7 @@ struct Settings: View {
     @State private var isClearing = false
     @State private var isSigningOut = false
     @State private var showSignedOutAlert = false
+    @State private var showSignInSheet = false
     
     // ProfileViewModel for cache clearing
     var profileViewModel: ProfileViewModel?
@@ -189,27 +190,33 @@ struct Settings: View {
 
             }
 
-            // Sign out
+            // Sign out / Sign in
             Section {
                 Button(action: {
-                    isSigningOut = true
-                    Task {
-                        await authViewModel.signOut()
-                        isSigningOut = false
-                        
-                        // Haptic feedback
-                        let generator = UINotificationFeedbackGenerator()
-                        generator.notificationOccurred(.success)
-                        
-                        // Show success alert
-                        showSignedOutAlert = true
+                    if authViewModel.user == nil {
+                        // User is signed out, show sign in sheet
+                        showSignInSheet = true
+                    } else {
+                        // User is signed in, sign out
+                        isSigningOut = true
+                        Task {
+                            await authViewModel.signOut()
+                            isSigningOut = false
+                            
+                            // Haptic feedback
+                            let generator = UINotificationFeedbackGenerator()
+                            generator.notificationOccurred(.success)
+                            
+                            // Show success alert
+                            showSignedOutAlert = true
+                        }
                     }
                 }) {
                     HStack {
-                        Image(systemName: "rectangle.portrait.and.arrow.right")
-                            .foregroundColor(.red)
-                        Text("Sign Out")
-                            .foregroundColor(.red)
+                        Image(systemName: authViewModel.user == nil ? "person.circle" : "rectangle.portrait.and.arrow.right")
+                            .foregroundColor(authViewModel.user == nil ? .blue : .red)
+                        Text(authViewModel.user == nil ? "Sign In" : "Sign Out")
+                            .foregroundColor(authViewModel.user == nil ? .blue : .red)
                         Spacer()
                         if isSigningOut {
                             ProgressView()
@@ -243,6 +250,11 @@ struct Settings: View {
             Button("OK", role: .cancel) {}
         } message: {
             Text("You have been successfully signed out.")
+        }
+        .sheet(isPresented: $showSignInSheet) {
+            SignInView()
+                .environmentObject(authViewModel)
+                .presentationDragIndicator(.visible)
         }
     }
     

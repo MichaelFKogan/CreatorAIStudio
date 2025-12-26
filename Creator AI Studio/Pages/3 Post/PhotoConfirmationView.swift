@@ -508,7 +508,6 @@ struct PhotoConfirmationView: View {
                 }
         }
         .padding(.horizontal)
-        .padding(.bottom, 12)
     }
 
     private var loginDisclaimer: some View {
@@ -600,7 +599,10 @@ struct PhotoConfirmationView: View {
     private var costDisplaySection: some View {
                 HStack {
                     Spacer()
-            costBadge
+                    Text("Cost")
+                        .font(.system(size: 14, weight: .medium, design: .rounded))
+                        .foregroundColor(.secondary)
+                    costBadge
         }
         .padding(.horizontal, 24)
     }
@@ -719,7 +721,7 @@ struct PhotoConfirmationView: View {
                     }
                     .padding(.horizontal, 24)
                 }
-                .padding(.bottom, 60)
+                .padding(.bottom, 100)
             }
 
     @ToolbarContentBuilder

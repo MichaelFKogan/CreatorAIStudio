@@ -331,6 +331,7 @@ struct ProfileViewContent: View {
             }
             .sheet(isPresented: $showShareSheet) {
                 ShareSheet(activityItems: shareItems)
+                .presentationDragIndicator(.visible)
             }
         }
     }
@@ -391,7 +392,7 @@ struct ProfileViewContent: View {
     }
     
     private var selectionModeToolbar: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 24) {
             saveButton
             shareButton
             deleteButton
@@ -420,15 +421,17 @@ struct ProfileViewContent: View {
     
     private var saveButton: some View {
         Button(action: handleSaveAction) {
-            VStack(spacing: 2) {
+            VStack(spacing: 6) {
                 Image(systemName: "arrow.down.circle")
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(.blue)
                     .opacity(0.8)
+                    .frame(height: 14)
                 Text("Save")
                     .font(.caption2)
                     .foregroundColor(.blue)
             }
+            .frame(height: 32)
         }
         .buttonStyle(.plain)
         .disabled(isSaving || isDeleting)
@@ -436,31 +439,35 @@ struct ProfileViewContent: View {
     
     private var shareButton: some View {
         Button(action: handleShareAction) {
-            VStack(spacing: 2) {
+            VStack(spacing: 6) {
                 Image(systemName: "square.and.arrow.up")
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(.blue)
                     .opacity(0.8)
+                    .frame(height: 14)
                 Text("Share")
                     .font(.caption2)
                     .foregroundColor(.blue)
             }
+            .frame(height: 32)
         }
+        .buttonStyle(.plain)
         .disabled(isSharing || isDeleting)
     }
     
     private var deleteButton: some View {
         Button(action: handleDeleteAction) {
-            VStack(spacing: 2) {
+            VStack(spacing: 6) {
                 Image(systemName: "trash")
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(.red)
                     .opacity(0.8)
+                    .frame(height: 14)
                 Text("Delete")
                     .font(.caption2)
                     .foregroundColor(.red)
             }
-            .padding(.top, 3)
+            .frame(height: 32)
         }
         .buttonStyle(.plain)
         .disabled(isDeleting)
@@ -2130,7 +2137,7 @@ struct UnsignedInPlaceholderCard: View {
 struct SignInOverlay: View {
     @EnvironmentObject var authViewModel: AuthViewModel
     @State private var showEmailSignIn = false
-    @State private var isSignUp = false
+    @State private var showSignUpOverlay = false
     
     var body: some View {
         ZStack {
@@ -2218,9 +2225,13 @@ struct SignInOverlay: View {
                             Spacer()
                         }
                         .padding(.vertical, 14)
-                        .foregroundColor(.black)
-                        .background(Color.white)
+                        .foregroundColor(.white)
+                        .background(Color.black)
                         .cornerRadius(12)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                        )
                     }
                     
                     // Email Sign In
@@ -2236,9 +2247,13 @@ struct SignInOverlay: View {
                             Spacer()
                         }
                         .padding(.vertical, 14)
-                        .foregroundColor(.black)
-                        .background(Color.white)
+                        .foregroundColor(.white)
+                        .background(Color.black)
                         .cornerRadius(12)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                        )
                     }
                 }
                 .padding(.horizontal, 32)
@@ -2264,6 +2279,17 @@ struct SignInOverlay: View {
                     }
                 }
                 .padding(.top, 8)
+                
+                // Sign Up link
+                Button(action: {
+                    showSignUpOverlay = true
+                }) {
+                    Text("Don't have an account? Sign Up")
+                        .font(.footnote)
+                        .foregroundColor(.white.opacity(0.9))
+                        .underline()
+                }
+                .padding(.top, 12)
                 .padding(.bottom, 20)
             }
             .padding(.vertical, 32)
@@ -2276,13 +2302,192 @@ struct SignInOverlay: View {
             .padding(.horizontal, 24)
         }
         .sheet(isPresented: $showEmailSignIn) {
-            EmbeddedEmailSignInView(isSignUp: $isSignUp, isPresented: $showEmailSignIn)
+            EmbeddedEmailSignInView(isSignUp: .constant(false), isPresented: $showEmailSignIn)
                 .environmentObject(authViewModel)
+                .presentationDragIndicator(.visible)
+        }
+        .sheet(isPresented: $showSignUpOverlay) {
+            SignUpOverlay()
+                .environmentObject(authViewModel)
+                .presentationDragIndicator(.visible)
         }
     }
     
     // MARK: - Apple Sign In
     func handleAppleSignIn() {
+        let request = ASAuthorizationAppleIDProvider().createRequest()
+        request.requestedScopes = [.email, .fullName]
+        
+        let controller = ASAuthorizationController(authorizationRequests: [request])
+        controller.delegate = AppleSignInCoordinator(authViewModel: authViewModel)
+        controller.performRequests()
+    }
+}
+
+// MARK: - SIGN UP OVERLAY
+
+struct SignUpOverlay: View {
+    @EnvironmentObject var authViewModel: AuthViewModel
+    @State private var showEmailSignIn = false
+    @Environment(\.dismiss) var dismiss
+    
+    var body: some View {
+        ZStack {
+            // Semi-transparent background
+            Color.black.opacity(0.7)
+                .ignoresSafeArea()
+                .onTapGesture {
+                    dismiss()
+                }
+            
+            // Sign-up card
+            VStack(spacing: 24) {
+                // Welcome section
+                VStack(spacing: 12) {
+                    Image(systemName: "photo.on.rectangle.angled")
+                        .font(.system(size: 56))
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [.blue, .purple],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                    
+                    Text("Create Your Account")
+                        .font(.system(size: 26, weight: .bold, design: .rounded))
+                        .foregroundColor(.white)
+                    
+                    Text("Sign up to start creating amazing images")
+                        .font(.subheadline)
+                        .foregroundColor(.white.opacity(0.8))
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 32)
+                }
+                
+                // Sign up buttons
+                VStack(spacing: 14) {
+                    // Apple Sign Up
+                    Button(action: {
+                        handleAppleSignUp()
+                    }) {
+                        HStack {
+                            Spacer()
+                            Image(systemName: "applelogo")
+                                .font(.system(size: 18, weight: .semibold))
+                            Text("Continue with Apple")
+                                .font(.system(size: 16, weight: .semibold))
+                            Spacer()
+                        }
+                        .padding(.vertical, 14)
+                        .foregroundColor(.white)
+                        .background(Color.black)
+                        .cornerRadius(12)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                        )
+                    }
+                    
+                    // Google Sign Up
+                    Button(action: {
+                        authViewModel.isSignedIn = true
+                        dismiss()
+                    }) {
+                        HStack {
+                            Spacer()
+                            Image(systemName: "globe")
+                                .font(.system(size: 18, weight: .semibold))
+                            Text("Continue with Google")
+                                .font(.system(size: 16, weight: .semibold))
+                            Spacer()
+                        }
+                        .padding(.vertical, 14)
+                        .foregroundColor(.white)
+                        .background(Color.black)
+                        .cornerRadius(12)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                        )
+                    }
+                    
+                    // Email Sign Up
+                    Button(action: {
+                        showEmailSignIn = true
+                    }) {
+                        HStack {
+                            Spacer()
+                            Image(systemName: "envelope.fill")
+                                .font(.system(size: 18, weight: .semibold))
+                            Text("Continue with Email")
+                                .font(.system(size: 16, weight: .semibold))
+                            Spacer()
+                        }
+                        .padding(.vertical, 14)
+                        .foregroundColor(.white)
+                        .background(Color.black)
+                        .cornerRadius(12)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                        )
+                    }
+                }
+                .padding(.horizontal, 32)
+                
+                // Terms and Privacy
+                VStack(spacing: 4) {
+                    Text("By signing up you agree to our")
+                        .font(.footnote)
+                        .foregroundColor(.white.opacity(0.7))
+                    
+                    HStack(spacing: 4) {
+                        Link("Terms of Service", destination: URL(string: "https://yourapp.com/terms")!)
+                            .font(.footnote)
+                            .underline()
+                            .foregroundColor(.white.opacity(0.9))
+                        Text("and")
+                            .font(.footnote)
+                            .foregroundColor(.white.opacity(0.7))
+                        Link("Privacy Policy", destination: URL(string: "https://yourapp.com/privacy")!)
+                            .font(.footnote)
+                            .underline()
+                            .foregroundColor(.white.opacity(0.9))
+                    }
+                }
+                .padding(.top, 8)
+                
+                // Sign In link
+                Button(action: {
+                    dismiss()
+                }) {
+                    Text("Already have an account? Sign In")
+                        .font(.footnote)
+                        .foregroundColor(.white.opacity(0.9))
+                        .underline()
+                }
+                .padding(.top, 12)
+                .padding(.bottom, 20)
+            }
+            .padding(.vertical, 32)
+            .padding(.horizontal, 24)
+            .background(
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(Color(.systemBackground))
+                    .shadow(color: .black.opacity(0.3), radius: 20, x: 0, y: 10)
+            )
+            .padding(.horizontal, 24)
+        }
+        .sheet(isPresented: $showEmailSignIn) {
+            EmbeddedEmailSignInView(isSignUp: .constant(true), isPresented: $showEmailSignIn)
+                .environmentObject(authViewModel)
+                .presentationDragIndicator(.visible)
+        }
+    }
+    
+    // MARK: - Apple Sign Up
+    func handleAppleSignUp() {
         let request = ASAuthorizationAppleIDProvider().createRequest()
         request.requestedScopes = [.email, .fullName]
         
@@ -2348,7 +2553,7 @@ struct EmbeddedSignInView: View {
                         .cornerRadius(12)
                         .overlay(
                             RoundedRectangle(cornerRadius: 12)
-                                .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                                .stroke(Color.white.opacity(0.2), lineWidth: 1)
                         )
                     }
                     
@@ -2365,12 +2570,12 @@ struct EmbeddedSignInView: View {
                             Spacer()
                         }
                         .padding(.vertical, 14)
-                        .foregroundColor(.primary)
-                        .background(Color.gray.opacity(0.1))
+                        .foregroundColor(.white)
+                        .background(Color.black)
                         .cornerRadius(12)
                         .overlay(
                             RoundedRectangle(cornerRadius: 12)
-                                .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                                .stroke(Color.white.opacity(0.2), lineWidth: 1)
                         )
                     }
                     
@@ -2387,12 +2592,12 @@ struct EmbeddedSignInView: View {
                             Spacer()
                         }
                         .padding(.vertical, 14)
-                        .foregroundColor(.primary)
-                        .background(Color.gray.opacity(0.1))
+                        .foregroundColor(.white)
+                        .background(Color.black)
                         .cornerRadius(12)
                         .overlay(
                             RoundedRectangle(cornerRadius: 12)
-                                .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                                .stroke(Color.white.opacity(0.2), lineWidth: 1)
                         )
                     }
                 }
@@ -2423,6 +2628,7 @@ struct EmbeddedSignInView: View {
         .sheet(isPresented: $showEmailSignIn) {
             EmbeddedEmailSignInView(isSignUp: $isSignUp, isPresented: $showEmailSignIn)
                 .environmentObject(authViewModel)
+                .presentationDragIndicator(.visible)
         }
     }
     
