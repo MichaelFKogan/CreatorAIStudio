@@ -629,7 +629,7 @@ class ProfileViewModel: ObservableObject {
     
     /// Clears the local cache for the current user, forcing a full refresh from the database
     /// Call this when there are issues with cached data
-    func clearCache() {
+    func clearCache() async {
         guard let userId = userId else { return }
         
         // Clear in-memory cache
@@ -643,12 +643,31 @@ class ProfileViewModel: ObservableObject {
         // Clear model-specific caches
         modelImagesCache.removeAll()
         
-        // Persist the cleared cache
+        // Clear stats cache
+        cachedUserStatsMap.removeValue(forKey: userId)
+        favoriteCount = 0
+        imageCount = 0
+        videoCount = 0
+        modelCounts = [:]
+        videoModelCounts = [:]
+        hasLoadedStats = false
+        
+        // Persist the cleared caches
         if let encoded = try? JSONEncoder().encode(cachedUserImagesMap) {
             cachedUserImagesData = encoded
         }
+        if let encoded = try? JSONEncoder().encode(cachedUserStatsMap) {
+            cachedUserStatsData = encoded
+        }
         
-        print("🧹 Cache cleared for user: \(userId)")
+        print("🧹 Cache cleared for user: \(userId) (including stats cache)")
+        
+        // Recompute stats from user_media table (the authoritative source of truth)
+        // This ensures counts match the actual data, not the potentially stale user_stats table
+        await initializeUserStats()
+        
+        // Also refresh images to ensure UI is up to date
+        await fetchUserImages(forceRefresh: true)
     }
 
     private func saveCachedImages(for userId: String) {
@@ -1213,8 +1232,9 @@ class ProfileViewModel: ObservableObject {
         }
     }
     
-    /// Initializes user stats if they don't exist (computes counts from user_media)
-    private func initializeUserStats() async {
+    /// Initializes user stats by computing counts from user_media table
+    /// This is the authoritative source of truth - use this to resync stats
+    func initializeUserStats() async {
         guard let userId = userId else { return }
         
         print("📊 Initializing user stats by computing counts from user_media...")
@@ -1772,6 +1792,18 @@ class ProfileViewModel: ObservableObject {
                         await decrementFavoriteCount()
                     }
                     
+                    // Decrement image/video count
+                    await MainActor.run {
+                        if image.isImage {
+                            imageCount = max(0, imageCount - 1)
+                        } else if image.isVideo {
+                            videoCount = max(0, videoCount - 1)
+                        }
+                    }
+                    
+                    // Update stats in database after decrementing counts
+                    await updateUserStats()
+                    
                     // Success - remove from local array
                     await MainActor.run {
                         userImages.removeAll { $0.id == imageId }
@@ -1796,6 +1828,10 @@ class ProfileViewModel: ObservableObject {
         await MainActor.run {
             saveCachedImages(for: userId)
         }
+        
+        // Force a fresh fetch of stats from database to ensure accuracy
+        // This ensures counts are correct even if there were any cache inconsistencies
+        await fetchUserStats()
     }
     
     // MARK: - Retry Helper

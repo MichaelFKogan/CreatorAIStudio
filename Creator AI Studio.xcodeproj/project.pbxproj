@@ -39,22 +39,9 @@
 		277F96912ED2A6CA002B7782 /* Creator AI StudioUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Creator AI StudioUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		271631CE2EFF885E00BC0309 /* Exceptions for "Creator AI Studio" folder in "Creator AI Studio" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				"Creator-AI-Studio-Info.plist",
-			);
-			target = 277F96762ED2A6C7002B7782 /* Creator AI Studio */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
-
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		277F96792ED2A6C7002B7782 /* Creator AI Studio */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				271631CE2EFF885E00BC0309 /* Exceptions for "Creator AI Studio" folder in "Creator AI Studio" target */,
-			);
 			path = "Creator AI Studio";
 			sourceTree = "<group>";
 		};

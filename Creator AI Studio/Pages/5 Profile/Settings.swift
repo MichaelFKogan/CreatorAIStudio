@@ -67,36 +67,25 @@ struct Settings: View {
                 }
             }
 
-            // // App preferences
-            // Section("Preferences") {
-            //     HStack {
-            //         Image(systemName: themeManager.isDarkMode ? "moon.fill" : "sun.max.fill")
-            //             .foregroundColor(.blue)
-            //         Text("Dark Mode")
-            //         Spacer()
-            //         Toggle("", isOn: Binding(
-            //             get: { themeManager.isDarkMode },
-            //             set: { _ in themeManager.toggleTheme() }
-            //         ))
-            //     }
-                
-            //     // Clear Cache button
-            //     Button(action: {
-            //         clearCache()
-            //     }) {
-            //         HStack {
-            //             Image(systemName: "trash")
-            //                 .foregroundColor(.orange)
-            //             Text("Clear Gallery Cache")
-            //                 .foregroundColor(.primary)
-            //             Spacer()
-            //             if isClearing {
-            //                 ProgressView()
-            //                     .scaleEffect(0.8)
-            //             }
-            //         }
-            //     }
-            //     .disabled(isClearing)
+            // App preferences
+            Section("Preferences") {
+                // Clear Cache button
+                Button(action: {
+                    clearCache()
+                }) {
+                    HStack {
+                        Image(systemName: "trash")
+                            .foregroundColor(.orange)
+                        Text("Clear Gallery Cache")
+                            .foregroundColor(.primary)
+                        Spacer()
+                        if isClearing {
+                            ProgressView()
+                                .scaleEffect(0.8)
+                        }
+                    }
+                }
+                .disabled(isClearing)
 
 //                HStack {
 //                    Image(systemName: "paintbrush")
@@ -127,7 +116,7 @@ struct Settings: View {
 //                    Spacer()
 //                    Toggle("", isOn: .constant(true))
 //                }
-            // }
+            }
 
             // Support
             Section("Support") {
@@ -244,7 +233,7 @@ struct Settings: View {
         .alert("Cache Cleared", isPresented: $showCacheClearedAlert) {
             Button("OK", role: .cancel) {}
         } message: {
-            Text("Gallery cache has been cleared. Pull to refresh on the Gallery page to reload your images.")
+            Text("Gallery cache has been cleared and stats have been resynced from the database.")
         }
         .alert("Signed Out", isPresented: $showSignedOutAlert) {
             Button("OK", role: .cancel) {}
@@ -261,14 +250,18 @@ struct Settings: View {
     private func clearCache() {
         isClearing = true
         
-        // Clear the profile cache
-        profileViewModel?.clearCache()
-        
-        // Haptic feedback
-        let generator = UINotificationFeedbackGenerator()
-        generator.notificationOccurred(.success)
-        
-        isClearing = false
-        showCacheClearedAlert = true
+        Task {
+            // Clear the profile cache and fetch fresh stats
+            await profileViewModel?.clearCache()
+            
+            await MainActor.run {
+                // Haptic feedback
+                let generator = UINotificationFeedbackGenerator()
+                generator.notificationOccurred(.success)
+                
+                isClearing = false
+                showCacheClearedAlert = true
+            }
+        }
     }
 }
