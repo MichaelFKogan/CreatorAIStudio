@@ -128,35 +128,76 @@ class AuthViewModel: ObservableObject {
 
     // MARK: - Google Sign In
 
-    func signInWithGoogle(idToken: String, accessToken: String) async {
+    /// Signs in with Google using the ID token and access token
+    /// - Parameters:
+    ///   - idToken: The ID token from Google Sign-In
+    ///   - accessToken: The access token from Google Sign-In
+    ///   - rawNonce: The raw (unhashed) nonce that was passed to Google Sign-In. 
+    ///               Google hashes this and includes the hash in the ID token.
+    ///               Supabase will hash this raw nonce and compare it to the hash in the token.
+    func signInWithGoogle(idToken: String, accessToken: String, rawNonce: String? = nil) async {
         lastError = nil
+        print("🔑 [Google Sign-In] Starting authentication...")
+        print("🔑 [Google Sign-In] ID Token length: \(idToken.count)")
+        print("🔑 [Google Sign-In] Access Token length: \(accessToken.count)")
+        if let rawNonce = rawNonce {
+            print("🔑 [Google Sign-In] Raw nonce provided: \(rawNonce.prefix(10))...")
+        } else {
+            print("🔑 [Google Sign-In] No raw nonce provided")
+        }
+        
         do {
-            let session = try await client.auth.signInWithIdToken(
-                credentials: .init(provider: .google, idToken: idToken, accessToken: accessToken)
+            // Use the SDK's signInWithIdToken with the raw nonce
+            // Supabase will hash the raw nonce and compare it to the hash in the ID token
+            let credentials = OpenIDConnectCredentials(
+                provider: .google,
+                idToken: idToken,
+                accessToken: accessToken,
+                nonce: rawNonce  // Pass the raw (unhashed) nonce
             )
+            
+            let session = try await client.auth.signInWithIdToken(credentials: credentials)
+            
             print("✅ Google sign-in successful: \(session.user.id)")
+            print("✅ User email: \(session.user.email ?? "no email")")
             self.user = session.user
             self.isSignedIn = true
             
             // Start listening for webhook job completions
             await JobStatusManager.shared.startListening(userId: session.user.id.uuidString)
         } catch {
-            print("❌ Google sign-in error: \(error.localizedDescription)")
+            // Log the full error details
+            print("❌ Google sign-in error: \(error)")
+            print("❌ Error type: \(type(of: error))")
+            if let supabaseError = error as? AuthError {
+                print("❌ Supabase Auth Error: \(supabaseError)")
+            }
+            if let urlError = error as? URLError {
+                print("❌ URL Error: \(urlError.localizedDescription)")
+            }
+            
             let errorMessage = error.localizedDescription.lowercased()
-            // Check for common Supabase error messages indicating user doesn't exist or needs to sign up
-            if errorMessage.contains("user not found") ||
+            let fullErrorDescription = String(describing: error)
+            
+            // Check for nonce-related errors - these are configuration issues, not "user not found"
+            if errorMessage.contains("nonce") || errorMessage.contains("nonces mismatch") {
+                lastError = "NONCE_ERROR"
+                print("❌ Nonce error detected - this is a configuration issue, not a user account issue")
+            }
+            // Check for actual "user not found" errors (but not nonce errors)
+            else if errorMessage.contains("user not found") ||
                errorMessage.contains("invalid_credentials") ||
                errorMessage.contains("invalid login credentials") ||
                errorMessage.contains("email not confirmed") ||
                errorMessage.contains("no user found") ||
                errorMessage.contains("user does not exist") ||
-               errorMessage.contains("signup_disabled") ||
-               errorMessage.contains("nonce") ||
-               errorMessage.contains("id_token") {
+               errorMessage.contains("signup_disabled") {
                 // This error typically means the user needs to create an account first
                 lastError = "USER_NOT_FOUND"
             } else {
-                lastError = error.localizedDescription
+                // Store the full error for debugging
+                lastError = fullErrorDescription
+                print("❌ Full error description: \(fullErrorDescription)")
             }
         }
     }

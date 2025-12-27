@@ -6,6 +6,7 @@
 //
 
 import AuthenticationServices // For Apple Sign-In
+import CommonCrypto // For SHA256 hashing
 import SwiftUI
 import GoogleSignIn
 
@@ -179,7 +180,7 @@ struct SignInView: View {
                 }
             }
         }
-        .alert("Account Required", isPresented: Binding(
+        .alert("Sign In Error", isPresented: Binding(
             get: { googleSignInError != nil },
             set: { if !$0 { googleSignInError = nil } }
         )) {
@@ -193,8 +194,10 @@ struct SignInView: View {
                 }
             }
         } message: {
-            if googleSignInError == "USER_NOT_FOUND" {
-                Text("No account found with this Google email. Please create an account first using the 'Create Your Account' page.")
+            if googleSignInError == "NONCE_ERROR" {
+                Text("There was an authentication configuration error. Please try again or contact support if the issue persists.")
+            } else if googleSignInError == "USER_NOT_FOUND" {
+                Text("No account found with this Google email. Please create an account first.")
             } else if let error = googleSignInError {
                 Text(error)
             }
@@ -228,6 +231,12 @@ struct SignInView: View {
             return
         }
         
+        // Generate a random nonce for security
+        let rawNonce = randomNonceString()
+        let hashedNonce = sha256(rawNonce)
+        
+        print("🔑 [SignInView] Generated nonce - raw: \(rawNonce.prefix(10))..., hashed: \(hashedNonce.prefix(10))...")
+        
         // Configure Google Sign-In
         let config = GIDConfiguration(clientID: clientID)
         GIDSignIn.sharedInstance.configuration = config
@@ -244,8 +253,13 @@ struct SignInView: View {
         }
         
         do {
-            // Perform the sign-in
-            let result = try await GIDSignIn.sharedInstance.signIn(withPresenting: rootViewController)
+            // Perform the sign-in with the hashed nonce
+            let result = try await GIDSignIn.sharedInstance.signIn(
+                withPresenting: rootViewController,
+                hint: nil,
+                additionalScopes: nil,
+                nonce: hashedNonce
+            )
             
             let user = result.user
             guard let idToken = user.idToken?.tokenString else {
@@ -260,8 +274,8 @@ struct SignInView: View {
             // Get access token
             let accessToken = user.accessToken.tokenString
             
-            // Sign in with Supabase
-            await authViewModel.signInWithGoogle(idToken: idToken, accessToken: accessToken)
+            // Sign in with Supabase - pass the RAW nonce
+            await authViewModel.signInWithGoogle(idToken: idToken, accessToken: accessToken, rawNonce: rawNonce)
             
             await MainActor.run {
                 isGoogleSigningIn = false
@@ -285,6 +299,32 @@ struct SignInView: View {
             }
             print("❌ Google sign-in error: \(error.localizedDescription)")
         }
+    }
+    
+    // MARK: - Nonce Helpers
+    
+    private func randomNonceString(length: Int = 32) -> String {
+        precondition(length > 0)
+        var randomBytes = [UInt8](repeating: 0, count: length)
+        let errorCode = SecRandomCopyBytes(kSecRandomDefault, randomBytes.count, &randomBytes)
+        if errorCode != errSecSuccess {
+            fatalError("Unable to generate nonce. SecRandomCopyBytes failed with OSStatus \(errorCode)")
+        }
+        
+        let charset: [Character] = Array("0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._")
+        let nonce = randomBytes.map { byte in
+            charset[Int(byte) % charset.count]
+        }
+        return String(nonce)
+    }
+    
+    private func sha256(_ input: String) -> String {
+        let inputData = Data(input.utf8)
+        var hash = [UInt8](repeating: 0, count: Int(CC_SHA256_DIGEST_LENGTH))
+        inputData.withUnsafeBytes {
+            _ = CC_SHA256($0.baseAddress, CC_LONG(inputData.count), &hash)
+        }
+        return hash.map { String(format: "%02x", $0) }.joined()
     }
     
     private func getGoogleClientID() -> String? {
@@ -651,21 +691,20 @@ struct SignUpView: View {
                 }
             }
         }
-        .alert("Google Sign-In", isPresented: Binding(
+        .alert("Sign Up Error", isPresented: Binding(
             get: { googleSignInError != nil },
             set: { if !$0 { googleSignInError = nil } }
         )) {
             Button("OK", role: .cancel) {
                 googleSignInError = nil
             }
-            if googleSignInError == "No account found with this Google email. Please create an account first using the 'Create Your Account' page." {
-                Button("Go to Sign In") {
-                    googleSignInError = nil
-                    dismiss()
-                }
-            }
         } message: {
-            if let error = googleSignInError {
+            if googleSignInError == "NONCE_ERROR" {
+                Text("There was an authentication configuration error. Please try again or contact support if the issue persists.")
+            } else if googleSignInError == "USER_NOT_FOUND" {
+                // This shouldn't happen on sign-up page, but handle it just in case
+                Text("Unable to create account. Please try again or contact support.")
+            } else if let error = googleSignInError {
                 Text(error)
             }
         }
@@ -697,6 +736,12 @@ struct SignUpView: View {
             return
         }
         
+        // Generate a random nonce for security
+        let rawNonce = randomNonceString()
+        let hashedNonce = sha256(rawNonce)
+        
+        print("🔑 [SignUpView] Generated nonce - raw: \(rawNonce.prefix(10))..., hashed: \(hashedNonce.prefix(10))...")
+        
         // Configure Google Sign-In
         let config = GIDConfiguration(clientID: clientID)
         GIDSignIn.sharedInstance.configuration = config
@@ -713,8 +758,13 @@ struct SignUpView: View {
         }
         
         do {
-            // Perform the sign-in
-            let result = try await GIDSignIn.sharedInstance.signIn(withPresenting: rootViewController)
+            // Perform the sign-in with the hashed nonce
+            let result = try await GIDSignIn.sharedInstance.signIn(
+                withPresenting: rootViewController,
+                hint: nil,
+                additionalScopes: nil,
+                nonce: hashedNonce
+            )
             
             let user = result.user
             guard let idToken = user.idToken?.tokenString else {
@@ -729,8 +779,8 @@ struct SignUpView: View {
             // Get access token
             let accessToken = user.accessToken.tokenString
             
-            // Sign in with Supabase
-            await authViewModel.signInWithGoogle(idToken: idToken, accessToken: accessToken)
+            // Sign in with Supabase - pass the RAW nonce
+            await authViewModel.signInWithGoogle(idToken: idToken, accessToken: accessToken, rawNonce: rawNonce)
             
             await MainActor.run {
                 isGoogleSigningIn = false
@@ -754,6 +804,32 @@ struct SignUpView: View {
             }
             print("❌ Google sign-in error: \(error.localizedDescription)")
         }
+    }
+    
+    // MARK: - Nonce Helpers
+    
+    private func randomNonceString(length: Int = 32) -> String {
+        precondition(length > 0)
+        var randomBytes = [UInt8](repeating: 0, count: length)
+        let errorCode = SecRandomCopyBytes(kSecRandomDefault, randomBytes.count, &randomBytes)
+        if errorCode != errSecSuccess {
+            fatalError("Unable to generate nonce. SecRandomCopyBytes failed with OSStatus \(errorCode)")
+        }
+        
+        let charset: [Character] = Array("0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._")
+        let nonce = randomBytes.map { byte in
+            charset[Int(byte) % charset.count]
+        }
+        return String(nonce)
+    }
+    
+    private func sha256(_ input: String) -> String {
+        let inputData = Data(input.utf8)
+        var hash = [UInt8](repeating: 0, count: Int(CC_SHA256_DIGEST_LENGTH))
+        inputData.withUnsafeBytes {
+            _ = CC_SHA256($0.baseAddress, CC_LONG(inputData.count), &hash)
+        }
+        return hash.map { String(format: "%02x", $0) }.joined()
     }
     
     private func getGoogleClientID() -> String? {
