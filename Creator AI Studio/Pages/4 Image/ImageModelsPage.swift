@@ -509,7 +509,7 @@ private struct CreditsToolbarImage: ToolbarContent {
                         )
                     )
 
-                Text("250")
+                Text("$2.50")
                     .font(.system(size: 14, weight: .semibold, design: .rounded))
                     .foregroundColor(.white).opacity(0.9)
 

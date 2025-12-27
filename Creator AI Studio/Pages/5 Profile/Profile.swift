@@ -605,7 +605,8 @@ struct ProfileViewContent: View {
                         isSelected: selectedTab == .all && selectedModel == nil
                             && selectedVideoModel == nil,
                         // Stats are pre-loaded from cache in init(), so this should show correct count immediately
-                        count: viewModel.imageCount + viewModel.videoCount
+                        count: viewModel.imageCount + viewModel.videoCount,
+                        isSignedIn: isSignedIn
                     ) {
                         selectedTab = .all
                         selectedModel = nil
@@ -620,7 +621,8 @@ struct ProfileViewContent: View {
                             && selectedModel == nil
                             && selectedVideoModel == nil,
                         // Stats are pre-loaded from cache in init(), so this should show correct count immediately
-                        count: viewModel.favoriteCount
+                        count: viewModel.favoriteCount,
+                        isSignedIn: isSignedIn
                     ) {
                         selectedTab = .favorites
                         selectedModel = nil
@@ -682,8 +684,8 @@ struct ProfileViewContent: View {
                 )
                 .lineLimit(1)
 
-            // Show count when not selected or when showing all models
-            if !isSelected && modelCount > 0 {
+            // Show count when not selected or when showing all models, and user is signed in
+            if isSignedIn && !isSelected && modelCount > 0 {
                 Text("(\(modelCount))")
                     .font(.system(size: 12, weight: .medium))
                     .foregroundColor(.secondary)
@@ -734,8 +736,8 @@ struct ProfileViewContent: View {
                 )
                 .lineLimit(1)
 
-            // Show count when not selected or when showing all models
-            if !isSelected && modelCount > 0 {
+            // Show count when not selected or when showing all models, and user is signed in
+            if isSignedIn && !isSelected && modelCount > 0 {
                 Text("(\(modelCount))")
                     .font(.system(size: 12, weight: .medium))
                     .foregroundColor(.secondary)
@@ -1699,6 +1701,7 @@ struct GalleryTabPill: View {
     let icon: String
     let isSelected: Bool
     let count: Int
+    let isSignedIn: Bool
     let action: () -> Void
 
     var body: some View {
@@ -1714,7 +1717,7 @@ struct GalleryTabPill: View {
                     )
                     .foregroundColor(isSelected ? .white : .primary)
 
-                if count > 0 {
+                if isSignedIn && count > 0 {
                     Text("(\(count))")
                         .font(.system(size: 12, weight: .medium))
                         .foregroundColor(
