@@ -7,11 +7,14 @@
 
 import AuthenticationServices // For Apple Sign-In
 import SwiftUI
+import GoogleSignIn
 
 struct SignInView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
     @State private var navigateToSignUp = false
     @State private var navigateToEmail = false
+    @State private var isGoogleSigningIn = false
+    @State private var googleSignInError: String?
 
     var body: some View {
         NavigationStack {
@@ -38,7 +41,7 @@ struct SignInView: View {
                                         )
                                     )
                                 
-                                Text("Welcome to Runspeed AI")
+                                Text("Log In")
                                     .font(.system(size: 26, weight: .bold, design: .rounded))
                                     .foregroundColor(.white)
                                 
@@ -75,7 +78,9 @@ struct SignInView: View {
                                 
                                 // Google Sign In
                                 Button(action: {
-                                    authViewModel.isSignedIn = true
+                                    Task {
+                                        await handleGoogleSignIn()
+                                    }
                                 }) {
                                     HStack {
                                         Spacer()
@@ -174,6 +179,26 @@ struct SignInView: View {
                 }
             }
         }
+        .alert("Account Required", isPresented: Binding(
+            get: { googleSignInError != nil },
+            set: { if !$0 { googleSignInError = nil } }
+        )) {
+            Button("OK", role: .cancel) {
+                googleSignInError = nil
+            }
+            if googleSignInError == "USER_NOT_FOUND" {
+                Button("Create Account") {
+                    googleSignInError = nil
+                    navigateToSignUp = true
+                }
+            }
+        } message: {
+            if googleSignInError == "USER_NOT_FOUND" {
+                Text("No account found with this Google email. Please create an account first using the 'Create Your Account' page.")
+            } else if let error = googleSignInError {
+                Text(error)
+            }
+        }
     }
 
     // MARK: - Apple Sign In
@@ -185,6 +210,95 @@ struct SignInView: View {
         let controller = ASAuthorizationController(authorizationRequests: [request])
         controller.delegate = AppleSignInCoordinator(authViewModel: authViewModel)
         controller.performRequests()
+    }
+    
+    // MARK: - Google Sign In
+    
+    func handleGoogleSignIn() async {
+        isGoogleSigningIn = true
+        googleSignInError = nil
+        
+        // Get the Google Client ID from Info.plist or environment
+        guard let clientID = getGoogleClientID() else {
+            await MainActor.run {
+                googleSignInError = "Google Client ID not configured. Please add GOOGLE_CLIENT_ID to your Info.plist."
+                isGoogleSigningIn = false
+            }
+            print("❌ Google Client ID not found")
+            return
+        }
+        
+        // Configure Google Sign-In
+        let config = GIDConfiguration(clientID: clientID)
+        GIDSignIn.sharedInstance.configuration = config
+        
+        // Get the presenting view controller
+        guard let windowScene = await UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let rootViewController = await windowScene.windows.first?.rootViewController else {
+            await MainActor.run {
+                googleSignInError = "Unable to find root view controller"
+                isGoogleSigningIn = false
+            }
+            print("❌ Unable to find root view controller")
+            return
+        }
+        
+        do {
+            // Perform the sign-in
+            let result = try await GIDSignIn.sharedInstance.signIn(withPresenting: rootViewController)
+            
+            let user = result.user
+            guard let idToken = user.idToken?.tokenString else {
+                await MainActor.run {
+                    googleSignInError = "Failed to get Google ID token"
+                    isGoogleSigningIn = false
+                }
+                print("❌ Failed to get Google ID token")
+                return
+            }
+            
+            // Get access token
+            let accessToken = user.accessToken.tokenString
+            
+            // Sign in with Supabase
+            await authViewModel.signInWithGoogle(idToken: idToken, accessToken: accessToken)
+            
+            await MainActor.run {
+                isGoogleSigningIn = false
+                // Check if sign-in failed and show appropriate message
+                if !authViewModel.isSignedIn {
+                    if let error = authViewModel.lastError {
+                        if error == "USER_NOT_FOUND" {
+                            googleSignInError = "USER_NOT_FOUND"
+                        } else {
+                            googleSignInError = error
+                        }
+                    } else {
+                        googleSignInError = "Failed to sign in with Google. Please try again."
+                    }
+                }
+            }
+        } catch {
+            await MainActor.run {
+                googleSignInError = error.localizedDescription
+                isGoogleSigningIn = false
+            }
+            print("❌ Google sign-in error: \(error.localizedDescription)")
+        }
+    }
+    
+    private func getGoogleClientID() -> String? {
+        // Try to get from Info.plist first
+        if let clientID = Bundle.main.object(forInfoDictionaryKey: "GOOGLE_CLIENT_ID") as? String {
+            return clientID
+        }
+        
+        // Try to get from environment variable (for development)
+        if let clientID = ProcessInfo.processInfo.environment["GOOGLE_CLIENT_ID"] {
+            return clientID
+        }
+        
+        return nil
     }
 }
 
@@ -198,6 +312,7 @@ struct EmailSignInView: View {
     @State private var password = ""
     @State private var message: String? = nil
     @State private var messageColor: Color = .red
+    @State private var showForgotPassword = false
 
     var body: some View {
         ZStack {
@@ -261,7 +376,16 @@ struct EmailSignInView: View {
                             if authViewModel.isSignedIn {
                                 showMessage("Signed in successfully ✅", color: .green)
                             } else {
-                                showMessage("Incorrect email or password.", color: .red)
+                                // Check for specific error messages
+                                if let error = authViewModel.lastError {
+                                    if error == "USER_EXISTS" {
+                                        showMessage("This email is already registered. Please sign in instead.", color: .orange)
+                                    } else {
+                                        showMessage(error, color: .red)
+                                    }
+                                } else {
+                                    showMessage("Incorrect email or password.", color: .red)
+                                }
                             }
                         }
                     }
@@ -271,16 +395,17 @@ struct EmailSignInView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.top)
 
-                    // 🔹 Toggle Sign Up / Sign In
-                    Button(isSignUp ? "Already have an account? Sign In" : "Don't have an account? Sign Up") {
-                        withAnimation {
-                            isSignUp.toggle()
-                            message = nil
+                    // 🔹 Forgot password (only for sign in)
+                    if !isSignUp {
+                        Button(action: {
+                            showForgotPassword = true
+                        }) {
+                            Text("Forgot password?")
+                                .font(.footnote)
+                                .foregroundColor(.blue)
                         }
+                        .padding(.top, 8)
                     }
-                    .font(.footnote)
-                    .padding(.top, 4)
-                    .foregroundColor(.blue)
 
                     // 🔹 Terms & Privacy
                     if isSignUp {
@@ -314,26 +439,10 @@ struct EmailSignInView: View {
         }
         .navigationTitle(isSignUp ? "Create Account" : "Sign In")
         .navigationBarTitleDisplayMode(.inline)
-//        .navigationBarBackButtonHidden(true)
-        .toolbar {
-//            ToolbarItem(placement: .navigationBarLeading) {
-//                Button {
-//                    navigateBack = false
-//                } label: {
-//                    Image(systemName: "chevron.left")
-//                        .foregroundColor(.blue)
-//                        .fontWeight(.bold)
-//                }
-//            }
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button(isSignUp ? "Sign In" : "Sign Up") {
-                    withAnimation {
-                        isSignUp.toggle()
-                        message = nil
-                    }
-                }
-                .fontWeight(.bold)
-            }
+        .sheet(isPresented: $showForgotPassword) {
+            ForgotPasswordView(isPresented: $showForgotPassword)
+                .environmentObject(authViewModel)
+                .presentationDragIndicator(.visible)
         }
     }
 
@@ -377,6 +486,9 @@ struct SignInButton: View {
 struct SignUpView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
     @State private var navigateToEmail = false
+    @State private var isGoogleSigningIn = false
+    @State private var googleSignInError: String?
+    @Environment(\.dismiss) var dismiss
     
     var body: some View {
         NavigationStack {
@@ -440,7 +552,9 @@ struct SignUpView: View {
                                 
                                 // Google Sign Up
                                 Button(action: {
-                                    authViewModel.isSignedIn = true
+                                    Task {
+                                        await handleGoogleSignIn()
+                                    }
                                 }) {
                                     HStack {
                                         Spacer()
@@ -512,10 +626,9 @@ struct SignUpView: View {
                             .padding(.top, 8)
                             
                             // Sign In link
-                            NavigationLink(
-                                destination: SignInView()
-                                    .environmentObject(authViewModel)
-                            ) {
+                            Button(action: {
+                                dismiss()
+                            }) {
                                 Text("Already have an account? Sign In")
                                     .font(.footnote)
                                     .foregroundColor(.white.opacity(0.9))
@@ -538,6 +651,24 @@ struct SignUpView: View {
                 }
             }
         }
+        .alert("Google Sign-In", isPresented: Binding(
+            get: { googleSignInError != nil },
+            set: { if !$0 { googleSignInError = nil } }
+        )) {
+            Button("OK", role: .cancel) {
+                googleSignInError = nil
+            }
+            if googleSignInError == "No account found with this Google email. Please create an account first using the 'Create Your Account' page." {
+                Button("Go to Sign In") {
+                    googleSignInError = nil
+                    dismiss()
+                }
+            }
+        } message: {
+            if let error = googleSignInError {
+                Text(error)
+            }
+        }
     }
     
     // MARK: - Apple Sign Up
@@ -548,6 +679,95 @@ struct SignUpView: View {
         let controller = ASAuthorizationController(authorizationRequests: [request])
         controller.delegate = AppleSignInCoordinator(authViewModel: authViewModel)
         controller.performRequests()
+    }
+    
+    // MARK: - Google Sign In
+    
+    func handleGoogleSignIn() async {
+        isGoogleSigningIn = true
+        googleSignInError = nil
+        
+        // Get the Google Client ID from Info.plist or environment
+        guard let clientID = getGoogleClientID() else {
+            await MainActor.run {
+                googleSignInError = "Google Client ID not configured. Please add GOOGLE_CLIENT_ID to your Info.plist."
+                isGoogleSigningIn = false
+            }
+            print("❌ Google Client ID not found")
+            return
+        }
+        
+        // Configure Google Sign-In
+        let config = GIDConfiguration(clientID: clientID)
+        GIDSignIn.sharedInstance.configuration = config
+        
+        // Get the presenting view controller
+        guard let windowScene = await UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let rootViewController = await windowScene.windows.first?.rootViewController else {
+            await MainActor.run {
+                googleSignInError = "Unable to find root view controller"
+                isGoogleSigningIn = false
+            }
+            print("❌ Unable to find root view controller")
+            return
+        }
+        
+        do {
+            // Perform the sign-in
+            let result = try await GIDSignIn.sharedInstance.signIn(withPresenting: rootViewController)
+            
+            let user = result.user
+            guard let idToken = user.idToken?.tokenString else {
+                await MainActor.run {
+                    googleSignInError = "Failed to get Google ID token"
+                    isGoogleSigningIn = false
+                }
+                print("❌ Failed to get Google ID token")
+                return
+            }
+            
+            // Get access token
+            let accessToken = user.accessToken.tokenString
+            
+            // Sign in with Supabase
+            await authViewModel.signInWithGoogle(idToken: idToken, accessToken: accessToken)
+            
+            await MainActor.run {
+                isGoogleSigningIn = false
+                // Check if sign-in failed and show appropriate message
+                if !authViewModel.isSignedIn {
+                    if let error = authViewModel.lastError {
+                        if error == "USER_NOT_FOUND" {
+                            googleSignInError = "USER_NOT_FOUND"
+                        } else {
+                            googleSignInError = error
+                        }
+                    } else {
+                        googleSignInError = "Failed to sign in with Google. Please try again."
+                    }
+                }
+            }
+        } catch {
+            await MainActor.run {
+                googleSignInError = error.localizedDescription
+                isGoogleSigningIn = false
+            }
+            print("❌ Google sign-in error: \(error.localizedDescription)")
+        }
+    }
+    
+    private func getGoogleClientID() -> String? {
+        // Try to get from Info.plist first
+        if let clientID = Bundle.main.object(forInfoDictionaryKey: "GOOGLE_CLIENT_ID") as? String {
+            return clientID
+        }
+        
+        // Try to get from environment variable (for development)
+        if let clientID = ProcessInfo.processInfo.environment["GOOGLE_CLIENT_ID"] {
+            return clientID
+        }
+        
+        return nil
     }
 }
 
@@ -573,5 +793,151 @@ class AppleSignInCoordinator: NSObject, ASAuthorizationControllerDelegate {
 
     func authorizationController(controller _: ASAuthorizationController, didCompleteWithError error: Error) {
         print("Apple sign in failed: \(error)")
+    }
+}
+
+// MARK: - Forgot Password View
+
+struct ForgotPasswordView: View {
+    @EnvironmentObject var authViewModel: AuthViewModel
+    @Binding var isPresented: Bool
+    @State private var email = ""
+    @State private var message: String? = nil
+    @State private var messageColor: Color = .red
+    @State private var isResetting = false
+    
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: 24) {
+                    // Header
+                    VStack(spacing: 12) {
+                        Image(systemName: "key.fill")
+                            .font(.system(size: 56))
+                            .foregroundStyle(
+                                LinearGradient(
+                                    colors: [.blue, .purple],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                        
+                        Text("Reset Password")
+                            .font(.system(size: 26, weight: .bold, design: .rounded))
+                            .foregroundColor(.primary)
+                        
+                        Text("Enter your email address and we'll send you a link to reset your password")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 32)
+                    }
+                    .padding(.top, 40)
+                    
+                    // Email Field
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Email")
+                            .font(.headline)
+                            .foregroundColor(.primary)
+                        TextField("Email", text: $email)
+                            .padding()
+                            .background(Color.gray.opacity(0.1))
+                            .cornerRadius(8)
+                            .autocapitalization(.none)
+                            .keyboardType(.emailAddress)
+                            .disabled(isResetting)
+                    }
+                    
+                    // Message Area
+                    if let message = message {
+                        Text(message)
+                            .font(.footnote)
+                            .foregroundColor(messageColor)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal)
+                    }
+                    
+                    // Reset Password Button
+                    Button(action: {
+                        Task {
+                            await handleResetPassword()
+                        }
+                    }) {
+                        HStack {
+                            if isResetting {
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                            } else {
+                                Text("Send Reset Link")
+                            }
+                        }
+                        .frame(maxWidth: .infinity)
+                    }
+                    .fontWeight(.semibold)
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.large)
+                    .disabled(email.isEmpty || isResetting)
+                    .padding(.top, 8)
+                }
+                .padding()
+            }
+            .navigationTitle("Forgot Password")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        isPresented = false
+                    }
+                }
+            }
+        }
+    }
+    
+    private func handleResetPassword() async {
+        guard !email.isEmpty else {
+            showMessage("Please enter your email address.", color: .red)
+            return
+        }
+        
+        // Basic email validation
+        guard email.contains("@") && email.contains(".") else {
+            showMessage("Please enter a valid email address.", color: .red)
+            return
+        }
+        
+        await MainActor.run {
+            isResetting = true
+            message = nil
+        }
+        
+        await authViewModel.resetPassword(email: email)
+        
+        await MainActor.run {
+            isResetting = false
+            
+            if authViewModel.lastError == nil {
+                showMessage("Password reset email sent! Please check your inbox.", color: .green)
+                // Optionally auto-dismiss after a delay
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                    isPresented = false
+                }
+            } else {
+                // Handle specific errors
+                if let error = authViewModel.lastError {
+                    if error.lowercased().contains("user not found") {
+                        showMessage("No account found with this email address.", color: .orange)
+                    } else {
+                        showMessage(error, color: .red)
+                    }
+                }
+            }
+        }
+    }
+    
+    private func showMessage(_ text: String, color: Color) {
+        withAnimation {
+            message = text
+            messageColor = color
+        }
     }
 }

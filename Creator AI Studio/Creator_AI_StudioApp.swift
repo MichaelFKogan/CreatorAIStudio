@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import GoogleSignIn
 
 @main
 struct Creator_AI_StudioApp: App {
@@ -56,6 +57,10 @@ struct Creator_AI_StudioApp: App {
             .animation(.easeInOut, value: showSplash)
             .animation(.easeInOut, value: authViewModel.isCheckingSession)
             .animation(.easeInOut, value: authViewModel.isSignedIn)
+            .onOpenURL { url in
+                // Handle Google Sign-In URL callback
+                GIDSignIn.sharedInstance.handle(url)
+            }
         }
     }
 }

@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		271631AE2EFF81FF00BC0309 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 271631AD2EFF81FF00BC0309 /* GoogleSignIn */; };
+		271631B02EFF81FF00BC0309 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 271631AF2EFF81FF00BC0309 /* GoogleSignInSwift */; };
 		277F96BD2ED2A9CD002B7782 /* Auth in Frameworks */ = {isa = PBXBuildFile; productRef = 277F96BC2ED2A9CD002B7782 /* Auth */; };
 		277F96BF2ED2A9CD002B7782 /* PostgREST in Frameworks */ = {isa = PBXBuildFile; productRef = 277F96BE2ED2A9CD002B7782 /* PostgREST */; };
 		277F96C12ED2A9CD002B7782 /* Storage in Frameworks */ = {isa = PBXBuildFile; productRef = 277F96C02ED2A9CD002B7782 /* Storage */; };
@@ -37,9 +39,22 @@
 		277F96912ED2A6CA002B7782 /* Creator AI StudioUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Creator AI StudioUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		271631CE2EFF885E00BC0309 /* Exceptions for "Creator AI Studio" folder in "Creator AI Studio" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				"Creator-AI-Studio-Info.plist",
+			);
+			target = 277F96762ED2A6C7002B7782 /* Creator AI Studio */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		277F96792ED2A6C7002B7782 /* Creator AI Studio */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				271631CE2EFF885E00BC0309 /* Exceptions for "Creator AI Studio" folder in "Creator AI Studio" target */,
+			);
 			path = "Creator AI Studio";
 			sourceTree = "<group>";
 		};
@@ -62,9 +77,11 @@
 			files = (
 				277F96C42ED2AA6C002B7782 /* Supabase in Frameworks */,
 				277F96C12ED2A9CD002B7782 /* Storage in Frameworks */,
+				271631B02EFF81FF00BC0309 /* GoogleSignInSwift in Frameworks */,
 				277F96BF2ED2A9CD002B7782 /* PostgREST in Frameworks */,
 				277F96BD2ED2A9CD002B7782 /* Auth in Frameworks */,
 				27E2E0772ED51473004B79DA /* Kingfisher in Frameworks */,
+				271631AE2EFF81FF00BC0309 /* GoogleSignIn in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -138,6 +155,8 @@
 				277F96C02ED2A9CD002B7782 /* Storage */,
 				277F96C32ED2AA6C002B7782 /* Supabase */,
 				27E2E0762ED51473004B79DA /* Kingfisher */,
+				271631AD2EFF81FF00BC0309 /* GoogleSignIn */,
+				271631AF2EFF81FF00BC0309 /* GoogleSignInSwift */,
 			);
 			productName = "Creator AI Studio";
 			productReference = 277F96772ED2A6C7002B7782 /* Creator AI Studio.app */;
@@ -224,6 +243,7 @@
 			packageReferences = (
 				277F96BB2ED2A9CD002B7782 /* XCRemoteSwiftPackageReference "supabase-swift" */,
 				27E2E0752ED51473004B79DA /* XCRemoteSwiftPackageReference "Kingfisher" */,
+				271631AC2EFF81FF00BC0309 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 277F96782ED2A6C7002B7782 /* Products */;
@@ -429,6 +449,7 @@
 				DEVELOPMENT_TEAM = A2UK5VZ977;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Creator-AI-Studio-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "Runspeed AI";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.photography";
 				INFOPLIST_KEY_NSCameraUsageDescription = "This app needs access to your camera to take photos.";
@@ -463,6 +484,7 @@
 				DEVELOPMENT_TEAM = A2UK5VZ977;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Creator-AI-Studio-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "Runspeed AI";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.photography";
 				INFOPLIST_KEY_NSCameraUsageDescription = "This app needs access to your camera to take photos.";
@@ -600,6 +622,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		271631AC2EFF81FF00BC0309 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 9.0.0;
+			};
+		};
 		277F96BB2ED2A9CD002B7782 /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/supabase/supabase-swift";
@@ -619,6 +649,16 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		271631AD2EFF81FF00BC0309 /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 271631AC2EFF81FF00BC0309 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
+		};
+		271631AF2EFF81FF00BC0309 /* GoogleSignInSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 271631AC2EFF81FF00BC0309 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignInSwift;
+		};
 		277F96BC2ED2A9CD002B7782 /* Auth */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 277F96BB2ED2A9CD002B7782 /* XCRemoteSwiftPackageReference "supabase-swift" */;

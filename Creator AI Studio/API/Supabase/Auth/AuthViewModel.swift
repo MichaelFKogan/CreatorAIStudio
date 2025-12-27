@@ -14,6 +14,7 @@ class AuthViewModel: ObservableObject {
     @Published var isSignedIn = false
     @Published var user: User?
     @Published var isCheckingSession = true
+    @Published var lastError: String? = nil
     
     private let client = SupabaseManager.shared.client
     private let sessionKey = "supabase.session"
@@ -46,6 +47,7 @@ class AuthViewModel: ObservableObject {
 
     func signUpWithEmail(email: String, password: String) async {
         print("📝 Attempting sign up with email: \(email)")
+        lastError = nil
         do {
             let result = try await client.auth.signUp(
                 email: email,
@@ -67,11 +69,21 @@ class AuthViewModel: ObservableObject {
             }
         } catch {
             print("❌ Email sign-up error: \(error)")
+            let errorMessage = error.localizedDescription
+            // Check for common Supabase error messages
+            if errorMessage.contains("already registered") || 
+               errorMessage.contains("User already registered") ||
+               errorMessage.contains("already exists") {
+                lastError = "USER_EXISTS"
+            } else {
+                lastError = errorMessage
+            }
         }
     }
 
     func signInWithEmail(email: String, password: String) async {
         print("🔑 Attempting sign in with email: \(email)")
+        lastError = nil
         do {
             let session = try await client.auth.signIn(
                 email: email,
@@ -93,6 +105,7 @@ class AuthViewModel: ObservableObject {
             }
         } catch {
             print("❌ Email sign-in error: \(error)")
+            lastError = error.localizedDescription
         }
     }
 
@@ -116,17 +129,53 @@ class AuthViewModel: ObservableObject {
     // MARK: - Google Sign In
 
     func signInWithGoogle(idToken: String, accessToken: String) async {
+        lastError = nil
         do {
             let session = try await client.auth.signInWithIdToken(
                 credentials: .init(provider: .google, idToken: idToken, accessToken: accessToken)
             )
+            print("✅ Google sign-in successful: \(session.user.id)")
             self.user = session.user
             self.isSignedIn = true
             
             // Start listening for webhook job completions
             await JobStatusManager.shared.startListening(userId: session.user.id.uuidString)
         } catch {
-            print("Google sign-in error: \(error.localizedDescription)")
+            print("❌ Google sign-in error: \(error.localizedDescription)")
+            let errorMessage = error.localizedDescription.lowercased()
+            // Check for common Supabase error messages indicating user doesn't exist or needs to sign up
+            if errorMessage.contains("user not found") ||
+               errorMessage.contains("invalid_credentials") ||
+               errorMessage.contains("invalid login credentials") ||
+               errorMessage.contains("email not confirmed") ||
+               errorMessage.contains("no user found") ||
+               errorMessage.contains("user does not exist") ||
+               errorMessage.contains("signup_disabled") ||
+               errorMessage.contains("nonce") ||
+               errorMessage.contains("id_token") {
+                // This error typically means the user needs to create an account first
+                lastError = "USER_NOT_FOUND"
+            } else {
+                lastError = error.localizedDescription
+            }
+        }
+    }
+
+    // MARK: - Password Reset
+
+    func resetPassword(email: String) async {
+        print("📧 Attempting password reset for email: \(email)")
+        lastError = nil
+        do {
+            try await client.auth.resetPasswordForEmail(
+                email,
+                redirectTo: URL(string: "yourapp://reset-password") // Optional: deep link for web
+            )
+            print("✅ Password reset email sent successfully")
+            // Success - email sent
+        } catch {
+            print("❌ Password reset error: \(error)")
+            lastError = error.localizedDescription
         }
     }
 

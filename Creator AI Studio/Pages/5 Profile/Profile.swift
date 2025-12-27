@@ -1,5 +1,6 @@
 import AVKit
 import AuthenticationServices // Add this for Apple Sign-In
+import GoogleSignIn
 import Kingfisher
 import Photos
 import SwiftUI
@@ -2138,6 +2139,8 @@ struct SignInOverlay: View {
     @EnvironmentObject var authViewModel: AuthViewModel
     @State private var showEmailSignIn = false
     @State private var showSignUpOverlay = false
+    @State private var isGoogleSigningIn = false
+    @State private var googleSignInError: String?
     
     var body: some View {
         ZStack {
@@ -2177,7 +2180,7 @@ struct SignInOverlay: View {
                             )
                         )
                     
-                    Text("Welcome to Runspeed AI")
+                    Text("Log In")
                         .font(.system(size: 26, weight: .bold, design: .rounded))
                         .foregroundColor(.white)
                     
@@ -2214,7 +2217,9 @@ struct SignInOverlay: View {
                     
                     // Google Sign In
                     Button(action: {
-                        authViewModel.isSignedIn = true
+                        Task {
+                            await handleGoogleSignIn()
+                        }
                     }) {
                         HStack {
                             Spacer()
@@ -2311,6 +2316,26 @@ struct SignInOverlay: View {
                 .environmentObject(authViewModel)
                 .presentationDragIndicator(.visible)
         }
+        .alert("Account Required", isPresented: Binding(
+            get: { googleSignInError != nil },
+            set: { if !$0 { googleSignInError = nil } }
+        )) {
+            Button("OK", role: .cancel) {
+                googleSignInError = nil
+            }
+            if googleSignInError == "USER_NOT_FOUND" {
+                Button("Create Account") {
+                    googleSignInError = nil
+                    showSignUpOverlay = true
+                }
+            }
+        } message: {
+            if googleSignInError == "USER_NOT_FOUND" {
+                Text("No account found with this Google email. Please create an account first using the 'Create Your Account' page.")
+            } else if let error = googleSignInError {
+                Text(error)
+            }
+        }
     }
     
     // MARK: - Apple Sign In
@@ -2322,6 +2347,94 @@ struct SignInOverlay: View {
         controller.delegate = AppleSignInCoordinator(authViewModel: authViewModel)
         controller.performRequests()
     }
+    
+    // MARK: - Google Sign In
+    func handleGoogleSignIn() async {
+        isGoogleSigningIn = true
+        googleSignInError = nil
+        
+        // Get the Google Client ID from Info.plist or environment
+        guard let clientID = getGoogleClientID() else {
+            await MainActor.run {
+                googleSignInError = "Google Client ID not configured. Please add GOOGLE_CLIENT_ID to your Info.plist."
+                isGoogleSigningIn = false
+            }
+            print("❌ Google Client ID not found")
+            return
+        }
+        
+        // Configure Google Sign-In
+        let config = GIDConfiguration(clientID: clientID)
+        GIDSignIn.sharedInstance.configuration = config
+        
+        // Get the presenting view controller
+        guard let windowScene = await UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let rootViewController = await windowScene.windows.first?.rootViewController else {
+            await MainActor.run {
+                googleSignInError = "Unable to find root view controller"
+                isGoogleSigningIn = false
+            }
+            print("❌ Unable to find root view controller")
+            return
+        }
+        
+        do {
+            // Perform the sign-in
+            let result = try await GIDSignIn.sharedInstance.signIn(withPresenting: rootViewController)
+            
+            let user = result.user
+            guard let idToken = user.idToken?.tokenString else {
+                await MainActor.run {
+                    googleSignInError = "Failed to get Google ID token"
+                    isGoogleSigningIn = false
+                }
+                print("❌ Failed to get Google ID token")
+                return
+            }
+            
+            // Get access token
+            let accessToken = user.accessToken.tokenString
+            
+            // Sign in with Supabase
+            await authViewModel.signInWithGoogle(idToken: idToken, accessToken: accessToken)
+            
+            await MainActor.run {
+                isGoogleSigningIn = false
+                // Check if sign-in failed and show appropriate message
+                if !authViewModel.isSignedIn {
+                    if let error = authViewModel.lastError {
+                        if error == "USER_NOT_FOUND" {
+                            googleSignInError = "USER_NOT_FOUND"
+                        } else {
+                            googleSignInError = error
+                        }
+                    } else {
+                        googleSignInError = "Failed to sign in with Google. Please try again."
+                    }
+                }
+            }
+        } catch {
+            await MainActor.run {
+                googleSignInError = error.localizedDescription
+                isGoogleSigningIn = false
+            }
+            print("❌ Google sign-in error: \(error.localizedDescription)")
+        }
+    }
+    
+    private func getGoogleClientID() -> String? {
+        // Try to get from Info.plist first
+        if let clientID = Bundle.main.object(forInfoDictionaryKey: "GOOGLE_CLIENT_ID") as? String {
+            return clientID
+        }
+        
+        // Try to get from environment variable (for development)
+        if let clientID = ProcessInfo.processInfo.environment["GOOGLE_CLIENT_ID"] {
+            return clientID
+        }
+        
+        return nil
+    }
 }
 
 // MARK: - SIGN UP OVERLAY
@@ -2329,6 +2442,8 @@ struct SignInOverlay: View {
 struct SignUpOverlay: View {
     @EnvironmentObject var authViewModel: AuthViewModel
     @State private var showEmailSignIn = false
+    @State private var isGoogleSigningIn = false
+    @State private var googleSignInError: String?
     @Environment(\.dismiss) var dismiss
     
     var body: some View {
@@ -2391,8 +2506,9 @@ struct SignUpOverlay: View {
                     
                     // Google Sign Up
                     Button(action: {
-                        authViewModel.isSignedIn = true
-                        dismiss()
+                        Task {
+                            await handleGoogleSignIn()
+                        }
                     }) {
                         HStack {
                             Spacer()
@@ -2401,6 +2517,11 @@ struct SignUpOverlay: View {
                             Text("Continue with Google")
                                 .font(.system(size: 16, weight: .semibold))
                             Spacer()
+                            if isGoogleSigningIn {
+                                ProgressView()
+                                    .scaleEffect(0.8)
+                                    .padding(.leading, 8)
+                            }
                         }
                         .padding(.vertical, 14)
                         .foregroundColor(.white)
@@ -2411,6 +2532,7 @@ struct SignUpOverlay: View {
                                 .stroke(Color.white.opacity(0.2), lineWidth: 1)
                         )
                     }
+                    .disabled(isGoogleSigningIn)
                     
                     // Email Sign Up
                     Button(action: {
@@ -2484,6 +2606,26 @@ struct SignUpOverlay: View {
                 .environmentObject(authViewModel)
                 .presentationDragIndicator(.visible)
         }
+        .alert("Account Required", isPresented: Binding(
+            get: { googleSignInError != nil },
+            set: { if !$0 { googleSignInError = nil } }
+        )) {
+            Button("OK", role: .cancel) {
+                googleSignInError = nil
+            }
+            if googleSignInError == "USER_NOT_FOUND" {
+                Button("Go to Sign In") {
+                    googleSignInError = nil
+                    dismiss()
+                }
+            }
+        } message: {
+            if googleSignInError == "USER_NOT_FOUND" {
+                Text("No account found with this Google email. Please create an account first using the 'Create Your Account' page.")
+            } else if let error = googleSignInError {
+                Text(error)
+            }
+        }
     }
     
     // MARK: - Apple Sign Up
@@ -2495,6 +2637,85 @@ struct SignUpOverlay: View {
         controller.delegate = AppleSignInCoordinator(authViewModel: authViewModel)
         controller.performRequests()
     }
+    
+    // MARK: - Google Sign In
+    func handleGoogleSignIn() async {
+        isGoogleSigningIn = true
+        googleSignInError = nil
+        
+        // Get the Google Client ID from Info.plist or environment
+        guard let clientID = getGoogleClientID() else {
+            await MainActor.run {
+                googleSignInError = "Google Client ID not configured. Please add GOOGLE_CLIENT_ID to your Info.plist."
+                isGoogleSigningIn = false
+            }
+            print("❌ Google Client ID not found")
+            return
+        }
+        
+        // Configure Google Sign-In
+        let config = GIDConfiguration(clientID: clientID)
+        GIDSignIn.sharedInstance.configuration = config
+        
+        // Get the presenting view controller
+        guard let windowScene = await UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let rootViewController = await windowScene.windows.first?.rootViewController else {
+            await MainActor.run {
+                googleSignInError = "Unable to find root view controller"
+                isGoogleSigningIn = false
+            }
+            print("❌ Unable to find root view controller")
+            return
+        }
+        
+        do {
+            // Perform the sign-in
+            let result = try await GIDSignIn.sharedInstance.signIn(withPresenting: rootViewController)
+            
+            let user = result.user
+            guard let idToken = user.idToken?.tokenString else {
+                await MainActor.run {
+                    googleSignInError = "Failed to get Google ID token"
+                    isGoogleSigningIn = false
+                }
+                print("❌ Failed to get Google ID token")
+                return
+            }
+            
+            // Get access token
+            let accessToken = user.accessToken.tokenString
+            
+            // Sign in with Supabase
+            await authViewModel.signInWithGoogle(idToken: idToken, accessToken: accessToken)
+            
+            await MainActor.run {
+                isGoogleSigningIn = false
+                if authViewModel.isSignedIn {
+                    dismiss()
+                }
+            }
+        } catch {
+            await MainActor.run {
+                googleSignInError = error.localizedDescription
+                isGoogleSigningIn = false
+            }
+            print("❌ Google sign-in error: \(error.localizedDescription)")
+        }
+    }
+    
+    private func getGoogleClientID() -> String? {
+        // Try to get from Info.plist first
+        if let clientID = Bundle.main.object(forInfoDictionaryKey: "GOOGLE_CLIENT_ID") as? String {
+            return clientID
+        }
+        
+        // Try to get from environment variable (for development)
+        if let clientID = ProcessInfo.processInfo.environment["GOOGLE_CLIENT_ID"] {
+            return clientID
+        }
+        
+        return nil
+    }
 }
 
 // MARK: - EMBEDDED SIGN IN VIEW
@@ -2503,6 +2724,8 @@ struct EmbeddedSignInView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
     @State private var showEmailSignIn = false
     @State private var isSignUp = false
+    @State private var isGoogleSigningIn = false
+    @State private var googleSignInError: String?
     
     var body: some View {
         ScrollView {
@@ -2521,7 +2744,7 @@ struct EmbeddedSignInView: View {
                             )
                         )
                     
-                    Text("Welcome to Runspeed AI")
+                    Text("Log In")
                         .font(.system(size: 28, weight: .bold, design: .rounded))
                         .foregroundColor(.primary)
                     
@@ -2559,7 +2782,9 @@ struct EmbeddedSignInView: View {
                     
                     // Google Sign In
                     Button(action: {
-                        authViewModel.isSignedIn = true
+                        Task {
+                            await handleGoogleSignIn()
+                        }
                     }) {
                         HStack {
                             Spacer()
@@ -2630,6 +2855,24 @@ struct EmbeddedSignInView: View {
                 .environmentObject(authViewModel)
                 .presentationDragIndicator(.visible)
         }
+        .alert("Google Sign-In", isPresented: Binding(
+            get: { googleSignInError != nil },
+            set: { if !$0 { googleSignInError = nil } }
+        )) {
+            Button("OK", role: .cancel) {
+                googleSignInError = nil
+            }
+            if googleSignInError == "No account found with this Google email. Please create an account first using the 'Create Your Account' page." {
+                Button("Create Account") {
+                    googleSignInError = nil
+                    isSignUp = true
+                }
+            }
+        } message: {
+            if let error = googleSignInError {
+                Text(error)
+            }
+        }
     }
     
     // MARK: - Apple Sign In
@@ -2640,6 +2883,94 @@ struct EmbeddedSignInView: View {
         let controller = ASAuthorizationController(authorizationRequests: [request])
         controller.delegate = AppleSignInCoordinator(authViewModel: authViewModel)
         controller.performRequests()
+    }
+    
+    // MARK: - Google Sign In
+    func handleGoogleSignIn() async {
+        isGoogleSigningIn = true
+        googleSignInError = nil
+        
+        // Get the Google Client ID from Info.plist or environment
+        guard let clientID = getGoogleClientID() else {
+            await MainActor.run {
+                googleSignInError = "Google Client ID not configured. Please add GOOGLE_CLIENT_ID to your Info.plist."
+                isGoogleSigningIn = false
+            }
+            print("❌ Google Client ID not found")
+            return
+        }
+        
+        // Configure Google Sign-In
+        let config = GIDConfiguration(clientID: clientID)
+        GIDSignIn.sharedInstance.configuration = config
+        
+        // Get the presenting view controller
+        guard let windowScene = await UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let rootViewController = await windowScene.windows.first?.rootViewController else {
+            await MainActor.run {
+                googleSignInError = "Unable to find root view controller"
+                isGoogleSigningIn = false
+            }
+            print("❌ Unable to find root view controller")
+            return
+        }
+        
+        do {
+            // Perform the sign-in
+            let result = try await GIDSignIn.sharedInstance.signIn(withPresenting: rootViewController)
+            
+            let user = result.user
+            guard let idToken = user.idToken?.tokenString else {
+                await MainActor.run {
+                    googleSignInError = "Failed to get Google ID token"
+                    isGoogleSigningIn = false
+                }
+                print("❌ Failed to get Google ID token")
+                return
+            }
+            
+            // Get access token
+            let accessToken = user.accessToken.tokenString
+            
+            // Sign in with Supabase
+            await authViewModel.signInWithGoogle(idToken: idToken, accessToken: accessToken)
+            
+            await MainActor.run {
+                isGoogleSigningIn = false
+                // Check if sign-in failed and show appropriate message
+                if !authViewModel.isSignedIn {
+                    if let error = authViewModel.lastError {
+                        if error == "USER_NOT_FOUND" {
+                            googleSignInError = "USER_NOT_FOUND"
+                        } else {
+                            googleSignInError = error
+                        }
+                    } else {
+                        googleSignInError = "Failed to sign in with Google. Please try again."
+                    }
+                }
+            }
+        } catch {
+            await MainActor.run {
+                googleSignInError = error.localizedDescription
+                isGoogleSigningIn = false
+            }
+            print("❌ Google sign-in error: \(error.localizedDescription)")
+        }
+    }
+    
+    private func getGoogleClientID() -> String? {
+        // Try to get from Info.plist first
+        if let clientID = Bundle.main.object(forInfoDictionaryKey: "GOOGLE_CLIENT_ID") as? String {
+            return clientID
+        }
+        
+        // Try to get from environment variable (for development)
+        if let clientID = ProcessInfo.processInfo.environment["GOOGLE_CLIENT_ID"] {
+            return clientID
+        }
+        
+        return nil
     }
 }
 
@@ -2653,6 +2984,7 @@ struct EmbeddedEmailSignInView: View {
     @State private var password = ""
     @State private var message: String? = nil
     @State private var messageColor: Color = .red
+    @State private var showForgotPassword = false
     
     var body: some View {
         NavigationStack {
@@ -2712,7 +3044,16 @@ struct EmbeddedEmailSignInView: View {
                                     isPresented = false
                                 }
                             } else {
-                                showMessage("Incorrect email or password.", color: .red)
+                                // Check for specific error messages
+                                if let error = authViewModel.lastError {
+                                    if error == "USER_EXISTS" {
+                                        showMessage("This email is already registered. Please sign in instead.", color: .orange)
+                                    } else {
+                                        showMessage(error, color: .red)
+                                    }
+                                } else {
+                                    showMessage("Incorrect email or password.", color: .red)
+                                }
                             }
                         }
                     }
@@ -2722,16 +3063,17 @@ struct EmbeddedEmailSignInView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.top, 8)
                     
-                    // Toggle Sign Up / Sign In
-                    Button(isSignUp ? "Already have an account? Sign In" : "Don't have an account? Sign Up") {
-                        withAnimation {
-                            isSignUp.toggle()
-                            message = nil
+                    // Forgot password (only for sign in)
+                    if !isSignUp {
+                        Button(action: {
+                            showForgotPassword = true
+                        }) {
+                            Text("Forgot password?")
+                                .font(.footnote)
+                                .foregroundColor(.blue)
                         }
+                        .padding(.top, 8)
                     }
-                    .font(.footnote)
-                    .padding(.top, 4)
-                    .foregroundColor(.blue)
                     
                     // Terms & Privacy (only for sign up)
                     if isSignUp {
@@ -2766,6 +3108,11 @@ struct EmbeddedEmailSignInView: View {
                         isPresented = false
                     }
                 }
+            }
+            .sheet(isPresented: $showForgotPassword) {
+                ForgotPasswordView(isPresented: $showForgotPassword)
+                    .environmentObject(authViewModel)
+                    .presentationDragIndicator(.visible)
             }
         }
     }
