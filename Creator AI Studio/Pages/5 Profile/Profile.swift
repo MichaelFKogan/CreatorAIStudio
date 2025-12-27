@@ -1784,26 +1784,103 @@ struct EmptyGalleryView: View {
     let isImageModelsTab: Bool
     var isVideoModelsTab: Bool = false
     var videoModel: String? = nil
+    
+    private let spacing: CGFloat = 2
+    private var gridColumns: [GridItem] {
+        Array(repeating: GridItem(.flexible(), spacing: spacing), count: 3)
+    }
+    
+    private var shouldShowPlaceholderGrid: Bool {
+        // Show placeholder grid only for the default "No Images Yet" case
+        return tab == .all && !isImageModelsTab && !isVideoModelsTab
+    }
 
     var body: some View {
-        VStack(spacing: 16) {
-            Image(systemName: iconName)
-                .font(.system(size: 48))
-                .foregroundColor(.gray.opacity(0.5))
+        if shouldShowPlaceholderGrid {
+            // For "No Images Yet" case: show placeholder grid with center cell containing message
+            placeholderGrid
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else {
+            // For other cases: keep original layout
+            VStack(spacing: 16) {
+                Image(systemName: iconName)
+                    .font(.system(size: 48))
+                    .foregroundColor(.gray.opacity(0.5))
 
-            VStack(spacing: 8) {
-                Text(emptyTitle)
-                    .font(.headline)
-                    .foregroundColor(.primary)
+                VStack(spacing: 8) {
+                    Text(emptyTitle)
+                        .font(.headline)
+                        .foregroundColor(.primary)
 
-                Text(emptyMessage)
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 32)
+                    Text(emptyMessage)
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 32)
+                }
             }
         }
-        .padding(.vertical, 60)
+    }
+    
+    private var placeholderGrid: some View {
+        GeometryReader { proxy in
+            let totalSpacing = spacing * 2
+            let contentWidth = max(0, proxy.size.width - totalSpacing - 8)
+            let itemWidth = max(44, contentWidth / 3)
+            let itemHeight = itemWidth * 1.4
+            
+            LazyVGrid(columns: gridColumns, spacing: spacing) {
+                ForEach(0..<9, id: \.self) { index in
+                    if index == 4 {
+                        // Center cell: show icon and title
+                        VStack(spacing: 12) {
+                            Image(systemName: iconName)
+                                .font(.system(size: 32))
+                                .foregroundColor(.gray.opacity(0.4))
+                            
+                            Text(emptyTitle)
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundColor(.primary)
+                                .multilineTextAlignment(.center)
+                                .lineLimit(2)
+                        }
+                        .frame(width: itemWidth, height: itemHeight)
+                        .background(Color.gray.opacity(0.05))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 4)
+                                .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                        )
+                    } else {
+                        // Other cells: show placeholder with gray icon
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 4)
+                                .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                                .frame(width: itemWidth, height: itemHeight)
+                                .background(Color.gray.opacity(0.05))
+                            
+                            Image(systemName: "photo")
+                                .font(.system(size: 24))
+                                .foregroundColor(.gray.opacity(0.25))
+                        }
+                    }
+                }
+            }
+            .padding(.horizontal, 4)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        }
+        .frame(minHeight: calculateGridHeight())
+    }
+    
+    private func calculateGridHeight() -> CGFloat {
+        // Calculate height for 3 rows of items
+        // We need to estimate based on screen width
+        let screenWidth = UIScreen.main.bounds.width
+        let totalSpacing = spacing * 2
+        let contentWidth = max(0, screenWidth - totalSpacing - 8)
+        let itemWidth = max(44, contentWidth / 3)
+        let itemHeight = itemWidth * 1.4
+        // 3 rows with 2 spacing gaps between them
+        return itemHeight * 3 + spacing * 2
     }
 
     private var iconName: String {
