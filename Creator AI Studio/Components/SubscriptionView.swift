@@ -12,6 +12,7 @@ struct SubscriptionView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var isSubscribed: Bool = false // TODO: Connect to actual subscription status
     @State private var subscriptionStatus: SubscriptionStatus = .notSubscribed
+    @State private var selectedPaymentMethod: PaymentMethod = .apple
     
     var body: some View {
         NavigationStack {
@@ -43,29 +44,54 @@ struct SubscriptionView: View {
                     SubscriptionStatusCard(status: subscriptionStatus)
                         .padding(.horizontal)
                     
-                    // Subscription plan
-                    VStack(spacing: 16) {
-                        SubscriptionPlanCard(
-                            title: "Premium",
-                            price: "$4.99",
-                            period: "per month",
-                            features: [
-                                "Full access to all app features",
-                                "Ability to purchase credits",
-                                "Ongoing access to the platform"
-                            ],
-                            isSubscribed: isSubscribed,
-                            onSubscribe: {
-                                // TODO: Handle subscription purchase
-                                print("Subscribe to Premium")
-                            },
-                            onManage: {
-                                // TODO: Handle subscription management
-                                print("Manage subscription")
+                    // Payment Method Selector (only show if not subscribed)
+                    if !isSubscribed {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Payment Method")
+                                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                                .foregroundColor(.secondary)
+                                .padding(.horizontal)
+                            
+                            PaymentMethodSelector(selectedMethod: $selectedPaymentMethod)
+                                .padding(.horizontal)
+                        }
+                    }
+                    
+                    // Starter Pack (Subscription + Credits bundle)
+                    if !isSubscribed {
+                        StarterPackCard(
+                            paymentMethod: selectedPaymentMethod,
+                            onPurchase: {
+                                // TODO: Handle starter pack purchase
+                                print("Purchase Starter Pack via \(selectedPaymentMethod.rawValue)")
                             }
                         )
+                        .padding(.horizontal)
+                    } else {
+                        // Subscription plan (for subscribed users)
+                        VStack(spacing: 16) {
+                            SubscriptionPlanCard(
+                                title: "Premium",
+                                price: "$5.00",
+                                period: "per month",
+                                features: [
+                                    "Full access to all app features",
+                                    "Ability to purchase credits",
+                                    "Ongoing access to the platform"
+                                ],
+                                isSubscribed: isSubscribed,
+                                onSubscribe: {
+                                    // TODO: Handle subscription purchase
+                                    print("Subscribe to Premium")
+                                },
+                                onManage: {
+                                    // TODO: Handle subscription management
+                                    print("Manage subscription")
+                                }
+                            )
+                        }
+                        .padding(.horizontal)
                     }
-                    .padding(.horizontal)
                     
                     // What's Not Included section
                     VStack(alignment: .leading, spacing: 16) {
@@ -78,7 +104,7 @@ struct SubscriptionView: View {
                             HStack(alignment: .top, spacing: 16) {
                                 Image(systemName: "xmark.circle.fill")
                                     .font(.system(size: 24))
-                                    .foregroundColor(.orange)
+                                    .foregroundColor(.red)
                                     .frame(width: 40)
                                 
                                 VStack(alignment: .leading, spacing: 4) {
@@ -391,6 +417,173 @@ struct BenefitRow: View {
             RoundedRectangle(cornerRadius: 12)
                 .fill(Color(.secondarySystemBackground))
         )
+    }
+}
+
+// Starter Pack Card: Subscription + Credits bundle
+struct StarterPackCard: View {
+    let paymentMethod: PaymentMethod
+    let onPurchase: () -> Void
+    
+    // Subscription is always $5.00/month, no fees
+    private let subscriptionPrice: Double = 5.00
+    // Credits base value
+    private let baseCreditsValue: Double = 1.00
+    
+    // Credits with fees applied (only credits have fees)
+    private var creditsPriceWithFees: Double {
+        switch paymentMethod {
+        case .apple:
+            return PriceCalculator.calculateApplePrice(basePrice: baseCreditsValue)
+        case .external:
+            return PriceCalculator.calculateExternalPrice(basePrice: baseCreditsValue)
+        }
+    }
+    
+    // Total: subscription (no fees) + credits (with fees)
+    private var totalPrice: Double {
+        return subscriptionPrice + creditsPriceWithFees
+    }
+    
+    // Fee amount (only on credits)
+    private var feeAmount: Double {
+        switch paymentMethod {
+        case .apple:
+            return creditsPriceWithFees - baseCreditsValue
+        case .external:
+            return PriceCalculator.calculateExternalFee(basePrice: baseCreditsValue)
+        }
+    }
+    
+    var body: some View {
+        Button(action: onPurchase) {
+            VStack(alignment: .leading, spacing: 16) {
+                // Header
+                HStack {
+                    Text("Starter Pack")
+                        .font(.system(size: 24, weight: .bold, design: .rounded))
+                        .foregroundColor(.primary)
+                    
+                    Spacer()
+                    
+                    Text("Popular")
+                        .font(.caption)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 4)
+                        .background(
+                            LinearGradient(
+                                colors: [.yellow, .orange],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .clipShape(Capsule())
+                }
+                
+                // Subscription + Credits breakdown
+                HStack(spacing: 16) {
+                    // Subscription (left)
+                    VStack(spacing: 8) {
+                        Image(systemName: "crown.fill")
+                            .font(.system(size: 24))
+                            .foregroundStyle(
+                                LinearGradient(
+                                    colors: [.yellow, .orange],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                        
+                        VStack(spacing: 4) {
+                            Text("Subscription")
+                                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                                .foregroundColor(.primary)
+                            
+                            HStack(alignment: .firstTextBaseline, spacing: 4) {
+                                Text(PriceCalculator.formatPrice(subscriptionPrice))
+                                    .font(.system(size: 18, weight: .bold, design: .rounded))
+                                    .foregroundColor(.primary)
+                                
+                                Text("/month")
+                                    .font(.system(size: 12, design: .rounded))
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    
+                    // Plus sign
+                    Text("+")
+                        .font(.system(size: 24, weight: .bold, design: .rounded))
+                        .foregroundColor(.secondary)
+                    
+                    // Credits (right) - always show base value
+                    VStack(spacing: 8) {
+                        Image(systemName: "diamond.fill")
+                            .font(.system(size: 24))
+                            .foregroundColor(.blue)
+                        
+                        VStack(spacing: 4) {
+                            Text("Credits")
+                                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                                .foregroundColor(.primary)
+                            
+                            Text(PriceCalculator.formatPrice(baseCreditsValue))
+                                .font(.system(size: 18, weight: .bold, design: .rounded))
+                                .foregroundColor(.primary)
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+                .padding()
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color(.secondarySystemBackground))
+                )
+                
+                // Total price with fees
+                VStack(alignment: .trailing, spacing: 4) {
+                    HStack {
+                        Text("Total")
+                            .font(.system(size: 16, weight: .medium, design: .rounded))
+                            .foregroundColor(.secondary)
+                        
+                        Spacer()
+                        
+                        Text(PriceCalculator.formatPrice(totalPrice))
+                            .font(.system(size: 28, weight: .bold, design: .rounded))
+                            .foregroundColor(.primary)
+                    }
+                    
+                    HStack {
+                        Spacer()
+                        Text(paymentMethod == .apple ? "Apple's fee (30%): \(PriceCalculator.formatPrice(feeAmount))" : "Credit Card fee (3% + $0.30): \(PriceCalculator.formatPrice(feeAmount))")
+                            .font(.system(size: 12, weight: .medium, design: .rounded))
+                            .foregroundColor(.secondary)
+                    }
+                }
+            }
+            .padding()
+            .background(
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(Color(.systemBackground))
+                    .shadow(color: Color.black.opacity(0.15), radius: 12, x: 0, y: 6)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 20)
+                    .stroke(
+                        LinearGradient(
+                            colors: [Color.yellow.opacity(0.5), Color.orange.opacity(0.5)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 2
+                    )
+            )
+        }
+        .buttonStyle(PlainButtonStyle())
     }
 }
 
