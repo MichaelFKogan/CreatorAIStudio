@@ -393,7 +393,11 @@ struct ImageModelDetailPage: View {
                 Button("Done") { isPromptFocused = false }
             }
             ToolbarItem(placement: .navigationBarTrailing) {
-                CreditsView()
+                CreditsBadge(
+                    diamondColor: .blue,
+                    borderColor: .cyan,
+                    creditsAmount: "$10.00"
+                )
             }
         }
         .onReceive(
@@ -825,39 +829,6 @@ struct GenerateButton: View {
     }
 }
 
-// MARK: CREDITS VIEW
-
-struct CreditsView: View {
-    var body: some View {
-        HStack(spacing: 6) {
-            Image(systemName: "diamond.fill")
-                .foregroundStyle(
-                    LinearGradient(
-                        colors: [.blue, .cyan], startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-                .font(.system(size: 8))
-            Text("$2.50").font(
-                .system(size: 14, weight: .semibold, design: .rounded)
-            ).foregroundColor(.primary)
-            Text("credits").font(.caption2).foregroundColor(.secondary)
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 6)
-        .background(
-            RoundedRectangle(cornerRadius: 20).fill(Color.blue.opacity(0.1))
-                .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 20).strokeBorder(
-                LinearGradient(
-                    colors: [.blue, .cyan], startPoint: .leading,
-                    endPoint: .trailing
-                ), lineWidth: 1.5
-            ))
-    }
-}
 
 // MARK: MODEL GALLERY
 

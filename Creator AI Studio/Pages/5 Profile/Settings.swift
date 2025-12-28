@@ -9,6 +9,9 @@ struct Settings: View {
     @State private var isSigningOut = false
     @State private var showSignedOutAlert = false
     @State private var showSignInSheet = false
+    @State private var showSubscriptionView = false
+    @State private var showPurchaseCreditsView = false
+    @State private var isSubscribed: Bool = false // TODO: Connect to actual subscription status
     
     // ProfileViewModel for cache clearing
     var profileViewModel: ProfileViewModel?
@@ -66,26 +69,87 @@ struct Settings: View {
                         .foregroundColor(.gray)
                 }
             }
-
-            // App preferences
-            Section("Preferences") {
-                // Clear Cache button
-                Button(action: {
-                    clearCache()
-                }) {
-                    HStack {
-                        Image(systemName: "trash")
-                            .foregroundColor(.orange)
-                        Text("Clear Gallery Cache")
-                            .foregroundColor(.primary)
-                        Spacer()
-                        if isClearing {
-                            ProgressView()
-                                .scaleEffect(0.8)
-                        }
+            
+            // Subscription section
+            Section("Subscription") {
+                HStack {
+                    Image(systemName: "crown.fill")
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [.yellow, .orange],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(isSubscribed ? "Premium Active" : "Premium Subscription")
+                            .font(.body)
+                        Text(isSubscribed ? "Renews monthly" : "$4.99/month")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    Spacer()
+                    if isSubscribed {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.green)
+                    } else {
+                        Image(systemName: "chevron.right")
+                            .foregroundColor(.gray)
                     }
                 }
-                .disabled(isClearing)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    showSubscriptionView = true
+                }
+            }
+            
+            // Purchase Credits section
+            Section("Credits") {
+                HStack {
+                    Image(systemName: "diamond.fill")
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [.blue, .purple],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Purchase Credits")
+                            .font(.body)
+                        Text("Buy credits to generate images and videos")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .foregroundColor(.gray)
+                }
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    showPurchaseCreditsView = true
+                }
+            }
+
+            // // App preferences
+            // Section("Preferences") {
+            //     // Clear Cache button
+            //     Button(action: {
+            //         clearCache()
+            //     }) {
+            //         HStack {
+            //             Image(systemName: "trash")
+            //                 .foregroundColor(.orange)
+            //             Text("Clear Gallery Cache")
+            //                 .foregroundColor(.primary)
+            //             Spacer()
+            //             if isClearing {
+            //                 ProgressView()
+            //                     .scaleEffect(0.8)
+            //             }
+            //         }
+            //     }
+            //     .disabled(isClearing)
 
 //                HStack {
 //                    Image(systemName: "paintbrush")
@@ -116,7 +180,7 @@ struct Settings: View {
 //                    Spacer()
 //                    Toggle("", isOn: .constant(true))
 //                }
-            }
+            // }
 
             // Support
             Section("Support") {
@@ -245,23 +309,33 @@ struct Settings: View {
                 .environmentObject(authViewModel)
                 .presentationDragIndicator(.visible)
         }
-    }
-    
-    private func clearCache() {
-        isClearing = true
-        
-        Task {
-            // Clear the profile cache and fetch fresh stats
-            await profileViewModel?.clearCache()
-            
-            await MainActor.run {
-                // Haptic feedback
-                let generator = UINotificationFeedbackGenerator()
-                generator.notificationOccurred(.success)
-                
-                isClearing = false
-                showCacheClearedAlert = true
-            }
+        .sheet(isPresented: $showSubscriptionView) {
+            SubscriptionView()
+                .environmentObject(authViewModel)
+                .presentationDragIndicator(.visible)
+        }
+        .sheet(isPresented: $showPurchaseCreditsView) {
+            PurchaseCreditsView()
+                .environmentObject(authViewModel)
+                .presentationDragIndicator(.visible)
         }
     }
+    
+//    private func clearCache() {
+//        isClearing = true
+//        
+//        Task {
+//            // Clear the profile cache and fetch fresh stats
+//            await profileViewModel?.clearCache()
+//            
+//            await MainActor.run {
+//                // Haptic feedback
+//                let generator = UINotificationFeedbackGenerator()
+//                generator.notificationOccurred(.success)
+//                
+//                isClearing = false
+//                showCacheClearedAlert = true
+//            }
+//        }
+//    }
 }

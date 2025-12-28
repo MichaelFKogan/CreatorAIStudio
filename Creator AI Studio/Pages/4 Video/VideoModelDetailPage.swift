@@ -500,7 +500,11 @@ struct VideoModelDetailPage: View {
                 Button("Done") { isPromptFocused = false }
             }
             ToolbarItem(placement: .navigationBarTrailing) {
-                CreditsViewVideo()
+                CreditsBadge(
+                    diamondColor: .purple,
+                    borderColor: .pink,
+                    creditsAmount: "$10.00"
+                )
             }
         }
         .onReceive(
@@ -1471,39 +1475,6 @@ private struct GenerateButtonVideo: View {
     }
 }
 
-// MARK: CREDITS VIEW
-
-private struct CreditsViewVideo: View {
-    var body: some View {
-        HStack(spacing: 6) {
-            Image(systemName: "diamond.fill")
-                .foregroundStyle(
-                    LinearGradient(
-                        colors: [.purple, .pink], startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-                .font(.system(size: 8))
-            Text("$2.50").font(
-                .system(size: 14, weight: .semibold, design: .rounded)
-            ).foregroundColor(.primary)
-            Text("credits").font(.caption2).foregroundColor(.secondary)
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 6)
-        .background(
-            RoundedRectangle(cornerRadius: 20).fill(Color.purple.opacity(0.1))
-                .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 20).strokeBorder(
-                LinearGradient(
-                    colors: [.purple, .pink], startPoint: .leading,
-                    endPoint: .trailing
-                ), lineWidth: 1.5
-            ))
-    }
-}
 
 // MARK: AUDIO TOGGLE
 

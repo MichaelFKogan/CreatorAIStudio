@@ -12,7 +12,7 @@ import GoogleSignIn
 struct Creator_AI_StudioApp: App {
     @StateObject private var themeManager = ThemeManager()
     @StateObject private var authViewModel = AuthViewModel()
-    @State private var showSplash = true
+    @State private var showSplash = false
     
     init() {
         // Enable webhook mode for image and video generation

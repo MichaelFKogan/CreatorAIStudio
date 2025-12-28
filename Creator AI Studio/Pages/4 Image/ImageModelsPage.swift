@@ -30,7 +30,13 @@ struct ImageModelsPage: View {
                 }
 
                 // Trailing credits
-                CreditsToolbarImage()
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    CreditsBadge(
+                        diamondColor: .blue,
+                        borderColor: .blue,
+                        creditsAmount: "$10.00"
+                    )
+                }
             }
         }
     }
@@ -62,8 +68,14 @@ struct ImageModelsPageContent: View {
                         )
                 }
 
-                // Trailing credits - CreditsToolbarImage is ToolbarContent so use directly
-                CreditsToolbarImage()
+                // Trailing credits
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    CreditsBadge(
+                        diamondColor: .blue,
+                        borderColor: .blue,
+                        creditsAmount: "$10.00"
+                    )
+                }
             }
         }
     }
@@ -494,42 +506,6 @@ private struct ImageModelListItem: View {
 }
 
 // MARK: TOOLBAR
-
-private struct CreditsToolbarImage: ToolbarContent {
-    var body: some ToolbarContent {
-        ToolbarItem(placement: .navigationBarTrailing) {
-            HStack(spacing: 6) {
-                Image(systemName: "diamond.fill")
-                    .font(.system(size: 8))
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [.blue, .blue],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-
-                Text("$2.50")
-                    .font(.system(size: 14, weight: .semibold, design: .rounded))
-                    .foregroundColor(.white).opacity(0.9)
-
-                Text("credits")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-            .background(
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(Color.black.opacity(0.4))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 20)
-                    .stroke(Color.blue, lineWidth: 1.5)
-            )
-        }
-    }
-}
 
 // MARK: FILTER PILL
 

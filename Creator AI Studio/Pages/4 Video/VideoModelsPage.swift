@@ -31,7 +31,13 @@ struct VideoModelsPage: View {
                 }
 
                 // Trailing credits
-                CreditsToolbarVideo()
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    CreditsBadge(
+                        diamondColor: .purple,
+                        borderColor: .purple,
+                        creditsAmount: "$10.00"
+                    )
+                }
             }
         }
     }
@@ -64,8 +70,14 @@ struct VideoModelsPageContent: View {
                         )
                 }
 
-                // Trailing credits - CreditsToolbarVideo is ToolbarContent so use directly
-                CreditsToolbarVideo()
+                // Trailing credits
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    CreditsBadge(
+                        diamondColor: .purple,
+                        borderColor: .purple,
+                        creditsAmount: "$10.00"
+                    )
+                }
             }
         }
     }
@@ -545,44 +557,6 @@ private struct VideoModelListItem: View {
 }
 
 // MARK: TOOLBAR
-
-private struct CreditsToolbarVideo: ToolbarContent {
-    var body: some ToolbarContent {
-        ToolbarItem(placement: .navigationBarTrailing) {
-            HStack(spacing: 6) {
-                Image(systemName: "diamond.fill")
-                    .font(.system(size: 8))
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [.purple, .purple],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-
-                Text("$2.50")
-                    .font(
-                        .system(size: 14, weight: .semibold, design: .rounded)
-                    )
-                    .foregroundColor(.white)
-
-                Text("credits")
-                    .font(.caption2)
-                    .foregroundColor(.white.opacity(0.9))
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-            .background(
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(Color.secondary.opacity(0.1))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 20)
-                    .stroke(Color.purple, lineWidth: 1.5)
-            )
-        }
-    }
-}
 
 // MARK: FILTER PILL
 
