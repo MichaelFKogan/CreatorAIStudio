@@ -23,8 +23,8 @@ struct PhotoFilterDetailView: View {
     @State private var showSignInSheet: Bool = false
     @State private var showSubscriptionView: Bool = false
     @State private var showPurchaseCreditsView: Bool = false
-    @State private var isSubscribed: Bool = false // TODO: Connect to actual subscription status
-    @State private var hasCredits: Bool = true // TODO: Connect to actual credits check
+    @State private var isSubscribed: Bool = false  // TODO: Connect to actual subscription status
+    @State private var hasCredits: Bool = true  // TODO: Connect to actual credits check
 
     @EnvironmentObject var authViewModel: AuthViewModel
 
@@ -74,13 +74,12 @@ struct PhotoFilterDetailView: View {
             } ?? 0
         return itemPrice + additionalPrice
     }
-    
+
     // Computed property to check if user can upload
     private var canUpload: Bool {
-        guard let _ = authViewModel.user else { return false }
+        guard authViewModel.user != nil else { return false }
         return isSubscribed && hasCredits
     }
-
 
     var body: some View {
         ScrollView {
@@ -273,14 +272,31 @@ struct PhotoFilterDetailView: View {
                                     .font(.caption)
                                     .foregroundColor(.orange)
                             }
-                            
+
                             HStack {
                                 Spacer()
                                 Button(action: {
                                     showSubscriptionView = true
                                 }) {
+                                    Image(systemName: "crown.fill")
+                                        .font(
+                                            .system(
+                                                size: 11, weight: .semibold,
+                                                design: .rounded)
+                                        )
+                                        .foregroundStyle(
+                                            LinearGradient(
+                                                colors: [.yellow, .orange],
+                                                startPoint: .topLeading,
+                                                endPoint: .bottomTrailing
+                                            )
+                                        )
                                     Text("Subscribe")
-                                        .font(.system(size: 15, weight: .medium, design: .rounded))
+                                        .font(
+                                            .system(
+                                                size: 15, weight: .medium,
+                                                design: .rounded)
+                                        )
                                         .foregroundColor(.blue)
                                 }
                                 Spacer()
@@ -298,14 +314,18 @@ struct PhotoFilterDetailView: View {
                                     .font(.caption)
                                     .foregroundColor(.orange)
                             }
-                            
+
                             HStack {
                                 Spacer()
                                 Button(action: {
                                     showPurchaseCreditsView = true
                                 }) {
                                     Text("Buy Credits")
-                                        .font(.system(size: 15, weight: .medium, design: .rounded))
+                                        .font(
+                                            .system(
+                                                size: 15, weight: .medium,
+                                                design: .rounded)
+                                        )
                                         .foregroundColor(.blue)
                                 }
                                 Spacer()
@@ -351,6 +371,13 @@ struct PhotoFilterDetailView: View {
                     // MARK: - Cost Section
                     HStack {
                         Spacer()
+                        Text("Cost")
+                            .font(
+                                .system(
+                                    size: 14, weight: .medium, design: .rounded)
+                            )
+                            .foregroundColor(.secondary)
+
                         HStack(spacing: 6) {
                             if PricingManager.displayMode == .credits {
                                 Image(systemName: "diamond.fill")
@@ -366,7 +393,9 @@ struct PhotoFilterDetailView: View {
                             PriceDisplayView(
                                 price: totalPrice,
                                 showUnit: true,
-                                font: .system(size: 16, weight: .semibold, design: .rounded),
+                                font: .system(
+                                    size: 16, weight: .semibold,
+                                    design: .rounded),
                                 foregroundColor: .primary
                             )
                         }
@@ -653,7 +682,7 @@ struct SpinningPlusButton: View {
     @State private var rotation: Double = 0
     @State private var shine = false
     @State private var isAnimating = false
-    
+
     private var canUpload: Bool {
         isLoggedIn && isSubscribed && hasCredits
     }

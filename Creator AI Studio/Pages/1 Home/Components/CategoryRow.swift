@@ -10,7 +10,7 @@ struct CategoryRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            RowTitle(title: title) {
+            RowTitle(title: title, items: items) {
                 print("Tapped See All for \(title)")
             }
 
@@ -111,7 +111,15 @@ private struct ScrollOffsetKey: PreferenceKey {
 // MARK: - Row Title Component
 struct RowTitle: View {
     let title: String
+    let items: [InfoPacket]
     let onSeeAll: () -> Void
+    
+    // Extract category name from title (removes emoji prefix like "✨ Anime" -> "Anime")
+    private var categoryName: String {
+        // Title format is "\(emoji) \(categoryName)", so we need to remove the first character and space
+        let components = title.split(separator: " ", maxSplits: 1)
+        return components.count > 1 ? String(components[1]) : title
+    }
     
     var body: some View {
         HStack {
@@ -119,10 +127,15 @@ struct RowTitle: View {
                 .font(.system(size: 20, weight: .bold, design: .rounded))
                 .foregroundColor(.primary)
             Spacer()
-            Button(action: onSeeAll) {
-                Text("See All")
-                    .font(.system(size: 14, weight: .semibold, design: .rounded))
-                    .foregroundColor(.blue)
+            NavigationLink(destination: CategoryDetailView(categoryName: categoryName, items: items)) {
+                HStack(spacing: 8) {
+                    Text("See All")
+                        .font(.system(size: 16, weight: .bold, design: .rounded))
+                        .foregroundColor(.white)
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 16, weight: .bold, design: .rounded))
+                        .foregroundColor(.white)
+                }
             }
         }
         .padding(.horizontal)

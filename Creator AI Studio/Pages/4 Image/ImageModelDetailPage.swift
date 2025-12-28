@@ -40,8 +40,8 @@ struct ImageModelDetailPage: View {
     @State private var showSignInSheet: Bool = false
     @State private var showSubscriptionView: Bool = false
     @State private var showPurchaseCreditsView: Bool = false
-    @State private var isSubscribed: Bool = false // TODO: Connect to actual subscription status
-    @State private var hasCredits: Bool = true // TODO: Connect to actual credits check
+    @State private var isSubscribed: Bool = false  // TODO: Connect to actual subscription status
+    @State private var hasCredits: Bool = true  // TODO: Connect to actual credits check
 
     @EnvironmentObject var authViewModel: AuthViewModel
 
@@ -146,7 +146,8 @@ struct ImageModelDetailPage: View {
         formatter.numberStyle = .decimal
         formatter.maximumFractionDigits = 4
         formatter.minimumFractionDigits = 0
-        return formatter.string(from: NSDecimalNumber(decimal: item.resolvedCost ?? 0)) ?? "0"
+        return formatter.string(
+            from: NSDecimalNumber(decimal: item.resolvedCost ?? 0)) ?? "0"
     }
 
     private var isMidjourney: Bool {
@@ -227,7 +228,6 @@ struct ImageModelDetailPage: View {
                                     .foregroundColor(.red)
                                     Spacer()
                                 }
-                                
 
                                 // Sign In / Sign Up text link (shown when not logged in)
                                 HStack {
@@ -251,22 +251,44 @@ struct ImageModelDetailPage: View {
                             VStack(spacing: 8) {
                                 HStack(spacing: 6) {
                                     Spacer()
-                                    Image(systemName: "exclamationmark.circle.fill")
-                                        .font(.system(size: 14))
-                                        .foregroundColor(.orange)
-                                    Text("Please Subscribe to generate an image")
-                                        .font(.caption)
-                                        .foregroundColor(.orange)
+                                    Image(
+                                        systemName:
+                                            "exclamationmark.circle.fill"
+                                    )
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.orange)
+                                    Text(
+                                        "Please Subscribe to generate an image"
+                                    )
+                                    .font(.caption)
+                                    .foregroundColor(.orange)
                                     Spacer()
                                 }
-                                
+
                                 HStack {
                                     Spacer()
                                     Button(action: {
                                         showSubscriptionView = true
                                     }) {
+                                        Image(systemName: "crown.fill")
+                                            .font(
+                                                .system(
+                                                    size: 11, weight: .semibold,
+                                                    design: .rounded)
+                                            )
+                                            .foregroundStyle(
+                                                LinearGradient(
+                                                    colors: [.yellow, .orange],
+                                                    startPoint: .topLeading,
+                                                    endPoint: .bottomTrailing
+                                                )
+                                            )
                                         Text("Subscribe")
-                                            .font(.system(size: 15, weight: .medium, design: .rounded))
+                                            .font(
+                                                .system(
+                                                    size: 15, weight: .medium,
+                                                    design: .rounded)
+                                            )
                                             .foregroundColor(.blue)
                                     }
                                     Spacer()
@@ -277,22 +299,29 @@ struct ImageModelDetailPage: View {
                             VStack(spacing: 8) {
                                 HStack(spacing: 6) {
                                     Spacer()
-                                    Image(systemName: "exclamationmark.circle.fill")
-                                        .font(.system(size: 14))
-                                        .foregroundColor(.orange)
+                                    Image(
+                                        systemName:
+                                            "exclamationmark.circle.fill"
+                                    )
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.orange)
                                     Text("Insufficient credits to generate")
                                         .font(.caption)
                                         .foregroundColor(.orange)
                                     Spacer()
                                 }
-                                
+
                                 HStack {
                                     Spacer()
                                     Button(action: {
                                         showPurchaseCreditsView = true
                                     }) {
                                         Text("Buy Credits")
-                                            .font(.system(size: 15, weight: .medium, design: .rounded))
+                                            .font(
+                                                .system(
+                                                    size: 15, weight: .medium,
+                                                    design: .rounded)
+                                            )
                                             .foregroundColor(.blue)
                                     }
                                     Spacer()
@@ -838,7 +867,7 @@ struct GenerateButton: View {
     let hasCredits: Bool
     let onSignInTap: () -> Void
     let action: () -> Void
-    
+
     private var canGenerate: Bool {
         isLoggedIn && isSubscribed && hasCredits
     }
@@ -902,7 +931,6 @@ struct GenerateButton: View {
         .animation(.easeOut(duration: 0.25), value: keyboardHeight)
     }
 }
-
 
 // MARK: MODEL GALLERY
 

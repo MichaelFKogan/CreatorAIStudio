@@ -12,8 +12,8 @@ struct PhotoReviewView: View {
     @State private var showSignInSheet: Bool = false
     @State private var showSubscriptionView: Bool = false
     @State private var showPurchaseCreditsView: Bool = false
-    @State private var isSubscribed: Bool = false // TODO: Connect to actual subscription status
-    @State private var hasCredits: Bool = true // TODO: Connect to actual credits check
+    @State private var isSubscribed: Bool = false  // TODO: Connect to actual subscription status
+    @State private var hasCredits: Bool = true  // TODO: Connect to actual credits check
 
     @State private var selectedStyle: String = "Anime"
     @State private var title: String = ""
@@ -155,14 +155,31 @@ struct PhotoReviewView: View {
                                 .font(.caption)
                                 .foregroundColor(.orange)
                         }
-                        
+
                         HStack {
                             Spacer()
                             Button(action: {
                                 showSubscriptionView = true
                             }) {
+                                Image(systemName: "crown.fill")
+                                    .font(
+                                        .system(
+                                            size: 11, weight: .semibold,
+                                            design: .rounded)
+                                    )
+                                    .foregroundStyle(
+                                        LinearGradient(
+                                            colors: [.yellow, .orange],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
                                 Text("Subscribe")
-                                    .font(.system(size: 15, weight: .medium, design: .rounded))
+                                    .font(
+                                        .system(
+                                            size: 15, weight: .medium,
+                                            design: .rounded)
+                                    )
                                     .foregroundColor(.blue)
                             }
                             Spacer()
@@ -180,14 +197,18 @@ struct PhotoReviewView: View {
                                 .font(.caption)
                                 .foregroundColor(.orange)
                         }
-                        
+
                         HStack {
                             Spacer()
                             Button(action: {
                                 showPurchaseCreditsView = true
                             }) {
                                 Text("Buy Credits")
-                                    .font(.system(size: 15, weight: .medium, design: .rounded))
+                                    .font(
+                                        .system(
+                                            size: 15, weight: .medium,
+                                            design: .rounded)
+                                    )
                                     .foregroundColor(.blue)
                             }
                             Spacer()
@@ -225,8 +246,13 @@ struct PhotoReviewView: View {
                     .cornerRadius(12)
                     .padding(.horizontal)
                 }
-                .disabled(isProcessing || authViewModel.user == nil || !isSubscribed || !hasCredits)
-                .opacity((authViewModel.user != nil && isSubscribed && hasCredits) ? 1.0 : 0.6)
+                .disabled(
+                    isProcessing || authViewModel.user == nil || !isSubscribed
+                        || !hasCredits
+                )
+                .opacity(
+                    (authViewModel.user != nil && isSubscribed && hasCredits)
+                        ? 1.0 : 0.6)
 
                 // Cancel Button
                 Button(action: {

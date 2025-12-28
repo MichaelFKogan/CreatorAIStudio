@@ -42,8 +42,8 @@ struct VideoModelDetailPage: View {
     @State private var showSignInSheet: Bool = false
     @State private var showSubscriptionView: Bool = false
     @State private var showPurchaseCreditsView: Bool = false
-    @State private var isSubscribed: Bool = false // TODO: Connect to actual subscription status
-    @State private var hasCredits: Bool = true // TODO: Connect to actual credits check
+    @State private var isSubscribed: Bool = false  // TODO: Connect to actual subscription status
+    @State private var hasCredits: Bool = true  // TODO: Connect to actual credits check
 
     @EnvironmentObject var authViewModel: AuthViewModel
 
@@ -223,7 +223,7 @@ struct VideoModelDetailPage: View {
     private var priceString: String {
         PricingManager.formatPrice(currentPrice ?? item.resolvedCost ?? 0)
     }
-    
+
     private var creditsString: String {
         // Keep for backward compatibility, but use new formatter
         priceString
@@ -385,22 +385,42 @@ struct VideoModelDetailPage: View {
                             VStack(spacing: 8) {
                                 HStack(spacing: 6) {
                                     Spacer()
-                                    Image(systemName: "exclamationmark.circle.fill")
-                                        .font(.system(size: 14))
-                                        .foregroundColor(.orange)
+                                    Image(
+                                        systemName:
+                                            "exclamationmark.circle.fill"
+                                    )
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.orange)
                                     Text("Please Subscribe to create a video")
                                         .font(.caption)
                                         .foregroundColor(.orange)
                                     Spacer()
                                 }
-                                
+
                                 HStack {
                                     Spacer()
                                     Button(action: {
                                         showSubscriptionView = true
                                     }) {
+                                        Image(systemName: "crown.fill")
+                                            .font(
+                                                .system(
+                                                    size: 11, weight: .semibold,
+                                                    design: .rounded)
+                                            )
+                                            .foregroundStyle(
+                                                LinearGradient(
+                                                    colors: [.yellow, .orange],
+                                                    startPoint: .topLeading,
+                                                    endPoint: .bottomTrailing
+                                                )
+                                            )
                                         Text("Subscribe")
-                                            .font(.system(size: 15, weight: .medium, design: .rounded))
+                                            .font(
+                                                .system(
+                                                    size: 15, weight: .medium,
+                                                    design: .rounded)
+                                            )
                                             .foregroundColor(.blue)
                                     }
                                     Spacer()
@@ -411,22 +431,29 @@ struct VideoModelDetailPage: View {
                             VStack(spacing: 8) {
                                 HStack(spacing: 6) {
                                     Spacer()
-                                    Image(systemName: "exclamationmark.circle.fill")
-                                        .font(.system(size: 14))
-                                        .foregroundColor(.orange)
+                                    Image(
+                                        systemName:
+                                            "exclamationmark.circle.fill"
+                                    )
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.orange)
                                     Text("Insufficient credits to generate")
                                         .font(.caption)
                                         .foregroundColor(.orange)
                                     Spacer()
                                 }
-                                
+
                                 HStack {
                                     Spacer()
                                     Button(action: {
                                         showPurchaseCreditsView = true
                                     }) {
                                         Text("Buy Credits")
-                                            .font(.system(size: 15, weight: .medium, design: .rounded))
+                                            .font(
+                                                .system(
+                                                    size: 15, weight: .medium,
+                                                    design: .rounded)
+                                            )
                                             .foregroundColor(.blue)
                                     }
                                     Spacer()
@@ -1224,7 +1251,9 @@ private struct AudioPricingCard: View {
                                             + audioAddonProvider(duration)
                                         PriceDisplayView(
                                             price: adjustedPrice,
-                                            font: .system(size: 12, weight: .medium, design: .rounded),
+                                            font: .system(
+                                                size: 12, weight: .medium,
+                                                design: .rounded),
                                             foregroundColor: .white
                                         )
                                         .frame(maxWidth: .infinity)
@@ -1399,7 +1428,9 @@ private struct ResolutionPricingCard: View {
                             {
                                 PriceDisplayView(
                                     price: price,
-                                    font: .system(size: 12, weight: .medium, design: .rounded),
+                                    font: .system(
+                                        size: 12, weight: .medium,
+                                        design: .rounded),
                                     foregroundColor: .white
                                 )
                                 .frame(maxWidth: .infinity)
@@ -1448,7 +1479,7 @@ private struct GenerateButtonVideo: View {
     let hasCredits: Bool
     let onSignInTap: () -> Void
     let action: () -> Void
-    
+
     private var canGenerate: Bool {
         isLoggedIn && isSubscribed && hasCredits
     }
@@ -1471,8 +1502,10 @@ private struct GenerateButtonVideo: View {
                         Image(systemName: "video.fill")
                     }
                     HStack(spacing: 4) {
-                        Text(isGenerating ? "Generating..." : "Generate Video - ")
-                            .fontWeight(.semibold)
+                        Text(
+                            isGenerating ? "Generating..." : "Generate Video - "
+                        )
+                        .fontWeight(.semibold)
                         if !isGenerating {
                             PriceDisplayView(
                                 price: price ?? 0,
@@ -1548,7 +1581,6 @@ private struct GenerateButtonVideo: View {
         .animation(.easeOut(duration: 0.25), value: keyboardHeight)
     }
 }
-
 
 // MARK: AUDIO TOGGLE
 
