@@ -40,6 +40,10 @@ struct VideoModelDetailPage: View {
     @State private var selectedResolutionIndex: Int = 0
     @State private var generateAudio: Bool = true  // Default to ON for audio generation
     @State private var showSignInSheet: Bool = false
+    @State private var showSubscriptionView: Bool = false
+    @State private var showPurchaseCreditsView: Bool = false
+    @State private var isSubscribed: Bool = false // TODO: Connect to actual subscription status
+    @State private var hasCredits: Bool = true // TODO: Connect to actual credits check
 
     @EnvironmentObject var authViewModel: AuthViewModel
 
@@ -377,6 +381,58 @@ struct VideoModelDetailPage: View {
                                 }
                             }
                             .padding(.horizontal)
+                        } else if !isSubscribed {
+                            VStack(spacing: 8) {
+                                HStack(spacing: 6) {
+                                    Spacer()
+                                    Image(systemName: "exclamationmark.circle.fill")
+                                        .font(.system(size: 14))
+                                        .foregroundColor(.orange)
+                                    Text("Please Subscribe to create a video")
+                                        .font(.caption)
+                                        .foregroundColor(.orange)
+                                    Spacer()
+                                }
+                                
+                                HStack {
+                                    Spacer()
+                                    Button(action: {
+                                        showSubscriptionView = true
+                                    }) {
+                                        Text("Subscribe")
+                                            .font(.system(size: 15, weight: .medium, design: .rounded))
+                                            .foregroundColor(.blue)
+                                    }
+                                    Spacer()
+                                }
+                            }
+                            .padding(.horizontal)
+                        } else if !hasCredits {
+                            VStack(spacing: 8) {
+                                HStack(spacing: 6) {
+                                    Spacer()
+                                    Image(systemName: "exclamationmark.circle.fill")
+                                        .font(.system(size: 14))
+                                        .foregroundColor(.orange)
+                                    Text("Insufficient credits to generate")
+                                        .font(.caption)
+                                        .foregroundColor(.orange)
+                                    Spacer()
+                                }
+                                
+                                HStack {
+                                    Spacer()
+                                    Button(action: {
+                                        showPurchaseCreditsView = true
+                                    }) {
+                                        Text("Buy Credits")
+                                            .font(.system(size: 15, weight: .medium, design: .rounded))
+                                            .foregroundColor(.blue)
+                                    }
+                                    Spacer()
+                                }
+                            }
+                            .padding(.horizontal)
                         }
 
                         LazyView(
@@ -395,6 +451,8 @@ struct VideoModelDetailPage: View {
                                 selectedDuration:
                                     "\(Int(videoDurationOptions[selectedDurationIndex].duration))s",
                                 isLoggedIn: authViewModel.user != nil,
+                                isSubscribed: isSubscribed,
+                                hasCredits: hasCredits,
                                 onSignInTap: {
                                     showSignInSheet = true
                                 },
@@ -546,6 +604,16 @@ struct VideoModelDetailPage: View {
         }
         .sheet(isPresented: $showSignInSheet) {
             SignInView()
+                .environmentObject(authViewModel)
+                .presentationDragIndicator(.visible)
+        }
+        .sheet(isPresented: $showSubscriptionView) {
+            SubscriptionView()
+                .environmentObject(authViewModel)
+                .presentationDragIndicator(.visible)
+        }
+        .sheet(isPresented: $showPurchaseCreditsView) {
+            PurchaseCreditsView()
                 .environmentObject(authViewModel)
                 .presentationDragIndicator(.visible)
         }
@@ -1376,8 +1444,14 @@ private struct GenerateButtonVideo: View {
     let selectedResolution: String?
     let selectedDuration: String
     let isLoggedIn: Bool
+    let isSubscribed: Bool
+    let hasCredits: Bool
     let onSignInTap: () -> Void
     let action: () -> Void
+    
+    private var canGenerate: Bool {
+        isLoggedIn && isSubscribed && hasCredits
+    }
 
     var body: some View {
         VStack(spacing: 8) {
@@ -1412,7 +1486,7 @@ private struct GenerateButtonVideo: View {
                 .frame(maxWidth: .infinity)
                 .padding()
                 .background(
-                    isGenerating || !isLoggedIn
+                    isGenerating || !canGenerate
                         ? LinearGradient(
                             colors: [Color.gray, Color.gray],
                             startPoint: .leading, endPoint: .trailing
@@ -1425,15 +1499,15 @@ private struct GenerateButtonVideo: View {
                 .foregroundColor(.white)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
                 .shadow(
-                    color: (isGenerating || !isLoggedIn)
+                    color: (isGenerating || !canGenerate)
                         ? Color.clear : Color.purple.opacity(0.4),
                     radius: 8, x: 0, y: 4
                 )
             }
             .scaleEffect(isGenerating ? 0.98 : 1.0)
             .animation(.easeInOut(duration: 0.2), value: isGenerating)
-            .disabled(isGenerating || !isLoggedIn)
-            .opacity(!isLoggedIn ? 0.6 : 1.0)
+            .disabled(isGenerating || !canGenerate)
+            .opacity(canGenerate ? 1.0 : 0.6)
             .padding(.horizontal)
             .background(Color(UIColor.systemBackground))
 

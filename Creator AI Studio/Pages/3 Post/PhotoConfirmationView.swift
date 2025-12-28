@@ -24,6 +24,10 @@ struct PhotoConfirmationView: View {
     @State private var selectedAspectIndex: Int = 0
     @State private var sizeButtonTapped: Bool = false
     @State private var showSignInSheet: Bool = false
+    @State private var showSubscriptionView: Bool = false
+    @State private var showPurchaseCreditsView: Bool = false
+    @State private var isSubscribed: Bool = false // TODO: Connect to actual subscription status
+    @State private var hasCredits: Bool = true // TODO: Connect to actual credits check
     
     // Primary initializer for multiple images
     init(
@@ -58,6 +62,12 @@ struct PhotoConfirmationView: View {
         } else {
             return "Generating..."
         }
+    }
+    
+    // Computed property to check if user can generate
+    private var canGenerate: Bool {
+        guard let _ = authViewModel.user else { return false }
+        return isSubscribed && hasCredits
     }
     
     // Calculate total price: sum of all filter costs × number of images
@@ -118,6 +128,16 @@ struct PhotoConfirmationView: View {
         .toolbar { toolbarContent }
         .sheet(isPresented: $showSignInSheet) {
             SignInView()
+                .environmentObject(authViewModel)
+                .presentationDragIndicator(.visible)
+        }
+        .sheet(isPresented: $showSubscriptionView) {
+            SubscriptionView()
+                .environmentObject(authViewModel)
+                .presentationDragIndicator(.visible)
+        }
+        .sheet(isPresented: $showPurchaseCreditsView) {
+            PurchaseCreditsView()
                 .environmentObject(authViewModel)
                 .presentationDragIndicator(.visible)
         }
@@ -500,6 +520,12 @@ struct PhotoConfirmationView: View {
 
                 signInTextLink
                     .padding(.bottom, 12)
+            } else if !isSubscribed {
+                subscriptionRequiredMessage
+                    .padding(.bottom, 12)
+            } else if !hasCredits {
+                creditsRequiredMessage
+                    .padding(.bottom, 12)
             }
 
             generateButton
@@ -565,8 +591,8 @@ struct PhotoConfirmationView: View {
                     )
                     .opacity(isLoading ? 0.85 : 1.0)
                 }
-        .disabled(isLoading || authViewModel.user == nil)
-        .opacity(authViewModel.user == nil ? 0.6 : 1.0)
+        .disabled(isLoading || !canGenerate)
+        .opacity(canGenerate ? 1.0 : 0.6)
                 .padding(.horizontal, 24)
     }
 
@@ -593,6 +619,60 @@ struct PhotoConfirmationView: View {
                     .foregroundColor(.blue)
             }
             Spacer()
+        }
+    }
+    
+    private var subscriptionRequiredMessage: some View {
+        VStack(spacing: 8) {
+            HStack(spacing: 6) {
+                Spacer()
+                Image(systemName: "exclamationmark.circle.fill")
+                    .font(.system(size: 14))
+                    .foregroundColor(.orange)
+                Text("Please Subscribe to generate this image")
+                    .font(.caption)
+                    .foregroundColor(.orange)
+                Spacer()
+            }
+            
+            HStack {
+                Spacer()
+                Button(action: {
+                    showSubscriptionView = true
+                }) {
+                    Text("Subscribe")
+                        .font(.system(size: 15, weight: .medium, design: .rounded))
+                        .foregroundColor(.blue)
+                }
+                Spacer()
+            }
+        }
+    }
+    
+    private var creditsRequiredMessage: some View {
+        VStack(spacing: 8) {
+            HStack(spacing: 6) {
+                Spacer()
+                Image(systemName: "exclamationmark.circle.fill")
+                    .font(.system(size: 14))
+                    .foregroundColor(.orange)
+                Text("Insufficient credits to generate")
+                    .font(.caption)
+                    .foregroundColor(.orange)
+                Spacer()
+            }
+            
+            HStack {
+                Spacer()
+                Button(action: {
+                    showPurchaseCreditsView = true
+                }) {
+                    Text("Buy Credits")
+                        .font(.system(size: 15, weight: .medium, design: .rounded))
+                        .foregroundColor(.blue)
+                }
+                Spacer()
+            }
         }
     }
 

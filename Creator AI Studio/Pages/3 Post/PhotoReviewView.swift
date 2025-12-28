@@ -10,6 +10,10 @@ struct PhotoReviewView: View {
     @Environment(\.dismiss) var dismiss
     @EnvironmentObject var authViewModel: AuthViewModel
     @State private var showSignInSheet: Bool = false
+    @State private var showSubscriptionView: Bool = false
+    @State private var showPurchaseCreditsView: Bool = false
+    @State private var isSubscribed: Bool = false // TODO: Connect to actual subscription status
+    @State private var hasCredits: Bool = true // TODO: Connect to actual credits check
 
     @State private var selectedStyle: String = "Anime"
     @State private var title: String = ""
@@ -141,6 +145,56 @@ struct PhotoReviewView: View {
                     }
                     .padding(.horizontal)
                     .padding(.bottom, 12)
+                } else if !isSubscribed {
+                    VStack(spacing: 8) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "exclamationmark.circle.fill")
+                                .font(.system(size: 14))
+                                .foregroundColor(.orange)
+                            Text("Please Subscribe to generate an image")
+                                .font(.caption)
+                                .foregroundColor(.orange)
+                        }
+                        
+                        HStack {
+                            Spacer()
+                            Button(action: {
+                                showSubscriptionView = true
+                            }) {
+                                Text("Subscribe")
+                                    .font(.system(size: 15, weight: .medium, design: .rounded))
+                                    .foregroundColor(.blue)
+                            }
+                            Spacer()
+                        }
+                    }
+                    .padding(.horizontal)
+                    .padding(.bottom, 12)
+                } else if !hasCredits {
+                    VStack(spacing: 8) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "exclamationmark.circle.fill")
+                                .font(.system(size: 14))
+                                .foregroundColor(.orange)
+                            Text("Insufficient credits to upload")
+                                .font(.caption)
+                                .foregroundColor(.orange)
+                        }
+                        
+                        HStack {
+                            Spacer()
+                            Button(action: {
+                                showPurchaseCreditsView = true
+                            }) {
+                                Text("Buy Credits")
+                                    .font(.system(size: 15, weight: .medium, design: .rounded))
+                                    .foregroundColor(.blue)
+                            }
+                            Spacer()
+                        }
+                    }
+                    .padding(.horizontal)
+                    .padding(.bottom, 12)
                 }
 
                 // Upload Your Photo Button
@@ -171,8 +225,8 @@ struct PhotoReviewView: View {
                     .cornerRadius(12)
                     .padding(.horizontal)
                 }
-                .disabled(isProcessing || authViewModel.user == nil)
-                .opacity(authViewModel.user == nil ? 0.6 : 1.0)
+                .disabled(isProcessing || authViewModel.user == nil || !isSubscribed || !hasCredits)
+                .opacity((authViewModel.user != nil && isSubscribed && hasCredits) ? 1.0 : 0.6)
 
                 // Cancel Button
                 Button(action: {
@@ -196,6 +250,16 @@ struct PhotoReviewView: View {
         .onAppear(perform: setDefaultFilter)
         .sheet(isPresented: $showSignInSheet) {
             SignInView()
+                .environmentObject(authViewModel)
+                .presentationDragIndicator(.visible)
+        }
+        .sheet(isPresented: $showSubscriptionView) {
+            SubscriptionView()
+                .environmentObject(authViewModel)
+                .presentationDragIndicator(.visible)
+        }
+        .sheet(isPresented: $showPurchaseCreditsView) {
+            PurchaseCreditsView()
                 .environmentObject(authViewModel)
                 .presentationDragIndicator(.visible)
         }

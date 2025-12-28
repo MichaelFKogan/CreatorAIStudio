@@ -67,6 +67,41 @@ struct SubscriptionView: View {
                     }
                     .padding(.horizontal)
                     
+                    // What's Not Included section
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("What's Not Included")
+                            .font(.system(size: 20, weight: .bold, design: .rounded))
+                            .foregroundColor(.primary)
+                            .padding(.horizontal)
+                        
+                        VStack(spacing: 12) {
+                            HStack(alignment: .top, spacing: 16) {
+                                Image(systemName: "xmark.circle.fill")
+                                    .font(.system(size: 24))
+                                    .foregroundColor(.orange)
+                                    .frame(width: 40)
+                                
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Credits Sold Separately")
+                                        .font(.system(size: 16, weight: .semibold, design: .rounded))
+                                        .foregroundColor(.primary)
+                                    
+                                    Text("Credits are not included with your subscription and must be purchased separately to use AI features")
+                                        .font(.system(size: 14, design: .rounded))
+                                        .foregroundColor(.secondary)
+                                }
+                                
+                                Spacer()
+                            }
+                            .padding()
+                            .background(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(Color(.secondarySystemBackground))
+                            )
+                        }
+                        .padding(.horizontal)
+                    }
+                    
                     // Benefits section
                     VStack(alignment: .leading, spacing: 16) {
                         Text("What's Included")
