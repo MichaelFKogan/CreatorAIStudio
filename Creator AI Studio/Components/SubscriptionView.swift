@@ -47,7 +47,7 @@ struct SubscriptionView: View {
                     VStack(spacing: 16) {
                         SubscriptionPlanCard(
                             title: "Premium",
-                            price: "$10.00",
+                            price: "$5.00",
                             period: "per month",
                             features: [
                                 "Full access to all app features",
