@@ -84,7 +84,7 @@ struct Settings: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(isSubscribed ? "Premium Active" : "Premium Subscription")
                             .font(.body)
-                        Text(isSubscribed ? "Renews monthly" : "$4.99/month")
+                        Text(isSubscribed ? "Renews monthly" : "$10.00/month")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }

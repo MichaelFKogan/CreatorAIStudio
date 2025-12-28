@@ -3,6 +3,8 @@ import SwiftUI
 struct Home: View {
     @Environment(\.colorScheme) var colorScheme
     @EnvironmentObject var authViewModel: AuthViewModel
+    @State private var showSubscriptionSheet: Bool = false
+    @State private var showSignInSheet: Bool = false
     let resetTrigger: UUID
 
     var body: some View {
@@ -43,28 +45,55 @@ struct Home: View {
                         }
                     }
 
-                    // MARK: Credits Badge and Settings
+                    // MARK: Sign In / Crown Icon for Subscription
                     ToolbarItem(placement: .navigationBarTrailing) {
-                        HStack(spacing: 8) {
-                            // // Credits Badge (or Sign in when logged out)
-                            // CreditsBadge(
-                            //     diamondColor: .purple,
-                            //     borderColor: .purple,
-                            //     creditsAmount: "$10.00"
-                            // )
-                            
-                            // Settings Gear Icon
-                            NavigationLink(
-                                destination: Settings(profileViewModel: nil)
-                                    .environmentObject(authViewModel)
-                            ) {
-                                Image(systemName: "gearshape")
-                                    .font(.body)
-                                    .foregroundColor(.gray)
+                        Group {
+                            if authViewModel.user == nil {
+                                // Show "Sign in" button when logged out
+                                Button(action: {
+                                    showSignInSheet = true
+                                }) {
+                                    Text("Sign in")
+                                        .font(
+                                            .system(
+                                                size: 16, weight: .semibold,
+                                                design: .rounded)
+                                        )
+                                        .foregroundColor(.primary)
+                                }
+                            } else {
+                                // Show crown icon when logged in
+                                Button(action: {
+                                    showSubscriptionSheet = true
+                                }) {
+                                    Image(systemName: "crown.fill")
+                                        .font(
+                                            .system(
+                                                size: 14, weight: .semibold,
+                                                design: .rounded)
+                                        )
+                                        .foregroundStyle(
+                                            LinearGradient(
+                                                colors: [.yellow, .orange],
+                                                startPoint: .topLeading,
+                                                endPoint: .bottomTrailing
+                                            )
+                                        )
+                                }
                             }
                         }
                     }
                 }
+            .sheet(isPresented: $showSignInSheet) {
+                SignInView()
+                    .environmentObject(authViewModel)
+                    .presentationDragIndicator(.visible)
+            }
+            .sheet(isPresented: $showSubscriptionSheet) {
+                SubscriptionView()
+                    .environmentObject(authViewModel)
+                    .presentationDragIndicator(.visible)
+            }
         }
     }
 

@@ -75,21 +75,21 @@ struct PurchaseCreditsView: View {
                 VStack(spacing: 24) {
                     // Header
                     VStack(spacing: 12) {
-                        Image(systemName: isSubscribed ? "diamond.fill" : "crown.fill")
+                        Image(systemName: "diamond.fill")
                             .font(.system(size: 56))
                             .foregroundStyle(
                                 LinearGradient(
-                                    colors: isSubscribed ? [.blue, .purple] : [.yellow, .orange],
+                                    colors: [.blue, .purple],
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
                                 )
                             )
                         
-                        Text(isSubscribed ? "Buy Credits" : "Get Started")
+                        Text("Buy Credits")
                             .font(.system(size: 26, weight: .bold, design: .rounded))
                             .foregroundColor(.primary)
                         
-                        Text(isSubscribed ? "Choose a credit package" : "Subscribe and get credits")
+                        Text("Choose a credit package")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                     }
@@ -101,7 +101,7 @@ struct PurchaseCreditsView: View {
                                 .font(.system(size: 16))
                                 .foregroundColor(.blue)
                             
-                            Text("Subscription required to use the app and purchase credits")
+                            Text("Subscription required to purchase credits")
                                 .font(.system(size: 13, design: .rounded))
                                 .foregroundColor(.secondary)
                         }
@@ -125,62 +125,32 @@ struct PurchaseCreditsView: View {
                             .padding(.horizontal)
                     }
                     
-                    // Start Packs (for non-subscribers) or Credit Packages (for subscribers)
+                    // Credit Packages
                     VStack(spacing: 12) {
-                        if isSubscribed {
-                            // Start Packs: Subscription + Credits bundles
-                            // Subscription is always $5.00/month, credits vary
-                            StartPackCard(
-                                title: "Starter Pack",
-                                baseCreditsValue: 1.00,
-                                paymentMethod: selectedPaymentMethod,
-                                badge: "Popular"
-                            )
-                            
-                            StartPackCard(
-                                title: "Pro Pack",
-                                baseCreditsValue: 5.00,
-                                paymentMethod: selectedPaymentMethod,
-                                badge: "Best Value"
-                            )
-                            
-                            StartPackCard(
-                                title: "Mega Pack",
-                                baseCreditsValue: 10.00,
-                                paymentMethod: selectedPaymentMethod
-                            )
-                        } else {
-                            // Credit Packages: Individual credit purchases for subscribers
-                            // Base credit values and prices
-                            CreditPackageCard(
-                                title: "Starter Pack",
-                                baseCreditsValue: 5.00,
-                                basePrice: 4.99,
-                                paymentMethod: selectedPaymentMethod
-                            )
-                            
-                            CreditPackageCard(
-                                title: "Pro Pack",
-                                baseCreditsValue: 10.00,
-                                basePrice: 9.99,
-                                paymentMethod: selectedPaymentMethod,
-                                badge: "Best Value"
-                            )
-                            
-                            CreditPackageCard(
-                                title: "Mega Pack",
-                                baseCreditsValue: 20.00,
-                                basePrice: 19.99,
-                                paymentMethod: selectedPaymentMethod
-                            )
-                            
-                            CreditPackageCard(
-                                title: "Ultra Pack",
-                                baseCreditsValue: 50.00,
-                                basePrice: 49.99,
-                                paymentMethod: selectedPaymentMethod
-                            )
-                        }
+                        CreditPackageCard(
+                            title: "Starter Pack",
+                            baseCreditsValue: 5.00,
+                            paymentMethod: selectedPaymentMethod
+                        )
+                        
+                        CreditPackageCard(
+                            title: "Pro Pack",
+                            baseCreditsValue: 10.00,
+                            paymentMethod: selectedPaymentMethod,
+                            badge: "Best Value"
+                        )
+                        
+                        CreditPackageCard(
+                            title: "Mega Pack",
+                            baseCreditsValue: 20.00,
+                            paymentMethod: selectedPaymentMethod
+                        )
+                        
+                        CreditPackageCard(
+                            title: "Ultra Pack",
+                            baseCreditsValue: 50.00,
+                            paymentMethod: selectedPaymentMethod
+                        )
                     }
                     .padding(.horizontal)
                     
@@ -250,27 +220,32 @@ struct PaymentMethodSelector: View {
 // Placeholder credit package card
 struct CreditPackageCard: View {
     let title: String
-    let baseCreditsValue: Double
-    let basePrice: Double
+    let baseCreditsValue: Double // This is both the credits amount and the base price
     let paymentMethod: PaymentMethod
     var badge: String? = nil
     
     private var adjustedPrice: Double {
         switch paymentMethod {
         case .apple:
-            return PriceCalculator.calculateApplePrice(basePrice: basePrice)
+            return PriceCalculator.calculateApplePrice(basePrice: baseCreditsValue)
         case .external:
-            return PriceCalculator.calculateExternalPrice(basePrice: basePrice)
+            return PriceCalculator.calculateExternalPrice(basePrice: baseCreditsValue)
         }
     }
     
     private var feeAmount: Double {
         switch paymentMethod {
         case .apple:
-            return adjustedPrice - basePrice
+            return adjustedPrice - baseCreditsValue
         case .external:
-            return PriceCalculator.calculateExternalFee(basePrice: basePrice)
+            return PriceCalculator.calculateExternalFee(basePrice: baseCreditsValue)
         }
+    }
+    
+    // Calculate number of image generations at $0.04 per image
+    private var imageGenerations: Int {
+        let costPerImage = 0.04
+        return Int(baseCreditsValue / costPerImage)
     }
     
     var body: some View {
@@ -293,6 +268,10 @@ struct CreditPackageCard: View {
                                 .font(.system(size: 16, weight: .semibold, design: .rounded))
                                 .foregroundColor(.primary)
                         }
+                        
+                        Text("About \(imageGenerations)+ image generations")
+                            .font(.system(size: 13, design: .rounded))
+                            .foregroundColor(.secondary)
                     }
                     
                     Spacer()
@@ -333,177 +312,3 @@ struct CreditPackageCard: View {
         .buttonStyle(PlainButtonStyle())
     }
 }
-
-// Start Pack Card: Subscription + Credits bundle for non-subscribers
-struct StartPackCard: View {
-    let title: String
-    let baseCreditsValue: Double
-    let paymentMethod: PaymentMethod
-    var badge: String? = nil
-    
-    // Subscription is always $5.00/month, no fees
-    private let subscriptionPrice: Double = 5.00
-    
-    // Credits with fees applied (only credits have fees)
-    private var creditsPriceWithFees: Double {
-        switch paymentMethod {
-        case .apple:
-            return PriceCalculator.calculateApplePrice(basePrice: baseCreditsValue)
-        case .external:
-            return PriceCalculator.calculateExternalPrice(basePrice: baseCreditsValue)
-        }
-    }
-    
-    // Total: subscription (no fees) + credits (with fees)
-    private var totalPrice: Double {
-        return subscriptionPrice + creditsPriceWithFees
-    }
-    
-    // Fee amount (only on credits)
-    private var feeAmount: Double {
-        switch paymentMethod {
-        case .apple:
-            return creditsPriceWithFees - baseCreditsValue
-        case .external:
-            return PriceCalculator.calculateExternalFee(basePrice: baseCreditsValue)
-        }
-    }
-    
-    var body: some View {
-        Button(action: {
-            // TODO: Handle start pack purchase (subscription + credits) with selected payment method
-            print("Purchase \(title) via \(paymentMethod.rawValue): \(PriceCalculator.formatPrice(subscriptionPrice))/month + \(PriceCalculator.formatPrice(baseCreditsValue)) credits (with fees: \(PriceCalculator.formatPrice(creditsPriceWithFees))) = \(PriceCalculator.formatPrice(totalPrice))")
-        }) {
-            VStack(alignment: .leading, spacing: 10) {
-                // Header with title and badge
-                HStack {
-                    Text(title)
-                        .font(.system(size: 18, weight: .bold, design: .rounded))
-                        .foregroundColor(.primary)
-                    
-                    Spacer()
-                    
-                    if let badge = badge {
-                        Text(badge)
-                            .font(.caption)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 3)
-                            .background(
-                                LinearGradient(
-                                    colors: [.yellow, .orange],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
-                            )
-                            .clipShape(Capsule())
-                    }
-                }
-                
-                // Subscription + Credits breakdown
-                HStack(spacing: 12) {
-                    // Subscription (left)
-                    VStack(spacing: 4) {
-                        Image(systemName: "crown.fill")
-                            .font(.system(size: 16))
-                            .foregroundStyle(
-                                LinearGradient(
-                                    colors: [.yellow, .orange],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
-                        
-                        VStack(spacing: 2) {
-                            Text("Subscription")
-                                .font(.system(size: 11, weight: .semibold, design: .rounded))
-                                .foregroundColor(.primary)
-                            
-                            HStack(alignment: .firstTextBaseline, spacing: 2) {
-                                Text(PriceCalculator.formatPrice(subscriptionPrice))
-                                    .font(.system(size: 14, weight: .bold, design: .rounded))
-                                    .foregroundColor(.primary)
-                                
-                                Text("/mo")
-                                    .font(.system(size: 10, design: .rounded))
-                                    .foregroundColor(.secondary)
-                            }
-                        }
-                    }
-                    .frame(maxWidth: .infinity)
-                    
-                    // Plus sign
-                    Text("+")
-                        .font(.system(size: 18, weight: .bold, design: .rounded))
-                        .foregroundColor(.secondary)
-                    
-                    // Credits (right) - always show base value
-                    VStack(spacing: 4) {
-                        Image(systemName: "diamond.fill")
-                            .font(.system(size: 16))
-                            .foregroundColor(.blue)
-                        
-                        VStack(spacing: 2) {
-                            Text("Credits")
-                                .font(.system(size: 11, weight: .semibold, design: .rounded))
-                                .foregroundColor(.primary)
-                            
-                            Text(PriceCalculator.formatPrice(baseCreditsValue))
-                                .font(.system(size: 14, weight: .bold, design: .rounded))
-                                .foregroundColor(.primary)
-                        }
-                    }
-                    .frame(maxWidth: .infinity)
-                }
-                .padding(.vertical, 8)
-                .padding(.horizontal, 10)
-                .background(
-                    RoundedRectangle(cornerRadius: 10)
-                        .fill(Color(.secondarySystemBackground))
-                )
-                
-                // Total price with fees
-                VStack(alignment: .trailing, spacing: 2) {
-                    HStack {
-                        Text("Total")
-                            .font(.system(size: 13, weight: .medium, design: .rounded))
-                            .foregroundColor(.secondary)
-                        
-                        Spacer()
-                        
-                        Text(PriceCalculator.formatPrice(totalPrice))
-                            .font(.system(size: 20, weight: .bold, design: .rounded))
-                            .foregroundColor(.primary)
-                    }
-                    
-                    HStack {
-                        Spacer()
-                        Text(paymentMethod == .apple ? "Apple's fee (30%): \(PriceCalculator.formatPrice(feeAmount))" : "Credit Card fee (3% + $0.30): \(PriceCalculator.formatPrice(feeAmount))")
-                            .font(.system(size: 12, weight: .medium, design: .rounded))
-                            .foregroundColor(.secondary)
-                    }
-                }
-            }
-            .padding(12)
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(Color(.systemBackground))
-                    .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 4)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 16)
-                    .stroke(
-                        LinearGradient(
-                            colors: [Color.yellow.opacity(0.5), Color.orange.opacity(0.5)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        ),
-                        lineWidth: 2
-                    )
-            )
-        }
-        .buttonStyle(PlainButtonStyle())
-    }
-}
-

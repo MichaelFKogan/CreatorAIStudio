@@ -12,7 +12,6 @@ struct SubscriptionView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var isSubscribed: Bool = false // TODO: Connect to actual subscription status
     @State private var subscriptionStatus: SubscriptionStatus = .notSubscribed
-    @State private var selectedPaymentMethod: PaymentMethod = .apple
     
     var body: some View {
         NavigationStack {
@@ -44,89 +43,30 @@ struct SubscriptionView: View {
                     SubscriptionStatusCard(status: subscriptionStatus)
                         .padding(.horizontal)
                     
-                    // Payment Method Selector (only show if not subscribed)
-                    if !isSubscribed {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Payment Method")
-                                .font(.system(size: 14, weight: .semibold, design: .rounded))
-                                .foregroundColor(.secondary)
-                                .padding(.horizontal)
-                            
-                            PaymentMethodSelector(selectedMethod: $selectedPaymentMethod)
-                                .padding(.horizontal)
-                        }
-                    }
-                    
-                    // Starter Pack (Subscription + Credits bundle)
-                    if !isSubscribed {
-                        StarterPackCard(
-                            paymentMethod: selectedPaymentMethod,
-                            onPurchase: {
-                                // TODO: Handle starter pack purchase
-                                print("Purchase Starter Pack via \(selectedPaymentMethod.rawValue)")
+                    // Subscription plan
+                    VStack(spacing: 16) {
+                        SubscriptionPlanCard(
+                            title: "Premium",
+                            price: "$10.00",
+                            period: "per month",
+                            features: [
+                                "Full access to all app features",
+                                "$5.00 worth of credits included monthly (125+ image generations)",
+                                "Ability to purchase additional credits",
+                                "Ongoing access to the platform"
+                            ],
+                            isSubscribed: isSubscribed,
+                            onSubscribe: {
+                                // TODO: Handle subscription purchase
+                                print("Subscribe to Premium")
+                            },
+                            onManage: {
+                                // TODO: Handle subscription management
+                                print("Manage subscription")
                             }
                         )
-                        .padding(.horizontal)
-                    } else {
-                        // Subscription plan (for subscribed users)
-                        VStack(spacing: 16) {
-                            SubscriptionPlanCard(
-                                title: "Premium",
-                                price: "$5.00",
-                                period: "per month",
-                                features: [
-                                    "Full access to all app features",
-                                    "Ability to purchase credits",
-                                    "Ongoing access to the platform"
-                                ],
-                                isSubscribed: isSubscribed,
-                                onSubscribe: {
-                                    // TODO: Handle subscription purchase
-                                    print("Subscribe to Premium")
-                                },
-                                onManage: {
-                                    // TODO: Handle subscription management
-                                    print("Manage subscription")
-                                }
-                            )
-                        }
-                        .padding(.horizontal)
                     }
-                    
-                    // What's Not Included section
-                    VStack(alignment: .leading, spacing: 16) {
-                        Text("What's Not Included")
-                            .font(.system(size: 20, weight: .bold, design: .rounded))
-                            .foregroundColor(.primary)
-                            .padding(.horizontal)
-                        
-                        VStack(spacing: 12) {
-                            HStack(alignment: .top, spacing: 16) {
-                                Image(systemName: "xmark.circle.fill")
-                                    .font(.system(size: 24))
-                                    .foregroundColor(.red)
-                                    .frame(width: 40)
-                                
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text("Credits Sold Separately")
-                                        .font(.system(size: 16, weight: .semibold, design: .rounded))
-                                        .foregroundColor(.primary)
-                                    
-                                    Text("Credits are not included with your subscription and must be purchased separately to use AI features")
-                                        .font(.system(size: 14, design: .rounded))
-                                        .foregroundColor(.secondary)
-                                }
-                                
-                                Spacer()
-                            }
-                            .padding()
-                            .background(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .fill(Color(.secondarySystemBackground))
-                            )
-                        }
-                        .padding(.horizontal)
-                    }
+                    .padding(.horizontal)
                     
                     // Benefits section
                     VStack(alignment: .leading, spacing: 16) {
@@ -144,8 +84,14 @@ struct SubscriptionView: View {
                             
                             BenefitRow(
                                 icon: "diamond.fill",
-                                title: "Purchase Credits",
-                                description: "Buy credits to use AI features and create content"
+                                title: "$5.00 Credits Included",
+                                description: "Receive $5.00 worth of credits every month with your subscription (125+ image generations)"
+                            )
+                            
+                            BenefitRow(
+                                icon: "creditcard.fill",
+                                title: "Purchase Additional Credits",
+                                description: "Buy extra credits beyond your monthly included amount"
                             )
                             
                             BenefitRow(
@@ -153,13 +99,19 @@ struct SubscriptionView: View {
                                 title: "Ongoing Access",
                                 description: "Continue using the app as long as your subscription is active"
                             )
+                            
+                            BenefitRow(
+                                icon: "xmark.circle.fill",
+                                title: "Cancel Anytime",
+                                description: "No long-term commitment - cancel your subscription at any time"
+                            )
                         }
                         .padding(.horizontal)
                     }
                     
                     // Terms and info
                     VStack(spacing: 8) {
-                        Text("Subscription automatically renews unless cancelled at least 24 hours before the end of the current period.")
+                        Text("Cancel anytime. Subscription automatically renews unless cancelled at least 24 hours before the end of the current period.")
                             .font(.caption)
                             .foregroundColor(.secondary)
                             .multilineTextAlignment(.center)
@@ -419,171 +371,3 @@ struct BenefitRow: View {
         )
     }
 }
-
-// Starter Pack Card: Subscription + Credits bundle
-struct StarterPackCard: View {
-    let paymentMethod: PaymentMethod
-    let onPurchase: () -> Void
-    
-    // Subscription is always $5.00/month, no fees
-    private let subscriptionPrice: Double = 5.00
-    // Credits base value
-    private let baseCreditsValue: Double = 1.00
-    
-    // Credits with fees applied (only credits have fees)
-    private var creditsPriceWithFees: Double {
-        switch paymentMethod {
-        case .apple:
-            return PriceCalculator.calculateApplePrice(basePrice: baseCreditsValue)
-        case .external:
-            return PriceCalculator.calculateExternalPrice(basePrice: baseCreditsValue)
-        }
-    }
-    
-    // Total: subscription (no fees) + credits (with fees)
-    private var totalPrice: Double {
-        return subscriptionPrice + creditsPriceWithFees
-    }
-    
-    // Fee amount (only on credits)
-    private var feeAmount: Double {
-        switch paymentMethod {
-        case .apple:
-            return creditsPriceWithFees - baseCreditsValue
-        case .external:
-            return PriceCalculator.calculateExternalFee(basePrice: baseCreditsValue)
-        }
-    }
-    
-    var body: some View {
-        Button(action: onPurchase) {
-            VStack(alignment: .leading, spacing: 16) {
-                // Header
-                HStack {
-                    Text("Starter Pack")
-                        .font(.system(size: 24, weight: .bold, design: .rounded))
-                        .foregroundColor(.primary)
-                    
-                    Spacer()
-                    
-                    Text("Popular")
-                        .font(.caption)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 4)
-                        .background(
-                            LinearGradient(
-                                colors: [.yellow, .orange],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
-                        .clipShape(Capsule())
-                }
-                
-                // Subscription + Credits breakdown
-                HStack(spacing: 16) {
-                    // Subscription (left)
-                    VStack(spacing: 8) {
-                        Image(systemName: "crown.fill")
-                            .font(.system(size: 24))
-                            .foregroundStyle(
-                                LinearGradient(
-                                    colors: [.yellow, .orange],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
-                        
-                        VStack(spacing: 4) {
-                            Text("Subscription")
-                                .font(.system(size: 14, weight: .semibold, design: .rounded))
-                                .foregroundColor(.primary)
-                            
-                            HStack(alignment: .firstTextBaseline, spacing: 4) {
-                                Text(PriceCalculator.formatPrice(subscriptionPrice))
-                                    .font(.system(size: 18, weight: .bold, design: .rounded))
-                                    .foregroundColor(.primary)
-                                
-                                Text("/month")
-                                    .font(.system(size: 12, design: .rounded))
-                                    .foregroundColor(.secondary)
-                            }
-                        }
-                    }
-                    .frame(maxWidth: .infinity)
-                    
-                    // Plus sign
-                    Text("+")
-                        .font(.system(size: 24, weight: .bold, design: .rounded))
-                        .foregroundColor(.secondary)
-                    
-                    // Credits (right) - always show base value
-                    VStack(spacing: 8) {
-                        Image(systemName: "diamond.fill")
-                            .font(.system(size: 24))
-                            .foregroundColor(.blue)
-                        
-                        VStack(spacing: 4) {
-                            Text("Credits")
-                                .font(.system(size: 14, weight: .semibold, design: .rounded))
-                                .foregroundColor(.primary)
-                            
-                            Text(PriceCalculator.formatPrice(baseCreditsValue))
-                                .font(.system(size: 18, weight: .bold, design: .rounded))
-                                .foregroundColor(.primary)
-                        }
-                    }
-                    .frame(maxWidth: .infinity)
-                }
-                .padding()
-                .background(
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(Color(.secondarySystemBackground))
-                )
-                
-                // Total price with fees
-                VStack(alignment: .trailing, spacing: 4) {
-                    HStack {
-                        Text("Total")
-                            .font(.system(size: 16, weight: .medium, design: .rounded))
-                            .foregroundColor(.secondary)
-                        
-                        Spacer()
-                        
-                        Text(PriceCalculator.formatPrice(totalPrice))
-                            .font(.system(size: 28, weight: .bold, design: .rounded))
-                            .foregroundColor(.primary)
-                    }
-                    
-                    HStack {
-                        Spacer()
-                        Text(paymentMethod == .apple ? "Apple's fee (30%): \(PriceCalculator.formatPrice(feeAmount))" : "Credit Card fee (3% + $0.30): \(PriceCalculator.formatPrice(feeAmount))")
-                            .font(.system(size: 12, weight: .medium, design: .rounded))
-                            .foregroundColor(.secondary)
-                    }
-                }
-            }
-            .padding()
-            .background(
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(Color(.systemBackground))
-                    .shadow(color: Color.black.opacity(0.15), radius: 12, x: 0, y: 6)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 20)
-                    .stroke(
-                        LinearGradient(
-                            colors: [Color.yellow.opacity(0.5), Color.orange.opacity(0.5)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        ),
-                        lineWidth: 2
-                    )
-            )
-        }
-        .buttonStyle(PlainButtonStyle())
-    }
-}
-

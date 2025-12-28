@@ -53,13 +53,19 @@ struct CreditsBadge: View {
                 Button(action: {
                     showSubscriptionSheet = true
                 }) {
-                    Text("Subscribe")
+                    Image(systemName: "crown.fill")
                         .font(
                             .system(
-                                size: 16, weight: .semibold,
+                                size: 14, weight: .semibold,
                                 design: .rounded)
                         )
-                        .foregroundColor(.primary)
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [.yellow, .orange],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
                 }
                 
             } else {
