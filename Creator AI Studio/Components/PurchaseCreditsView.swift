@@ -19,57 +19,94 @@ struct PurchaseCreditsView: View {
                 VStack(spacing: 24) {
                     // Header
                     VStack(spacing: 12) {
-                        Image(systemName: "diamond.fill")
+                        Image(systemName: isSubscribed ? "diamond.fill" : "crown.fill")
                             .font(.system(size: 56))
                             .foregroundStyle(
                                 LinearGradient(
-                                    colors: [.blue, .purple],
+                                    colors: isSubscribed ? [.blue, .purple] : [.yellow, .orange],
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
                                 )
                             )
                         
-                        Text("Buy Credits")
+                        Text(isSubscribed ? "Buy Credits" : "Get Started")
                             .font(.system(size: 26, weight: .bold, design: .rounded))
                             .foregroundColor(.primary)
                         
-                        Text("Choose a credit package")
+                        Text(isSubscribed ? "Choose a credit package" : "Subscribe and get credits")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                     }
                     .padding(.top, 40)
                     
-                    // Subscription requirement banner
+                    // Info banner for non-subscribers
                     if !isSubscribed {
-                        SubscriptionRequirementBanner(onSubscribe: {
-                            showSubscriptionView = true
-                        })
+                        VStack(spacing: 8) {
+                            HStack(spacing: 8) {
+                                Image(systemName: "info.circle.fill")
+                                    .font(.system(size: 16))
+                                    .foregroundColor(.blue)
+                                
+                                Text("Subscription required to use the app and purchase credits")
+                                    .font(.system(size: 13, design: .rounded))
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        .padding()
+                        .background(
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(Color.blue.opacity(0.1))
+                        )
                         .padding(.horizontal)
                     }
                     
-                    // Credit packages (placeholder - you'll add your actual packages here)
+                    // Start Packs (for non-subscribers) or Credit Packages (for subscribers)
                     VStack(spacing: 16) {
-                        // Example package 1
-                        CreditPackageCard(
-                            title: "Starter Pack",
-                            credits: "$10.00",
-                            price: "$9.99",
-                            badge: "Best Value"
-                        )
-                        
-                        // Example package 2
-                        CreditPackageCard(
-                            title: "Pro Pack",
-                            credits: "$25.00",
-                            price: "$24.99"
-                        )
-                        
-                        // Example package 3
-                        CreditPackageCard(
-                            title: "Mega Pack",
-                            credits: "$50.00",
-                            price: "$49.99"
-                        )
+                        if !isSubscribed {
+                            // Start Packs: Subscription + Credits bundles
+                            StartPackCard(
+                                title: "Starter Pack",
+                                subscriptionPrice: "$4.99",
+                                creditsValue: "$1.00",
+                                totalPrice: "$5.99",
+                                badge: "Popular"
+                            )
+                            
+                            StartPackCard(
+                                title: "Pro Pack",
+                                subscriptionPrice: "$4.99",
+                                creditsValue: "$5.00",
+                                totalPrice: "$9.99",
+                                badge: "Best Value"
+                            )
+                            
+                            StartPackCard(
+                                title: "Mega Pack",
+                                subscriptionPrice: "$4.99",
+                                creditsValue: "$10.00",
+                                totalPrice: "$14.99"
+                            )
+                        } else {
+                            // Credit Packages: Individual credit purchases for subscribers
+                            CreditPackageCard(
+                                title: "Starter Pack",
+                                credits: "$10.00",
+                                price: "$9.99",
+                                badge: "Best Value"
+                            )
+                            
+                            CreditPackageCard(
+                                title: "Pro Pack",
+                                credits: "$25.00",
+                                price: "$24.99"
+                            )
+                            
+                            CreditPackageCard(
+                                title: "Mega Pack",
+                                credits: "$50.00",
+                                price: "$49.99"
+                            )
+                        }
                     }
                     .padding(.horizontal)
                     
@@ -158,73 +195,137 @@ struct CreditPackageCard: View {
     }
 }
 
-// Subscription requirement banner
-struct SubscriptionRequirementBanner: View {
-    let onSubscribe: () -> Void
+// Start Pack Card: Subscription + Credits bundle for non-subscribers
+struct StartPackCard: View {
+    let title: String
+    let subscriptionPrice: String
+    let creditsValue: String
+    let totalPrice: String
+    var badge: String? = nil
     
     var body: some View {
-        VStack(spacing: 12) {
-            HStack(spacing: 12) {
-                Image(systemName: "crown.fill")
-                    .font(.system(size: 24))
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [.yellow, .orange],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Subscription Required")
-                        .font(.system(size: 16, weight: .bold, design: .rounded))
+        Button(action: {
+            // TODO: Handle start pack purchase (subscription + credits)
+            print("Purchase \(title): \(subscriptionPrice)/month + \(creditsValue) credits = \(totalPrice)")
+        }) {
+            VStack(alignment: .leading, spacing: 16) {
+                // Header with title and badge
+                HStack {
+                    Text(title)
+                        .font(.system(size: 20, weight: .bold, design: .rounded))
                         .foregroundColor(.primary)
                     
-                    Text("A $4.99/month subscription is required to purchase credits")
-                        .font(.system(size: 13, design: .rounded))
-                        .foregroundColor(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
+                    Spacer()
+                    
+                    if let badge = badge {
+                        Text(badge)
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 4)
+                            .background(
+                                LinearGradient(
+                                    colors: [.yellow, .orange],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                            .clipShape(Capsule())
+                    }
                 }
                 
-                Spacer()
-            }
-            
-            Button(action: onSubscribe) {
-                HStack {
-                    Spacer()
-                    Text("View Subscription")
-                        .font(.system(size: 15, weight: .semibold, design: .rounded))
-                        .foregroundColor(.white)
-                    Spacer()
+                // Subscription + Credits breakdown
+                HStack(spacing: 16) {
+                    // Subscription (left)
+                    VStack(spacing: 8) {
+                        Image(systemName: "crown.fill")
+                            .font(.system(size: 20))
+                            .foregroundStyle(
+                                LinearGradient(
+                                    colors: [.yellow, .orange],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                        
+                        VStack(spacing: 4) {
+                            Text("Subscription")
+                                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                                .foregroundColor(.primary)
+                            
+                            Text(subscriptionPrice)
+                                .font(.system(size: 16, weight: .bold, design: .rounded))
+                                .foregroundColor(.primary)
+                            
+                            Text("/month")
+                                .font(.system(size: 11, design: .rounded))
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    
+                    // Plus sign
+                    Text("+")
+                        .font(.system(size: 24, weight: .bold, design: .rounded))
+                        .foregroundColor(.secondary)
+                    
+                    // Credits (right)
+                    VStack(spacing: 8) {
+                        Image(systemName: "diamond.fill")
+                            .font(.system(size: 20))
+                            .foregroundColor(.blue)
+                        
+                        VStack(spacing: 4) {
+                            Text("Credits")
+                                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                                .foregroundColor(.primary)
+                            
+                            Text(creditsValue)
+                                .font(.system(size: 16, weight: .bold, design: .rounded))
+                                .foregroundColor(.primary)
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
                 }
-                .padding(.vertical, 12)
+                .padding()
                 .background(
-                    LinearGradient(
-                        colors: [.blue, .purple],
-                        startPoint: .leading,
-                        endPoint: .trailing
-                    )
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color(.secondarySystemBackground))
                 )
-                .cornerRadius(10)
+                
+                // Total price
+                HStack {
+                    Text("Total")
+                        .font(.system(size: 14, weight: .medium, design: .rounded))
+                        .foregroundColor(.secondary)
+                    
+                    Spacer()
+                    
+                    Text(totalPrice)
+                        .font(.system(size: 24, weight: .bold, design: .rounded))
+                        .foregroundColor(.primary)
+                }
             }
+            .padding()
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(Color(.systemBackground))
+                    .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 4)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(
+                        LinearGradient(
+                            colors: [Color.yellow.opacity(0.5), Color.orange.opacity(0.5)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 2
+                    )
+            )
         }
-        .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color(.systemBackground))
-                .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 4)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(
-                    LinearGradient(
-                        colors: [Color.yellow.opacity(0.5), Color.orange.opacity(0.5)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ),
-                    lineWidth: 2
-                )
-        )
+        .buttonStyle(PlainButtonStyle())
     }
 }
 

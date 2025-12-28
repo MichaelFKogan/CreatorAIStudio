@@ -33,7 +33,7 @@ struct SubscriptionView: View {
                             .font(.system(size: 26, weight: .bold, design: .rounded))
                             .foregroundColor(.primary)
                         
-                        Text("Unlock unlimited access")
+                        Text("Required to use the app")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                     }
@@ -50,11 +50,9 @@ struct SubscriptionView: View {
                             price: "$4.99",
                             period: "per month",
                             features: [
-                                "Unlimited access to all features",
-                                "Priority processing",
-                                "No watermarks",
-                                "Early access to new models",
-                                "Buy credits at discounted rates"
+                                "Full access to all app features",
+                                "Ability to purchase credits",
+                                "Ongoing access to the platform"
                             ],
                             isSubscribed: isSubscribed,
                             onSubscribe: {
@@ -78,33 +76,21 @@ struct SubscriptionView: View {
                         
                         VStack(spacing: 12) {
                             BenefitRow(
-                                icon: "sparkles",
-                                title: "Unlimited Generations",
-                                description: "Create as many images and videos as you want"
-                            )
-                            
-                            BenefitRow(
-                                icon: "bolt.fill",
-                                title: "Priority Processing",
-                                description: "Your jobs get processed faster"
-                            )
-                            
-                            BenefitRow(
-                                icon: "checkmark.seal.fill",
-                                title: "No Watermarks",
-                                description: "All your creations are watermark-free"
-                            )
-                            
-                            BenefitRow(
-                                icon: "star.fill",
-                                title: "Early Access",
-                                description: "Try new models and features first"
+                                icon: "app.fill",
+                                title: "Full App Access",
+                                description: "Unlock all features and functionality of Creator AI Studio"
                             )
                             
                             BenefitRow(
                                 icon: "diamond.fill",
-                                title: "Discounted Credits",
-                                description: "Save up to 20% on credit purchases"
+                                title: "Purchase Credits",
+                                description: "Buy credits to use AI features and create content"
+                            )
+                            
+                            BenefitRow(
+                                icon: "arrow.clockwise",
+                                title: "Ongoing Access",
+                                description: "Continue using the app as long as your subscription is active"
                             )
                         }
                         .padding(.horizontal)
