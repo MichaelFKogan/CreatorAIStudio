@@ -3,9 +3,12 @@ import SwiftUI
 struct Home: View {
     @Environment(\.colorScheme) var colorScheme
     @EnvironmentObject var authViewModel: AuthViewModel
+    @StateObject private var filtersViewModel = PhotoFiltersViewModel.shared
     @State private var showSubscriptionSheet: Bool = false
     @State private var showSignInSheet: Bool = false
     let resetTrigger: UUID
+    
+    private let categoryManager = CategoryConfigurationManager.shared
 
     var body: some View {
         NavigationStack {
@@ -16,8 +19,16 @@ struct Home: View {
                         .padding(.top, 8)
                     
                     // Rest of content can go here
-                    VStack {
-                        // Placeholder for future content
+                    VStack(spacing: 20) {
+                        // Display all categories in order
+                        ForEach(Array(sortedCategoryNames.enumerated()), id: \.element) { index, categoryName in
+                            let items = filtersViewModel.filters(for: categoryName)
+                            if !items.isEmpty {
+                                let emoji = categoryManager.emoji(for: categoryName)
+                                CategoryRow(title: "\(emoji) \(categoryName)", items: items)
+                                    .padding(.top, index == 0 ? 16 : 0)
+                            }
+                        }
                     }
                 }
             }
@@ -95,6 +106,10 @@ struct Home: View {
                     .presentationDragIndicator(.visible)
             }
         }
+    }
+    
+    private var sortedCategoryNames: [String] {
+        filtersViewModel.sortedCategoryNames
     }
 
     private var titleGradient: [Color] {
