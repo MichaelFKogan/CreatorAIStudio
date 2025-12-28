@@ -480,8 +480,10 @@ struct ProfileViewContent: View {
                         isSelected: selectedTab == .favorites
                             && selectedModel == nil
                             && selectedVideoModel == nil,
-                        // Stats are pre-loaded from cache in init(), so this should show correct count immediately
-                        count: viewModel.favoriteCount,
+                        // Use actualFavoriteCount to ensure it includes both images and videos
+                        // This counts from actual data, ensuring videos are included
+                        // Falls back to favoriteCount from stats if userImages is empty
+                        count: viewModel.userImages.isEmpty ? viewModel.favoriteCount : viewModel.actualFavoriteCount,
                         isSignedIn: isSignedIn
                     ) {
                         selectedTab = .favorites

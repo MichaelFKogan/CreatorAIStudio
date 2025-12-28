@@ -1604,6 +1604,12 @@ class ProfileViewModel: ObservableObject {
         // Otherwise, fall back to filtering from userImages (limited to first 50)
         return userImages.filter { $0.is_favorite == true }
     }
+    
+    /// Computes the actual favorite count from userImages (includes both images and videos)
+    /// This ensures the count is always accurate, even if database stats are out of sync
+    var actualFavoriteCount: Int {
+        return userImages.filter { $0.is_favorite == true }.count
+    }
 
     /// Gets unique list of models from user images (images only)
     var uniqueModels: [String] {
