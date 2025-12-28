@@ -12,6 +12,7 @@ struct SubscriptionView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var isSubscribed: Bool = false // TODO: Connect to actual subscription status
     @State private var subscriptionStatus: SubscriptionStatus = .notSubscribed
+    @State private var selectedPaymentMethod: PaymentMethod = .apple
     
     var body: some View {
         NavigationStack {
@@ -64,6 +65,46 @@ struct SubscriptionView: View {
                                 // TODO: Handle subscription management
                                 print("Manage subscription")
                             }
+                        )
+                    }
+                    .padding(.horizontal)
+                    
+                    // Payment Method Selector
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Payment Method")
+                            .font(.system(size: 14, weight: .semibold, design: .rounded))
+                            .foregroundColor(.secondary)
+                            .padding(.horizontal)
+                        
+                        PaymentMethodSelector(selectedMethod: $selectedPaymentMethod)
+                            .padding(.horizontal)
+                    }
+                    
+                    // Credit Packages
+                    VStack(spacing: 12) {
+                        CreditPackageCard(
+                            title: "Starter Pack",
+                            baseCreditsValue: 5.00,
+                            paymentMethod: selectedPaymentMethod
+                        )
+                        
+                        CreditPackageCard(
+                            title: "Pro Pack",
+                            baseCreditsValue: 10.00,
+                            paymentMethod: selectedPaymentMethod,
+                            badge: "Best Value"
+                        )
+                        
+                        CreditPackageCard(
+                            title: "Mega Pack",
+                            baseCreditsValue: 20.00,
+                            paymentMethod: selectedPaymentMethod
+                        )
+                        
+                        CreditPackageCard(
+                            title: "Ultra Pack",
+                            baseCreditsValue: 50.00,
+                            paymentMethod: selectedPaymentMethod
                         )
                     }
                     .padding(.horizontal)
@@ -371,3 +412,4 @@ struct BenefitRow: View {
         )
     }
 }
+
