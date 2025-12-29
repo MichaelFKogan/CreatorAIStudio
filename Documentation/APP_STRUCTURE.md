@@ -22,6 +22,7 @@ Creator AI Studio is an iOS app built with SwiftUI that allows users to generate
 **Location**: `Creator AI Studio/API/Supabase/`
 
 #### SupabaseManager.swift
+
 - **Purpose**: Central manager for all Supabase operations
 - **Key Features**:
   - Singleton pattern (`SupabaseManager.shared`)
@@ -32,22 +33,21 @@ Creator AI Studio is an iOS app built with SwiftUI that allows users to generate
   - Storage buckets: `user-generated-images`, `user-generated-videos`
 
 #### Database Tables
+
 - **`user_images`**: Stores generated images/videos with metadata
   - Fields: `id`, `user_id`, `image_url`, `model`, `title`, `cost`, `type`, `endpoint`, `created_at`, `media_type`, `file_extension`, `thumbnail_url`, `prompt`, `aspect_ratio`, `provider`, `is_favorite`
-  
 - **`user_presets`**: User-saved presets for quick reuse
   - Fields: `id`, `user_id`, `title`, `model_name`, `prompt`, `created_at`, `updated_at`
   - Migration: `DATABASE_MIGRATION_user_presets.sql`
-  
 - **`user_stats`**: Pre-computed user statistics (counts, model usage)
   - Fields: `id`, `user_id`, `favorite_count`, `image_count`, `video_count`, `model_counts` (JSONB), `video_model_counts` (JSONB), `created_at`, `updated_at`
   - Migration: `DATABASE_MIGRATION_user_stats.sql`
-  
 - **`pending_jobs`**: Tracks async generation jobs for webhook completion
   - Fields: `id`, `user_id`, `task_id`, `provider`, `job_type`, `status`, `result_url`, `error_message`, `metadata` (JSONB), `device_token`, `notification_sent`, `created_at`, `updated_at`, `completed_at`
   - Migration: `Creator AI Studio/API/Supabase/Database/pending_jobs_setup.sql`
 
 #### Database Migration Files
+
 - `DATABASE_MIGRATION_user_presets.sql`
 - `DATABASE_MIGRATION_user_presets_add_display_order.sql`
 - `DATABASE_MIGRATION_user_presets_add_image_url.sql`
@@ -62,6 +62,7 @@ Creator AI Studio is an iOS app built with SwiftUI that allows users to generate
 **Location**: `Creator AI Studio/API/`
 
 #### Runware API
+
 - **File**: `Creator AI Studio/API/Runware/RunwareAPI.swift`
 - **Purpose**: Handles image and video generation via Runware API
 - **Key Functions**:
@@ -71,6 +72,7 @@ Creator AI Studio is an iOS app built with SwiftUI that allows users to generate
   - Webhook support for async job completion
 
 #### WaveSpeed API
+
 - **File**: `Creator AI Studio/API/WaveSpeed/WaveSpeedAPI.swift`
 - **Purpose**: Handles image generation via WaveSpeed API
 - **Key Functions**:
@@ -80,6 +82,7 @@ Creator AI Studio is an iOS app built with SwiftUI that allows users to generate
   - Supports both base64 and URL-based image submission
 
 #### Supabase Edge Functions
+
 - **Location**: `Creator AI Studio/API/Supabase/EdgeFunctions/`
 - **Files**:
   - `webhook-receiver.ts`: Receives webhooks from Runware/WaveSpeed, updates `pending_jobs` table
@@ -92,6 +95,7 @@ Creator AI Studio is an iOS app built with SwiftUI that allows users to generate
 **Location**: `Creator AI Studio/TaskManager/PricingManager.swift`
 
 #### PricingManager
+
 - **Pattern**: Singleton (`PricingManager.shared`)
 - **Purpose**: Centralized pricing for all AI models
 - **Features**:
@@ -103,6 +107,7 @@ Creator AI Studio is an iOS app built with SwiftUI that allows users to generate
     - `variablePrice(for modelName: String, aspectRatio: String, resolution: String, duration: Double) -> Decimal?`: Get variable price for video models
 
 #### Pricing Structure
+
 - **Image Models**: Fixed prices (e.g., "GPT Image 1.5": 0.034)
 - **Video Models**: Variable pricing based on aspect ratio, resolution, and duration
   - Example: `"Sora 2": VideoPricingConfiguration(pricing: ["16:9": ["720p": [4.0: 0.4, 8.0: 0.8, 12.0: 1.2]]])`
@@ -114,6 +119,7 @@ Creator AI Studio is an iOS app built with SwiftUI that allows users to generate
 **Location**: `Creator AI Studio/TaskManager/`
 
 #### ImageGenerationCoordinator
+
 - **File**: `Creator AI Studio/TaskManager/ImageGenerationCoordinator.swift`
 - **Pattern**: Singleton (`ImageGenerationCoordinator.shared`)
 - **Purpose**: Manages all image generation tasks
@@ -125,6 +131,7 @@ Creator AI Studio is an iOS app built with SwiftUI that allows users to generate
   - Stores background tasks for cancellation
 
 #### VideoGenerationCoordinator
+
 - **File**: `Creator AI Studio/TaskManager/VideoGenerationCoordinator.swift`
 - **Pattern**: Singleton (`VideoGenerationCoordinator.shared`)
 - **Purpose**: Manages all video generation tasks
@@ -133,6 +140,7 @@ Creator AI Studio is an iOS app built with SwiftUI that allows users to generate
   - Similar structure to ImageGenerationCoordinator
 
 #### ImageGenerationTask
+
 - **File**: `Creator AI Studio/TaskManager/ImageGenerationTask.swift`
 - **Purpose**: Executes individual image generation tasks
 - **Features**:
@@ -142,11 +150,13 @@ Creator AI Studio is an iOS app built with SwiftUI that allows users to generate
   - API provider abstraction (Runware vs WaveSpeed)
 
 #### VideoGenerationTask
+
 - **File**: `Creator AI Studio/TaskManager/VideoGenerationTask.swift`
 - **Purpose**: Executes individual video generation tasks
 - **Features**: Similar to ImageGenerationTask but for video
 
 #### JobStatusManager
+
 - **File**: `Creator AI Studio/TaskManager/JobStatusManager.swift`
 - **Pattern**: Singleton (`JobStatusManager.shared`)
 - **Purpose**: Manages Supabase Realtime subscriptions for pending job updates
@@ -158,6 +168,7 @@ Creator AI Studio is an iOS app built with SwiftUI that allows users to generate
   - Maps webhook task IDs to notification IDs
 
 #### ModelConfigurationManager
+
 - **File**: `Creator AI Studio/TaskManager/ModelConfigurationManager.swift`
 - **Purpose**: Manages model-specific API configurations
 - **Features**:
@@ -165,6 +176,7 @@ Creator AI Studio is an iOS app built with SwiftUI that allows users to generate
   - Centralized configuration to avoid duplication
 
 #### CategoryConfigurationManager
+
 - **File**: `Creator AI Studio/TaskManager/CategoryConfigurationManager.swift`
 - **Purpose**: Manages category-specific configurations for photo filters
 
@@ -175,6 +187,7 @@ Creator AI Studio is an iOS app built with SwiftUI that allows users to generate
 **Location**: `Creator AI Studio/Notifications/`
 
 #### NotificationManager
+
 - **File**: `Creator AI Studio/Notifications/Managers/NotificationManager.swift`
 - **Pattern**: Singleton (`NotificationManager.shared`)
 - **Purpose**: Manages in-app notifications for generation progress
@@ -188,6 +201,7 @@ Creator AI Studio is an iOS app built with SwiftUI that allows users to generate
   - Published properties: `notifications`, `newCompletedCount`, `newFailedCount`, `isNotificationBarVisible`
 
 #### PushNotificationManager
+
 - **File**: `Creator AI Studio/Notifications/PushNotificationManager.swift`
 - **Pattern**: Singleton (`PushNotificationManager.shared`)
 - **Purpose**: Manages push notifications for job completion
@@ -200,10 +214,12 @@ Creator AI Studio is an iOS app built with SwiftUI that allows users to generate
   - **Note**: Currently a stub implementation - requires APNs setup
 
 #### NotificationBar
+
 - **File**: `Creator AI Studio/Notifications/NotificationBar.swift`
 - **Purpose**: UI component displaying active notifications at bottom of screen
 
 #### NotificationModels
+
 - **File**: `Creator AI Studio/Notifications/Models/NotificationModels.swift`
 - **Models**:
   - `NotificationState`: Enum (`.inProgress`, `.completed`, `.failed`)
@@ -216,6 +232,7 @@ Creator AI Studio is an iOS app built with SwiftUI that allows users to generate
 **Location**: `Creator AI Studio/API/Supabase/Auth/`
 
 #### AuthViewModel
+
 - **File**: `Creator AI Studio/API/Supabase/Auth/AuthViewModel.swift`
 - **Purpose**: Manages user authentication
 - **Key Features**:
@@ -229,6 +246,7 @@ Creator AI Studio is an iOS app built with SwiftUI that allows users to generate
   - **Note**: Currently authentication is bypassed in `Creator_AI_StudioApp.swift` (commented out)
 
 #### SignInView
+
 - **File**: `Creator AI Studio/API/Supabase/Auth/SignInView.swift`
 - **Purpose**: UI for sign-in/sign-up
 
@@ -237,6 +255,7 @@ Creator AI Studio is an iOS app built with SwiftUI that allows users to generate
 ### 7. App Entry Point & Navigation
 
 #### Creator_AI_StudioApp.swift
+
 - **Location**: `Creator AI Studio/Creator_AI_StudioApp.swift`
 - **Purpose**: Main app entry point
 - **Key Features**:
@@ -246,10 +265,10 @@ Creator AI Studio is an iOS app built with SwiftUI that allows users to generate
   - **Note**: Authentication flow is currently bypassed (goes directly to `ContentView`)
 
 #### ContentView.swift
+
 - **Location**: `Creator AI Studio/ContentView.swift`
 - **Purpose**: Main navigation container with tab bar
-- **Tabs**:
-  0. Home (`Home`)
+- **Tabs**: 0. Home (`Home`)
   1. Photo Filters (`PhotoFilters`)
   2. Post/Camera (`Post`)
   3. AI Models (`ModelsPageContainer`)
@@ -267,30 +286,32 @@ Creator AI Studio is an iOS app built with SwiftUI that allows users to generate
 **Location**: `Creator AI Studio/Pages/`
 
 #### 1 Home
+
 - **Files**: `Home.swift`, `HomeOne.swift`
 - **Components**: `BannerCarousel.swift`
 - **Purpose**: Home screen with featured content
 
 #### 2 Photo Filters
-- **Files**: 
+
+- **Files**:
   - `PhotoFilters.swift`: Main photo filters page
   - `PhotoFilterDetailView.swift`: Detail view for a filter
   - `PhotoFiltersGrid.swift`: Grid display
   - `PhotoFiltersBottomBar.swift`: Bottom bar UI
-- **Components**: 
+- **Components**:
   - `CostBadge.swift`: Price display
   - `FilterThumbnails.swift`: Thumbnail grid
   - `SpinningPlusButton.swift`: Add button
 - **Data**: JSON files for filter categories (Anime.json, Art.json, etc.)
 
 #### 3 Post
+
 - **Files**:
   - `Post.swift`: Main post/camera page
   - `CameraPreview.swift`: Camera preview
   - `CameraService.swift`: Camera functionality
   - `PhotoLibraryPickerView.swift`: Photo picker
   - `PhotoConfirmationView.swift`: Confirmation screen
-  - `PhotoReviewView.swift`: Review screen
 - **Components**:
   - `FilterCategorySheet.swift`: Category selection
   - `FilterModelSelectionView.swift`: Model selection
@@ -301,6 +322,7 @@ Creator AI Studio is an iOS app built with SwiftUI that allows users to generate
   - `QuickFiltersRow.swift`: Quick filters row
 
 #### 4 Image
+
 - **Files**:
   - `ImageModelsPage.swift`: Main image models page
   - `ImageModelDetailPage.swift`: Detail page for image model
@@ -315,6 +337,7 @@ Creator AI Studio is an iOS app built with SwiftUI that allows users to generate
 - **Data**: `ImageModelData.json`, `UnusedImageModels.json`
 
 #### 4 Video
+
 - **Files**:
   - `VideoModelsPage.swift`: Main video models page
   - `VideoModelDetailPage.swift`: Detail page for video model
@@ -324,6 +347,7 @@ Creator AI Studio is an iOS app built with SwiftUI that allows users to generate
 - **Data**: `VideoModelData.json`, `unusedvideomodels.json`
 
 #### 5 Profile
+
 - **Files**:
   - `Profile.swift`: Main profile/gallery page (2755 lines - complex)
   - `FullScreenImageView.swift`: Full screen image viewer
@@ -342,6 +366,7 @@ Creator AI Studio is an iOS app built with SwiftUI that allows users to generate
 **Location**: `Creator AI Studio/Models/`
 
 #### InfoPacketModel.swift
+
 - **Model**: `InfoPacket`
 - **Purpose**: Represents an AI model configuration (image or video)
 - **Key Properties**:
@@ -357,13 +382,16 @@ Creator AI Studio is an iOS app built with SwiftUI that allows users to generate
   - `resolvedAPIConfig`: Gets API config from `ModelConfigurationManager`
 
 #### PresetModel.swift
+
 - **Models**: `Preset`, `PresetMetadata`
 - **Purpose**: User-saved presets for quick reuse
 
 #### MediaMetadata.swift
+
 - **Purpose**: Metadata for generated media
 
 #### TaskManager/Models/
+
 - **PendingJob.swift**: Model for pending jobs table
 - **TaskModels.swift**: Task-related models
 
@@ -374,6 +402,7 @@ Creator AI Studio is an iOS app built with SwiftUI that allows users to generate
 **Location**: `Creator AI Studio/ThemeManager.swift`
 
 #### ThemeManager
+
 - **Pattern**: ObservableObject
 - **Purpose**: Manages app theme (dark/light mode)
 - **Features**:
@@ -387,6 +416,7 @@ Creator AI Studio is an iOS app built with SwiftUI that allows users to generate
 ## Key Features
 
 ### Webhook System
+
 - **Configuration**: `WebhookConfig.useWebhooks = true` (set in app init)
 - **Flow**:
   1. User starts generation → Task created with webhook URL
@@ -399,16 +429,19 @@ Creator AI Studio is an iOS app built with SwiftUI that allows users to generate
   8. Notification updated, user sees completed result
 
 ### Real-time Updates
+
 - Uses Supabase Realtime to listen for `pending_jobs` table changes
 - `JobStatusManager` subscribes to changes for current user
 - Automatically handles job completion without polling
 
 ### Progress Tracking
+
 - `NotificationManager` tracks progress for each generation task
 - Progress updates shown in notification bar
 - Profile page shows placeholders for active generations
 
 ### Storage
+
 - Images stored in Supabase Storage bucket: `user-generated-images`
 - Videos stored in Supabase Storage bucket: `user-generated-videos`
 - File naming: `{userId}/{timestamp}_{modelName}.{ext}`
@@ -418,10 +451,12 @@ Creator AI Studio is an iOS app built with SwiftUI that allows users to generate
 ## Important Configuration Files
 
 ### Supabase Configuration
+
 - **URL**: `https://inaffymocuppuddsewyq.supabase.co`
 - **Anon Key**: Stored in `SupabaseManager.swift` (should be moved to environment variables)
 
 ### API Keys
+
 - Runware API key: Should be in environment variables
 - WaveSpeed API key: Should be in environment variables
 
@@ -495,12 +530,14 @@ Creator AI Studio/
 ## Development Notes
 
 ### Adding a New Image Model
+
 1. Add model data to `Pages/4 Image/Data/ImageModelData.json`
 2. Add pricing to `PricingManager.swift` → `prices` dictionary
 3. Add API config to `ModelConfigurationManager.swift`
 4. Add model image to `Assets.xcassets/Image Models/`
 
 ### Adding a New Video Model
+
 1. Add model data to `Pages/4 Video/Data/VideoModelData.json`
 2. Add pricing to `PricingManager.swift`:
    - Add to `defaultVideoConfigs` dictionary
@@ -510,16 +547,19 @@ Creator AI Studio/
 5. See `VIDEO_MODEL_ADDITION_GUIDE.md` for detailed instructions
 
 ### Adding a New Photo Filter
+
 1. Add filter data to `Pages/2 Photo Filters/Data/{Category}.json`
 2. Add filter images to `Assets.xcassets/Photo Filters/{Category}/`
 3. Filter pricing is handled via `InfoPacket.cost` or `PricingManager`
 
 ### Database Migrations
+
 - All SQL migration files are in root directory or `API/Supabase/Database/`
 - Run migrations in Supabase SQL Editor
 - Migrations include RLS (Row Level Security) policies
 
 ### Webhook Configuration
+
 - Webhooks are enabled by default (`WebhookConfig.useWebhooks = true`)
 - Webhook URL points to Supabase Edge Function: `webhook-receiver.ts`
 - Edge Function validates HMAC signature and updates `pending_jobs` table
@@ -539,12 +579,14 @@ Creator AI Studio/
 ## Environment Setup
 
 ### Required Environment Variables
+
 - Supabase URL (currently hardcoded in `SupabaseManager.swift`)
 - Supabase Anon Key (currently hardcoded)
 - Runware API Key
 - WaveSpeed API Key
 
 ### Capabilities Required
+
 - Push Notifications (for APNs - currently stub)
 - Camera (for photo capture)
 - Photo Library (for photo selection)
@@ -554,12 +596,14 @@ Creator AI Studio/
 ## Testing & Debugging
 
 ### Key Debug Points
+
 - `SupabaseManager`: Check upload/download logs
 - `JobStatusManager`: Check Realtime subscription status
 - `NotificationManager`: Check notification state updates
 - `ImageGenerationCoordinator` / `VideoGenerationCoordinator`: Check task execution
 
 ### Common Issues
+
 1. **Webhook not firing**: Check Edge Function logs, verify HMAC signature
 2. **Realtime not updating**: Check subscription status, verify user authentication
 3. **Upload failures**: Check retry logic, verify storage bucket permissions
@@ -587,6 +631,5 @@ Creator AI Studio/
 
 ---
 
-*Last Updated: Based on codebase analysis*
-*Use this file to reprompt Cursor for better context understanding*
-
+_Last Updated: Based on codebase analysis_
+_Use this file to reprompt Cursor for better context understanding_

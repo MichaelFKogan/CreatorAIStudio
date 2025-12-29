@@ -11,7 +11,7 @@ struct Settings: View {
     @State private var showSignInSheet = false
     @State private var showSubscriptionView = false
     @State private var showPurchaseCreditsView = false
-    @State private var isSubscribed: Bool = false // TODO: Connect to actual subscription status
+    @AppStorage("testSubscriptionStatus") private var isSubscribed: Bool = false // Testing: Toggle subscription status
     
     // ProfileViewModel for cache clearing
     var profileViewModel: ProfileViewModel?
@@ -209,6 +209,30 @@ struct Settings: View {
                     Spacer()
                     Image(systemName: "chevron.right")
                         .foregroundColor(.gray)
+                }
+            }
+
+            // Testing (for development)
+            Section("Testing") {
+                HStack {
+                    Image(systemName: "crown.fill")
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [.yellow, .orange],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Test Subscription Status")
+                            .font(.body)
+                        Text(isSubscribed ? "Subscription enabled for testing" : "Subscription disabled")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    Spacer()
+                    Toggle("", isOn: $isSubscribed)
+                        .labelsHidden()
                 }
             }
 

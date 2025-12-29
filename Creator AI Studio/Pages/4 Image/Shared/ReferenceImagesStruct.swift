@@ -18,25 +18,47 @@ struct ReferenceImagesSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             if referenceImages.isEmpty {
-                // Single line button when no images
-                Button {
-                    showActionSheet = true
-                } label: {
-                    HStack(spacing: 8) {
-                        Image(systemName: "plus.circle.fill")
-                            .font(.system(size: 20))
-                            .foregroundColor(color)
-                        Text("Add Image")
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.secondary)
-                        Text("(Optional)")
-                            .font(.caption)
-                            .foregroundColor(.secondary.opacity(0.7))
-                        Spacer()
+                // Square button with dashed border when no images
+                // Calculate square size to match grid items (3 columns with spacing)
+                let screenWidth = UIScreen.main.bounds.width
+                let horizontalPadding: CGFloat = 16
+                let gridSpacing: CGFloat = 12
+                let availableWidth = screenWidth - (horizontalPadding * 2)
+                let squareSize = (availableWidth - (gridSpacing * 2)) / 3
+                
+                HStack {
+                    Button {
+                        showActionSheet = true
+                    } label: {
+                        VStack(spacing: 12) {
+                            Image(systemName: "camera")
+                                .font(.system(size: 28))
+                                .foregroundColor(.gray.opacity(0.5))
+                            VStack(spacing: 4) {
+                                Text("Add Image")
+                                    .font(.caption)
+                                    .fontWeight(.medium)
+                                    .foregroundColor(.gray)
+                                Text("(Optional)")
+                                    .font(.caption2)
+                                    .foregroundColor(.gray.opacity(0.7))
+                            }
+                        }
+                        .frame(width: squareSize, height: squareSize)
+                        .background(Color.gray.opacity(0.03))
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .strokeBorder(
+                                    style: StrokeStyle(lineWidth: 3.5, dash: [6, 4])
+                                )
+                                .foregroundColor(.gray.opacity(0.4))
+                        )
                     }
+                    .buttonStyle(PlainButtonStyle())
+                    
+                    Spacer()
                 }
-                .buttonStyle(PlainButtonStyle())
             } else {
                 // Header section when images exist
                 VStack(spacing: 8) {
@@ -65,42 +87,31 @@ struct ReferenceImagesSection: View {
                 // Grid layout when images exist - responsive to screen width
                 LazyVGrid(columns: columns, spacing: 12) {
                     // Existing selected reference images
-                    ForEach(referenceImages.indices, id: \.self) {
-                        index in
-                        ZStack(alignment: .topTrailing) {
-                            Image(uiImage: referenceImages[index])
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                                .frame(maxWidth: .infinity)
-                                .aspectRatio(115.0 / 160.0, contentMode: .fit)
-                                .clipShape(
-                                    RoundedRectangle(cornerRadius: 6)
-                                )
-                                .clipped()
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 6)
-                                        .stroke(
-                                            color.opacity(0.6),
-                                            lineWidth: 1
-                                        )
-                                )
+                    ForEach(referenceImages.indices, id: \.self) { index in
+                        GeometryReader { geometry in
+                            let squareSize = geometry.size.width
+                            
+                            ZStack(alignment: .topTrailing) {
+                                Image(uiImage: referenceImages[index])
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                                    .frame(width: squareSize, height: squareSize)
+                                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .stroke(color.opacity(0.6), lineWidth: 1)
+                                    )
 
-                            Button(action: {
-                                referenceImages.remove(at: index)
-                            }) {
-                                ZStack {
-                                    Circle()
-                                        .fill(Color.gray)
-                                        .frame(width: 20, height: 20)
-
-                                    Image(systemName: "xmark")
-                                        .font(.system(size: 10, weight: .bold))
+                                Button(action: { referenceImages.remove(at: index) }) {
+                                    Image(systemName: "xmark.circle.fill")
+                                        .font(.title3)
                                         .foregroundColor(.white)
+                                        .background(Circle().fill(Color.red))
                                 }
+                                .padding(6)
                             }
-                            .padding(4)
-                            .shadow(color: Color.black.opacity(0.2), radius: 3, x: 0, y: 1)
                         }
+                        .aspectRatio(1, contentMode: .fit)
                     }
 
                     // // Grid-sized add button
@@ -189,7 +200,7 @@ struct ImageSourceSelectionSheet: View {
 
                 PhotosPicker(
                     selection: $selectedPhotoItems,
-                    maxSelectionCount: 10,
+                    maxSelectionCount: 5,
                     matching: .images
                 ) {
                     HStack(spacing: 16) {

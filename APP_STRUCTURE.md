@@ -312,7 +312,6 @@ Creator AI Studio is an iOS app built with SwiftUI that allows users to generate
   - `CameraService.swift`: Camera functionality
   - `PhotoLibraryPickerView.swift`: Photo picker
   - `PhotoConfirmationView.swift`: Confirmation screen
-  - `PhotoReviewView.swift`: Review screen
 - **Components**:
   - `FilterCategorySheet.swift`: Category selection
   - `FilterModelSelectionView.swift`: Model selection
@@ -634,5 +633,3 @@ Creator AI Studio/
 
 _Last Updated: Based on codebase analysis_
 _Use this file to reprompt Cursor for better context understanding_
-
-

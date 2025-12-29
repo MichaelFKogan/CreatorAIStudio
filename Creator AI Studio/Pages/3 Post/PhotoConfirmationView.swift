@@ -26,7 +26,7 @@ struct PhotoConfirmationView: View {
     @State private var showSignInSheet: Bool = false
     @State private var showSubscriptionView: Bool = false
     @State private var showPurchaseCreditsView: Bool = false
-    @State private var isSubscribed: Bool = false  // TODO: Connect to actual subscription status
+    @AppStorage("testSubscriptionStatus") private var isSubscribed: Bool = false  // Testing: Toggle in Settings
     @State private var hasCredits: Bool = true  // TODO: Connect to actual credits check
 
     // Primary initializer for multiple images
@@ -624,16 +624,6 @@ struct PhotoConfirmationView: View {
 
     private var subscriptionRequiredMessage: some View {
         VStack(spacing: 8) {
-            HStack(spacing: 6) {
-                Spacer()
-                Image(systemName: "exclamationmark.circle.fill")
-                    .font(.system(size: 14))
-                    .foregroundColor(.orange)
-                Text("Please Subscribe to generate this image")
-                    .font(.caption)
-                    .foregroundColor(.orange)
-                Spacer()
-            }
 
             HStack {
                 Spacer()
@@ -659,6 +649,17 @@ struct PhotoConfirmationView: View {
                         )
                         .foregroundColor(.blue)
                 }
+                Spacer()
+            }
+
+            HStack(spacing: 6) {
+                Spacer()
+                Image(systemName: "exclamationmark.circle.fill")
+                    .font(.system(size: 14))
+                    .foregroundColor(.orange)
+                Text("Please Subscribe to generate this image")
+                    .font(.caption)
+                    .foregroundColor(.orange)
                 Spacer()
             }
         }

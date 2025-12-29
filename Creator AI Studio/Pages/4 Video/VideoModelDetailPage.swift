@@ -42,7 +42,7 @@ struct VideoModelDetailPage: View {
     @State private var showSignInSheet: Bool = false
     @State private var showSubscriptionView: Bool = false
     @State private var showPurchaseCreditsView: Bool = false
-    @State private var isSubscribed: Bool = false  // TODO: Connect to actual subscription status
+    @AppStorage("testSubscriptionStatus") private var isSubscribed: Bool = false  // Testing: Toggle in Settings
     @State private var hasCredits: Bool = true  // TODO: Connect to actual credits check
 
     @EnvironmentObject var authViewModel: AuthViewModel
@@ -383,19 +383,6 @@ struct VideoModelDetailPage: View {
                             .padding(.horizontal)
                         } else if !isSubscribed {
                             VStack(spacing: 8) {
-                                HStack(spacing: 6) {
-                                    Spacer()
-                                    Image(
-                                        systemName:
-                                            "exclamationmark.circle.fill"
-                                    )
-                                    .font(.system(size: 14))
-                                    .foregroundColor(.orange)
-                                    Text("Please Subscribe to create a video")
-                                        .font(.caption)
-                                        .foregroundColor(.orange)
-                                    Spacer()
-                                }
 
                                 HStack {
                                     Spacer()
@@ -423,6 +410,20 @@ struct VideoModelDetailPage: View {
                                             )
                                             .foregroundColor(.blue)
                                     }
+                                    Spacer()
+                                }
+
+                                HStack(spacing: 6) {
+                                    Spacer()
+                                    Image(
+                                        systemName:
+                                            "exclamationmark.circle.fill"
+                                    )
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.orange)
+                                    Text("Please Subscribe to create a video")
+                                        .font(.caption)
+                                        .foregroundColor(.orange)
                                     Spacer()
                                 }
                             }
