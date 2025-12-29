@@ -129,6 +129,16 @@ private let wan25PreviewImageSizes: [String: (Int, Int)] = [
     "auto": (0, 0),
 ]
 
+// KlingAI 2.5 Turbo Pro (klingai:6@1) - Video model dimensions
+// Supported: 1920x1080, 1080x1920, 1080x1080 (1080p) or 1280x720, 720x1280, 720x720 (720p)
+// Only supports 16:9, 9:16, 1:1 aspect ratios
+private let klingai25TurboProSizes: [String: (Int, Int)] = [
+    "16:9": (1920, 1080),    // 1080p landscape
+    "9:16": (1080, 1920),    // 1080p portrait
+    "1:1": (1080, 1080),     // 1080p square
+    "auto": (0, 0),
+]
+
 // MARK: - Model to Size Set Mapping
 
 /// Returns the appropriate allowed sizes dictionary for a given model identifier.
@@ -179,6 +189,9 @@ func getAllowedSizes(for model: String) -> [String: (Int, Int)] {
 
     // Wan2.5-Preview Image (Alibaba) - Runware model ID: runware:201@10
     if modelLower.contains("runware:201@10") { return wan25PreviewImageSizes }
+    
+    // KlingAI 2.5 Turbo Pro - Runware model ID: klingai:6@1
+    if modelLower.contains("klingai:6@1") { return klingai25TurboProSizes }
 
     // Default fallback to Google Nano Banana sizes
     print("[Runware] Model '\(model)' not found in size mapping, using default (Google Nano Banana) sizes")

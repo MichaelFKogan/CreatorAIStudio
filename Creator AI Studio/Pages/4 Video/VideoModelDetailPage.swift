@@ -24,6 +24,12 @@ struct VideoModelDetailPage: View {
 
     @State private var referenceImages: [UIImage] = []
     @State private var selectedPhotoItems: [PhotosPickerItem] = []
+    
+    // Frame images for KlingAI 2.5 Turbo Pro (first and last frame)
+    @State private var firstFrameImage: UIImage? = nil
+    @State private var lastFrameImage: UIImage? = nil
+    @State private var showFirstFrameCameraSheet: Bool = false
+    @State private var showLastFrameCameraSheet: Bool = false
 
     @State private var isGenerating: Bool = false
     @State private var keyboardHeight: CGFloat = 0
@@ -152,6 +158,13 @@ struct VideoModelDetailPage: View {
         // Models that require audio (cannot generate without it)
         let audioRequiredModels = ["Sora 2"]
         return audioRequiredModels.contains(modelName)
+    }
+    
+    /// Checks if the current model supports first and last frame images
+    /// KlingAI 2.5 Turbo Pro supports both first and last frame
+    private var supportsFrameImages: Bool {
+        guard let modelName = item.display.modelName else { return false }
+        return modelName == "KlingAI 2.5 Turbo Pro"
     }
 
     private let examplePrompts: [String] = [
@@ -316,14 +329,27 @@ struct VideoModelDetailPage: View {
                                 isProcessingOCR: $isProcessingOCR
                             ))
 
+                        // Hide reference images section for KlingAI 2.5 Turbo Pro (uses frame images instead)
                         if ModelConfigurationManager.shared.capabilities(
-                            for: item)?.contains("Image to Video") == true
+                            for: item)?.contains("Image to Video") == true && !supportsFrameImages
                         {
                             LazyView(
                                 ReferenceImagesSection(
                                     referenceImages: $referenceImages,
                                     selectedPhotoItems: $selectedPhotoItems,
                                     showCameraSheet: $showCameraSheet,
+                                    color: .purple
+                                ))
+                        }
+                        
+                        // Frame images section for KlingAI 2.5 Turbo Pro
+                        if supportsFrameImages {
+                            LazyView(
+                                FrameImagesSection(
+                                    firstFrameImage: $firstFrameImage,
+                                    lastFrameImage: $lastFrameImage,
+                                    showFirstFrameCameraSheet: $showFirstFrameCameraSheet,
+                                    showLastFrameCameraSheet: $showLastFrameCameraSheet,
                                     color: .purple
                                 ))
                         }
@@ -619,6 +645,16 @@ struct VideoModelDetailPage: View {
                 referenceImages.append(capturedImage)
             }
         }
+        .sheet(isPresented: $showFirstFrameCameraSheet) {
+            SimpleCameraPicker(isPresented: $showFirstFrameCameraSheet) { capturedImage in
+                firstFrameImage = capturedImage
+            }
+        }
+        .sheet(isPresented: $showLastFrameCameraSheet) {
+            SimpleCameraPicker(isPresented: $showLastFrameCameraSheet) { capturedImage in
+                lastFrameImage = capturedImage
+            }
+        }
         .sheet(isPresented: $showPromptCameraSheet) {
             SimpleCameraPicker(isPresented: $showPromptCameraSheet) {
                 capturedImage in
@@ -727,6 +763,8 @@ struct VideoModelDetailPage: View {
                 resolution: hasVariableResolution
                     ? selectedResolutionOption.id : nil,
                 generateAudio: supportsAudio ? generateAudio : nil,
+                firstFrameImage: supportsFrameImages ? firstFrameImage : nil,
+                lastFrameImage: supportsFrameImages ? lastFrameImage : nil,
                 onVideoGenerated: { _ in
                     isGenerating = false
                 },
@@ -1674,6 +1712,266 @@ private struct AudioToggleSectionVideo: View {
             }
         }
         .padding(.horizontal)
+    }
+}
+
+// MARK: FRAME IMAGES SECTION
+
+private struct FrameImagesSection: View {
+    @Binding var firstFrameImage: UIImage?
+    @Binding var lastFrameImage: UIImage?
+    @Binding var showFirstFrameCameraSheet: Bool
+    @Binding var showLastFrameCameraSheet: Bool
+    let color: Color
+    
+    @State private var showFirstFrameActionSheet: Bool = false
+    @State private var showLastFrameActionSheet: Bool = false
+    @State private var selectedFirstFramePhotoItem: PhotosPickerItem? = nil
+    @State private var selectedLastFramePhotoItem: PhotosPickerItem? = nil
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 6) {
+                Image(systemName: "photo.on.rectangle.angled")
+                    .foregroundColor(color)
+                Text("Frame Images (Optional)")
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.secondary)
+                Spacer()
+            }
+            
+            Text("Add first and last frame images to control the video start and end")
+                .font(.caption)
+                .foregroundColor(.secondary.opacity(0.8))
+                .padding(.bottom, 4)
+            
+            // Horizontal layout with arrow icon between first and last frame images
+            HStack(spacing: 0) {
+                // First Frame Image - takes 50% of width
+                FrameImageCard(
+                    title: "First Frame",
+                    image: $firstFrameImage,
+                    showCameraSheet: $showFirstFrameCameraSheet,
+                    showActionSheet: $showFirstFrameActionSheet,
+                    selectedPhotoItem: $selectedFirstFramePhotoItem,
+                    color: color
+                )
+                .frame(maxWidth: .infinity)
+                
+                // Left-right arrows icon with padding
+                HStack(spacing: 0) {
+                    Spacer().frame(width: 12)
+                    Image(systemName: "arrow.left.arrow.right")
+                        .font(.system(size: 20))
+                        .foregroundColor(color.opacity(0.6))
+                    Spacer().frame(width: 12)
+                }
+                
+                // Last Frame Image - takes 50% of width
+                FrameImageCard(
+                    title: "Last Frame",
+                    image: $lastFrameImage,
+                    showCameraSheet: $showLastFrameCameraSheet,
+                    showActionSheet: $showLastFrameActionSheet,
+                    selectedPhotoItem: $selectedLastFramePhotoItem,
+                    color: color
+                )
+                .frame(maxWidth: .infinity)
+            }
+        }
+        .padding(.horizontal)
+        .sheet(isPresented: $showFirstFrameActionSheet) {
+            SingleImageSourceSelectionSheet(
+                showCameraSheet: $showFirstFrameCameraSheet,
+                selectedPhotoItem: $selectedFirstFramePhotoItem,
+                showActionSheet: $showFirstFrameActionSheet,
+                image: $firstFrameImage,
+                color: color
+            )
+        }
+        .sheet(isPresented: $showLastFrameActionSheet) {
+            SingleImageSourceSelectionSheet(
+                showCameraSheet: $showLastFrameCameraSheet,
+                selectedPhotoItem: $selectedLastFramePhotoItem,
+                showActionSheet: $showLastFrameActionSheet,
+                image: $lastFrameImage,
+                color: color
+            )
+        }
+    }
+}
+
+// MARK: SINGLE IMAGE SOURCE SELECTION SHEET
+
+private struct SingleImageSourceSelectionSheet: View {
+    @Binding var showCameraSheet: Bool
+    @Binding var selectedPhotoItem: PhotosPickerItem?
+    @Binding var showActionSheet: Bool
+    @Binding var image: UIImage?
+    let color: Color
+    
+    @State private var selectedPhotoItems: [PhotosPickerItem] = []
+    
+    var body: some View {
+        NavigationView {
+            VStack(spacing: 20) {
+                Button {
+                    showActionSheet = false
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                        showCameraSheet = true
+                    }
+                } label: {
+                    HStack(spacing: 16) {
+                        Image(systemName: "camera.fill")
+                            .font(.system(size: 24))
+                            .foregroundColor(color)
+                            .frame(width: 40)
+                        Text("Camera")
+                            .font(.headline)
+                            .foregroundColor(.primary)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding()
+                    .background(Color.gray.opacity(0.1))
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                }
+                .buttonStyle(PlainButtonStyle())
+
+                PhotosPicker(
+                    selection: $selectedPhotoItems,
+                    maxSelectionCount: 1,
+                    matching: .images
+                ) {
+                    HStack(spacing: 16) {
+                        Image(systemName: "photo.on.rectangle")
+                            .font(.system(size: 24))
+                            .foregroundColor(color)
+                            .frame(width: 40)
+                        Text("Gallery")
+                            .font(.headline)
+                            .foregroundColor(.primary)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding()
+                    .background(Color.gray.opacity(0.1))
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                }
+                .buttonStyle(PlainButtonStyle())
+                .onChange(of: selectedPhotoItems) { newItems in
+                    if let item = newItems.first {
+                        Task {
+                            if let data = try? await item.loadTransferable(type: Data.self),
+                               let img = UIImage(data: data) {
+                                image = img
+                            }
+                            selectedPhotoItems.removeAll()
+                            showActionSheet = false
+                        }
+                    }
+                }
+
+                Spacer()
+            }
+            .padding()
+            .navigationTitle("Add Image")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Cancel") {
+                        showActionSheet = false
+                    }
+                }
+            }
+        }
+        .presentationDetents([.height(250)])
+    }
+}
+
+// MARK: FRAME IMAGE CARD
+
+private struct FrameImageCard: View {
+    let title: String
+    @Binding var image: UIImage?
+    @Binding var showCameraSheet: Bool
+    @Binding var showActionSheet: Bool
+    @Binding var selectedPhotoItem: PhotosPickerItem?
+    let color: Color
+    
+    private var squareSize: CGFloat {
+        // Calculate size based on available width (50% minus padding and icon space)
+        let screenWidth = UIScreen.main.bounds.width
+        let horizontalPadding: CGFloat = 16
+        let iconWidth: CGFloat = 44 // Icon + padding on both sides
+        let availableWidth = screenWidth - (horizontalPadding * 2) - iconWidth
+        return availableWidth / 2
+    }
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title)
+                .font(.caption)
+                .fontWeight(.medium)
+                .foregroundColor(.secondary)
+            
+            if let image = image {
+                // Show image with remove button
+                ZStack(alignment: .topTrailing) {
+                    Image(uiImage: image)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: squareSize, height: squareSize)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(color.opacity(0.6), lineWidth: 1)
+                        )
+                    
+                    Button(action: { self.image = nil }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.title3)
+                            .foregroundColor(.white)
+                            .background(Circle().fill(Color.red))
+                    }
+                    .padding(6)
+                }
+            } else {
+                // Show add button
+                Button {
+                    showActionSheet = true
+                } label: {
+                    VStack(spacing: 8) {
+                        Image(systemName: "camera")
+                            .font(.system(size: 24))
+                            .foregroundColor(.gray.opacity(0.5))
+                        Text("Add Image")
+                            .font(.caption)
+                            .fontWeight(.medium)
+                            .foregroundColor(.gray)
+                        // Text("(Optional)")
+                        //     .font(.caption2)
+                        //     .foregroundColor(.gray.opacity(0.7))
+                    }
+                    .frame(width: squareSize, height: squareSize)
+                    .background(Color.gray.opacity(0.03))
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .strokeBorder(
+                                style: StrokeStyle(lineWidth: 3.5, dash: [6, 4])
+                            )
+                            .foregroundColor(.gray.opacity(0.4))
+                    )
+                }
+                .buttonStyle(PlainButtonStyle())
+            }
+        }
     }
 }
 

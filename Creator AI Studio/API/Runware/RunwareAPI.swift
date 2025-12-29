@@ -503,6 +503,8 @@ func sendVideoToRunware(
     isImageToVideo: Bool = false,
     runwareConfig: RunwareConfig? = nil,
     generateAudio: Bool? = nil,
+    firstFrameImage: UIImage? = nil,
+    lastFrameImage: UIImage? = nil,
     onPollingProgress: ((Int, Int) -> Void)? = nil
 ) async throws -> RunwareResponse {
     print("[Runware] Preparing video request…")
@@ -584,6 +586,39 @@ func sendVideoToRunware(
                 ]
             ]
             print("[Runware] Image-to-video enabled with frameImages (first frame): \(imageUUID)")
+        }
+    }
+    
+    // MARK: - Handle first and last frame images for KlingAI 2.5 Turbo Pro
+    
+    // KlingAI 2.5 Turbo Pro (klingai:6@1) supports both first and last frame
+    if model.lowercased() == "klingai:6@1" {
+        var frameImagesArray: [[String: Any]] = []
+        
+        // Add first frame if provided
+        if let firstFrame = firstFrameImage {
+            let firstFrameUUID = try await uploadImageToRunware(image: firstFrame)
+            frameImagesArray.append([
+                "inputImage": firstFrameUUID,
+                "frame": "first"
+            ])
+            print("[Runware] Added first frame image: \(firstFrameUUID)")
+        }
+        
+        // Add last frame if provided
+        if let lastFrame = lastFrameImage {
+            let lastFrameUUID = try await uploadImageToRunware(image: lastFrame)
+            frameImagesArray.append([
+                "inputImage": lastFrameUUID,
+                "frame": "last"
+            ])
+            print("[Runware] Added last frame image: \(lastFrameUUID)")
+        }
+        
+        // Only set frameImages if we have at least one frame
+        if !frameImagesArray.isEmpty {
+            task["frameImages"] = frameImagesArray
+            print("[Runware] Frame images configured: \(frameImagesArray.count) frame(s)")
         }
     }
 
@@ -1092,7 +1127,9 @@ func submitVideoToRunwareWithWebhook(
     resolution: String? = nil,
     isImageToVideo: Bool = false,
     runwareConfig: RunwareConfig? = nil,
-    generateAudio: Bool? = nil
+    generateAudio: Bool? = nil,
+    firstFrameImage: UIImage? = nil,
+    lastFrameImage: UIImage? = nil
 ) async throws -> RunwareWebhookSubmissionResponse {
     print("[Runware] Preparing webhook request for video…")
     print("[Runware] Task UUID: \(taskUUID)")
@@ -1144,6 +1181,39 @@ func submitVideoToRunwareWithWebhook(
                 ]
             ]
             print("[Runware] Image-to-video enabled with frameImages (first frame): \(imageUUID)")
+        }
+    }
+    
+    // MARK: - Handle first and last frame images for KlingAI 2.5 Turbo Pro (webhook)
+    
+    // KlingAI 2.5 Turbo Pro (klingai:6@1) supports both first and last frame
+    if model.lowercased() == "klingai:6@1" {
+        var frameImagesArray: [[String: Any]] = []
+        
+        // Add first frame if provided
+        if let firstFrame = firstFrameImage {
+            let firstFrameUUID = try await uploadImageToRunware(image: firstFrame)
+            frameImagesArray.append([
+                "inputImage": firstFrameUUID,
+                "frame": "first"
+            ])
+            print("[Runware] Added first frame image (webhook): \(firstFrameUUID)")
+        }
+        
+        // Add last frame if provided
+        if let lastFrame = lastFrameImage {
+            let lastFrameUUID = try await uploadImageToRunware(image: lastFrame)
+            frameImagesArray.append([
+                "inputImage": lastFrameUUID,
+                "frame": "last"
+            ])
+            print("[Runware] Added last frame image (webhook): \(lastFrameUUID)")
+        }
+        
+        // Only set frameImages if we have at least one frame
+        if !frameImagesArray.isEmpty {
+            task["frameImages"] = frameImagesArray
+            print("[Runware] Frame images configured (webhook): \(frameImagesArray.count) frame(s)")
         }
     }
     

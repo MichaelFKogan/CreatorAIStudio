@@ -412,6 +412,25 @@ class PricingManager {
             return klingDimensions[resolution]?[aspectRatio]
         }
         
+        // KlingAI 2.5 Turbo Pro (klingai:6@1) - requires exact dimensions
+        // Supported: 1920x1080, 1080x1920, 1080x1080 (1080p) or 1280x720, 720x1280, 720x720 (720p)
+        // Only supports 16:9, 9:16, 1:1 aspect ratios
+        if let model = model, model.lowercased().contains("klingai:6@1") {
+            let kling25TurboProDimensions: [String: [String: (Int, Int)]] = [
+                "720p": [
+                    "16:9": (1280, 720),
+                    "9:16": (720, 1280),
+                    "1:1": (720, 720),
+                ],
+                "1080p": [
+                    "16:9": (1920, 1080),
+                    "9:16": (1080, 1920),
+                    "1:1": (1080, 1080),
+                ],
+            ]
+            return kling25TurboProDimensions[resolution]?[aspectRatio]
+        }
+        
         // Default: Seedance 1.0 Pro Fast dimensions from documentation
         let dimensions: [String: [String: (Int, Int)]] = [
             "480p": [

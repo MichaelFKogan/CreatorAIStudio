@@ -551,6 +551,7 @@ class ModelConfigurationManager {
                 ResolutionOption(id: "1080p", label: "1080p", description: "Full HD")
             ],
             "KlingAI 2.5 Turbo Pro": [
+                ResolutionOption(id: "720p", label: "720p", description: "High quality"),
                 ResolutionOption(id: "1080p", label: "1080p", description: "Full HD")
             ]
         ]
