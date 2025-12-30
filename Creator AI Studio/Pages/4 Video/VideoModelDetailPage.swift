@@ -1762,7 +1762,7 @@ private struct FrameImagesSection: View {
                 // Left-right arrows icon with padding
                 HStack(spacing: 0) {
                     Spacer().frame(width: 12)
-                    Image(systemName: "arrow.left.arrow.right")
+                    Image(systemName: "arrow.left")
                         .font(.system(size: 20))
                         .foregroundColor(color.opacity(0.6))
                     Spacer().frame(width: 12)

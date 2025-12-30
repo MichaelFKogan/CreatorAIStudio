@@ -29,6 +29,7 @@ struct Home: View {
                                     .padding(.top, index == 0 ? 16 : 0)
                             }
                         }
+                        Color.clear.frame(height: 160)
                     }
                 }
             }
