@@ -54,7 +54,17 @@ struct Settings: View {
                 HStack {
                     Image(systemName: "person.circle")
                         .foregroundColor(.blue)
-                    Text("Account Settings")
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Account Settings")
+                            .font(.body)
+                        if let email = authViewModel.user?.email {
+                            Text(email)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .lineLimit(1)
+                                .truncationMode(.middle)
+                        }
+                    }
                     Spacer()
                     Image(systemName: "chevron.right")
                         .foregroundColor(.gray)
