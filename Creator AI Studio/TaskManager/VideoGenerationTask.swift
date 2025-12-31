@@ -305,7 +305,9 @@ class VideoGenerationTask: MediaGenerationTask {
                 endpoint: apiConfig.endpoint.isEmpty ? nil : apiConfig.endpoint,
                 fileExtension: fileExtension,
                 prompt: (item.prompt?.isEmpty == false ? item.prompt : nil),
-                aspectRatio: aspectRatio
+                aspectRatio: aspectRatio,
+                duration: duration,
+                resolution: resolution
             )
             
             print("📝 Saving video metadata: title=\(metadata.title ?? "none"), cost=\(metadata.cost ?? 0), type=\(metadata.type ?? "none"), extension=\(fileExtension)")
@@ -339,13 +341,17 @@ class VideoGenerationTask: MediaGenerationTask {
             // Handles request, download, or API timeouts.
             print("❌ Timeout: \(error.localizedDescription)")
             
-            await onComplete(.failure(
-                NSError(
-                    domain: "TimeoutError",
-                    code: -1,
-                    userInfo: [NSLocalizedDescriptionKey: "Request timed out. Videos can take several minutes."]
-                )
-            ))
+            let errorMessage = "Request timed out. Videos can take several minutes."
+            let nsError = NSError(
+                domain: "TimeoutError",
+                code: -1,
+                userInfo: [NSLocalizedDescriptionKey: errorMessage]
+            )
+            
+            // Save failed attempt to database
+            await saveFailedAttempt(errorMessage: errorMessage, apiConfig: apiConfig)
+            
+            await onComplete(.failure(nsError))
             
         } catch let error as URLError {
             // Provides friendly, user-facing network messages.
@@ -363,15 +369,26 @@ class VideoGenerationTask: MediaGenerationTask {
                 message = "Network error: \(error.localizedDescription)"
             }
             
-            await onComplete(.failure(NSError(
+            let nsError = NSError(
                 domain: "NetworkError",
                 code: error.code.rawValue,
                 userInfo: [NSLocalizedDescriptionKey: message]
-            )))
+            )
+            
+            // Save failed attempt to database
+            await saveFailedAttempt(errorMessage: message, apiConfig: apiConfig)
+            
+            await onComplete(.failure(nsError))
             
         } catch {
             // Catches everything else — JSON errors, decode errors, unexpected exceptions.
             print("❌ Runware video error: \(error)")
+            
+            let errorMessage = error.localizedDescription.isEmpty ? "Video generation failed" : error.localizedDescription
+            
+            // Save failed attempt to database
+            await saveFailedAttempt(errorMessage: errorMessage, apiConfig: apiConfig)
+            
             await onComplete(.failure(error))
         }
     }
@@ -468,7 +485,46 @@ class VideoGenerationTask: MediaGenerationTask {
                 try? await SupabaseManager.shared.deletePendingJob(taskId: taskId)
             }
             
+            let errorMessage = error.localizedDescription.isEmpty ? "Video webhook submission failed" : error.localizedDescription
+            
+            // Save failed attempt to database
+            await saveFailedAttempt(errorMessage: errorMessage, apiConfig: apiConfig)
+            
             await onComplete(.failure(error))
+        }
+    }
+    
+    // MARK: - Save Failed Attempt
+    
+    /// Saves a failed generation attempt to the database for tracking
+    private func saveFailedAttempt(errorMessage: String, apiConfig: APIConfiguration) async {
+        let modelName = item.display.modelName ?? ""
+        
+        let failedMetadata = VideoMetadata(
+            userId: userId,
+            videoUrl: "", // Empty for failed attempts
+            thumbnailUrl: nil,
+            model: modelName.isEmpty ? nil : modelName,
+            title: item.display.title.isEmpty ? nil : item.display.title,
+            cost: nil, // No cost for failed attempts
+            type: item.type?.isEmpty == false ? item.type : nil,
+            endpoint: apiConfig.endpoint.isEmpty ? nil : apiConfig.endpoint,
+            fileExtension: "mp4",
+            prompt: (item.prompt?.isEmpty == false ? item.prompt : nil),
+            aspectRatio: aspectRatio,
+            duration: duration,
+            resolution: resolution,
+            status: "failed",
+            errorMessage: errorMessage
+        )
+        
+        // Save with retry, but don't throw - we don't want to fail the error handling
+        do {
+            try await saveMetadataWithRetry(failedMetadata)
+            print("✅ Failed video attempt saved to database")
+        } catch {
+            print("⚠️ Failed to save failed video attempt to database: \(error)")
+            // Don't throw - this is best effort logging
         }
     }
     

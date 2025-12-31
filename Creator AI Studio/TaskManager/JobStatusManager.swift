@@ -498,7 +498,9 @@ class JobStatusManager: ObservableObject {
                     endpoint: metadata?.endpoint,
                     fileExtension: fileExtension,
                     prompt: metadata?.prompt,
-                    aspectRatio: metadata?.aspectRatio
+                    aspectRatio: metadata?.aspectRatio,
+                    duration: metadata?.duration,
+                    resolution: metadata?.resolution
                 )
                 
                 try await SupabaseManager.shared.client.database

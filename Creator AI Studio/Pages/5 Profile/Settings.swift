@@ -140,6 +140,23 @@ struct Settings: View {
                     showPurchaseCreditsView = true
                 }
             }
+            
+            // Usage section
+            Section("Usage") {
+                NavigationLink(destination: UsageView().environmentObject(authViewModel)) {
+                    HStack {
+                        Image(systemName: "chart.bar.fill")
+                            .foregroundColor(.orange)
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Usage Statistics")
+                                .font(.body)
+                            Text("View all successful and failed generations")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                }
+            }
 
             // // App preferences
             // Section("Preferences") {

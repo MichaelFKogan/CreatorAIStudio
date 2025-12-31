@@ -1,6 +1,6 @@
 import SwiftUI
 
-// MARK: - GALLERY TAB PILL
+// MARK:GALLERYTABPILL
 
 struct GalleryTabPill: View {
     let title: String
@@ -8,6 +8,7 @@ struct GalleryTabPill: View {
     let isSelected: Bool
     let count: Int
     let isSignedIn: Bool
+    var selectedColor: Color = .blue
     let action: () -> Void
 
     var body: some View {
@@ -34,11 +35,11 @@ struct GalleryTabPill: View {
             .padding(.vertical, 8)
             .background(
                 Capsule()
-                    .fill(isSelected ? Color.blue : Color.gray.opacity(0.15))
+                    .fill(isSelected ? selectedColor : Color.gray.opacity(0.15))
             )
             .overlay(
                 Capsule()
-                    .stroke(isSelected ? Color.blue : Color.clear, lineWidth: 0)
+                    .stroke(isSelected ? selectedColor : Color.clear, lineWidth: 0)
             )
         }
         .buttonStyle(.plain)
@@ -101,7 +102,7 @@ struct EmptyGalleryView: View {
     
     private var shouldShowPlaceholderGrid: Bool {
         // Show placeholder grid only for the default "No Images Yet" case
-        return tab == .all && !isImageModelsTab && !isVideoModelsTab
+        return (tab == .all || tab == .images || tab == .videos) && !isImageModelsTab && !isVideoModelsTab
     }
 
     var body: some View {
@@ -195,6 +196,10 @@ struct EmptyGalleryView: View {
     private var iconName: String {
         if tab == .favorites {
             return "heart.slash"
+        } else if tab == .images {
+            return "photo.on.rectangle"
+        } else if tab == .videos {
+            return "video.slash"
         } else if isVideoModelsTab {
             return "video.slash"
         } else if isImageModelsTab && model != nil {
@@ -207,6 +212,10 @@ struct EmptyGalleryView: View {
     private var emptyTitle: String {
         if tab == .favorites {
             return "No Favorites Yet"
+        } else if tab == .images {
+            return "No Images Yet"
+        } else if tab == .videos {
+            return "No Videos Yet"
         } else if isVideoModelsTab && videoModel != nil {
             return "No Videos for \(videoModel!)"
         } else if isVideoModelsTab {
@@ -223,6 +232,10 @@ struct EmptyGalleryView: View {
     private var emptyMessage: String {
         if tab == .favorites {
             return "Tap the heart icon on any image to add it to your favorites"
+        } else if tab == .images {
+            return "Start creating amazing images to see them here!"
+        } else if tab == .videos {
+            return "Start creating amazing videos to see them here!"
         } else if isVideoModelsTab && videoModel != nil {
             return "You haven't created any videos with this model yet"
         } else if isVideoModelsTab {

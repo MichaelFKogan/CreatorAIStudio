@@ -280,14 +280,18 @@ class ImageGenerationTask: MediaGenerationTask {
         } catch let error as TimeoutError {
             // Handles request, download, or API timeouts.
             print("❌ Timeout: \(error.localizedDescription)")
-
-            await onComplete(.failure(
-                NSError(
-                    domain: "TimeoutError",
-                    code: -1,
-                    userInfo: [NSLocalizedDescriptionKey: "Request timed out. Please try again."]
-                )
-            ))
+            
+            let errorMessage = "Request timed out. Please try again."
+            let nsError = NSError(
+                domain: "TimeoutError",
+                code: -1,
+                userInfo: [NSLocalizedDescriptionKey: errorMessage]
+            )
+            
+            // Save failed attempt to database
+            await saveFailedAttempt(errorMessage: errorMessage, apiConfig: apiConfig)
+            
+            await onComplete(.failure(nsError))
 
         } catch let error as URLError {
             // Provides friendly, user-facing network messages.
@@ -305,15 +309,26 @@ class ImageGenerationTask: MediaGenerationTask {
                 message = "Network error: \(error.localizedDescription)"
             }
 
-            await onComplete(.failure(NSError(
+            let nsError = NSError(
                 domain: "NetworkError",
                 code: error.code.rawValue,
                 userInfo: [NSLocalizedDescriptionKey: message]
-            )))
+            )
+            
+            // Save failed attempt to database
+            await saveFailedAttempt(errorMessage: message, apiConfig: apiConfig)
+            
+            await onComplete(.failure(nsError))
 
         } catch {
             // Catches everything else — JSON errors, decode errors, unexpected exceptions.
             print("❌ \(apiConfig.provider == .runware ? "Runware" : "WaveSpeed") error: \(error)")
+            
+            let errorMessage = error.localizedDescription.isEmpty ? "Generation failed" : error.localizedDescription
+            
+            // Save failed attempt to database
+            await saveFailedAttempt(errorMessage: errorMessage, apiConfig: apiConfig)
+            
             await onComplete(.failure(error))
         }
     }
@@ -412,7 +427,43 @@ class ImageGenerationTask: MediaGenerationTask {
                 try? await SupabaseManager.shared.deletePendingJob(taskId: taskId)
             }
             
+            let errorMessage = error.localizedDescription.isEmpty ? "Webhook submission failed" : error.localizedDescription
+            
+            // Save failed attempt to database
+            await saveFailedAttempt(errorMessage: errorMessage, apiConfig: apiConfig)
+            
             await onComplete(.failure(error))
+        }
+    }
+    
+    // MARK: - Save Failed Attempt
+    
+    /// Saves a failed generation attempt to the database for tracking
+    private func saveFailedAttempt(errorMessage: String, apiConfig: APIConfiguration) async {
+        let modelName = item.display.modelName ?? ""
+        
+        let failedMetadata = ImageMetadata(
+            userId: userId,
+            imageUrl: "", // Empty for failed attempts
+            model: modelName.isEmpty ? nil : modelName,
+            title: item.display.title.isEmpty ? nil : item.display.title,
+            cost: nil, // No cost for failed attempts
+            type: item.type?.isEmpty == false ? item.type : nil,
+            endpoint: apiConfig.endpoint.isEmpty ? nil : apiConfig.endpoint,
+            prompt: (item.prompt?.isEmpty == false ? item.prompt : nil),
+            aspectRatio: apiConfig.aspectRatio,
+            provider: apiConfig.provider.rawValue,
+            status: "failed",
+            errorMessage: errorMessage
+        )
+        
+        // Save with retry, but don't throw - we don't want to fail the error handling
+        do {
+            _ = try await saveMetadataWithRetry(failedMetadata)
+            print("✅ Failed attempt saved to database")
+        } catch {
+            print("⚠️ Failed to save failed attempt to database: \(error)")
+            // Don't throw - this is best effort logging
         }
     }
     

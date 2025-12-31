@@ -2,9 +2,11 @@ import Photos
 import SwiftUI
 import UIKit
 
-// MARK: STRUCT PROFILEVIEWCONTENT
+// MARK: - STRUCT PROFILEVIEWCONTENT
 
 struct ProfileViewContent: View {
+    // MARK: - PROPERTIES
+    
     @ObservedObject var viewModel: ProfileViewModel
     @EnvironmentObject var authViewModel: AuthViewModel
     let isSignedIn: Bool
@@ -49,35 +51,49 @@ struct ProfileViewContent: View {
         return models
     }
 
+    // MARK: - ENUMS
+    
     enum GalleryTab: String, CaseIterable {
         case all = "All"
         case favorites = "Favorites"
+        case images = "Images"
+        case videos = "Videos"
         case imageModels = "Image Models"
         case videoModels = "Video Models"
     }
 
-    // MARK: - Cached Computations
+    // MARK: - CACHED COMPUTATIONS
     
     @State private var cachedImageModelsMetadata: [(model: String, count: Int, imageName: String)]? = nil
     @State private var cachedVideoModelsMetadata: [(model: String, count: Int, imageName: String)]? = nil
     
     // Compute models with metadata - cached to avoid repeated computation
+    // IMPORTANT: Merges models from BOTH user_stats AND loaded images to ensure no models are missed
     private func computeModelsWithMetadata() -> [(model: String, count: Int, imageName: String)] {
         // Use cached result if available and modelCounts haven't changed
         if let cached = cachedImageModelsMetadata, !viewModel.modelCounts.isEmpty {
             return cached
         }
         
-        let modelNames: [String]
-        if !viewModel.modelCounts.isEmpty {
-            modelNames = Array(viewModel.modelCounts.keys).sorted()
-        } else {
-            modelNames = viewModel.uniqueModels
+        // Merge model names from both sources to ensure we don't miss any:
+        // 1. modelCounts from user_stats (authoritative source, includes all images)
+        // 2. uniqueModels from loaded images (in case stats are incomplete)
+        var allModelNames = Set<String>()
+        
+        // Add models from stats (preferred source - includes all images even if not loaded)
+        for modelName in viewModel.modelCounts.keys {
+            allModelNames.insert(modelName)
+        }
+        
+        // Also add models from loaded images (backup if stats are incomplete)
+        for modelName in viewModel.uniqueModels {
+            allModelNames.insert(modelName)
         }
 
         var result: [(String, Int, String)] = []
 
-        for modelName in modelNames {
+        for modelName in allModelNames {
+            // Prefer count from stats (includes all images), fall back to loaded images count
             let count: Int
             if let dbCount = viewModel.modelCounts[modelName], dbCount > 0 {
                 count = dbCount
@@ -97,23 +113,39 @@ struct ProfileViewContent: View {
     }
 
     // Compute video models with metadata - cached to avoid repeated computation
+    // IMPORTANT: Merges models from BOTH user_stats AND loaded videos to ensure no models are missed
     private func computeVideoModelsWithMetadata() -> [(model: String, count: Int, imageName: String)] {
         // Use cached result if available
         if let cached = cachedVideoModelsMetadata {
             return cached
         }
         
-        let modelNames: [String]
-        if !viewModel.videoModelCounts.isEmpty {
-            modelNames = Array(viewModel.videoModelCounts.keys).sorted()
-        } else {
-            modelNames = viewModel.uniqueVideoModels
+        // Merge model names from both sources to ensure we don't miss any:
+        // 1. videoModelCounts from user_stats (authoritative source, includes all videos)
+        // 2. uniqueVideoModels from loaded videos (in case stats are incomplete)
+        var allModelNames = Set<String>()
+        
+        // Add models from stats (preferred source - includes all videos even if not loaded)
+        for modelName in viewModel.videoModelCounts.keys {
+            allModelNames.insert(modelName)
+        }
+        
+        // Also add models from loaded videos (backup if stats are incomplete)
+        for modelName in viewModel.uniqueVideoModels {
+            allModelNames.insert(modelName)
         }
 
         var result: [(String, Int, String)] = []
 
-        for modelName in modelNames {
-            let count = viewModel.filteredVideos(by: modelName, favoritesOnly: false).count
+        for modelName in allModelNames {
+            // Prefer count from stats (includes all videos), fall back to loaded videos count
+            let count: Int
+            if let statsCount = viewModel.videoModelCounts[modelName], statsCount > 0 {
+                count = statsCount
+            } else {
+                count = viewModel.filteredVideos(by: modelName, favoritesOnly: false).count
+            }
+            
             guard count > 0 else { continue }
 
             let imageName = findVideoModelImageName(for: modelName)
@@ -143,6 +175,8 @@ struct ProfileViewContent: View {
         return "video.fill"
     }
 
+    // MARK: - BODY
+    
     var body: some View {
         NavigationStack {
             ScrollViewReader { proxy in
@@ -178,6 +212,16 @@ struct ProfileViewContent: View {
                 cachedImageModelsMetadata = nil
             }
             .onChange(of: viewModel.videoModelCounts) {
+                _ in
+                cachedVideoModelsMetadata = nil
+            }
+            // Invalidate all caches when userId changes (user switched accounts)
+            .onChange(of: viewModel.userId) {
+                _, _ in
+                invalidateCaches()
+            }
+            // Invalidate video metadata cache when userVideos change
+            .onChange(of: viewModel.userVideos.count) {
                 _ in
                 cachedVideoModelsMetadata = nil
             }
@@ -244,7 +288,7 @@ struct ProfileViewContent: View {
         }
     }
 
-    // MARK: - View Components
+    // MARK: - VIEW COMPONENTS
     
     private var mainScrollView: some View {
         ScrollView {
@@ -392,14 +436,14 @@ struct ProfileViewContent: View {
         }
     }
     
-    // MARK: - Cache Management
+    // MARK: - CACHE MANAGEMENT
     
     private func invalidateCaches() {
         cachedImageModelsMetadata = nil
         cachedVideoModelsMetadata = nil
     }
     
-    // MARK: - Actions
+    // MARK: - ACTIONS
     
     private func handleSaveAction() {
         if selectedImageIds.isEmpty {
@@ -452,7 +496,7 @@ struct ProfileViewContent: View {
         }
     }
 
-    // MARK: - Filter Section
+    // MARK: - FILTER SECTION
 
     private var filterSection: some View {
         VStack(spacing: 12) {
@@ -484,7 +528,8 @@ struct ProfileViewContent: View {
                         // This counts from actual data, ensuring videos are included
                         // Falls back to favoriteCount from stats if userImages is empty
                         count: viewModel.userImages.isEmpty ? viewModel.favoriteCount : viewModel.actualFavoriteCount,
-                        isSignedIn: isSignedIn
+                        isSignedIn: isSignedIn,
+                        selectedColor: .red
                     ) {
                         selectedTab = .favorites
                         selectedModel = nil
@@ -493,6 +538,38 @@ struct ProfileViewContent: View {
                         Task {
                             await viewModel.fetchFavorites()
                         }
+                    }
+
+                    // Images pill
+                    GalleryTabPill(
+                        title: "Images",
+                        icon: "photo.fill",
+                        isSelected: selectedTab == .images
+                            && selectedModel == nil
+                            && selectedVideoModel == nil,
+                        count: viewModel.imageCount,
+                        isSignedIn: isSignedIn,
+                        selectedColor: .blue
+                    ) {
+                        selectedTab = .images
+                        selectedModel = nil
+                        selectedVideoModel = nil
+                    }
+
+                    // Videos pill
+                    GalleryTabPill(
+                        title: "Videos",
+                        icon: "video.fill",
+                        isSelected: selectedTab == .videos
+                            && selectedModel == nil
+                            && selectedVideoModel == nil,
+                        count: viewModel.videoCount,
+                        isSignedIn: isSignedIn,
+                        selectedColor: .purple
+                    ) {
+                        selectedTab = .videos
+                        selectedModel = nil
+                        selectedVideoModel = nil
                     }
 
                     imageModelsButton
@@ -526,7 +603,8 @@ struct ProfileViewContent: View {
         let isSelected = selectedTab == .imageModels && selectedModel != nil
         let title =
             isSelected && selectedModel != nil ? selectedModel! : "Image Models"
-        let modelCount = viewModel.hasLoadedStats ? viewModel.modelCounts.count : viewModel.uniqueModels.count
+        // Use the same computed source as the sheet to ensure count matches what's displayed
+        let modelCount = computeModelsWithMetadata().count
 
         return HStack(spacing: 6) {
             Image(systemName: "cpu")
@@ -578,7 +656,8 @@ struct ProfileViewContent: View {
         let title =
             isSelected && selectedVideoModel != nil
             ? selectedVideoModel! : "Video Models"
-        let modelCount = viewModel.hasLoadedStats ? viewModel.videoModelCounts.count : viewModel.uniqueVideoModels.count
+        // Use the same computed source as the sheet to ensure count matches what's displayed
+        let modelCount = computeVideoModelsWithMetadata().count
 
         return HStack(spacing: 6) {
             Image(systemName: "video")
@@ -607,7 +686,7 @@ struct ProfileViewContent: View {
         .clipShape(Capsule())
     }
 
-    // MARK: - Content Section
+    // MARK: - CONTENT SECTION
 
     private var contentSection: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -672,6 +751,12 @@ struct ProfileViewContent: View {
                 ? viewModel.favoriteImages
                 : viewModel.filteredImages(
                     by: selectedModel, favoritesOnly: true)
+        case .images:
+            // Filter to show only images (not videos)
+            return viewModel.userImages.filter { !$0.isVideo }
+        case .videos:
+            // Filter to show only videos
+            return viewModel.userVideos
         case .imageModels:
             return selectedModel != nil
                 ? viewModel.filteredImages(
@@ -685,6 +770,8 @@ struct ProfileViewContent: View {
         }
     }
 
+    // MARK: - IMAGE OPERATIONS
+    
     private func deleteSelectedImages() async {
         guard !selectedImageIds.isEmpty else { return }
 

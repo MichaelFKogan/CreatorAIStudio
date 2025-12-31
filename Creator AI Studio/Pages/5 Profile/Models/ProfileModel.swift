@@ -91,6 +91,10 @@ struct UserImage: Codable, Identifiable {
     let aspect_ratio: String? // Aspect ratio used for generation
     let provider: String? // Provider used for generation (e.g., "wavespeed", "runware")
     var is_favorite: Bool? // Whether the image is favorited
+    let status: String? // "success" or "failed"
+    let error_message: String? // Error message for failed generations
+    let duration: Double? // Video duration in seconds (for videos only)
+    let resolution: String? // Video resolution (e.g., "720p", "1080p") (for videos only)
 
     // Computed property for convenience
     var isVideo: Bool {
@@ -99,6 +103,14 @@ struct UserImage: Codable, Identifiable {
 
     var isImage: Bool {
         media_type == "image" || media_type == nil
+    }
+    
+    var isFailed: Bool {
+        status == "failed"
+    }
+    
+    var isSuccess: Bool {
+        status == "success" || status == nil // Default to success for backward compatibility
     }
 
     // Custom coding keys to handle database field names
@@ -118,6 +130,10 @@ struct UserImage: Codable, Identifiable {
         case aspect_ratio
         case provider
         case is_favorite
+        case status
+        case error_message
+        case duration
+        case resolution
     }
 
     // Custom decoder to handle id as either Int or String
@@ -149,6 +165,10 @@ struct UserImage: Codable, Identifiable {
         aspect_ratio = try? container.decode(String.self, forKey: .aspect_ratio)
         provider = try? container.decode(String.self, forKey: .provider)
         is_favorite = try? container.decode(Bool.self, forKey: .is_favorite) ?? false
+        status = try? container.decode(String.self, forKey: .status)
+        error_message = try? container.decode(String.self, forKey: .error_message)
+        duration = try? container.decode(Double.self, forKey: .duration)
+        resolution = try? container.decode(String.self, forKey: .resolution)
     }
 }
 
@@ -525,20 +545,22 @@ class ProfileViewModel: ObservableObject {
         hasFetchedFavorites = false
         hasMoreFavoritePages = true
         
-        // Only reset stats if we don't already have loaded stats for this user
-        // This prevents resetting stats when navigating back to the same user
-        // Stats will be refreshed by fetchUserStats() if needed
-        if !hasLoadedStats {
-            favoriteCount = 0
-            imageCount = 0
-            videoCount = 0
-            modelCounts = [:]
-            videoModelCounts = [:]
-        }
-        // Note: We keep hasLoadedStats = true if it was already true
-        // This way the UI shows the correct counts immediately
+        // Clear model-specific caches when user changes
+        modelImagesCache.removeAll()
+        modelCurrentPages.removeAll()
+        modelHasMorePages.removeAll()
+        
+        // ALWAYS reset stats when user changes to prevent showing previous user's counts
+        // The loadCachedStats() call below will restore the correct stats for this user
+        favoriteCount = 0
+        imageCount = 0
+        videoCount = 0
+        modelCounts = [:]
+        videoModelCounts = [:]
+        hasLoadedStats = false
 
         // Load cached data for this user if available
+        // This will restore the correct stats and images for the new user
         loadCachedImages(for: userId)
         loadCachedStats(for: userId)
     }
