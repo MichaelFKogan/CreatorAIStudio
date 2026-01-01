@@ -36,13 +36,6 @@
   },
   {
     "display": {
-      "title": "Wan2.5-Preview",
-      "imageName": "wan25preview",
-      "modelName": "Wan2.5-Preview"
-    }
-  },
-  {
-    "display": {
       "title": "Wan2.6",
       "imageName": "wan26",
       "modelName": "Wan2.6"

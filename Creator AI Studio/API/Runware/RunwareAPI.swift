@@ -600,7 +600,7 @@ func sendVideoToRunware(
         print("[Runware] Sora 2 image-to-video enabled with frameImages: \(imageUUID)")
     }
     
-    // Handle Alibaba Wan models (Wan2.5-Preview and Wan2.6) - they use inputs.frameImages
+    // Handle Alibaba Wan2.6 model - uses inputs.frameImages
     if isAlibabaWan && isImageToVideo, let seedImage = image {
         // Upload image first to get UUID (required for inputs.frameImages)
         let imageUUID = try await uploadImageToRunware(image: seedImage)
@@ -608,20 +608,9 @@ func sendVideoToRunware(
         // Initialize inputs object if it doesn't exist
         var inputs = task["inputs"] as? [String: Any] ?? [:]
         
-        if model.lowercased().contains("alibaba:wan@2.6") {
-            // Wan2.6 uses simpler format: array of UUID strings
-            inputs["frameImages"] = [imageUUID]
-            print("[Runware] Alibaba Wan2.6 image-to-video enabled with inputs.frameImages: \(imageUUID)")
-        } else {
-            // Wan2.5-Preview uses object format with inputImage and frame
-            inputs["frameImages"] = [
-                [
-                    "inputImage": imageUUID,
-                    "frame": "first"
-                ]
-            ]
-            print("[Runware] Alibaba Wan2.5-Preview image-to-video enabled with inputs.frameImages: \(imageUUID)")
-        }
+        // Wan2.6 uses simpler format: array of UUID strings
+        inputs["frameImages"] = [imageUUID]
+        print("[Runware] Alibaba Wan2.6 image-to-video enabled with inputs.frameImages: \(imageUUID)")
         
         task["inputs"] = inputs
     }
@@ -768,7 +757,7 @@ func sendVideoToRunware(
     
     // MARK: - Provider-specific settings for Alibaba models
     
-    // Wan2.5-Preview and Wan2.6 support promptExtend, audio, and shotType parameters
+    // Wan2.6 supports promptExtend, audio, and shotType parameters
     if model.lowercased().contains("alibaba:wan@") {
         var providerSettings = task["providerSettings"] as? [String: Any] ?? [:]
         var alibabaSettings: [String: Any] = [:]
@@ -780,8 +769,7 @@ func sendVideoToRunware(
         // Use generateAudio parameter if provided, otherwise default to true
         alibabaSettings["audio"] = generateAudio ?? true
         
-        // shotType only applies to Wan2.6 (defaults to "single")
-        // For Wan2.5-Preview, this parameter is not supported
+        // shotType applies to Wan2.6 (defaults to "single")
         if model.lowercased().contains("alibaba:wan@2.6") {
             alibabaSettings["shotType"] = "single"  // Can be "single" or "multi"
         }
@@ -1290,7 +1278,7 @@ func submitVideoToRunwareWithWebhook(
         print("[Runware] Sora 2 image-to-video enabled with frameImages (webhook): \(imageUUID)")
     }
     
-    // Handle Alibaba Wan models (Wan2.5-Preview and Wan2.6) - they use inputs.frameImages
+    // Handle Alibaba Wan2.6 model - uses inputs.frameImages
     if isAlibabaWan && isImageToVideo, let seedImage = image {
         // Upload image first to get UUID (required for inputs.frameImages)
         let imageUUID = try await uploadImageToRunware(image: seedImage)
@@ -1298,20 +1286,9 @@ func submitVideoToRunwareWithWebhook(
         // Initialize inputs object if it doesn't exist
         var inputs = task["inputs"] as? [String: Any] ?? [:]
         
-        if model.lowercased().contains("alibaba:wan@2.6") {
-            // Wan2.6 uses simpler format: array of UUID strings
-            inputs["frameImages"] = [imageUUID]
-            print("[Runware] Alibaba Wan2.6 image-to-video enabled with inputs.frameImages (webhook): \(imageUUID)")
-        } else {
-            // Wan2.5-Preview uses object format with inputImage and frame
-            inputs["frameImages"] = [
-                [
-                    "inputImage": imageUUID,
-                    "frame": "first"
-                ]
-            ]
-            print("[Runware] Alibaba Wan2.5-Preview image-to-video enabled with inputs.frameImages (webhook): \(imageUUID)")
-        }
+        // Wan2.6 uses simpler format: array of UUID strings
+        inputs["frameImages"] = [imageUUID]
+        print("[Runware] Alibaba Wan2.6 image-to-video enabled with inputs.frameImages (webhook): \(imageUUID)")
         
         task["inputs"] = inputs
     }
@@ -1426,8 +1403,7 @@ func submitVideoToRunwareWithWebhook(
         // Use generateAudio parameter if provided, otherwise default to true
         alibabaSettings["audio"] = generateAudio ?? true
         
-        // shotType only applies to Wan2.6 (defaults to "single")
-        // For Wan2.5-Preview, this parameter is not supported
+        // shotType applies to Wan2.6 (defaults to "single")
         if model.lowercased().contains("alibaba:wan@2.6") {
             alibabaSettings["shotType"] = "single"  // Can be "single" or "multi"
         }

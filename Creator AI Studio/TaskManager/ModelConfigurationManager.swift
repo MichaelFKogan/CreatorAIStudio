@@ -284,28 +284,6 @@ class ModelConfigurationManager {
                     outputQuality: nil
                 )
             ),
-            "Wan2.5-Preview": APIConfiguration(
-                provider: .runware,
-                endpoint: "https://api.runware.ai/v1",
-                // NOTE: If getting "invalidModel" error, verify current identifier via Runware Model Search API
-                // Documentation shows: alibaba:wan@2.5-preview
-                runwareModel: "alibaba:wan@2.5-preview",
-                aspectRatio: nil,
-                wavespeedConfig: nil,
-                runwareConfig: RunwareConfig(
-                    imageToImageMethod: "frameImages",
-                    strength: nil,
-                    additionalTaskParams: [
-                        "taskType": "videoInference",
-                        "deliveryMethod": "async"
-                    ],
-                    requiresDimensions: true,
-                    imageCompressionQuality: 0.9,
-                    outputFormat: "MP4",
-                    outputType: "URL",
-                    outputQuality: nil
-                )
-            ),
             "Wan2.6": APIConfiguration(
                 provider: .runware,
                 endpoint: "https://api.runware.ai/v1",
@@ -371,7 +349,6 @@ class ModelConfigurationManager {
             "Wan 2.5": ["Text to Video", "Image to Video", "Audio"],
             "Seedance 1.0 Pro Fast": ["Text to Video", "Image to Video"],
             "Kling VIDEO 2.6 Pro": ["Text to Video", "Image to Video", "Audio"],
-            "Wan2.5-Preview": ["Text to Video", "Image to Video", "Audio"],
             "Wan2.6": ["Text to Video", "Image to Video", "Audio"],
             "KlingAI 2.5 Turbo Pro": ["Text to Video", "Image to Video"]
         ]
@@ -404,7 +381,6 @@ class ModelConfigurationManager {
             "Wan 2.5": "Wan 2.5 delivers dramatic cinematic visuals, advanced character performance, atmospheric effects, and stylized world-building. It shines in fantasy, anime, surreal scenes, and richly creative storytelling.",
             "Seedance 1.0 Pro Fast": "Seedance 1.0 Pro Fast delivers accelerated video generation while maintaining the high visual quality and cinematic capabilities of Seedance 1.0 Pro. Optimized for faster iteration and production workflows, it supports dynamic camera movements, multiple aspect ratios, and resolutions up to 1080p. Perfect for rapid prototyping, quick content creation, and efficient video production.",
             "Kling VIDEO 2.6 Pro": "Kling VIDEO 2.6 Pro is a next-generation video-and-audio AI model that delivers cinematic-quality visuals and native synchronized audio including dialogue, sound effects, and ambience. This model combines strong prompt fidelity with scene consistency and flexible artistic control for professional video production workflows.",
-            "Wan2.5-Preview": "Alibaba's Wan2.5-Preview model represents a research preview of multimodal video generation with native audio support. This model offers strong prompt adherence, smooth motion, and multilingual audio capabilities for narrative scenes up to 10 seconds, making it suitable for short-form storytelling and creative video workflows.",
             "Wan2.6": "Alibaba's Wan2.6 model delivers multimodal video generation with native audio support and multi-shot sequencing capabilities. This model emphasizes temporal stability, consistent visual structure across shots, and reliable alignment between visuals and audio for short-form narrative video production.",
             "KlingAI 2.5 Turbo Pro": "KlingAI's 2.5 Turbo Pro model delivers next-level creativity with turbocharged motion and cinematic visuals. Featuring precise prompt adherence for both text-to-video and image-to-video workflows, this model combines enhanced motion fluidity with professional-grade cinematic capabilities at 30 FPS."
         ]
@@ -431,7 +407,6 @@ class ModelConfigurationManager {
             "Wan 2.5": "wan25",
             "Seedance 1.0 Pro Fast": "seedance10profast",
             "Kling VIDEO 2.6 Pro": "klingvideo26pro",
-            "Wan2.5-Preview": "wan25preview",
             "Wan2.6": "wan26",
             "KlingAI 2.5 Turbo Pro": "klingai25turbopro"
         ]
@@ -453,10 +428,6 @@ class ModelConfigurationManager {
                 DurationOption(id: "10", label: "10 seconds", duration: 10.0, description: "Extended duration"),
             ],
             "Kling VIDEO 2.6 Pro": [
-                DurationOption(id: "5", label: "5 seconds", duration: 5.0, description: "Standard duration"),
-                DurationOption(id: "10", label: "10 seconds", duration: 10.0, description: "Extended duration")
-            ],
-            "Wan2.5-Preview": [
                 DurationOption(id: "5", label: "5 seconds", duration: 5.0, description: "Standard duration"),
                 DurationOption(id: "10", label: "10 seconds", duration: 10.0, description: "Extended duration")
             ],
@@ -508,11 +479,6 @@ class ModelConfigurationManager {
                 AspectRatioOption(id: "1:1", label: "1:1", width: 1, height: 1, platforms: ["Instagram"]),
                 AspectRatioOption(id: "16:9", label: "16:9", width: 16, height: 9, platforms: ["YouTube"])
             ],
-            "Wan2.5-Preview": [
-                AspectRatioOption(id: "9:16", label: "9:16", width: 9, height: 16, platforms: ["TikTok", "Reels"]),
-                AspectRatioOption(id: "1:1", label: "1:1", width: 1, height: 1, platforms: ["Instagram"]),
-                AspectRatioOption(id: "16:9", label: "16:9", width: 16, height: 9, platforms: ["YouTube"])
-            ],
             "Wan2.6": [
                 AspectRatioOption(id: "9:16", label: "9:16", width: 9, height: 16, platforms: ["TikTok", "Reels"]),
                 AspectRatioOption(id: "1:1", label: "1:1", width: 1, height: 1, platforms: ["Instagram"]),
@@ -541,11 +507,6 @@ class ModelConfigurationManager {
                 ResolutionOption(id: "1080p", label: "1080p", description: "Full HD")
             ],
             "Kling VIDEO 2.6 Pro": [
-                ResolutionOption(id: "1080p", label: "1080p", description: "Full HD")
-            ],
-            "Wan2.5-Preview": [
-                ResolutionOption(id: "480p", label: "480p", description: "Standard quality"),
-                ResolutionOption(id: "720p", label: "720p", description: "High quality"),
                 ResolutionOption(id: "1080p", label: "1080p", description: "Full HD")
             ],
             "Wan2.6": [
