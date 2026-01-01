@@ -608,8 +608,12 @@ func sendVideoToRunware(
         // Initialize inputs object if it doesn't exist
         var inputs = task["inputs"] as? [String: Any] ?? [:]
         
-        // Wan2.6 uses simpler format: array of UUID strings
-        inputs["frameImages"] = [imageUUID]
+        // Wan2.6 uses object format: array of objects with "image" property containing UUID
+        inputs["frameImages"] = [
+            [
+                "image": imageUUID
+            ]
+        ]
         print("[Runware] Alibaba Wan2.6 image-to-video enabled with inputs.frameImages: \(imageUUID)")
         
         task["inputs"] = inputs
@@ -1286,8 +1290,12 @@ func submitVideoToRunwareWithWebhook(
         // Initialize inputs object if it doesn't exist
         var inputs = task["inputs"] as? [String: Any] ?? [:]
         
-        // Wan2.6 uses simpler format: array of UUID strings
-        inputs["frameImages"] = [imageUUID]
+        // Wan2.6 uses object format: array of objects with "image" property containing UUID
+        inputs["frameImages"] = [
+            [
+                "image": imageUUID
+            ]
+        ]
         print("[Runware] Alibaba Wan2.6 image-to-video enabled with inputs.frameImages (webhook): \(imageUUID)")
         
         task["inputs"] = inputs
