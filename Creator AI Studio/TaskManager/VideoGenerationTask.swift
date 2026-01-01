@@ -472,6 +472,12 @@ class VideoGenerationTask: MediaGenerationTask {
             )
             print("✅ Runware video webhook request submitted")
             
+            // Mark API request as submitted AFTER successful submission - this will hide the Cancel button
+            // At this point, the API request has been sent and cannot be cancelled
+            await MainActor.run {
+                VideoGenerationCoordinator.shared.markApiRequestSubmitted(notificationId: notificationId)
+            }
+            
             // MARK: Step 3 - Return immediately with queued status
             // Note: Don't update progress here - the coordinator will set the appropriate progress for queued state
             await onComplete(.queued(taskId: taskId, jobType: .video))

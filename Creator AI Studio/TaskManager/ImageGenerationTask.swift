@@ -74,7 +74,7 @@ class ImageGenerationTask: MediaGenerationTask {
     ///
     /// This function surfaces progress updates and the final result via async callbacks.
     func execute(
-        notificationId _: UUID,
+        notificationId: UUID,
         onProgress: @escaping (TaskProgress) async -> Void,
         onComplete: @escaping (TaskResult) async -> Void
     ) async {
@@ -99,7 +99,7 @@ class ImageGenerationTask: MediaGenerationTask {
         
         // MARK: - WEBHOOK MODE
         if useWebhook {
-            await executeWithWebhook(apiConfig: apiConfig, onProgress: onProgress, onComplete: onComplete)
+            await executeWithWebhook(notificationId: notificationId, apiConfig: apiConfig, onProgress: onProgress, onComplete: onComplete)
             return
         }
         
@@ -339,6 +339,7 @@ class ImageGenerationTask: MediaGenerationTask {
     /// Creates a pending job record and submits to API with webhook URL
     /// Returns immediately with "queued" status - result delivered via webhook
     private func executeWithWebhook(
+        notificationId: UUID,
         apiConfig: APIConfiguration,
         onProgress: @escaping (TaskProgress) async -> Void,
         onComplete: @escaping (TaskResult) async -> Void
@@ -385,8 +386,14 @@ class ImageGenerationTask: MediaGenerationTask {
             createdTaskId = taskId  // Track that job was created
             print("✅ Pending job created with taskId: \(taskId)")
             
+            // Check for cancellation before submitting to API
+            try Task.checkCancellation()
+            
             // MARK: Step 2 - Submit to API with webhook
             await onProgress(TaskProgress(progress: 0.4, message: generateProgressMessage()))
+            
+            // Check for cancellation again right before API submission (critical point)
+            try Task.checkCancellation()
             
             switch apiConfig.provider {
             case .wavespeed:
@@ -414,9 +421,36 @@ class ImageGenerationTask: MediaGenerationTask {
                 print("✅ Runware webhook request submitted")
             }
             
+            // Mark API request as submitted AFTER successful submission - this will hide the Cancel button
+            // At this point, the API request has been sent and cannot be cancelled
+            await MainActor.run {
+                ImageGenerationCoordinator.shared.markApiRequestSubmitted(notificationId: notificationId)
+            }
+            
+            // Check for cancellation after API submission (in case it was cancelled during the request)
+            try Task.checkCancellation()
+            
             // MARK: Step 3 - Return immediately with queued status
             // Note: Don't update progress here - the coordinator will set the appropriate progress for queued state
             await onComplete(.queued(taskId: taskId, jobType: .image))
+            
+        } catch is CancellationError {
+            // Task was cancelled - clean up and don't submit API request
+            print("🚫 Task cancelled before API submission")
+            
+            // Clean up the pending job if it was created
+            if let taskId = createdTaskId {
+                print("🧹 Cleaning up pending job after cancellation: \(taskId)")
+                try? await SupabaseManager.shared.deletePendingJob(taskId: taskId)
+            }
+            
+            // Return cancellation error
+            let cancellationError = NSError(
+                domain: "TaskCancellationError",
+                code: -1,
+                userInfo: [NSLocalizedDescriptionKey: "Task cancelled by user"]
+            )
+            await onComplete(.failure(cancellationError))
             
         } catch {
             print("❌ Webhook submission error: \(error)")

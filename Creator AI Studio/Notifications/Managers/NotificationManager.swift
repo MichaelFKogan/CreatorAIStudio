@@ -158,8 +158,36 @@ class NotificationManager: ObservableObject {
             return
         }
         
-        // Cancel the task via the coordinator
+        // Cancel the task via the appropriate coordinator
+        // Try both coordinators - the taskId should only exist in one
         ImageGenerationCoordinator.shared.cancelTask(taskId: taskId)
+        VideoGenerationCoordinator.shared.cancelTask(taskId: taskId)
+        
+        // Check if there's a webhook taskId associated with this notification
+        // IMPORTANT: Only delete pending job if API request hasn't been submitted yet
+        // Once the API request is submitted, payment is taken and we can't cancel/refund
+        Task {
+            // Check if the task can still be cancelled (API request not submitted)
+            let canCancel = ImageGenerationCoordinator.shared.canCancelTask(notificationId: notificationId) ||
+                           VideoGenerationCoordinator.shared.canCancelTask(notificationId: notificationId)
+            
+            if canCancel {
+                // Find webhook taskId by reverse lookup in JobStatusManager
+                if let webhookTaskId = await JobStatusManager.shared.getWebhookTaskId(for: notificationId) {
+                    // Found the webhook taskId, delete the pending job (only if not yet submitted)
+                    do {
+                        try await SupabaseManager.shared.deletePendingJob(taskId: webhookTaskId)
+                        print("🧹 Deleted pending job from database after cancellation: \(webhookTaskId)")
+                    } catch {
+                        print("⚠️ Failed to delete pending job after cancellation: \(error)")
+                    }
+                    // Remove the notification mapping
+                    await JobStatusManager.shared.removeNotificationMapping(for: webhookTaskId)
+                }
+            } else {
+                print("⚠️ Cannot delete pending job - API request already submitted, payment taken")
+            }
+        }
         
         // Update the notification to show cancellation
         if let index = notifications.firstIndex(where: { $0.id == notificationId }) {
@@ -170,6 +198,7 @@ class NotificationManager: ObservableObject {
         
         // Note: Placeholder remains on screen so user can manually dismiss with X button
     }
+    
     
     /// Reset a failed notification to in-progress state for retry
     @MainActor

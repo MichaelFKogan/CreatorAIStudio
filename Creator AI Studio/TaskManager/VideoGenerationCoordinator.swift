@@ -184,6 +184,40 @@ class VideoGenerationCoordinator: ObservableObject {
         backgroundTasks[taskId]?.cancel()
         cleanupTask(taskId: taskId)
     }
+    
+    // MARK: - Check if task can be cancelled
+    
+    /// Checks if a task can still be cancelled by verifying if the background task exists
+    /// and if the API request hasn't been submitted yet
+    /// - Parameter notificationId: The notification ID to check
+    /// - Returns: True if the task can be cancelled, false otherwise
+    func canCancelTask(notificationId: UUID) -> Bool {
+        // Find the task ID associated with this notification
+        guard let taskInfo = generationTasks.values.first(where: { $0.notificationId == notificationId }) else {
+            return false
+        }
+        
+        // Can't cancel if API request has already been submitted (past point of no return)
+        if taskInfo.apiRequestSubmitted {
+            return false
+        }
+        
+        // Check if the background task still exists (hasn't been cleaned up yet)
+        // taskId is non-optional in GenerationTaskInfo, so we can use it directly
+        return backgroundTasks[taskInfo.taskId] != nil
+    }
+    
+    /// Marks that the API request has been submitted for a given notification
+    /// This is called right before submitting the API request to prevent cancellation
+    /// - Parameter notificationId: The notification ID to update
+    func markApiRequestSubmitted(notificationId: UUID) {
+        // Find the task info by notification ID
+        if let (taskId, taskInfo) = generationTasks.first(where: { $0.value.notificationId == notificationId }) {
+            var updatedTaskInfo = taskInfo
+            updatedTaskInfo.apiRequestSubmitted = true
+            generationTasks[taskId] = updatedTaskInfo
+        }
+    }
 
     // MARK: - Removes all tracking for a given task.
 

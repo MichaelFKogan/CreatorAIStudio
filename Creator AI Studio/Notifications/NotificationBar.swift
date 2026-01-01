@@ -58,6 +58,7 @@ struct NotificationCard: View {
                 Spacer(minLength: 0)
                 NotificationCancelButton(
                     state: notification.state,
+                    notificationId: notification.id,
                     onCancel: onCancel
                 )
             }
@@ -223,11 +224,12 @@ struct NotificationTextContent: View {
 // MARK: - Cancel Button View
 struct NotificationCancelButton: View {
     let state: NotificationState
+    let notificationId: UUID
     let onCancel: () -> Void
     
     var body: some View {
-        // Only show cancel button if task is in progress
-        if state == .inProgress {
+        // Only show cancel button if task is in progress AND can still be cancelled
+        if state == .inProgress && ImageGenerationCoordinator.shared.canCancelTask(notificationId: notificationId) {
             Button(action: onCancel) {
                 Text("Cancel")
                     .font(.custom("Nunito-Bold", size: 13))

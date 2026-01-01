@@ -13,6 +13,7 @@ struct PlaceholderImageCard: View {
     @StateObject private var notificationManager = NotificationManager.shared
     @State private var isRetrying = false
     @State private var showCopiedConfirmation = false
+    @State private var showDetailsSheet = false
 
     // Helper to check if image is a placeholder (very small, like 1x1)
     private var isValidImage: Bool {
@@ -145,38 +146,15 @@ struct PlaceholderImageCard: View {
                         .disabled(isRetrying)
                         .padding(.top, 4)
 
-                        // Copy Prompt button (only show if prompt exists)
-                        if let prompt = placeholder.prompt, !prompt.isEmpty {
-                            Button(action: {
-                                copyPrompt(prompt)
-                            }) {
-                                HStack(spacing: 3) {
-                                    Image(
-                                        systemName: showCopiedConfirmation
-                                            ? "checkmark" : "doc.on.doc"
-                                    )
-                                    .font(.system(size: 9, weight: .semibold))
-                                    Text(
-                                        showCopiedConfirmation
-                                            ? "Copied!" : "Copy Prompt"
-                                    )
-                                    .font(.custom("Nunito-Bold", size: 9))
-                                }
-                                .foregroundColor(
-                                    showCopiedConfirmation ? .green : .blue
-                                )
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
-                                .overlay(
-                                    Capsule()
-                                        .stroke(
-                                            showCopiedConfirmation
-                                                ? Color.green : Color.blue,
-                                            lineWidth: 1.5)
-                                )
-                            }
-                            .padding(.top, 2)
+                        // Tap To View button
+                        Button(action: {
+                            showDetailsSheet = true
+                        }) {
+                            Text("Tap To View")
+                                .font(.custom("Nunito-Regular", size: 9))
+                                .foregroundColor(.blue)
                         }
+                        .padding(.top, 2)
                     }
                 } else {
                     VStack(spacing: 4) {
@@ -222,8 +200,9 @@ struct PlaceholderImageCard: View {
                             .font(.custom("Nunito-Regular", size: 9))
                             .foregroundColor(.secondary)
 
-                        // Cancel button for in-progress tasks
-                        if placeholder.state == .inProgress {
+                        // Cancel button for in-progress tasks (only show if task can still be cancelled)
+                        // For fast models like Z-Image-Turbo, the API request may complete before user can cancel
+                        if placeholder.state == .inProgress && ImageGenerationCoordinator.shared.canCancelTask(notificationId: placeholder.id) {
                             Button(action: {
                                 notificationManager.cancelTask(
                                     notificationId: placeholder.id)
@@ -234,6 +213,16 @@ struct PlaceholderImageCard: View {
                             }
                             .padding(.top, 2)
                         }
+                        
+                        // Tap To View button (for in-progress items too)
+                        Button(action: {
+                            showDetailsSheet = true
+                        }) {
+                            Text("Tap To View")
+                                .font(.custom("Nunito-Regular", size: 9))
+                                .foregroundColor(.blue)
+                        }
+                        .padding(.top, 2)
                     }
                 }
             }
@@ -271,6 +260,12 @@ struct PlaceholderImageCard: View {
             .easeInOut(duration: 1).repeatForever(autoreverses: true),
             value: pulseAnimation
         )
+        .sheet(isPresented: $showDetailsSheet) {
+            GenerationDetailsSheet(
+                placeholder: placeholder,
+                isPresented: $showDetailsSheet
+            )
+        }
     }
 
     private var backgroundGradient: LinearGradient {
@@ -326,14 +321,5 @@ struct PlaceholderImageCard: View {
         }
     }
 
-    private func copyPrompt(_ prompt: String) {
-        UIPasteboard.general.string = prompt
-        showCopiedConfirmation = true
-
-        // Reset confirmation after 2 seconds
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-            showCopiedConfirmation = false
-        }
-    }
 }
 

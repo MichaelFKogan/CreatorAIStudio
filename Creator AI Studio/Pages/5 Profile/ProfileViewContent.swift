@@ -703,11 +703,22 @@ struct ProfileViewContent: View {
     private var filteredContent: some View {
         let filteredImages = getFilteredImages()
         
+        // Filter placeholders: only show failed placeholders in "All" tab
+        // In other tabs (Favorites, Images, Videos, etc.), exclude failed placeholders
+        let filteredPlaceholders: [PlaceholderImage] = {
+            if selectedTab == .all {
+                return notificationManager.activePlaceholders
+            } else {
+                // Exclude failed placeholders from other tabs
+                return notificationManager.activePlaceholders.filter { $0.state != .failed }
+            }
+        }()
+        
         // If not signed in, show placeholder grid
         if !isSignedIn {
             PlaceholderGrid()
         } else if filteredImages.isEmpty
-            && notificationManager.activePlaceholders.isEmpty
+            && filteredPlaceholders.isEmpty
         {
             EmptyGalleryView(
                 tab: selectedTab,
@@ -719,7 +730,7 @@ struct ProfileViewContent: View {
         } else {
             ImageGridView(
                 userImages: filteredImages,
-                placeholders: notificationManager.activePlaceholders,
+                placeholders: filteredPlaceholders,
                 onSelect: { userImage in
                     if isSelectionMode {
                         if selectedImageIds.contains(userImage.id) {

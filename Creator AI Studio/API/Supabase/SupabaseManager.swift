@@ -462,4 +462,105 @@ class SupabaseManager {
         
         return count
     }
+    
+    /// Marks stuck jobs as failed (jobs in pending or processing status for too long)
+    /// Saves them to user_media for tracking in UsageView, then deletes from pending_jobs
+    /// Videos typically take longer, so we use different timeouts for different job types
+    /// - Parameter olderThanMinutes: Number of minutes after which to consider a job stuck
+    /// - Returns: Number of jobs deleted
+    func markStuckJobsAsFailed(olderThanMinutes: Int? = nil) async throws -> Int {
+        let now = Date()
+        
+        // Fetch stuck jobs (pending or processing status for too long)
+        // Use different timeouts: 5 minutes for images, 10 minutes for videos
+        let imageCutoff = Calendar.current.date(byAdding: .minute, value: -(olderThanMinutes ?? 5), to: now)!
+        let videoCutoff = Calendar.current.date(byAdding: .minute, value: -(olderThanMinutes ?? 10), to: now)!
+        
+        let imageCutoffString = ISO8601DateFormatter().string(from: imageCutoff)
+        let videoCutoffString = ISO8601DateFormatter().string(from: videoCutoff)
+        
+        // Fetch stuck image jobs
+        let stuckImageJobs: [PendingJob] = try await client.database
+            .from("pending_jobs")
+            .select()
+            .eq("job_type", value: "image")
+            .in("status", values: ["pending", "processing"])
+            .lt("created_at", value: imageCutoffString)
+            .execute()
+            .value
+        
+        // Fetch stuck video jobs
+        let stuckVideoJobs: [PendingJob] = try await client.database
+            .from("pending_jobs")
+            .select()
+            .eq("job_type", value: "video")
+            .in("status", values: ["pending", "processing"])
+            .lt("created_at", value: videoCutoffString)
+            .execute()
+            .value
+        
+        let allStuckJobs = stuckImageJobs + stuckVideoJobs
+        let count = allStuckJobs.count
+        
+        if count > 0 {
+            // Save each stuck job to user_media before deleting from pending_jobs
+            for job in allStuckJobs {
+                let timeoutMinutes = job.job_type == "video" ? 10 : 5
+                let errorMessage = "Job timed out after \(timeoutMinutes) minutes"
+                
+                // Save to user_media for tracking in UsageView
+                if job.job_type == "image" {
+                    let failedMetadata = ImageMetadata(
+                        userId: job.user_id,
+                        imageUrl: "", // Empty for failed attempts
+                        model: job.metadata?.model,
+                        title: job.metadata?.title,
+                        cost: job.metadata?.cost, // Include cost since payment was taken
+                        type: job.metadata?.type,
+                        endpoint: job.metadata?.endpoint,
+                        prompt: job.metadata?.prompt,
+                        aspectRatio: job.metadata?.aspectRatio,
+                        provider: job.provider,
+                        status: "failed",
+                        errorMessage: errorMessage
+                    )
+                    
+                    try? await client.database
+                        .from("user_media")
+                        .insert(failedMetadata)
+                        .execute()
+                } else if job.job_type == "video" {
+                    let failedMetadata = VideoMetadata(
+                        userId: job.user_id,
+                        videoUrl: "", // Empty for failed attempts
+                        thumbnailUrl: nil,
+                        model: job.metadata?.model,
+                        title: job.metadata?.title,
+                        cost: job.metadata?.cost, // Include cost since payment was taken
+                        type: job.metadata?.type,
+                        endpoint: job.metadata?.endpoint,
+                        fileExtension: "mp4",
+                        prompt: job.metadata?.prompt,
+                        aspectRatio: job.metadata?.aspectRatio,
+                        duration: job.metadata?.duration,
+                        resolution: job.metadata?.resolution,
+                        status: "failed",
+                        errorMessage: errorMessage
+                    )
+                    
+                    try? await client.database
+                        .from("user_media")
+                        .insert(failedMetadata)
+                        .execute()
+                }
+                
+                // Now delete from pending_jobs
+                try await deletePendingJob(taskId: job.task_id)
+            }
+            
+            print("[PendingJobs] 🗑️ Deleted \(count) timed-out jobs and saved to user_media (images: \(stuckImageJobs.count), videos: \(stuckVideoJobs.count))")
+        }
+        
+        return count
+    }
 }

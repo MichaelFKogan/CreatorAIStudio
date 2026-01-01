@@ -9,6 +9,17 @@ struct GenerationTaskInfo {
     let item: InfoPacket? // Stored for retry functionality
     let originalImage: UIImage? // Stored for retry functionality
     let userId: String? // Stored for retry functionality
+    var apiRequestSubmitted: Bool // Tracks if API request has been submitted (past point of no return)
+    
+    init(taskId: UUID, notificationId: UUID, generatedImage: UIImage? = nil, item: InfoPacket?, originalImage: UIImage?, userId: String?, apiRequestSubmitted: Bool = false) {
+        self.taskId = taskId
+        self.notificationId = notificationId
+        self.generatedImage = generatedImage
+        self.item = item
+        self.originalImage = originalImage
+        self.userId = userId
+        self.apiRequestSubmitted = apiRequestSubmitted
+    }
 }
 
 // MARK: - Task Result

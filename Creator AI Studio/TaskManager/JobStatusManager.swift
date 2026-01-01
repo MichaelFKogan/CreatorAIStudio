@@ -74,6 +74,9 @@ class JobStatusManager: ObservableObject {
         // This handles jobs where webhook submission failed before the fix was applied
         await cleanupOrphanedJobs()
         
+        // Mark stuck jobs as failed (jobs in pending/processing status for too long)
+        await markStuckJobsAsFailed()
+        
         // Fetch existing pending jobs
         await fetchPendingJobs(userId: userId)
         
@@ -90,6 +93,18 @@ class JobStatusManager: ObservableObject {
             }
         } catch {
             print("[JobStatusManager] ⚠️ Failed to cleanup orphaned jobs: \(error.localizedDescription)")
+        }
+    }
+    
+    /// Mark stuck jobs as failed
+    private func markStuckJobsAsFailed() async {
+        do {
+            let failedCount = try await SupabaseManager.shared.markStuckJobsAsFailed()
+            if failedCount > 0 {
+                print("[JobStatusManager] ⏱️ Marked \(failedCount) stuck jobs as failed")
+            }
+        } catch {
+            print("[JobStatusManager] ⚠️ Failed to mark stuck jobs as failed: \(error.localizedDescription)")
         }
     }
     
@@ -137,6 +152,14 @@ class JobStatusManager: ObservableObject {
         taskNotificationMap.removeValue(forKey: taskId)
     }
     
+    /// Get webhook taskId for a notification ID (reverse lookup)
+    func getWebhookTaskId(for notificationId: UUID) -> String? {
+        for (taskId, notifId) in taskNotificationMap where notifId == notificationId {
+            return taskId
+        }
+        return nil
+    }
+    
     // MARK: - Private Methods
     
     /// Fetch existing pending jobs from database
@@ -155,10 +178,80 @@ class JobStatusManager: ObservableObject {
             pendingJobs = jobs
             print("[JobStatusManager] Fetched \(jobs.count) pending jobs")
             
+            // Check for and mark any stuck jobs as failed
+            await markStuckJobsAsFailed()
+            
             // Process any already-completed jobs that haven't been processed yet
             for job in jobs where job.isComplete && job.hasResult {
                 print("[JobStatusManager] Found completed job to process: \(job.task_id)")
                 await handleJobCompletion(job)
+            }
+            
+            // Also check for stuck jobs in the fetched list and save to user_media before deleting
+            let now = Date()
+            for job in jobs where !job.isComplete {
+                guard let createdAt = job.created_at else { continue }
+                let jobAge = now.timeIntervalSince(createdAt) // Positive value for past dates
+                let timeoutMinutes: Double = job.job_type == "video" ? 10 : 5
+                
+                if jobAge > timeoutMinutes * 60 {
+                    // Job is stuck, save to user_media first, then delete
+                    do {
+                        let errorMessage = "Job timed out after \(Int(timeoutMinutes)) minutes"
+                        
+                        // Save to user_media for tracking in UsageView
+                        if job.job_type == "image" {
+                            let failedMetadata = ImageMetadata(
+                                userId: job.user_id,
+                                imageUrl: "",
+                                model: job.metadata?.model,
+                                title: job.metadata?.title,
+                                cost: job.metadata?.cost, // Include cost since payment was taken
+                                type: job.metadata?.type,
+                                endpoint: job.metadata?.endpoint,
+                                prompt: job.metadata?.prompt,
+                                aspectRatio: job.metadata?.aspectRatio,
+                                provider: job.provider,
+                                status: "failed",
+                                errorMessage: errorMessage
+                            )
+                            
+                            try? await SupabaseManager.shared.client.database
+                                .from("user_media")
+                                .insert(failedMetadata)
+                                .execute()
+                        } else if job.job_type == "video" {
+                            let failedMetadata = VideoMetadata(
+                                userId: job.user_id,
+                                videoUrl: "",
+                                thumbnailUrl: nil,
+                                model: job.metadata?.model,
+                                title: job.metadata?.title,
+                                cost: job.metadata?.cost, // Include cost since payment was taken
+                                type: job.metadata?.type,
+                                endpoint: job.metadata?.endpoint,
+                                fileExtension: "mp4",
+                                prompt: job.metadata?.prompt,
+                                aspectRatio: job.metadata?.aspectRatio,
+                                duration: job.metadata?.duration,
+                                resolution: job.metadata?.resolution,
+                                status: "failed",
+                                errorMessage: errorMessage
+                            )
+                            
+                            try? await SupabaseManager.shared.client.database
+                                .from("user_media")
+                                .insert(failedMetadata)
+                                .execute()
+                        }
+                        
+                        // Now delete from pending_jobs
+                        try await SupabaseManager.shared.deletePendingJob(taskId: job.task_id)
+                        print("[JobStatusManager] 🗑️ Deleted timed-out job and saved to user_media: \(job.task_id) (age: \(Int(jobAge/60)) minutes)")
+                    } catch {
+                        print("[JobStatusManager] ⚠️ Failed to save/delete timed-out job: \(error)")
+                    }
+                }
             }
             
         } catch {
