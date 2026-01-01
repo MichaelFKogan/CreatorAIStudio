@@ -282,15 +282,16 @@ class JobStatusManager: ObservableObject {
                 let timeoutMinutes: Double = 5 // Both video and image timeout after 5 minutes
                 
                 if jobAge > timeoutMinutes * 60 {
-                    // Job is stuck, update notification first, then save to user_media, then delete
-                    let errorMessage = "Generation timed out after 5 minutes. Please try again."
+                    // Job is stuck, get actual error from provider if possible
+                    let defaultErrorMessage = "Generation timed out after 5 minutes. Please try again."
+                    let actualErrorMessage = await getActualErrorMessage(for: job, defaultMessage: defaultErrorMessage)
                     
                     // Update notification if one exists
                     if let notificationId = taskNotificationMap[job.task_id] {
                         await MainActor.run {
                             NotificationManager.shared.markAsFailed(
                                 id: notificationId,
-                                errorMessage: errorMessage
+                                errorMessage: actualErrorMessage
                             )
                             print("[JobStatusManager] ⚠️ Marked notification as failed for timed-out job: \(job.task_id)")
                         }
@@ -299,7 +300,7 @@ class JobStatusManager: ObservableObject {
                     }
                     
                     // Use the shared handler for timed-out jobs
-                    await handleTimedOutJob(job, errorMessage: errorMessage)
+                    await handleTimedOutJob(job, errorMessage: actualErrorMessage)
                 }
             }
             
@@ -410,15 +411,16 @@ class JobStatusManager: ObservableObject {
                 let jobAge = now.timeIntervalSince(createdAt)
                 
                 if jobAge > timeoutSeconds {
-                    // Job has timed out
-                    let errorMessage = "Generation timed out after 5 minutes. Please try again."
+                    // Job has timed out, get actual error from provider if possible
+                    let defaultErrorMessage = "Generation timed out after 5 minutes. Please try again."
+                    let actualErrorMessage = await getActualErrorMessage(for: job, defaultMessage: defaultErrorMessage)
                     
                     // Update notification if one exists
                     if let notificationId = taskNotificationMap[job.task_id] {
                         await MainActor.run {
                             NotificationManager.shared.markAsFailed(
                                 id: notificationId,
-                                errorMessage: errorMessage
+                                errorMessage: actualErrorMessage
                             )
                             print("[JobStatusManager] ⚠️ Marked notification as failed for timed-out job: \(job.task_id)")
                         }
@@ -426,7 +428,7 @@ class JobStatusManager: ObservableObject {
                     }
                     
                     // Save to user_media and delete from pending_jobs
-                    await handleTimedOutJob(job, errorMessage: errorMessage)
+                    await handleTimedOutJob(job, errorMessage: actualErrorMessage)
                 }
             }
         } catch {
@@ -434,8 +436,46 @@ class JobStatusManager: ObservableObject {
         }
     }
     
+    /// Get the actual error message from the provider if possible, otherwise return default
+    private func getActualErrorMessage(for job: PendingJob, defaultMessage: String) async -> String {
+        // Only poll Runware for actual error if this is a Runware job
+        guard job.provider == "runware" else {
+            return defaultMessage
+        }
+        
+        do {
+            print("[JobStatusManager] 🔍 Polling Runware for actual status: \(job.task_id)")
+            let runwareResponse = try await pollRunwareTaskStatus(taskUUID: job.task_id)
+            
+            // Check for error in response
+            if let error = runwareResponse.error, !error.isEmpty {
+                let errorMessage = "Runware error: \(error)"
+                print("[JobStatusManager] ✅ Got actual error from Runware: \(error)")
+                return errorMessage
+            } else if let first = runwareResponse.data.first, let status = first.status {
+                let statusLower = status.lowercased()
+                if statusLower == "failed" || statusLower == "error" {
+                    let errorMessage = "Generation failed with status: \(status)"
+                    print("[JobStatusManager] ✅ Got failed status from Runware: \(status)")
+                    return errorMessage
+                } else {
+                    print("[JobStatusManager] ℹ️ Runware status: \(status) (using timeout message)")
+                }
+            } else {
+                print("[JobStatusManager] ℹ️ No specific error from Runware, using timeout message")
+            }
+        } catch {
+            print("[JobStatusManager] ⚠️ Failed to poll Runware status: \(error.localizedDescription)")
+        }
+        
+        return defaultMessage
+    }
+    
     /// Handle a timed-out job: save to user_media and delete from pending_jobs
     private func handleTimedOutJob(_ job: PendingJob, errorMessage: String) async {
+        // Use the provided error message (may have already been enriched with Runware error)
+        let finalErrorMessage = errorMessage
+        
         do {
             // Save to user_media for tracking in UsageView
             if job.job_type == "image" {
@@ -451,7 +491,7 @@ class JobStatusManager: ObservableObject {
                     aspectRatio: job.metadata?.aspectRatio,
                     provider: job.provider,
                     status: "failed",
-                    errorMessage: errorMessage
+                    errorMessage: finalErrorMessage
                 )
                 
                 try? await SupabaseManager.shared.client.database
@@ -474,7 +514,7 @@ class JobStatusManager: ObservableObject {
                     duration: job.metadata?.duration,
                     resolution: job.metadata?.resolution,
                     status: "failed",
-                    errorMessage: errorMessage
+                    errorMessage: finalErrorMessage
                 )
                 
                 try? await SupabaseManager.shared.client.database

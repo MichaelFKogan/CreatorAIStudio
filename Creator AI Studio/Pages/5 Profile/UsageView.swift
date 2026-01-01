@@ -201,8 +201,8 @@ struct GenerationRow: View {
                         
                         Spacer(minLength: 4)
                         
-                        // Cost (if available)
-                        if let cost = generation.cost, cost > 0 {
+                        // Cost (if available and generation succeeded)
+                        if let cost = generation.cost, cost > 0, !generation.isFailed {
                             Text(String(format: "$%.2f", cost))
                                 .font(.caption2)
                                 .fontWeight(.medium)
@@ -325,7 +325,7 @@ struct GenerationRow: View {
                     
                     // Additional metadata - full width
                     HStack(spacing: 8) {
-                        // For videos, show size (file extension), resolution, and duration
+                        // For videos, show size (file extension), resolution, duration, and aspect ratio
                         if generation.isVideo {
                             // Size (file extension)
                             if let fileExtension = generation.file_extension {
@@ -358,6 +358,18 @@ struct GenerationRow: View {
                                         .font(.caption2)
                                         .foregroundColor(.secondary)
                                     Text(formatDuration(duration))
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                            
+                            // Aspect ratio (for videos)
+                            if let aspectRatio = generation.aspect_ratio {
+                                HStack(spacing: 3) {
+                                    Image(systemName: "aspectratio")
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
+                                    Text(aspectRatio)
                                         .font(.caption2)
                                         .foregroundColor(.secondary)
                                 }

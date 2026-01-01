@@ -703,14 +703,14 @@ struct ProfileViewContent: View {
     private var filteredContent: some View {
         let filteredImages = getFilteredImages()
         
-        // Filter placeholders: only show failed placeholders in "All" tab
-        // In other tabs (Favorites, Images, Videos, etc.), exclude failed placeholders
+        // Filter placeholders: only show placeholder cards in "All" tab
+        // In other tabs (Favorites, Images, Videos, Image Models, Video Models), hide all placeholders
         let filteredPlaceholders: [PlaceholderImage] = {
             if selectedTab == .all {
                 return notificationManager.activePlaceholders
             } else {
-                // Exclude failed placeholders from other tabs
-                return notificationManager.activePlaceholders.filter { $0.state != .failed }
+                // Hide all placeholders in other tabs (only show in "All" tab)
+                return []
             }
         }()
         

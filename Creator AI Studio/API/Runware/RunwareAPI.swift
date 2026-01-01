@@ -588,8 +588,13 @@ func sendVideoToRunware(
     
     // Handle Sora 2 and Sora 2 Pro - uses frameImages at top level, no "frame" property
     if isSora2 && isImageToVideo, let seedImage = image {
-        // Upload image first to get UUID (required for frameImages)
-        let imageUUID = try await uploadImageToRunware(image: seedImage)
+        // Sora 2 requires the input image to match the exact video dimensions
+        // Resize the image to match the requested width and height (with center crop to prevent warping)
+        let targetSize = CGSize(width: width, height: height)
+        let resizedImage = seedImage.fixedOrientation().resized(to: targetSize)
+        
+        // Upload resized image first to get UUID (required for frameImages)
+        let imageUUID = try await uploadImageToRunware(image: resizedImage)
         
         // Sora 2 uses format: [{ "inputImage": uuid }] - NO "frame" property
         task["frameImages"] = [
@@ -597,7 +602,7 @@ func sendVideoToRunware(
                 "inputImage": imageUUID
             ]
         ]
-        print("[Runware] Sora 2 image-to-video enabled with frameImages: \(imageUUID)")
+        print("[Runware] Sora 2 image-to-video enabled with frameImages (resized to \(width)x\(height)): \(imageUUID)")
     }
     
     // Handle Alibaba Wan2.6 model - uses inputs.frameImages
@@ -1270,8 +1275,13 @@ func submitVideoToRunwareWithWebhook(
     
     // Handle Sora 2 and Sora 2 Pro - uses frameImages at top level, no "frame" property
     if isSora2 && isImageToVideo, let seedImage = image {
-        // Upload image first to get UUID (required for frameImages)
-        let imageUUID = try await uploadImageToRunware(image: seedImage)
+        // Sora 2 requires the input image to match the exact video dimensions
+        // Resize the image to match the requested width and height (with center crop to prevent warping)
+        let targetSize = CGSize(width: width, height: height)
+        let resizedImage = seedImage.fixedOrientation().resized(to: targetSize)
+        
+        // Upload resized image first to get UUID (required for frameImages)
+        let imageUUID = try await uploadImageToRunware(image: resizedImage)
         
         // Sora 2 uses format: [{ "inputImage": uuid }] - NO "frame" property
         task["frameImages"] = [
@@ -1279,7 +1289,7 @@ func submitVideoToRunwareWithWebhook(
                 "inputImage": imageUUID
             ]
         ]
-        print("[Runware] Sora 2 image-to-video enabled with frameImages (webhook): \(imageUUID)")
+        print("[Runware] Sora 2 image-to-video enabled with frameImages (webhook, resized to \(width)x\(height)): \(imageUUID)")
     }
     
     // Handle Alibaba Wan2.6 model - uses inputs.frameImages
@@ -1477,5 +1487,47 @@ extension UIImage {
         UIGraphicsEndImageContext()
 
         return normalizedImage ?? self
+    }
+    
+    /// Resizes the image to the exact specified dimensions using center crop to maintain aspect ratio
+    /// This prevents warping when the source and target aspect ratios don't match
+    func resized(to targetSize: CGSize) -> UIImage {
+        let sourceSize = self.size
+        let sourceAspectRatio = sourceSize.width / sourceSize.height
+        let targetAspectRatio = targetSize.width / targetSize.height
+        
+        var drawSize = sourceSize
+        var drawOrigin = CGPoint.zero
+        
+        // If aspect ratios don't match, crop to match target aspect ratio
+        if abs(sourceAspectRatio - targetAspectRatio) > 0.01 {
+            if sourceAspectRatio > targetAspectRatio {
+                // Source is wider - crop width (center crop horizontally)
+                drawSize.width = sourceSize.height * targetAspectRatio
+                drawOrigin.x = (sourceSize.width - drawSize.width) / 2
+            } else {
+                // Source is taller - crop height (center crop vertically)
+                drawSize.height = sourceSize.width / targetAspectRatio
+                drawOrigin.y = (sourceSize.height - drawSize.height) / 2
+            }
+        }
+        
+        // Create cropped image
+        guard let cgImage = self.cgImage,
+              let croppedCGImage = cgImage.cropping(to: CGRect(origin: drawOrigin, size: drawSize)) else {
+            // Fallback to simple resize if cropping fails
+            let renderer = UIGraphicsImageRenderer(size: targetSize)
+            return renderer.image { _ in
+                self.draw(in: CGRect(origin: .zero, size: targetSize))
+            }
+        }
+        
+        let croppedImage = UIImage(cgImage: croppedCGImage, scale: self.scale, orientation: .up)
+        
+        // Resize the cropped image to exact target dimensions
+        let renderer = UIGraphicsImageRenderer(size: targetSize)
+        return renderer.image { _ in
+            croppedImage.draw(in: CGRect(origin: .zero, size: targetSize))
+        }
     }
 }
