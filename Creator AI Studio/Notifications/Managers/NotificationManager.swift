@@ -138,6 +138,7 @@ class NotificationManager: ObservableObject {
             notifications[index].state = .failed
             notifications[index].errorMessage = errorMessage
             notifications[index].message = "❌ Failed"
+            notifications[index].progress = 0.0 // Stop progress bar animation
             newFailedCount += 1
         }
     }

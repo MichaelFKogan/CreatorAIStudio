@@ -28,26 +28,75 @@ class JobStatusManager: ObservableObject {
     /// Maps webhook task IDs to their notification IDs for updating existing notifications
     private var taskNotificationMap: [String: UUID] = [:]
     
+    /// Timer for periodic polling of job status (fallback if Realtime fails)
+    private var pollingTask: Task<Void, Never>?
+    
     /// Decoder configured for Supabase's ISO8601 date format
+    /// Handles various formats including 6-digit fractional seconds with timezone offsets
     private lazy var supabaseDecoder: JSONDecoder = {
         let decoder = JSONDecoder()
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         decoder.dateDecodingStrategy = .custom { decoder in
             let container = try decoder.singleValueContainer()
             let dateString = try container.decode(String.self)
             
-            // Try with fractional seconds first
-            if let date = formatter.date(from: dateString) {
+            // ISO8601DateFormatter only supports up to 3-digit fractional seconds (milliseconds)
+            // Supabase can return 6-digit fractional seconds (microseconds), so we need DateFormatter
+            
+            // First, try DateFormatter with the most common formats
+            let flexibleFormatter = DateFormatter()
+            flexibleFormatter.locale = Locale(identifier: "en_US_POSIX")
+            
+            // Try various date formats in order of likelihood
+            let dateFormats = [
+                "yyyy-MM-dd'T'HH:mm:ss.SSSSSSZZZZZ",  // 6-digit microseconds with timezone +00:00
+                "yyyy-MM-dd'T'HH:mm:ss.SSSSSSZZZZ",   // 6-digit microseconds with timezone +0000 (no colon)
+                "yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'",    // 6-digit microseconds with Z
+                "yyyy-MM-dd'T'HH:mm:ss.SSSSSS",        // 6-digit microseconds without timezone
+                "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ",     // 3-digit milliseconds with timezone +00:00
+                "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZ",      // 3-digit milliseconds with timezone +0000
+                "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",       // 3-digit milliseconds with Z
+                "yyyy-MM-dd'T'HH:mm:ss.SSS",          // 3-digit milliseconds without timezone
+                "yyyy-MM-dd'T'HH:mm:ssZZZZZ",         // No fractional seconds with timezone +00:00
+                "yyyy-MM-dd'T'HH:mm:ssZZZZ",          // No fractional seconds with timezone +0000
+                "yyyy-MM-dd'T'HH:mm:ss'Z'"            // No fractional seconds with Z
+            ]
+            
+            for format in dateFormats {
+                flexibleFormatter.dateFormat = format
+                if let date = flexibleFormatter.date(from: dateString) {
+                    return date
+                }
+            }
+            
+            // Fallback: Try ISO8601DateFormatter (only works for standard formats)
+            let isoFormatter = ISO8601DateFormatter()
+            
+            // Try with fractional seconds and timezone
+            isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds, .withTimeZone]
+            if let date = isoFormatter.date(from: dateString) {
+                return date
+            }
+            
+            // Try with fractional seconds without timezone
+            isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+            if let date = isoFormatter.date(from: dateString) {
+                return date
+            }
+            
+            // Try without fractional seconds but with timezone
+            isoFormatter.formatOptions = [.withInternetDateTime, .withTimeZone]
+            if let date = isoFormatter.date(from: dateString) {
                 return date
             }
             
             // Try without fractional seconds
-            formatter.formatOptions = [.withInternetDateTime]
-            if let date = formatter.date(from: dateString) {
+            isoFormatter.formatOptions = [.withInternetDateTime]
+            if let date = isoFormatter.date(from: dateString) {
                 return date
             }
             
+            // If all else fails, log the problematic date and throw
+            print("[JobStatusManager] ⚠️ Failed to decode date: \(dateString)")
             throw DecodingError.dataCorruptedError(in: container, debugDescription: "Cannot decode date: \(dateString)")
         }
         return decoder
@@ -99,9 +148,43 @@ class JobStatusManager: ObservableObject {
     /// Mark stuck jobs as failed
     private func markStuckJobsAsFailed() async {
         do {
+            // Get stuck jobs before they're deleted so we can update notifications
+            let now = Date()
+            // Both video and image jobs timeout after 5 minutes
+            let timeoutCutoff = Calendar.current.date(byAdding: .minute, value: -5, to: now)!
+            
+            let timeoutCutoffString = ISO8601DateFormatter().string(from: timeoutCutoff)
+            
+            // Fetch stuck jobs (both video and image timeout after 5 minutes)
+            let stuckJobs: [PendingJob] = try await SupabaseManager.shared.client.database
+                .from("pending_jobs")
+                .select()
+                .in("status", values: ["pending", "processing"])
+                .lt("created_at", value: timeoutCutoffString)
+                .execute()
+                .value
+            
+            // Update notifications for stuck jobs before they're deleted
+            for job in stuckJobs {
+                let errorMessage = "Generation timed out after 5 minutes. Please try again."
+                
+                if let notificationId = taskNotificationMap[job.task_id] {
+                    await MainActor.run {
+                        NotificationManager.shared.markAsFailed(
+                            id: notificationId,
+                            errorMessage: errorMessage
+                        )
+                        print("[JobStatusManager] ⚠️ Marked notification as failed for stuck job: \(job.task_id)")
+                    }
+                    // Remove the notification mapping
+                    taskNotificationMap.removeValue(forKey: job.task_id)
+                }
+            }
+            
+            // Now call the function to actually delete them
             let failedCount = try await SupabaseManager.shared.markStuckJobsAsFailed()
             if failedCount > 0 {
-                print("[JobStatusManager] ⏱️ Marked \(failedCount) stuck jobs as failed")
+                print("[JobStatusManager] ⏱️ Marked \(failedCount) stuck jobs as failed and updated notifications")
             }
         } catch {
             print("[JobStatusManager] ⚠️ Failed to mark stuck jobs as failed: \(error.localizedDescription)")
@@ -110,6 +193,10 @@ class JobStatusManager: ObservableObject {
     
     /// Stop listening for updates
     func stopListening() async {
+        // Cancel polling task
+        pollingTask?.cancel()
+        pollingTask = nil
+        
         if let channel = realtimeChannel {
             await channel.unsubscribe()
             realtimeChannel = nil
@@ -192,70 +279,35 @@ class JobStatusManager: ObservableObject {
             for job in jobs where !job.isComplete {
                 guard let createdAt = job.created_at else { continue }
                 let jobAge = now.timeIntervalSince(createdAt) // Positive value for past dates
-                let timeoutMinutes: Double = job.job_type == "video" ? 10 : 5
+                let timeoutMinutes: Double = 5 // Both video and image timeout after 5 minutes
                 
                 if jobAge > timeoutMinutes * 60 {
-                    // Job is stuck, save to user_media first, then delete
-                    do {
-                        let errorMessage = "Job timed out after \(Int(timeoutMinutes)) minutes"
-                        
-                        // Save to user_media for tracking in UsageView
-                        if job.job_type == "image" {
-                            let failedMetadata = ImageMetadata(
-                                userId: job.user_id,
-                                imageUrl: "",
-                                model: job.metadata?.model,
-                                title: job.metadata?.title,
-                                cost: job.metadata?.cost, // Include cost since payment was taken
-                                type: job.metadata?.type,
-                                endpoint: job.metadata?.endpoint,
-                                prompt: job.metadata?.prompt,
-                                aspectRatio: job.metadata?.aspectRatio,
-                                provider: job.provider,
-                                status: "failed",
+                    // Job is stuck, update notification first, then save to user_media, then delete
+                    let errorMessage = "Generation timed out after 5 minutes. Please try again."
+                    
+                    // Update notification if one exists
+                    if let notificationId = taskNotificationMap[job.task_id] {
+                        await MainActor.run {
+                            NotificationManager.shared.markAsFailed(
+                                id: notificationId,
                                 errorMessage: errorMessage
                             )
-                            
-                            try? await SupabaseManager.shared.client.database
-                                .from("user_media")
-                                .insert(failedMetadata)
-                                .execute()
-                        } else if job.job_type == "video" {
-                            let failedMetadata = VideoMetadata(
-                                userId: job.user_id,
-                                videoUrl: "",
-                                thumbnailUrl: nil,
-                                model: job.metadata?.model,
-                                title: job.metadata?.title,
-                                cost: job.metadata?.cost, // Include cost since payment was taken
-                                type: job.metadata?.type,
-                                endpoint: job.metadata?.endpoint,
-                                fileExtension: "mp4",
-                                prompt: job.metadata?.prompt,
-                                aspectRatio: job.metadata?.aspectRatio,
-                                duration: job.metadata?.duration,
-                                resolution: job.metadata?.resolution,
-                                status: "failed",
-                                errorMessage: errorMessage
-                            )
-                            
-                            try? await SupabaseManager.shared.client.database
-                                .from("user_media")
-                                .insert(failedMetadata)
-                                .execute()
+                            print("[JobStatusManager] ⚠️ Marked notification as failed for timed-out job: \(job.task_id)")
                         }
-                        
-                        // Now delete from pending_jobs
-                        try await SupabaseManager.shared.deletePendingJob(taskId: job.task_id)
-                        print("[JobStatusManager] 🗑️ Deleted timed-out job and saved to user_media: \(job.task_id) (age: \(Int(jobAge/60)) minutes)")
-                    } catch {
-                        print("[JobStatusManager] ⚠️ Failed to save/delete timed-out job: \(error)")
+                        // Remove the notification mapping
+                        taskNotificationMap.removeValue(forKey: job.task_id)
                     }
+                    
+                    // Use the shared handler for timed-out jobs
+                    await handleTimedOutJob(job, errorMessage: errorMessage)
                 }
             }
             
         } catch {
-            print("[JobStatusManager] Error fetching pending jobs: \(error)")
+            print("[JobStatusManager] ❌ Error fetching pending jobs: \(error)")
+            if let decodingError = error as? DecodingError {
+                print("[JobStatusManager] Decoding error details: \(decodingError)")
+            }
         }
     }
     
@@ -314,6 +366,134 @@ class JobStatusManager: ObservableObject {
         isConnected = true
         
         print("[JobStatusManager] Realtime subscription active")
+        
+        // Start periodic polling as a fallback (checks every 30 seconds)
+        startPeriodicPolling(userId: userId)
+    }
+    
+    /// Start periodic polling to check for timed-out jobs (fallback if Realtime fails)
+    private func startPeriodicPolling(userId: String) {
+        // Cancel any existing polling task
+        pollingTask?.cancel()
+        
+        pollingTask = Task { [weak self] in
+            while !Task.isCancelled {
+                // Wait 30 seconds before checking
+                try? await Task.sleep(nanoseconds: 30_000_000_000) // 30 seconds
+                
+                guard let self = self, self.currentUserId == userId else {
+                    break
+                }
+                
+                // Check for timed-out jobs
+                await self.checkForTimedOutJobs(userId: userId)
+            }
+        }
+    }
+    
+    /// Check for timed-out jobs and handle them
+    private func checkForTimedOutJobs(userId: String) async {
+        do {
+            let response = try await SupabaseManager.shared.client.database
+                .from("pending_jobs")
+                .select()
+                .eq("user_id", value: userId)
+                .in("status", values: ["pending", "processing"])
+                .execute()
+            
+            let jobs = try supabaseDecoder.decode([PendingJob].self, from: response.data)
+            let now = Date()
+            let timeoutSeconds: Double = 5 * 60 // 5 minutes
+            
+            for job in jobs {
+                guard let createdAt = job.created_at else { continue }
+                let jobAge = now.timeIntervalSince(createdAt)
+                
+                if jobAge > timeoutSeconds {
+                    // Job has timed out
+                    let errorMessage = "Generation timed out after 5 minutes. Please try again."
+                    
+                    // Update notification if one exists
+                    if let notificationId = taskNotificationMap[job.task_id] {
+                        await MainActor.run {
+                            NotificationManager.shared.markAsFailed(
+                                id: notificationId,
+                                errorMessage: errorMessage
+                            )
+                            print("[JobStatusManager] ⚠️ Marked notification as failed for timed-out job: \(job.task_id)")
+                        }
+                        taskNotificationMap.removeValue(forKey: job.task_id)
+                    }
+                    
+                    // Save to user_media and delete from pending_jobs
+                    await handleTimedOutJob(job, errorMessage: errorMessage)
+                }
+            }
+        } catch {
+            print("[JobStatusManager] ⚠️ Error checking for timed-out jobs: \(error.localizedDescription)")
+        }
+    }
+    
+    /// Handle a timed-out job: save to user_media and delete from pending_jobs
+    private func handleTimedOutJob(_ job: PendingJob, errorMessage: String) async {
+        do {
+            // Save to user_media for tracking in UsageView
+            if job.job_type == "image" {
+                let failedMetadata = ImageMetadata(
+                    userId: job.user_id,
+                    imageUrl: "",
+                    model: job.metadata?.model,
+                    title: job.metadata?.title,
+                    cost: job.metadata?.cost,
+                    type: job.metadata?.type,
+                    endpoint: job.metadata?.endpoint,
+                    prompt: job.metadata?.prompt,
+                    aspectRatio: job.metadata?.aspectRatio,
+                    provider: job.provider,
+                    status: "failed",
+                    errorMessage: errorMessage
+                )
+                
+                try? await SupabaseManager.shared.client.database
+                    .from("user_media")
+                    .insert(failedMetadata)
+                    .execute()
+            } else if job.job_type == "video" {
+                let failedMetadata = VideoMetadata(
+                    userId: job.user_id,
+                    videoUrl: "",
+                    thumbnailUrl: nil,
+                    model: job.metadata?.model,
+                    title: job.metadata?.title,
+                    cost: job.metadata?.cost,
+                    type: job.metadata?.type,
+                    endpoint: job.metadata?.endpoint,
+                    fileExtension: "mp4",
+                    prompt: job.metadata?.prompt,
+                    aspectRatio: job.metadata?.aspectRatio,
+                    duration: job.metadata?.duration,
+                    resolution: job.metadata?.resolution,
+                    status: "failed",
+                    errorMessage: errorMessage
+                )
+                
+                try? await SupabaseManager.shared.client.database
+                    .from("user_media")
+                    .insert(failedMetadata)
+                    .execute()
+            }
+            
+            // Delete from pending_jobs
+            try await SupabaseManager.shared.deletePendingJob(taskId: job.task_id)
+            print("[JobStatusManager] 🗑️ Deleted timed-out job and saved to user_media: \(job.task_id)")
+            
+            // Remove from pendingJobs list
+            await MainActor.run {
+                pendingJobs.removeAll { $0.task_id == job.task_id }
+            }
+        } catch {
+            print("[JobStatusManager] ⚠️ Failed to handle timed-out job: \(error)")
+        }
     }
     
     /// Handle new job insertion
@@ -330,6 +510,9 @@ class JobStatusManager: ObservableObject {
             
         } catch {
             print("[JobStatusManager] ❌ Error decoding inserted job: \(error)")
+            if let decodingError = error as? DecodingError {
+                print("[JobStatusManager] Decoding error details: \(decodingError)")
+            }
         }
     }
     
@@ -347,13 +530,22 @@ class JobStatusManager: ObservableObject {
             
             print("[JobStatusManager] 🔄 Job updated: \(job.task_id), status: \(job.status)")
             
-            // Check if job completed
+            // Check if job completed or failed
             if job.isComplete {
-                await handleJobCompletion(job)
+                if job.jobStatus == .failed {
+                    // Handle failed job - update notification
+                    await handleJobFailure(job)
+                } else {
+                    // Handle successful completion
+                    await handleJobCompletion(job)
+                }
             }
             
         } catch {
             print("[JobStatusManager] ❌ Error decoding updated job: \(error)")
+            if let decodingError = error as? DecodingError {
+                print("[JobStatusManager] Decoding error details: \(decodingError)")
+            }
         }
     }
     
@@ -364,11 +556,67 @@ class JobStatusManager: ObservableObject {
         if let taskIdValue = oldRecord["task_id"],
            case .string(let taskId) = taskIdValue {
             
+            // Check if there's a notification for this task
+            if let notificationId = taskNotificationMap[taskId] {
+                // Job was deleted (likely due to timeout) - mark notification as failed
+                await MainActor.run {
+                    NotificationManager.shared.markAsFailed(
+                        id: notificationId,
+                        errorMessage: "Generation timed out after 5 minutes. Please try again."
+                    )
+                    print("[JobStatusManager] ⚠️ Marked notification as failed for deleted job: \(taskId)")
+                }
+                // Remove the notification mapping
+                taskNotificationMap.removeValue(forKey: taskId)
+            }
+            
             await MainActor.run {
                 pendingJobs.removeAll { $0.task_id == taskId }
             }
             
-            print("[JobStatusManager] Job deleted: \(taskId)")
+            print("[JobStatusManager] 🗑️ Job deleted: \(taskId)")
+        }
+    }
+    
+    /// Handle a failed job
+    private func handleJobFailure(_ job: PendingJob) async {
+        print("[JobStatusManager] ❌ Job failed: \(job.task_id), status: \(job.status)")
+        
+        // Get error message from job or use default
+        let errorMessage = job.error_message ?? "Generation failed"
+        
+        // Update notification if one exists
+        if let notificationId = taskNotificationMap[job.task_id] {
+            await MainActor.run {
+                NotificationManager.shared.markAsFailed(
+                    id: notificationId,
+                    errorMessage: errorMessage
+                )
+                print("[JobStatusManager] ⚠️ Marked notification as failed: \(job.task_id)")
+            }
+            // Remove the notification mapping
+            taskNotificationMap.removeValue(forKey: job.task_id)
+        }
+        
+        // Call registered completion handler if any
+        if let handler = completionHandlers[job.task_id] {
+            handler(job)
+            completionHandlers.removeValue(forKey: job.task_id)
+        }
+        
+        // Post notification for UI updates
+        await MainActor.run {
+            NotificationCenter.default.post(
+                name: NSNotification.Name("PendingJobCompleted"),
+                object: nil,
+                userInfo: [
+                    "job": job,
+                    "taskId": job.task_id,
+                    "status": job.status,
+                    "resultUrl": job.result_url ?? "",
+                    "error": errorMessage
+                ]
+            )
         }
     }
     
@@ -622,6 +870,19 @@ class JobStatusManager: ObservableObject {
             
         } catch {
             print("[JobStatusManager] ❌ Error processing completed job: \(error)")
+            print("[JobStatusManager] Error details: \(error.localizedDescription)")
+            
+            // If there's a notification for this job, mark it as failed
+            if let notificationId = taskNotificationMap[job.task_id] {
+                await MainActor.run {
+                    NotificationManager.shared.markAsFailed(
+                        id: notificationId,
+                        errorMessage: "Failed to process result: \(error.localizedDescription)"
+                    )
+                    print("[JobStatusManager] ⚠️ Marked notification as failed due to processing error: \(job.task_id)")
+                }
+                taskNotificationMap.removeValue(forKey: job.task_id)
+            }
         }
     }
 }

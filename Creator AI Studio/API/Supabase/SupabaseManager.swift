@@ -472,41 +472,26 @@ class SupabaseManager {
         let now = Date()
         
         // Fetch stuck jobs (pending or processing status for too long)
-        // Use different timeouts: 5 minutes for images, 10 minutes for videos
-        let imageCutoff = Calendar.current.date(byAdding: .minute, value: -(olderThanMinutes ?? 5), to: now)!
-        let videoCutoff = Calendar.current.date(byAdding: .minute, value: -(olderThanMinutes ?? 10), to: now)!
+        // Both video and image jobs timeout after 5 minutes
+        let timeoutCutoff = Calendar.current.date(byAdding: .minute, value: -(olderThanMinutes ?? 5), to: now)!
         
-        let imageCutoffString = ISO8601DateFormatter().string(from: imageCutoff)
-        let videoCutoffString = ISO8601DateFormatter().string(from: videoCutoff)
+        let timeoutCutoffString = ISO8601DateFormatter().string(from: timeoutCutoff)
         
-        // Fetch stuck image jobs
-        let stuckImageJobs: [PendingJob] = try await client.database
+        // Fetch stuck jobs (both video and image)
+        let stuckJobs: [PendingJob] = try await client.database
             .from("pending_jobs")
             .select()
-            .eq("job_type", value: "image")
             .in("status", values: ["pending", "processing"])
-            .lt("created_at", value: imageCutoffString)
+            .lt("created_at", value: timeoutCutoffString)
             .execute()
             .value
         
-        // Fetch stuck video jobs
-        let stuckVideoJobs: [PendingJob] = try await client.database
-            .from("pending_jobs")
-            .select()
-            .eq("job_type", value: "video")
-            .in("status", values: ["pending", "processing"])
-            .lt("created_at", value: videoCutoffString)
-            .execute()
-            .value
-        
-        let allStuckJobs = stuckImageJobs + stuckVideoJobs
-        let count = allStuckJobs.count
+        let count = stuckJobs.count
         
         if count > 0 {
             // Save each stuck job to user_media before deleting from pending_jobs
-            for job in allStuckJobs {
-                let timeoutMinutes = job.job_type == "video" ? 10 : 5
-                let errorMessage = "Job timed out after \(timeoutMinutes) minutes"
+            for job in stuckJobs {
+                let errorMessage = "Generation timed out after 5 minutes. Please try again."
                 
                 // Save to user_media for tracking in UsageView
                 if job.job_type == "image" {
@@ -558,7 +543,7 @@ class SupabaseManager {
                 try await deletePendingJob(taskId: job.task_id)
             }
             
-            print("[PendingJobs] 🗑️ Deleted \(count) timed-out jobs and saved to user_media (images: \(stuckImageJobs.count), videos: \(stuckVideoJobs.count))")
+            print("[PendingJobs] 🗑️ Deleted \(count) timed-out jobs and saved to user_media")
         }
         
         return count

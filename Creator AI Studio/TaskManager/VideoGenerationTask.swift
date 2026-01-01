@@ -125,7 +125,7 @@ class VideoGenerationTask: MediaGenerationTask {
         
         // MARK: - WEBHOOK MODE
         if useWebhook {
-            await executeWithWebhook(apiConfig: apiConfig, onProgress: onProgress, onComplete: onComplete)
+            await executeWithWebhook(notificationId: notificationId, apiConfig: apiConfig, onProgress: onProgress, onComplete: onComplete)
             return
         }
         
@@ -399,6 +399,7 @@ class VideoGenerationTask: MediaGenerationTask {
     /// Creates a pending job record and submits to API with webhook URL
     /// Returns immediately with "queued" status - result delivered via webhook
     private func executeWithWebhook(
+        notificationId: UUID,
         apiConfig: APIConfiguration,
         onProgress: @escaping (TaskProgress) async -> Void,
         onComplete: @escaping (TaskResult) async -> Void

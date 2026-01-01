@@ -287,6 +287,8 @@ class ModelConfigurationManager {
             "Wan2.5-Preview": APIConfiguration(
                 provider: .runware,
                 endpoint: "https://api.runware.ai/v1",
+                // NOTE: If getting "invalidModel" error, verify current identifier via Runware Model Search API
+                // Documentation shows: alibaba:wan@2.5-preview
                 runwareModel: "alibaba:wan@2.5-preview",
                 aspectRatio: nil,
                 wavespeedConfig: nil,

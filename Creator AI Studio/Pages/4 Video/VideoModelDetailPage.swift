@@ -161,10 +161,10 @@ struct VideoModelDetailPage: View {
     }
     
     /// Checks if the current model supports first and last frame images
-    /// KlingAI 2.5 Turbo Pro supports both first and last frame
+    /// KlingAI 2.5 Turbo Pro and Google Veo 3.1 Fast support both first and last frame
     private var supportsFrameImages: Bool {
         guard let modelName = item.display.modelName else { return false }
-        return modelName == "KlingAI 2.5 Turbo Pro"
+        return modelName == "KlingAI 2.5 Turbo Pro" || modelName == "Google Veo 3.1 Fast"
     }
 
     private let examplePrompts: [String] = [
@@ -1750,7 +1750,7 @@ private struct FrameImagesSection: View {
             HStack(spacing: 0) {
                 // First Frame Image - takes 50% of width
                 FrameImageCard(
-                    title: "First Frame",
+                    title: "First Frame (Optional)",
                     image: $firstFrameImage,
                     showCameraSheet: $showFirstFrameCameraSheet,
                     showActionSheet: $showFirstFrameActionSheet,
@@ -1762,7 +1762,7 @@ private struct FrameImagesSection: View {
                 // Left-right arrows icon with padding
                 HStack(spacing: 0) {
                     Spacer().frame(width: 12)
-                    Image(systemName: "arrow.left")
+                    Image(systemName: "arrow.right")
                         .font(.system(size: 20))
                         .foregroundColor(color.opacity(0.6))
                     Spacer().frame(width: 12)
@@ -1770,7 +1770,7 @@ private struct FrameImagesSection: View {
                 
                 // Last Frame Image - takes 50% of width
                 FrameImageCard(
-                    title: "Last Frame",
+                    title: "Last Frame (Optional)",
                     image: $lastFrameImage,
                     showCameraSheet: $showLastFrameCameraSheet,
                     showActionSheet: $showLastFrameActionSheet,

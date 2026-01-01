@@ -34,75 +34,83 @@ struct PlaceholderImageCard: View {
                 )
 
             VStack(spacing: 8) {
-                // Thumbnail or Icon
-                if let thumbnail = placeholder.thumbnailImage, isValidImage {
-                    Image(uiImage: thumbnail)
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: 50, height: 50)
-                        .clipShape(Circle())
-                        .scaleEffect(pulseAnimation ? 1.05 : 1.0)
-                } else {
-                    // Show an AI/magic icon for text-to-image generation (matches NotificationBar)
-                    ZStack {
-                        // Animated gradient background
-                        Circle()
-                            .fill(
-                                LinearGradient(
-                                    colors: [
-                                        Color(red: 0.4, green: 0.6, blue: 1.0),
-                                        Color(red: 0.6, green: 0.4, blue: 1.0),
-                                        Color(red: 0.8, green: 0.5, blue: 1.0),
-                                    ],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
-                            .frame(width: 50, height: 50)
-                            .opacity(0.8)
+                // Tappable area for image and title/message
+                Button(action: {
+                    showDetailsSheet = true
+                }) {
+                    VStack(spacing: 8) {
+                        // Thumbnail or Icon
+                        if let thumbnail = placeholder.thumbnailImage, isValidImage {
+                            Image(uiImage: thumbnail)
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(width: 50, height: 50)
+                                .clipShape(Circle())
+                                .scaleEffect(pulseAnimation ? 1.05 : 1.0)
+                        } else {
+                            // Show an AI/magic icon for text-to-image generation (matches NotificationBar)
+                            ZStack {
+                                // Animated gradient background
+                                Circle()
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [
+                                                Color(red: 0.4, green: 0.6, blue: 1.0),
+                                                Color(red: 0.6, green: 0.4, blue: 1.0),
+                                                Color(red: 0.8, green: 0.5, blue: 1.0),
+                                            ],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+                                    .frame(width: 50, height: 50)
+                                    .opacity(0.8)
 
-                        // Sparkles/magic wand icon to represent AI text-to-image
-                        Image(systemName: "wand.and.stars")
-                            .font(.system(size: 24, weight: .medium))
-                            .foregroundColor(.white)
+                                // Sparkles/magic wand icon to represent AI text-to-image
+                                Image(systemName: "wand.and.stars")
+                                    .font(.system(size: 24, weight: .medium))
+                                    .foregroundColor(.white)
+                                    .shadow(
+                                        color: .black.opacity(0.2), radius: 2, x: 0,
+                                        y: 1)
+                            }
+                            .overlay(
+                                Circle()
+                                    .stroke(
+                                        LinearGradient(
+                                            colors: [.blue, .purple, .pink],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        ),
+                                        lineWidth: 2
+                                    )
+                            )
                             .shadow(
-                                color: .black.opacity(0.2), radius: 2, x: 0,
-                                y: 1)
-                    }
-                    .overlay(
-                        Circle()
-                            .stroke(
-                                LinearGradient(
-                                    colors: [.blue, .purple, .pink],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                ),
-                                lineWidth: 2
+                                color: Color.purple.opacity(0.4), radius: 6, x: 0, y: 2
                             )
-                    )
-                    .shadow(
-                        color: Color.purple.opacity(0.4), radius: 6, x: 0, y: 2
-                    )
-                    .scaleEffect(pulseAnimation ? 1.05 : 1.0)
-                }
+                            .scaleEffect(pulseAnimation ? 1.05 : 1.0)
+                        }
 
-                // Title and Message
-                VStack(spacing: 4) {
-                    Text(placeholder.title)
-                        .font(.custom("Nunito-Bold", size: 11))
-                        .foregroundColor(.primary)
-                        .lineLimit(1)
-                        .multilineTextAlignment(.center)
+                        // Title and Message
+                        VStack(spacing: 4) {
+                            Text(placeholder.title)
+                                .font(.custom("Nunito-Bold", size: 11))
+                                .foregroundColor(.primary)
+                                .lineLimit(1)
+                                .multilineTextAlignment(.center)
 
-                    Text(placeholder.message)
-                        .font(.custom("Nunito-Regular", size: 9))
-                        .foregroundColor(
-                            placeholder.state == .failed ? .red : .secondary
-                        )
-                        .lineLimit(2)
-                        .multilineTextAlignment(.center)
+                            Text(placeholder.message)
+                                .font(.custom("Nunito-Regular", size: 9))
+                                .foregroundColor(
+                                    placeholder.state == .failed ? .red : .secondary
+                                )
+                                .lineLimit(2)
+                                .multilineTextAlignment(.center)
+                        }
+                        .padding(.horizontal, 8)
+                    }
                 }
-                .padding(.horizontal, 8)
+                .buttonStyle(PlainButtonStyle())
 
                 // Progress Bar or Error Message
                 if placeholder.state == .failed {

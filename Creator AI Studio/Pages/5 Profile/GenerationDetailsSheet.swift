@@ -14,11 +14,6 @@ struct GenerationDetailsSheet: View {
                     // Status Section
                     statusSection
                     
-                    // Title Section
-                    if !placeholder.title.isEmpty {
-                        detailSection(title: "Title", content: placeholder.title)
-                    }
-                    
                     // Model Section
                     if let modelName = placeholder.modelName, !modelName.isEmpty {
                         detailSection(title: "Model", content: modelName)
@@ -69,6 +64,7 @@ struct GenerationDetailsSheet: View {
             }
         }
         .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.gray.opacity(0.1))
         .cornerRadius(10)
     }

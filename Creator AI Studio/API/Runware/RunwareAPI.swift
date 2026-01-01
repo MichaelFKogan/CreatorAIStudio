@@ -556,8 +556,118 @@ func sendVideoToRunware(
     ]
 
     // MARK: - Image-to-video: handle frame images
-
-    if isImageToVideo, let seedImage = image {
+    
+    // Check if model is Alibaba Wan (uses inputs.frameImages, not frameImages)
+    let isAlibabaWan = model.lowercased().contains("alibaba:wan@")
+    
+    // Check if model is Kling VIDEO 2.6 Pro (uses inputs.frameImages with "image" property)
+    let isKlingVideo26Pro = model.lowercased().contains("kling-video@2.6-pro") || model.lowercased().contains("klingai:kling-video@2.6-pro")
+    
+    // Check if model is Sora 2 (uses frameImages at top level, no "frame" property)
+    let isSora2 = model.lowercased() == "openai:3@1" || model.lowercased() == "openai:3@2"
+    
+    // Handle Kling VIDEO 2.6 Pro - uses inputs.frameImages with "image" property (not "inputImage")
+    if isKlingVideo26Pro && isImageToVideo, let seedImage = image {
+        // Upload image first to get UUID (required for inputs.frameImages)
+        let imageUUID = try await uploadImageToRunware(image: seedImage)
+        
+        // Initialize inputs object if it doesn't exist
+        var inputs = task["inputs"] as? [String: Any] ?? [:]
+        
+        // Kling VIDEO 2.6 Pro uses "image" property (not "inputImage") and requires "frame"
+        inputs["frameImages"] = [
+            [
+                "image": imageUUID,
+                "frame": "first"
+            ]
+        ]
+        print("[Runware] Kling VIDEO 2.6 Pro image-to-video enabled with inputs.frameImages: \(imageUUID)")
+        
+        task["inputs"] = inputs
+    }
+    
+    // Handle Sora 2 and Sora 2 Pro - uses frameImages at top level, no "frame" property
+    if isSora2 && isImageToVideo, let seedImage = image {
+        // Upload image first to get UUID (required for frameImages)
+        let imageUUID = try await uploadImageToRunware(image: seedImage)
+        
+        // Sora 2 uses format: [{ "inputImage": uuid }] - NO "frame" property
+        task["frameImages"] = [
+            [
+                "inputImage": imageUUID
+            ]
+        ]
+        print("[Runware] Sora 2 image-to-video enabled with frameImages: \(imageUUID)")
+    }
+    
+    // Handle Alibaba Wan models (Wan2.5-Preview and Wan2.6) - they use inputs.frameImages
+    if isAlibabaWan && isImageToVideo, let seedImage = image {
+        // Upload image first to get UUID (required for inputs.frameImages)
+        let imageUUID = try await uploadImageToRunware(image: seedImage)
+        
+        // Initialize inputs object if it doesn't exist
+        var inputs = task["inputs"] as? [String: Any] ?? [:]
+        
+        if model.lowercased().contains("alibaba:wan@2.6") {
+            // Wan2.6 uses simpler format: array of UUID strings
+            inputs["frameImages"] = [imageUUID]
+            print("[Runware] Alibaba Wan2.6 image-to-video enabled with inputs.frameImages: \(imageUUID)")
+        } else {
+            // Wan2.5-Preview uses object format with inputImage and frame
+            inputs["frameImages"] = [
+                [
+                    "inputImage": imageUUID,
+                    "frame": "first"
+                ]
+            ]
+            print("[Runware] Alibaba Wan2.5-Preview image-to-video enabled with inputs.frameImages: \(imageUUID)")
+        }
+        
+        task["inputs"] = inputs
+    }
+    
+    // Check if model supports first and last frame images
+    let supportsFirstLastFrame = model.lowercased() == "klingai:6@1" || model.lowercased() == "google:3@3"
+    
+    // For models that support first/last frame, handle them specially
+    if supportsFirstLastFrame {
+        var frameImagesArray: [[String: Any]] = []
+        
+        // Add first frame if provided (prefer firstFrameImage over general image)
+        if let firstFrame = firstFrameImage {
+            let firstFrameUUID = try await uploadImageToRunware(image: firstFrame)
+            frameImagesArray.append([
+                "inputImage": firstFrameUUID,
+                "frame": "first"
+            ])
+            print("[Runware] Added first frame image: \(firstFrameUUID)")
+        } else if isImageToVideo, let seedImage = image {
+            // Fallback to general image if firstFrameImage not provided
+            let imageUUID = try await uploadImageToRunware(image: seedImage)
+            frameImagesArray.append([
+                "inputImage": imageUUID,
+                "frame": "first"
+            ])
+            print("[Runware] Added first frame image (from seed): \(imageUUID)")
+        }
+        
+        // Add last frame if provided
+        if let lastFrame = lastFrameImage {
+            let lastFrameUUID = try await uploadImageToRunware(image: lastFrame)
+            frameImagesArray.append([
+                "inputImage": lastFrameUUID,
+                "frame": "last"
+            ])
+            print("[Runware] Added last frame image: \(lastFrameUUID)")
+        }
+        
+        // Only set frameImages if we have at least one frame
+        if !frameImagesArray.isEmpty {
+            task["frameImages"] = frameImagesArray
+            print("[Runware] Frame images configured: \(frameImagesArray.count) frame(s)")
+        }
+    } else if isImageToVideo, let seedImage = image, !isAlibabaWan && !isKlingVideo26Pro && !isSora2 {
+        // General image-to-video handling for other models (skip if already handled by special cases above)
         // Seedance 1.0 Pro Fast uses frameImages with first frame only
         let method = runwareConfig?.imageToImageMethod ?? "frameImages"
         
@@ -586,39 +696,6 @@ func sendVideoToRunware(
                 ]
             ]
             print("[Runware] Image-to-video enabled with frameImages (first frame): \(imageUUID)")
-        }
-    }
-    
-    // MARK: - Handle first and last frame images for KlingAI 2.5 Turbo Pro
-    
-    // KlingAI 2.5 Turbo Pro (klingai:6@1) supports both first and last frame
-    if model.lowercased() == "klingai:6@1" {
-        var frameImagesArray: [[String: Any]] = []
-        
-        // Add first frame if provided
-        if let firstFrame = firstFrameImage {
-            let firstFrameUUID = try await uploadImageToRunware(image: firstFrame)
-            frameImagesArray.append([
-                "inputImage": firstFrameUUID,
-                "frame": "first"
-            ])
-            print("[Runware] Added first frame image: \(firstFrameUUID)")
-        }
-        
-        // Add last frame if provided
-        if let lastFrame = lastFrameImage {
-            let lastFrameUUID = try await uploadImageToRunware(image: lastFrame)
-            frameImagesArray.append([
-                "inputImage": lastFrameUUID,
-                "frame": "last"
-            ])
-            print("[Runware] Added last frame image: \(lastFrameUUID)")
-        }
-        
-        // Only set frameImages if we have at least one frame
-        if !frameImagesArray.isEmpty {
-            task["frameImages"] = frameImagesArray
-            print("[Runware] Frame images configured: \(frameImagesArray.count) frame(s)")
         }
     }
 
@@ -1168,29 +1245,85 @@ func submitVideoToRunwareWithWebhook(
         "webhookURL": WebhookConfig.webhookURL(for: "runware"),
     ]
     
-    // Handle image-to-video if provided
-    if isImageToVideo, let seedImage = image {
-        let method = runwareConfig?.imageToImageMethod ?? "frameImages"
+    // MARK: - Handle frame images for image-to-video (webhook)
+    
+    // Check if model is Alibaba Wan (uses inputs.frameImages, not frameImages)
+    let isAlibabaWan = model.lowercased().contains("alibaba:wan@")
+    
+    // Check if model is Kling VIDEO 2.6 Pro (uses inputs.frameImages with "image" property)
+    let isKlingVideo26Pro = model.lowercased().contains("kling-video@2.6-pro") || model.lowercased().contains("klingai:kling-video@2.6-pro")
+    
+    // Check if model is Sora 2 (uses frameImages at top level, no "frame" property)
+    let isSora2 = model.lowercased() == "openai:3@1" || model.lowercased() == "openai:3@2"
+    
+    // Handle Kling VIDEO 2.6 Pro - uses inputs.frameImages with "image" property (not "inputImage")
+    if isKlingVideo26Pro && isImageToVideo, let seedImage = image {
+        // Upload image first to get UUID (required for inputs.frameImages)
+        let imageUUID = try await uploadImageToRunware(image: seedImage)
         
-        if method == "frameImages" {
-            let imageUUID = try await uploadImageToRunware(image: seedImage)
-            task["frameImages"] = [
+        // Initialize inputs object if it doesn't exist
+        var inputs = task["inputs"] as? [String: Any] ?? [:]
+        
+        // Kling VIDEO 2.6 Pro uses "image" property (not "inputImage") and requires "frame"
+        inputs["frameImages"] = [
+            [
+                "image": imageUUID,
+                "frame": "first"
+            ]
+        ]
+        print("[Runware] Kling VIDEO 2.6 Pro image-to-video enabled with inputs.frameImages (webhook): \(imageUUID)")
+        
+        task["inputs"] = inputs
+    }
+    
+    // Handle Sora 2 and Sora 2 Pro - uses frameImages at top level, no "frame" property
+    if isSora2 && isImageToVideo, let seedImage = image {
+        // Upload image first to get UUID (required for frameImages)
+        let imageUUID = try await uploadImageToRunware(image: seedImage)
+        
+        // Sora 2 uses format: [{ "inputImage": uuid }] - NO "frame" property
+        task["frameImages"] = [
+            [
+                "inputImage": imageUUID
+            ]
+        ]
+        print("[Runware] Sora 2 image-to-video enabled with frameImages (webhook): \(imageUUID)")
+    }
+    
+    // Handle Alibaba Wan models (Wan2.5-Preview and Wan2.6) - they use inputs.frameImages
+    if isAlibabaWan && isImageToVideo, let seedImage = image {
+        // Upload image first to get UUID (required for inputs.frameImages)
+        let imageUUID = try await uploadImageToRunware(image: seedImage)
+        
+        // Initialize inputs object if it doesn't exist
+        var inputs = task["inputs"] as? [String: Any] ?? [:]
+        
+        if model.lowercased().contains("alibaba:wan@2.6") {
+            // Wan2.6 uses simpler format: array of UUID strings
+            inputs["frameImages"] = [imageUUID]
+            print("[Runware] Alibaba Wan2.6 image-to-video enabled with inputs.frameImages (webhook): \(imageUUID)")
+        } else {
+            // Wan2.5-Preview uses object format with inputImage and frame
+            inputs["frameImages"] = [
                 [
                     "inputImage": imageUUID,
                     "frame": "first"
                 ]
             ]
-            print("[Runware] Image-to-video enabled with frameImages (first frame): \(imageUUID)")
+            print("[Runware] Alibaba Wan2.5-Preview image-to-video enabled with inputs.frameImages (webhook): \(imageUUID)")
         }
+        
+        task["inputs"] = inputs
     }
     
-    // MARK: - Handle first and last frame images for KlingAI 2.5 Turbo Pro (webhook)
+    // Check if model supports first and last frame images
+    let supportsFirstLastFrame = model.lowercased() == "klingai:6@1" || model.lowercased() == "google:3@3"
     
-    // KlingAI 2.5 Turbo Pro (klingai:6@1) supports both first and last frame
-    if model.lowercased() == "klingai:6@1" {
+    // For models that support first/last frame, handle them specially
+    if supportsFirstLastFrame {
         var frameImagesArray: [[String: Any]] = []
         
-        // Add first frame if provided
+        // Add first frame if provided (prefer firstFrameImage over general image)
         if let firstFrame = firstFrameImage {
             let firstFrameUUID = try await uploadImageToRunware(image: firstFrame)
             frameImagesArray.append([
@@ -1198,6 +1331,14 @@ func submitVideoToRunwareWithWebhook(
                 "frame": "first"
             ])
             print("[Runware] Added first frame image (webhook): \(firstFrameUUID)")
+        } else if isImageToVideo, let seedImage = image {
+            // Fallback to general image if firstFrameImage not provided
+            let imageUUID = try await uploadImageToRunware(image: seedImage)
+            frameImagesArray.append([
+                "inputImage": imageUUID,
+                "frame": "first"
+            ])
+            print("[Runware] Added first frame image (webhook, from seed): \(imageUUID)")
         }
         
         // Add last frame if provided
@@ -1214,6 +1355,20 @@ func submitVideoToRunwareWithWebhook(
         if !frameImagesArray.isEmpty {
             task["frameImages"] = frameImagesArray
             print("[Runware] Frame images configured (webhook): \(frameImagesArray.count) frame(s)")
+        }
+    } else if isImageToVideo, let seedImage = image, !isAlibabaWan && !isKlingVideo26Pro && !isSora2 {
+        // General image-to-video handling for other models (skip if already handled by special cases above)
+        let method = runwareConfig?.imageToImageMethod ?? "frameImages"
+        
+        if method == "frameImages" {
+            let imageUUID = try await uploadImageToRunware(image: seedImage)
+            task["frameImages"] = [
+                [
+                    "inputImage": imageUUID,
+                    "frame": "first"
+                ]
+            ]
+            print("[Runware] Image-to-video enabled with frameImages (first frame, webhook): \(imageUUID)")
         }
     }
     
