@@ -172,8 +172,11 @@ struct ImageGridView: View {
                     videoPlayIcon
                 }
             }
+            .frame(width: itemWidth, height: itemHeight)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .frame(width: itemWidth, height: itemHeight)
     }
     
     private func fallbackImageButton(userImage: UserImage, url: URL, itemWidth: CGFloat, itemHeight: CGFloat) -> some View {
@@ -202,8 +205,11 @@ struct ImageGridView: View {
                     videoPlayIcon
                 }
             }
+            .frame(width: itemWidth, height: itemHeight)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .frame(width: itemWidth, height: itemHeight)
     }
     
     @ViewBuilder

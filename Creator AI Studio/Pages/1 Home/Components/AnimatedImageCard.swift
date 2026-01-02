@@ -352,7 +352,7 @@ struct ImageAnimations: View {
                 
                 // Phase 2: Stay at transformed (pause) - show transformed image longer
                 // Wait: 0.4s (animation) + 1.5s (pause) = 1.9s total
-                DispatchQueue.main.asyncAfter(deadline: .now() + 2.1) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2.4) {
                     // Phase 3: Quickly scan back to show original (smooth easeInOut)
                     withAnimation(
                         Animation
