@@ -263,6 +263,9 @@ struct ImageAnimations: View {
             let centerY = geometry.size.height / 2
             let maxRadius = sqrt(pow(geometry.size.width, 2) + pow(geometry.size.height, 2)) / 2
             
+            // Calculate overlay opacity: 0.3 when closed (apertureSize = 0), 0 when open (apertureSize = maxRadius)
+            let overlayOpacity = max(0, 0.3 * (1 - (apertureSize / maxRadius)))
+            
             ZStack {
                 // Original image (background) - shown when aperture is closed
                 Image(assetName(from: originalImageName))
@@ -270,6 +273,10 @@ struct ImageAnimations: View {
                     .aspectRatio(contentMode: .fill)
                     .frame(width: width, height: height)
                     .clipped()
+                    .overlay(
+                        // Black overlay that fades out as aperture opens
+                        Color.black.opacity(overlayOpacity)
+                    )
                 
                 // Transformed image with circular mask (aperture effect) - shown when aperture is open
                 Image(assetName(from: transformedImageName))
