@@ -107,31 +107,40 @@ struct ImageAnimations: View {
     }
     
     private var scanningVertical: some View {
-        ZStack(alignment: .top) {
-            Image(assetName(from: transformedImageName))
-                .resizable()
-                .aspectRatio(contentMode: .fill)
-                .frame(width: width, height: height)
-                .clipped()
-            
-            Image(assetName(from: originalImageName))
-                .resizable()
-                .aspectRatio(contentMode: .fill)
-                .frame(width: width, height: height)
-                .clipped()
-                .mask(
-                    Rectangle()
-                        .frame(height: scanPositionVertical)
-                        .frame(maxHeight: .infinity, alignment: .top)
-                )
-            
-            Rectangle()
-                .fill(Color.white)
-                .frame(height: 2)
-                .frame(width: width)
-                .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 0)
-                .offset(y: scanPositionVertical)
+        GeometryReader { geometry in
+            ZStack(alignment: .top) {
+                Image(assetName(from: transformedImageName))
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: width, height: height)
+                    .clipped()
+                
+                Image(assetName(from: originalImageName))
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: width, height: height)
+                    .clipped()
+                    .mask(
+                        Rectangle()
+                            .frame(height: geometry.size.height - scanPositionVertical)
+                            .frame(maxHeight: .infinity, alignment: .bottom)
+                    )
+                
+                // Bar positioned at the boundary between original and transformed
+                // With bottom-aligned mask that shrinks from bottom:
+                // Mask height = height - scanPositionVertical
+                // Top edge of mask (boundary) is at: y = scanPositionVertical
+                // When scanPositionVertical = height: boundary at y = height (bottom) - both start at bottom ✓
+                // When scanPositionVertical = 0: boundary at y = 0 (top) - both end at top ✓
+                Rectangle()
+                    .fill(Color.white)
+                    .frame(height: 2)
+                    .frame(width: width)
+                    .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 0)
+                    .position(x: geometry.size.width / 2, y: scanPositionVertical)
+            }
         }
+        .frame(width: width, height: height)
     }
     
     private var crossfade: some View {
@@ -330,74 +339,234 @@ struct ImageAnimations: View {
     private func startIfNeeded() {
         switch animation {
         case .scanHorizontal:
-            scanPosition = 0
-            withAnimation(
-                Animation
-                    .easeInOut(duration: 1.25)
-                    .repeatForever(autoreverses: true)
-            ) {
-                scanPosition = width
+            // Start showing original (mask at full width)
+            scanPosition = width
+            func animateScanHorizontal() {
+                // Phase 1: Quickly scan to reveal transformed (smooth easeInOut)
+                withAnimation(
+                    Animation
+                        .easeInOut(duration: 0.7)
+                ) {
+                    scanPosition = 0
+                }
+                
+                // Phase 2: Stay at transformed (pause) - show transformed image longer
+                // Wait: 0.4s (animation) + 1.5s (pause) = 1.9s total
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2.1) {
+                    // Phase 3: Quickly scan back to show original (smooth easeInOut)
+                    withAnimation(
+                        Animation
+                            .easeInOut(duration: 0.7)
+                    ) {
+                        scanPosition = width
+                    }
+                    
+                    // Phase 4: Stay at original (pause) - show original image shorter, then repeat
+                    // Wait: 0.3s (animation) + 0.5s (pause) = 0.8s total
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                        animateScanHorizontal() // Loop
+                    }
+                }
             }
+            animateScanHorizontal()
             
         case .scanVertical:
-            scanPositionVertical = 0
-            withAnimation(
-                Animation
-                    .easeInOut(duration: 1.25)
-                    .repeatForever(autoreverses: true)
-            ) {
-                scanPositionVertical = height
+            // Start showing original (mask at full height)
+            scanPositionVertical = height
+            func animateScanVertical() {
+                // Phase 1: Quickly scan to reveal transformed (smooth easeInOut)
+                withAnimation(
+                    Animation
+                        .easeInOut(duration: 0.9)
+                ) {
+                    scanPositionVertical = 0
+                }
+                
+                // Phase 2: Stay at transformed (pause) - show transformed image longer
+                // Wait: 0.4s (animation) + 1.5s (pause) = 1.9s total
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                    // Phase 3: Quickly scan back to show original (smooth easeInOut)
+                    withAnimation(
+                        Animation
+                            .easeInOut(duration: 0.9)
+                    ) {
+                        scanPositionVertical = height
+                    }
+                    
+                    // Phase 4: Stay at original (pause) - show original image shorter, then repeat
+                    // Wait: 0.3s (animation) + 0.5s (pause) = 0.8s total
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2.1) {
+                        animateScanVertical() // Loop
+                    }
+                }
             }
+            animateScanVertical()
+            
         case .scanHorizontalVarying:
             scanHorizontalDuration = Double.random(in: 1.0...2.0)
-            scanPosition = 0
-            withAnimation(
-                Animation
-                    .easeInOut(duration: scanHorizontalDuration)
-                    .repeatForever(autoreverses: true)
-            ) {
-                scanPosition = width
+            // Start showing original (mask at full width)
+            scanPosition = width
+            func animateScanHorizontalVarying() {
+                let revealDuration = scanHorizontalDuration * 0.3
+                // Phase 1: Scan to reveal transformed (smooth easeInOut)
+                withAnimation(
+                    Animation
+                        .easeInOut(duration: revealDuration)
+                ) {
+                    scanPosition = 0
+                }
+                
+                // Phase 2: Stay at transformed (pause) - show transformed image longer
+                let pauseAtTransformed = scanHorizontalDuration * 1.2
+                DispatchQueue.main.asyncAfter(deadline: .now() + revealDuration + pauseAtTransformed) {
+                    // Phase 3: Quickly scan back to show original (smooth easeInOut)
+                    withAnimation(
+                        Animation
+                            .easeInOut(duration: revealDuration * 0.75)
+                    ) {
+                        scanPosition = width
+                    }
+                    
+                    // Phase 4: Stay at original (pause) - show original image shorter, then repeat
+                    let pauseAtOriginal = scanHorizontalDuration * 0.4
+                    DispatchQueue.main.asyncAfter(deadline: .now() + (revealDuration * 0.75) + pauseAtOriginal) {
+                        scanHorizontalDuration = Double.random(in: 1.0...2.0)
+                        animateScanHorizontalVarying() // Loop
+                    }
+                }
             }
+            animateScanHorizontalVarying()
+            
         case .scanVerticalVarying:
             scanVerticalDuration = Double.random(in: 1.0...2.0)
-            scanPositionVertical = 0
-            withAnimation(
-                Animation
-                    .easeInOut(duration: scanVerticalDuration)
-                    .repeatForever(autoreverses: true)
-            ) {
-                scanPositionVertical = height
+            // Start showing original (mask at full height)
+            scanPositionVertical = height
+            func animateScanVerticalVarying() {
+                let revealDuration = scanVerticalDuration * 0.3
+                // Phase 1: Scan to reveal transformed (smooth easeInOut)
+                withAnimation(
+                    Animation
+                        .easeInOut(duration: revealDuration)
+                ) {
+                    scanPositionVertical = 0
+                }
+                
+                // Phase 2: Stay at transformed (pause) - show transformed image longer
+                let pauseAtTransformed = scanVerticalDuration * 1.2
+                DispatchQueue.main.asyncAfter(deadline: .now() + revealDuration + pauseAtTransformed) {
+                    // Phase 3: Quickly scan back to show original (smooth easeInOut)
+                    withAnimation(
+                        Animation
+                            .easeInOut(duration: revealDuration * 0.75)
+                    ) {
+                        scanPositionVertical = height
+                    }
+                    
+                    // Phase 4: Stay at original (pause) - show original image shorter, then repeat
+                    let pauseAtOriginal = scanVerticalDuration * 0.4
+                    DispatchQueue.main.asyncAfter(deadline: .now() + (revealDuration * 0.75) + pauseAtOriginal) {
+                        scanVerticalDuration = Double.random(in: 1.0...2.0)
+                        animateScanVerticalVarying() // Loop
+                    }
+                }
             }
+            animateScanVerticalVarying()
             
         case .crossfade:
-            fadeToOriginal = false
-            withAnimation(
-                Animation
-                    .easeInOut(duration: 1.5)
-                    .repeatForever(autoreverses: true)
-            ) {
-                fadeToOriginal = true
+            // Start showing original
+            fadeToOriginal = true
+            func animateCrossfade() {
+                // Phase 1: Fade to transformed (smooth easeInOut) - show transformed longer
+                withAnimation(
+                    Animation
+                        .easeInOut(duration: 0.5)
+                ) {
+                    fadeToOriginal = false
+                }
+                
+                // Phase 2: Stay at transformed (pause) - show transformed image longer
+                // Wait: 0.5s (animation) + 1.5s (pause) = 2.0s total
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                    // Phase 3: Quickly fade back to original (smooth easeInOut)
+                    withAnimation(
+                        Animation
+                            .easeInOut(duration: 0.4)
+                    ) {
+                        fadeToOriginal = true
+                    }
+                    
+                    // Phase 4: Stay at original (pause) - show original image shorter, then repeat
+                    // Wait: 0.4s (animation) + 0.5s (pause) = 0.9s total
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.9) {
+                        animateCrossfade() // Loop
+                    }
+                }
             }
+            animateCrossfade()
             
         case .cubeTurn:
+            // Start showing original
             cubeAngle = 0
-            withAnimation(
-                Animation
-                    .easeInOut(duration: 2)
-                    .repeatForever(autoreverses: true)
-            ) {
-                cubeAngle = 180
+            func animateCubeTurn() {
+                // Phase 1: Turn to reveal transformed (smooth easeInOut) - show transformed longer
+                withAnimation(
+                    Animation
+                        .easeInOut(duration: 0.3)
+                ) {
+                    cubeAngle = 180
+                }
+                
+                // Phase 2: Stay at transformed (pause) - show transformed image longer
+                // Wait: 0.6s (animation) + 1.5s (pause) = 2.1s total
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2.1) {
+                    // Phase 3: Quickly turn back to show original (smooth easeInOut)
+                    withAnimation(
+                        Animation
+                            .easeInOut(duration: 0.4)
+                    ) {
+                        cubeAngle = 0
+                    }
+                    
+                    // Phase 4: Stay at original (pause) - show original image shorter, then repeat
+                    // Wait: 0.4s (animation) + 0.5s (pause) = 0.9s total
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.9) {
+                        animateCubeTurn() // Loop
+                    }
+                }
             }
+            animateCubeTurn()
             
         case .flipCard:
+            // Start showing original
             flipAngle = 0
-            withAnimation(
-                Animation
-                    .easeInOut(duration: 1.5)
-                    .repeatForever(autoreverses: true)
-            ) {
-                flipAngle = 180
+            func animateFlipCard() {
+                // Phase 1: Flip to reveal transformed (smooth easeInOut) - show transformed longer
+                withAnimation(
+                    Animation
+                        .easeInOut(duration: 0.5)
+                ) {
+                    flipAngle = 180
+                }
+                
+                // Phase 2: Stay at transformed (pause) - show transformed image longer
+                // Wait: 0.5s (animation) + 1.5s (pause) = 2.0s total
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                    // Phase 3: Quickly flip back to show original (smooth easeInOut)
+                    withAnimation(
+                        Animation
+                            .easeInOut(duration: 0.4)
+                    ) {
+                        flipAngle = 0
+                    }
+                    
+                    // Phase 4: Stay at original (pause) - show original image shorter, then repeat
+                    // Wait: 0.4s (animation) + 0.5s (pause) = 0.9s total
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.9) {
+                        animateFlipCard() // Loop
+                    }
+                }
             }
+            animateFlipCard()
             
         case .slider:
             // Initialize slider to middle
@@ -420,7 +589,7 @@ struct ImageAnimations: View {
                 
                 // Phase 2: Stay open (pause) - show transformed image longer
                 // Wait: 0.3s (animation) + 1.5s (pause) = 1.8s total
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.8) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2.3) {
                     // Phase 3: Close aperture quickly (ease-in) - shows original image
                     // Duration: 0.3s
                     withAnimation(
@@ -441,14 +610,36 @@ struct ImageAnimations: View {
             animateAperture()
             
         case .instagramFilter:
+            // Start showing original
             instagramFilterOpacity = 0
-            withAnimation(
-                Animation
-                    .easeInOut(duration: 2.0)
-                    .repeatForever(autoreverses: true)
-            ) {
-                instagramFilterOpacity = 1.0
+            func animateInstagramFilter() {
+                // Phase 1: Fade in transformed image with filter (smooth easeInOut) - show transformed longer
+                withAnimation(
+                    Animation
+                        .easeInOut(duration: 0.6)
+                ) {
+                    instagramFilterOpacity = 1.0
+                }
+                
+                // Phase 2: Stay at transformed (pause) - show transformed image longer
+                // Wait: 0.6s (animation) + 1.5s (pause) = 2.1s total
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2.1) {
+                    // Phase 3: Quickly fade back to original (smooth easeInOut)
+                    withAnimation(
+                        Animation
+                            .easeInOut(duration: 0.4)
+                    ) {
+                        instagramFilterOpacity = 0
+                    }
+                    
+                    // Phase 4: Stay at original (pause) - show original image shorter, then repeat
+                    // Wait: 0.4s (animation) + 0.5s (pause) = 0.9s total
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.9) {
+                        animateInstagramFilter() // Loop
+                    }
+                }
             }
+            animateInstagramFilter()
         }
     }
 }
