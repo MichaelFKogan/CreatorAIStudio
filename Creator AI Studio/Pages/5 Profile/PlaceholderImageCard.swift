@@ -1,6 +1,36 @@
 import SwiftUI
 import UIKit
 
+// MARK: - Helper Function to Find Model Image Name
+
+private func findModelImageNameForPlaceholder(for modelName: String?, isVideo: Bool = false) -> String? {
+    guard let modelName = modelName, !modelName.isEmpty else { return nil }
+    
+    // Cache models to avoid repeated loading
+    struct ModelCache {
+        static var imageModels: [InfoPacket]?
+        static var videoModels: [InfoPacket]?
+    }
+    
+    if isVideo {
+        if ModelCache.videoModels == nil {
+            ModelCache.videoModels = VideoModelsViewModel.loadVideoModels()
+        }
+        if let modelInfo = ModelCache.videoModels?.first(where: { $0.display.modelName == modelName || $0.display.title == modelName }) {
+            return modelInfo.display.imageName
+        }
+    } else {
+        if ModelCache.imageModels == nil {
+            ModelCache.imageModels = ImageModelsViewModel.loadImageModels()
+        }
+        if let modelInfo = ModelCache.imageModels?.first(where: { $0.display.modelName == modelName || $0.display.title == modelName }) {
+            return modelInfo.display.imageName
+        }
+    }
+    
+    return nil
+}
+
 // MARK: PLACEHOLDER Image Card (for in-progress generations)
 
 struct PlaceholderImageCard: View {
@@ -53,8 +83,31 @@ struct PlaceholderImageCard: View {
                                 .frame(width: 50, height: 50)
                                 .clipShape(Circle())
                                 .scaleEffect(pulseAnimation ? 1.05 : 1.0)
+                        } else if let modelImageName = findModelImageNameForPlaceholder(
+                            for: placeholder.modelName,
+                            isVideo: placeholder.title.contains("Video") || placeholder.title.contains("video")
+                        ) {
+                            // Show the model image for text-to-image/video generation
+                            Image(modelImageName)
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(width: 50, height: 50)
+                                .clipShape(Circle())
+                                .overlay(
+                                    Circle()
+                                        .stroke(
+                                            LinearGradient(
+                                                colors: [.blue, .purple],
+                                                startPoint: .topLeading,
+                                                endPoint: .bottomTrailing
+                                            ),
+                                            lineWidth: 2
+                                        )
+                                )
+                                .shadow(color: Color.blue.opacity(0.3), radius: 4, x: 0, y: 2)
+                                .scaleEffect(pulseAnimation ? 1.05 : 1.0)
                         } else {
-                            // Show an AI/magic icon for text-to-image generation (matches NotificationBar)
+                            // Fallback: Show an AI/magic icon if no model image found (matches NotificationBar)
                             ZStack {
                                 // Animated gradient background
                                 Circle()

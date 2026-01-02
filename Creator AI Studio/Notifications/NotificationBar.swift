@@ -1,5 +1,35 @@
 import SwiftUI
 
+// MARK: - Helper Function to Find Model Image Name
+
+private func findModelImageName(for modelName: String?, isVideo: Bool = false) -> String? {
+    guard let modelName = modelName, !modelName.isEmpty else { return nil }
+    
+    // Cache models to avoid repeated loading
+    struct ModelCache {
+        static var imageModels: [InfoPacket]?
+        static var videoModels: [InfoPacket]?
+    }
+    
+    if isVideo {
+        if ModelCache.videoModels == nil {
+            ModelCache.videoModels = VideoModelsViewModel.loadVideoModels()
+        }
+        if let modelInfo = ModelCache.videoModels?.first(where: { $0.display.modelName == modelName || $0.display.title == modelName }) {
+            return modelInfo.display.imageName
+        }
+    } else {
+        if ModelCache.imageModels == nil {
+            ModelCache.imageModels = ImageModelsViewModel.loadImageModels()
+        }
+        if let modelInfo = ModelCache.imageModels?.first(where: { $0.display.modelName == modelName || $0.display.title == modelName }) {
+            return modelInfo.display.imageName
+        }
+    }
+    
+    return nil
+}
+
 // MARK: - Notification Bar
 struct NotificationBar: View {
     @ObservedObject var notificationManager: NotificationManager
@@ -34,6 +64,7 @@ struct NotificationCard: View {
     
     @State private var shimmer = false
     @State private var pulseAnimation = false
+    @State private var showDetailsSheet = false
     
     var body: some View {
         VStack(spacing: 0) {
@@ -53,9 +84,22 @@ struct NotificationCard: View {
             .padding(.bottom, 4)
             
             HStack(spacing: 12) {
-                NotificationThumbnail(image: notification.thumbnailImage, pulseAnimation: $pulseAnimation)
-                NotificationTextContent(notification: notification, shimmer: $shimmer)
-                Spacer(minLength: 0)
+                Button(action: {
+                    showDetailsSheet = true
+                }) {
+                    HStack(spacing: 12) {
+                        NotificationThumbnail(
+                            image: notification.thumbnailImage,
+                            modelName: notification.modelName,
+                            isVideo: notification.title.contains("Video") || notification.title.contains("video"),
+                            pulseAnimation: $pulseAnimation
+                        )
+                        NotificationTextContent(notification: notification, shimmer: $shimmer)
+                        Spacer(minLength: 0)
+                    }
+                }
+                .buttonStyle(PlainButtonStyle())
+                
                 NotificationCancelButton(
                     state: notification.state,
                     notificationId: notification.id,
@@ -81,6 +125,12 @@ struct NotificationCard: View {
                 RoundedRectangle(cornerRadius: 16)
                     .stroke(borderColor, lineWidth: 1)
             )
+            .sheet(isPresented: $showDetailsSheet) {
+                GenerationDetailsSheet(
+                    placeholder: PlaceholderImage(from: notification),
+                    isPresented: $showDetailsSheet
+                )
+            }
         }
         .transition(.asymmetric(
             insertion: .move(edge: .bottom).combined(with: .opacity),
@@ -115,6 +165,8 @@ struct NotificationCard: View {
 // MARK: - Thumbnail View
 struct NotificationThumbnail: View {
     let image: UIImage?
+    let modelName: String?
+    let isVideo: Bool
     @Binding var pulseAnimation: Bool
     
     // Helper to check if image is a placeholder (very small, like 1x1)
@@ -143,8 +195,25 @@ struct NotificationThumbnail: View {
                 .shadow(color: Color.blue.opacity(0.3), radius: 4, x: 0, y: 2)
                 .scaleEffect(pulseAnimation ? 1.05 : 1.0)
                 .animation(.easeInOut(duration: 1).repeatForever(autoreverses: true), value: pulseAnimation)
+        } else if let modelImageName = findModelImageName(for: modelName, isVideo: isVideo) {
+            // Show the model image for text-to-image/video generation
+            Image(modelImageName)
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+                .frame(width: 50, height: 50)
+                .clipShape(Circle())
+                .overlay(
+                    Circle()
+                        .stroke(
+                            LinearGradient(colors: [.blue, .purple], startPoint: .topLeading, endPoint: .bottomTrailing),
+                            lineWidth: 2
+                        )
+                )
+                .shadow(color: Color.blue.opacity(0.3), radius: 4, x: 0, y: 2)
+                .scaleEffect(pulseAnimation ? 1.05 : 1.0)
+                .animation(.easeInOut(duration: 1).repeatForever(autoreverses: true), value: pulseAnimation)
         } else {
-            // Show an AI/magic icon for text-to-image generation
+            // Fallback: Show an AI/magic icon if no model image found
             ZStack {
                 // Animated gradient background
                 Circle()
@@ -224,11 +293,16 @@ struct NotificationTextContent: View {
             
             if notification.state != .failed {
                 NotificationProgressBar(progress: notification.progress, state: notification.state, shimmer: $shimmer)
-                Text(notification.state == .completed
-                     ? "100% • View in Profile"
-                     : "\(Int(notification.progress * 100))% • View in Profile when complete")
-                    .font(.custom("Nunito-Regular", size: 10))
-                    .foregroundColor(.secondary)
+                HStack(spacing: 4) {
+                    Text(notification.state == .completed
+                         ? "100% • View in Profile"
+                         : "\(Int(notification.progress * 100))% • View in Profile when complete")
+                        .font(.custom("Nunito-Regular", size: 10))
+                        .foregroundColor(.secondary)
+                    Text("• Tap To View")
+                        .font(.custom("Nunito-Regular", size: 10))
+                        .foregroundColor(.blue)
+                }
             }
         }
         .onAppear {

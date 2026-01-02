@@ -6,6 +6,14 @@ struct GenerationDetailsSheet: View {
     let placeholder: PlaceholderImage
     @Binding var isPresented: Bool
     @State private var showCopiedConfirmation = false
+    @State private var dynamicMessage: String = ""
+    @State private var timeoutMessage: String = ""
+    @State private var showTimeoutMessage: Bool = false
+    @State private var showCancelButton: Bool = false
+    @StateObject private var notificationManager = NotificationManager.shared
+    
+    // Timer to update messages every minute
+    @State private var messageUpdateTimer: Timer?
     
     var body: some View {
         NavigationStack {
@@ -13,6 +21,9 @@ struct GenerationDetailsSheet: View {
                 VStack(alignment: .leading, spacing: 20) {
                     // Status Section
                     statusSection
+                    
+                    // Generation Start Time Section
+                    generationTimeSection
                     
                     // Model Section
                     if let modelName = placeholder.modelName, !modelName.isEmpty {
@@ -45,6 +56,18 @@ struct GenerationDetailsSheet: View {
                     }
                 }
             }
+        }
+        .onAppear {
+            // Initialize messages
+            updateMessages()
+            
+            // Set up timer to update messages every minute
+            messageUpdateTimer = Timer.scheduledTimer(withTimeInterval: 60.0, repeats: true) { _ in
+                updateMessages()
+            }
+        }
+        .onDisappear {
+            messageUpdateTimer?.invalidate()
         }
     }
     
@@ -106,6 +129,36 @@ struct GenerationDetailsSheet: View {
         case .failed:
             return "Failed"
         }
+    }
+    
+    // MARK: - Generation Time Section
+    
+    private var generationTimeSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Started")
+                .font(.headline)
+                .foregroundColor(.secondary)
+            
+            HStack(spacing: 8) {
+                Image(systemName: "clock.fill")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                Text(formatDate(placeholder.createdAt))
+                    .font(.body)
+                    .foregroundColor(.primary)
+            }
+        }
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.gray.opacity(0.1))
+        .cornerRadius(10)
+    }
+    
+    private func formatDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        return formatter.string(from: date)
     }
     
     // MARK: - Detail Section
@@ -188,10 +241,35 @@ struct GenerationDetailsSheet: View {
     // MARK: - Progress Section
     
     private var progressSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 12) {
             Text("Progress")
                 .font(.headline)
                 .foregroundColor(.secondary)
+            
+            // Timeout message (shown when appropriate - 2-5 minutes)
+            if showTimeoutMessage && !timeoutMessage.isEmpty {
+                HStack(spacing: 8) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.caption)
+                        .foregroundColor(.orange)
+                    Text(timeoutMessage)
+                        .font(.subheadline)
+                        .foregroundColor(.orange)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .padding(.vertical, 8)
+                .padding(.horizontal, 12)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color.orange.opacity(0.1))
+                .cornerRadius(8)
+            } else if !dynamicMessage.isEmpty {
+                // Dynamic message (shown when not showing timeout warning)
+                Text(dynamicMessage)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.vertical, 4)
+            }
             
             GeometryReader { geometry in
                 ZStack(alignment: .leading) {
@@ -215,6 +293,27 @@ struct GenerationDetailsSheet: View {
             Text("\(Int(placeholder.progress * 100))%")
                 .font(.caption)
                 .foregroundColor(.secondary)
+            
+            // Cancel button (shown when elapsed time >= 3 minutes)
+            if showCancelButton {
+                Button(action: {
+                    notificationManager.cancelTask(notificationId: placeholder.id)
+                    // Close the sheet after cancellation
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        isPresented = false
+                    }
+                }) {
+                    Text("Cancel")
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.red)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                        .background(Color.red.opacity(0.1))
+                        .cornerRadius(8)
+                }
+                .padding(.top, 8)
+            }
         }
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -235,6 +334,62 @@ struct GenerationDetailsSheet: View {
         // Reset confirmation after 2 seconds
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
             showCopiedConfirmation = false
+        }
+    }
+    
+    private func updateMessages() {
+        // Don't show timeout messages if generation is completed
+        if placeholder.state == .completed {
+            dynamicMessage = GenerationMessageHelper.getDynamicMessage(
+                elapsedSeconds: 0,
+                isVideo: false,
+                baseMessage: placeholder.message,
+                state: placeholder.state
+            )
+            showTimeoutMessage = false
+            timeoutMessage = ""
+            showCancelButton = false
+            return
+        }
+        
+        let elapsed = Date().timeIntervalSince(placeholder.createdAt)
+        let isVideo = placeholder.title.contains("Video") || placeholder.title.contains("video")
+        let elapsedMinutes = Int(elapsed / 60)
+        
+        // Update dynamic message
+        dynamicMessage = GenerationMessageHelper.getDynamicMessage(
+            elapsedSeconds: elapsed,
+            isVideo: isVideo,
+            baseMessage: placeholder.message,
+            state: placeholder.state
+        )
+        
+        // Show cancel button when elapsed time >= 3 minutes and task can still be cancelled
+        if elapsedMinutes >= 3 && placeholder.state == .inProgress {
+            // Check if task can still be cancelled
+            let canCancel = ImageGenerationCoordinator.shared.canCancelTask(notificationId: placeholder.id) ||
+                           VideoGenerationCoordinator.shared.canCancelTask(notificationId: placeholder.id)
+            showCancelButton = canCancel
+        } else {
+            showCancelButton = false
+        }
+        
+        // Show timeout message in two scenarios:
+        // 1. Initial timeout warning (2-3 minutes)
+        // 2. Countdown timeout warning (3-5 minutes)
+        if elapsedMinutes >= 2 && elapsedMinutes < 3 {
+            // Initial timeout message (2-3 minutes)
+            showTimeoutMessage = true
+            timeoutMessage = GenerationMessageHelper.getTimeoutMessage(isVideo: isVideo)
+        } else if elapsedMinutes >= 3 && elapsedMinutes < 5 {
+            // Countdown timeout message (3-5 minutes)
+            showTimeoutMessage = true
+            let remainingMinutes = 5 - elapsedMinutes
+            timeoutMessage = "This will cancel in \(remainingMinutes) minute\(remainingMinutes == 1 ? "" : "s") if no result. You won't be charged for failed generations."
+        } else {
+            // No timeout message to show
+            showTimeoutMessage = false
+            timeoutMessage = ""
         }
     }
 }

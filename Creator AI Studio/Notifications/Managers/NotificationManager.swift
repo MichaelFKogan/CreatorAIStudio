@@ -175,8 +175,66 @@ class NotificationManager: ObservableObject {
             if canCancel {
                 // Find webhook taskId by reverse lookup in JobStatusManager
                 if let webhookTaskId = await JobStatusManager.shared.getWebhookTaskId(for: notificationId) {
-                    // Found the webhook taskId, delete the pending job (only if not yet submitted)
+                    // Fetch the pending job before deleting it so we can save to user_media
                     do {
+                        if let pendingJob = try await SupabaseManager.shared.fetchPendingJob(taskId: webhookTaskId) {
+                            // Get user ID from current session
+                            if let session = try? await SupabaseManager.shared.client.auth.session {
+                                let userId = session.user.id.uuidString
+                                
+                                // Save cancelled job to user_media for tracking in UsageView
+                                if pendingJob.job_type == "image" {
+                                    let cancelledMetadata = ImageMetadata(
+                                        userId: userId,
+                                        imageUrl: "", // Empty for cancelled attempts
+                                        model: pendingJob.metadata?.model,
+                                        title: pendingJob.metadata?.title,
+                                        cost: pendingJob.metadata?.cost,
+                                        type: pendingJob.metadata?.type,
+                                        endpoint: pendingJob.metadata?.endpoint,
+                                        prompt: pendingJob.metadata?.prompt,
+                                        aspectRatio: pendingJob.metadata?.aspectRatio,
+                                        provider: pendingJob.provider,
+                                        status: "failed",
+                                        errorMessage: "Cancelled"
+                                    )
+                                    
+                                    try? await SupabaseManager.shared.client.database
+                                        .from("user_media")
+                                        .insert(cancelledMetadata)
+                                        .execute()
+                                    
+                                    print("✅ Saved cancelled image job to user_media: \(webhookTaskId)")
+                                } else if pendingJob.job_type == "video" {
+                                    let cancelledMetadata = VideoMetadata(
+                                        userId: userId,
+                                        videoUrl: "", // Empty for cancelled attempts
+                                        thumbnailUrl: nil,
+                                        model: pendingJob.metadata?.model,
+                                        title: pendingJob.metadata?.title,
+                                        cost: pendingJob.metadata?.cost,
+                                        type: pendingJob.metadata?.type,
+                                        endpoint: pendingJob.metadata?.endpoint,
+                                        fileExtension: "mp4",
+                                        prompt: pendingJob.metadata?.prompt,
+                                        aspectRatio: pendingJob.metadata?.aspectRatio,
+                                        duration: pendingJob.metadata?.duration,
+                                        resolution: pendingJob.metadata?.resolution,
+                                        status: "failed",
+                                        errorMessage: "Cancelled"
+                                    )
+                                    
+                                    try? await SupabaseManager.shared.client.database
+                                        .from("user_media")
+                                        .insert(cancelledMetadata)
+                                        .execute()
+                                    
+                                    print("✅ Saved cancelled video job to user_media: \(webhookTaskId)")
+                                }
+                            }
+                        }
+                        
+                        // Now delete the pending job
                         try await SupabaseManager.shared.deletePendingJob(taskId: webhookTaskId)
                         print("🧹 Deleted pending job from database after cancellation: \(webhookTaskId)")
                     } catch {
@@ -193,8 +251,8 @@ class NotificationManager: ObservableObject {
         // Update the notification to show cancellation
         if let index = notifications.firstIndex(where: { $0.id == notificationId }) {
             notifications[index].state = .failed
-            notifications[index].errorMessage = "Task cancelled by user"
-            notifications[index].message = "❌ Cancelled"
+            notifications[index].errorMessage = "Cancelled"
+            notifications[index].message = "Cancelled"
         }
         
         // Note: Placeholder remains on screen so user can manually dismiss with X button
@@ -211,6 +269,77 @@ class NotificationManager: ObservableObject {
             notifications[index].errorMessage = nil
             notifications[index].message = "Retrying generation..."
         }
+    }
+    
+    /// Find a notification by matching metadata (title, model, prompt)
+    /// Used as a fallback when task_id lookup fails
+    /// - Parameters:
+    ///   - title: The metadata title (model name) - not the notification title
+    ///   - modelName: Optional model name to match (should match notification.modelName)
+    ///   - prompt: Optional prompt to match
+    /// - Returns: The notification ID if found, nil otherwise
+    @MainActor
+    func findNotificationByMetadata(title: String, modelName: String? = nil, prompt: String? = nil) -> UUID? {
+        // Look for notifications that are still in progress (not completed/failed)
+        let matchingNotifications = notifications.filter { notification in
+            // Must be in progress (not completed/failed)
+            guard notification.state == .inProgress else { return false }
+            
+            // For image generations, notification title is "Transforming Your Photo"
+            // For video generations, notification title is "Creating Your Video"
+            // We need to match by model name and prompt instead
+            let isImageNotification = notification.title.lowercased().contains("transforming") || 
+                                     notification.title.lowercased().contains("photo")
+            let isVideoNotification = notification.title.lowercased().contains("creating") && 
+                                      notification.title.lowercased().contains("video")
+            
+            // Must be either image or video notification
+            guard isImageNotification || isVideoNotification else { return false }
+            
+            // Model name matching is the most reliable
+            if let modelName = modelName, !modelName.isEmpty {
+                if let notificationModel = notification.modelName?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
+                   !notificationModel.isEmpty {
+                    let searchModel = modelName.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+                    // Model names should match (case-insensitive)
+                    if notificationModel != searchModel {
+                        return false
+                    }
+                } else {
+                    // If notification has no model name but we're searching with one, skip
+                    return false
+                }
+            } else {
+                // If we don't have a model name to match, we can't reliably identify the notification
+                // But we can still try prompt matching if available
+            }
+            
+            // If prompt is provided, try to match it (optional, less reliable but helpful)
+            if let prompt = prompt, !prompt.isEmpty {
+                if let notificationPrompt = notification.prompt?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
+                   !notificationPrompt.isEmpty {
+                    // Prompts should be similar (at least 50% match)
+                    let promptWords = Set(prompt.split(separator: " "))
+                    let notificationWords = Set(notificationPrompt.split(separator: " "))
+                    let intersection = promptWords.intersection(notificationWords)
+                    let similarity = Double(intersection.count) / Double(max(promptWords.count, notificationWords.count))
+                    if similarity < 0.3 { // Lower threshold since prompts might vary slightly
+                        return false
+                    }
+                }
+            }
+            
+            return true
+        }
+        
+        // Return the most recent matching notification (newest first)
+        if let matchingNotification = matchingNotifications.sorted(by: { $0.createdAt > $1.createdAt }).first {
+            print("[NotificationManager] ✅ Found notification by metadata: \(matchingNotification.id), title: \(matchingNotification.title), model: \(matchingNotification.modelName ?? "nil")")
+            return matchingNotification.id
+        }
+        
+        print("[NotificationManager] ⚠️ No matching notification found for title: \(title), model: \(modelName ?? "nil"), prompt: \(prompt?.prefix(50) ?? "nil")")
+        return nil
     }
     
 }

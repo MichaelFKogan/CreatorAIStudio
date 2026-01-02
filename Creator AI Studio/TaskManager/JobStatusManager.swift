@@ -626,16 +626,33 @@ class JobStatusManager: ObservableObject {
         let errorMessage = job.error_message ?? "Generation failed"
         
         // Update notification if one exists
-        if let notificationId = taskNotificationMap[job.task_id] {
+        var notificationId: UUID? = taskNotificationMap[job.task_id]
+        
+        // Fallback: Try to find notification by matching metadata if task_id lookup failed
+        if notificationId == nil {
+            let metadata = job.metadata
+            let title = metadata?.title ?? (job.job_type == "image" ? "Image" : "Video")
+            await MainActor.run {
+                notificationId = NotificationManager.shared.findNotificationByMetadata(
+                    title: title,
+                    modelName: metadata?.model,
+                    prompt: metadata?.prompt
+                )
+            }
+        }
+        
+        if let notifId = notificationId {
             await MainActor.run {
                 NotificationManager.shared.markAsFailed(
-                    id: notificationId,
+                    id: notifId,
                     errorMessage: errorMessage
                 )
                 print("[JobStatusManager] ⚠️ Marked notification as failed: \(job.task_id)")
             }
             // Remove the notification mapping
             taskNotificationMap.removeValue(forKey: job.task_id)
+        } else {
+            print("[JobStatusManager] ⚠️ Could not find notification to mark as failed for task: \(job.task_id)")
         }
         
         // Call registered completion handler if any
@@ -750,11 +767,29 @@ class JobStatusManager: ObservableObject {
                     let title = metadata?.title ?? "Image"
                     
                     // Check if we have an existing notification for this task
-                    if let existingNotificationId = taskNotificationMap[job.task_id] {
+                    var existingNotificationId: UUID? = taskNotificationMap[job.task_id]
+                    
+                    // Fallback: Try to find notification by matching metadata if task_id lookup failed
+                    if existingNotificationId == nil {
+                        print("[JobStatusManager] ⚠️ No notification found for task_id: \(job.task_id), trying metadata fallback...")
+                        existingNotificationId = NotificationManager.shared.findNotificationByMetadata(
+                            title: title,
+                            modelName: metadata?.model,
+                            prompt: metadata?.prompt
+                        )
+                        
+                        // If found via metadata, register it in the map for future reference
+                        if let foundId = existingNotificationId {
+                            taskNotificationMap[job.task_id] = foundId
+                            print("[JobStatusManager] ✅ Found notification via metadata fallback, registered mapping")
+                        }
+                    }
+                    
+                    if let notificationId = existingNotificationId {
                         // Update the existing notification to show completion
-                        NotificationManager.shared.markAsCompleted(id: existingNotificationId, message: "✅ \(title) ready!")
+                        NotificationManager.shared.markAsCompleted(id: notificationId, message: "✅ \(title) ready!")
                         taskNotificationMap.removeValue(forKey: job.task_id)
-                        print("[JobStatusManager] ✅ Updated existing notification \(existingNotificationId)")
+                        print("[JobStatusManager] ✅ Updated existing notification \(notificationId)")
                     } else {
                         // Create a new notification (fallback for jobs started before app was listening)
                         let notificationId = NotificationManager.shared.showNotification(
@@ -764,7 +799,7 @@ class JobStatusManager: ObservableObject {
                             thumbnailImage: image
                         )
                         NotificationManager.shared.markAsCompleted(id: notificationId, message: "✅ \(title) ready!")
-                        print("[JobStatusManager] ✅ Created new success notification")
+                        print("[JobStatusManager] ✅ Created new success notification (no existing notification found)")
                     }
                 }
                 
@@ -849,11 +884,29 @@ class JobStatusManager: ObservableObject {
                     let title = metadata?.title ?? "Video"
                     
                     // Check if we have an existing notification for this task
-                    if let existingNotificationId = taskNotificationMap[job.task_id] {
+                    var existingNotificationId: UUID? = taskNotificationMap[job.task_id]
+                    
+                    // Fallback: Try to find notification by matching metadata if task_id lookup failed
+                    if existingNotificationId == nil {
+                        print("[JobStatusManager] ⚠️ No notification found for task_id: \(job.task_id), trying metadata fallback...")
+                        existingNotificationId = NotificationManager.shared.findNotificationByMetadata(
+                            title: title,
+                            modelName: metadata?.model,
+                            prompt: metadata?.prompt
+                        )
+                        
+                        // If found via metadata, register it in the map for future reference
+                        if let foundId = existingNotificationId {
+                            taskNotificationMap[job.task_id] = foundId
+                            print("[JobStatusManager] ✅ Found notification via metadata fallback, registered mapping")
+                        }
+                    }
+                    
+                    if let notificationId = existingNotificationId {
                         // Update the existing notification to show completion
-                        NotificationManager.shared.markAsCompleted(id: existingNotificationId, message: "✅ \(title) ready!")
+                        NotificationManager.shared.markAsCompleted(id: notificationId, message: "✅ \(title) ready!")
                         taskNotificationMap.removeValue(forKey: job.task_id)
-                        print("[JobStatusManager] ✅ Updated existing notification \(existingNotificationId)")
+                        print("[JobStatusManager] ✅ Updated existing notification \(notificationId)")
                     } else {
                         // Create a new notification (fallback for jobs started before app was listening)
                         let notificationId = NotificationManager.shared.showNotification(
@@ -863,7 +916,7 @@ class JobStatusManager: ObservableObject {
                             thumbnailImage: thumbnail
                         )
                         NotificationManager.shared.markAsCompleted(id: notificationId, message: "✅ \(title) ready!")
-                        print("[JobStatusManager] ✅ Created new success notification")
+                        print("[JobStatusManager] ✅ Created new success notification (no existing notification found)")
                     }
                 }
                 
@@ -913,15 +966,32 @@ class JobStatusManager: ObservableObject {
             print("[JobStatusManager] Error details: \(error.localizedDescription)")
             
             // If there's a notification for this job, mark it as failed
-            if let notificationId = taskNotificationMap[job.task_id] {
+            var notificationId: UUID? = taskNotificationMap[job.task_id]
+            
+            // Fallback: Try to find notification by matching metadata if task_id lookup failed
+            if notificationId == nil {
+                let metadata = job.metadata
+                let title = metadata?.title ?? (job.job_type == "image" ? "Image" : "Video")
+                await MainActor.run {
+                    notificationId = NotificationManager.shared.findNotificationByMetadata(
+                        title: title,
+                        modelName: metadata?.model,
+                        prompt: metadata?.prompt
+                    )
+                }
+            }
+            
+            if let notifId = notificationId {
                 await MainActor.run {
                     NotificationManager.shared.markAsFailed(
-                        id: notificationId,
+                        id: notifId,
                         errorMessage: "Failed to process result: \(error.localizedDescription)"
                     )
                     print("[JobStatusManager] ⚠️ Marked notification as failed due to processing error: \(job.task_id)")
                 }
                 taskNotificationMap.removeValue(forKey: job.task_id)
+            } else {
+                print("[JobStatusManager] ⚠️ Could not find notification to mark as failed for task: \(job.task_id)")
             }
         }
     }
