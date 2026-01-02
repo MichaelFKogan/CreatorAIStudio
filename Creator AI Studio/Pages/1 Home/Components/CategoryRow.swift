@@ -7,6 +7,17 @@ struct CategoryRow: View {
 
     @State private var lastOffset: CGFloat = 0
     @State private var feedback: UISelectionFeedbackGenerator?
+    
+    // Extract category name from title (removes emoji prefix like "✨ Anime" -> "Anime")
+    private var categoryName: String {
+        let components = title.split(separator: " ", maxSplits: 1)
+        return components.count > 1 ? String(components[1]) : title
+    }
+    
+    // Check if this is the Anime category
+    private var isAnimeCategory: Bool {
+        categoryName.lowercased() == "anime"
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -20,11 +31,15 @@ struct CategoryRow: View {
                     ForEach(items) { item in
                         NavigationLink(destination: PhotoFilterDetailView(item: item)) {
                             VStack(spacing: 8) {
-                                Image(item.display.imageName)
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fill)
-                                    .frame(width: 140, height: 196)
-                                    .clipped()
+                                // Use animated view for Anime category if original image exists
+                                if isAnimeCategory, let originalImageName = item.display.imageNameOriginal {
+                                    ImageAnimations(
+                                        originalImageName: originalImageName,
+                                        transformedImageName: item.display.imageName,
+                                        width: 140,
+                                        height: 196,
+                                        animation: .scanHorizontal
+                                    )
                                     .clipShape(RoundedRectangle(cornerRadius: 12))
                                     .overlay(
                                         RoundedRectangle(cornerRadius: 12)
@@ -52,6 +67,41 @@ struct CategoryRow: View {
                                                 .padding(6)
                                         }
                                     }
+                                } else {
+                                    // Regular image for other categories
+                                    Image(item.display.imageName)
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fill)
+                                        .frame(width: 140, height: 196)
+                                        .clipped()
+                                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 12)
+                                                .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                                        )
+                                        .overlay(alignment: .bottom) {
+                                            Text("Try This")
+                                                .font(.custom("Nunito-ExtraBold", size: 12))
+                                                .foregroundColor(.white)
+                                                .padding(.horizontal, 8)
+                                                .padding(.vertical, 5)
+                                                .background(Color.black.opacity(0.8))
+                                                .clipShape(Capsule())
+                                                .padding(.bottom, 6)
+                                        }
+                                        .overlay(alignment: .topTrailing) {
+                                            if let cost = item.resolvedCost {
+                                                Text(PricingManager.formatPrice(cost))
+                                                    .font(.custom("Nunito-Bold", size: 11))
+                                                    .foregroundColor(.white)
+                                                    .padding(.horizontal, 6)
+                                                    .padding(.vertical, 3)
+                                                    .background(Color.black.opacity(0.8))
+                                                    .clipShape(Capsule())
+                                                    .padding(6)
+                                            }
+                                        }
+                                }
 
                                 Text(item.display.title)
                                     .font(.custom("Nunito-ExtraBold", size: 11))

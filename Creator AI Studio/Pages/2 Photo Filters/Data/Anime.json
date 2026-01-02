@@ -3,7 +3,7 @@
     "display": {
       "title": "Anime 1",
       "imageName": "anime3-boy",
-      "imageNameOriginal": "yourphoto",
+      "imageNameOriginal": "three",
       "modelName": "FLUX.1 Kontext [pro]"
     },
     "prompt": "Transform to Anime style"
@@ -12,7 +12,7 @@
     "display": {
       "title": "Anime 1",
       "imageName": "anime3-girl",
-      "imageNameOriginal": "yourphoto",
+      "imageNameOriginal": "five",
       "modelName": "FLUX.1 Kontext [pro]"
     },
     "prompt": "Transform to Anime style"
@@ -22,7 +22,7 @@
     "display": {
       "title": "Anime 2",
       "imageName": "anime2-boy",
-      "imageNameOriginal": "yourphoto",
+      "imageNameOriginal": "one",
       "modelName": "Seedream 4.0"
     },
     "prompt": "Transform to Anime style"
