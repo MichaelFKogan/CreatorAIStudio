@@ -4,6 +4,7 @@ import UIKit
 struct CategoryRow: View {
     let title: String
     let items: [InfoPacket]
+    let rowIndex: Int
 
     @State private var lastOffset: CGFloat = 0
     @State private var feedback: UISelectionFeedbackGenerator?
@@ -14,9 +15,22 @@ struct CategoryRow: View {
         return components.count > 1 ? String(components[1]) : title
     }
     
-    // Check if this is the Anime category
-    private var isAnimeCategory: Bool {
-        categoryName.lowercased() == "anime"
+    // Determine which animation to use based on row index
+    private var animationType: ImageDiffAnimation? {
+        switch rowIndex {
+        case 0: return .scanHorizontal   // Row 1: Anime
+        case 1: return .scanvertical        // Row 2: Art
+        case 2: return .flipCard         // Row 3: Character
+        case 3: return .scanHorizontalVarying        // Row 4: Video Games
+        case 4: return .cameraAperture   // Row 5: Photography
+        case 5: return .instagramFilter  // Row 6: Instagram
+        default: return nil
+        }
+    }
+    
+    // Check if this row should use animation
+    private var shouldUseAnimation: Bool {
+        rowIndex < 6 && animationType != nil
     }
 
     var body: some View {
@@ -31,14 +45,16 @@ struct CategoryRow: View {
                     ForEach(items) { item in
                         NavigationLink(destination: PhotoFilterDetailView(item: item)) {
                             VStack(spacing: 8) {
-                                // Use animated view for Anime category if original image exists
-                                if isAnimeCategory, let originalImageName = item.display.imageNameOriginal {
+                                // Use animated view for rows 1-4 if original image exists
+                                if shouldUseAnimation, 
+                                   let originalImageName = item.display.imageNameOriginal,
+                                   let animation = animationType {
                                     ImageAnimations(
                                         originalImageName: originalImageName,
                                         transformedImageName: item.display.imageName,
                                         width: 140,
                                         height: 196,
-                                        animation: .scanHorizontal
+                                        animation: animation
                                     )
                                     .clipShape(RoundedRectangle(cornerRadius: 12))
                                     .overlay(

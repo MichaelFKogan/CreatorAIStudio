@@ -25,7 +25,7 @@ struct Home: View {
                             let items = filtersViewModel.filters(for: categoryName)
                             if !items.isEmpty {
                                 let emoji = categoryManager.emoji(for: categoryName)
-                                CategoryRow(title: "\(emoji) \(categoryName)", items: items)
+                                CategoryRow(title: "\(emoji) \(categoryName)", items: items, rowIndex: index)
                                     .padding(.top, index == 0 ? 16 : 0)
                             }
                         }

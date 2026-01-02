@@ -3,7 +3,7 @@
     "display": {
       "title": "Golden Hour Stairs Portrait",
       "imageName": "goldenhourstairs-male",
-      "imageNameOriginal": "yourphoto",
+      "imageNameOriginal": "three",
       "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
     },
     "prompt": "Transform the subject of the uploaded photo into an ultra-realistic vertical (9:16) fashion portrait while preserving their facial identity, hair color, hairstyle, and body shape.\n\nThe subject is seated on indoor stairs beside a matte concrete wall. A rectangular beam of golden sunlight from a window hits the wall, casting a crisp shadow silhouette inside the bright frame. They wear a black ribbed knit sweater, tapered grey chinos, and chunky white sneakers. Pose: elbows on thighs, hands loosely clasped, chin slightly lifted, eyes looking toward the light, calm and confident expression.\n\nLighting: hard warm sunlight from camera-right as the key, soft ambient bounce fill, high contrast with long shadows, cinematic golden-hour mood.\n\nCamera & composition: low-mid angle from a few steps below, 50–85mm f/2.2 lens, shallow depth of field, clean optics, realistic skin texture, fine film grain, subtle vignette.\n\nStyle: minimalist background, no clutter, fashion editorial realism. Keep all proportions, facial features, hair, and body shape accurate.\n\nExclude: cartoon, CGI, AI artifacts, over-smoothing, plastic skin, excessive sharpening, motion blur, warped anatomy, extra fingers, disfigured hands, double shadow, blown highlights, banding, watermark, logo, text, bad perspective, dirty wall, clutter."
@@ -13,7 +13,7 @@
     "display": {
       "title": "Golden Hour Stairs Portrait",
       "imageName": "goldenhourstairs-female",
-      "imageNameOriginal": "yourphoto",
+      "imageNameOriginal": "seven",
       "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
     },
     "prompt": "Transform the subject of the uploaded photo into an ultra-realistic vertical (9:16) fashion portrait while preserving their facial identity, hair color, hairstyle, and body shape.\n\nThe subject is seated on indoor stairs beside a matte concrete wall. A rectangular beam of golden sunlight from a window hits the wall, casting a crisp shadow silhouette inside the bright frame. They wear a black ribbed knit sweater, tapered grey chinos, and chunky white sneakers. Pose: elbows on thighs, hands loosely clasped, chin slightly lifted, eyes looking toward the light, calm and confident expression.\n\nLighting: hard warm sunlight from camera-right as the key, soft ambient bounce fill, high contrast with long shadows, cinematic golden-hour mood.\n\nCamera & composition: low-mid angle from a few steps below, 50–85mm f/2.2 lens, shallow depth of field, clean optics, realistic skin texture, fine film grain, subtle vignette.\n\nStyle: minimalist background, no clutter, fashion editorial realism. Keep all proportions, facial features, hair, and body shape accurate.\n\nExclude: cartoon, CGI, AI artifacts, over-smoothing, plastic skin, excessive sharpening, motion blur, warped anatomy, extra fingers, disfigured hands, double shadow, blown highlights, banding, watermark, logo, text, bad perspective, dirty wall, clutter."
@@ -22,7 +22,7 @@
     "display": {
       "title": "Classic Monochrome Portrait",
       "imageName": "classic_bw_portrait-man",
-      "imageNameOriginal": "yourphoto",
+      "imageNameOriginal": "eight",
       "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
     },
     "prompt": "Transform the subject of the uploaded photo into a classic black-and-white half-length artistic portrait while preserving facial identity, hair color, hairstyle, and body shape.\n\nUse studio-style lighting with a single diffused light to emphasize facial contours and eyes. Apply soft film grain and a subtle gradient background.\n\nCompose the portrait slightly off-center with generous negative space. Maintain a quiet, elegant mood inspired by classic photographer portraiture. Do not include text or logos."

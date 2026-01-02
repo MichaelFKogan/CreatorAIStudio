@@ -9,6 +9,8 @@ enum ImageDiffAnimation {
     case slider
     case flipCard
     case cubeTurn
+    case cameraAperture
+    case instagramFilter
 }
 
 struct ImageAnimations: View {
@@ -27,6 +29,8 @@ struct ImageAnimations: View {
     @State private var scanHorizontalDuration: Double = 2.5
     @State private var scanVerticalDuration: Double = 2.5
     @State private var hasStartedAnimation: Bool = false
+    @State private var apertureSize: CGFloat = 0
+    @State private var instagramFilterOpacity: Double = 0
     
     // Helper to strip file extension from image name (iOS assets don't use extensions)
     private func assetName(from imageName: String) -> String {
@@ -55,6 +59,10 @@ struct ImageAnimations: View {
                 flipCard
             case .cubeTurn:
                 cubeTurn
+            case .cameraAperture:
+                cameraAperture
+            case .instagramFilter:
+                instagramFilter
             }
         }
         .frame(width: width, height: height)
@@ -249,6 +257,67 @@ struct ImageAnimations: View {
         }
     }
     
+    private var cameraAperture: some View {
+        GeometryReader { geometry in
+            let centerX = geometry.size.width / 2
+            let centerY = geometry.size.height / 2
+            let maxRadius = sqrt(pow(geometry.size.width, 2) + pow(geometry.size.height, 2)) / 2
+            
+            ZStack {
+                // Original image (background) - shown when aperture is closed
+                Image(assetName(from: originalImageName))
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: width, height: height)
+                    .clipped()
+                
+                // Transformed image with circular mask (aperture effect) - shown when aperture is open
+                Image(assetName(from: transformedImageName))
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: width, height: height)
+                    .clipped()
+                    .mask(
+                        Circle()
+                            .frame(width: apertureSize, height: apertureSize)
+                            .position(x: centerX, y: centerY)
+                    )
+            }
+        }
+        .frame(width: width, height: height)
+    }
+    
+    private var instagramFilter: some View {
+        ZStack {
+            // Original image (base)
+            Image(assetName(from: originalImageName))
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+                .frame(width: width, height: height)
+                .clipped()
+            
+            // Transformed image with filter overlay effect
+            Image(assetName(from: transformedImageName))
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+                .frame(width: width, height: height)
+                .clipped()
+                .opacity(instagramFilterOpacity)
+                .overlay(
+                    // Instagram-style color overlay that fades in
+                    LinearGradient(
+                        colors: [
+                            Color.purple.opacity(0.3 * instagramFilterOpacity),
+                            Color.pink.opacity(0.2 * instagramFilterOpacity),
+                            Color.orange.opacity(0.15 * instagramFilterOpacity)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+        }
+    }
+    
     // MARK: - Animation Control
     
     private func startIfNeeded() {
@@ -307,7 +376,7 @@ struct ImageAnimations: View {
             cubeAngle = 0
             withAnimation(
                 Animation
-                    .easeInOut(duration: 4)
+                    .easeInOut(duration: 2)
                     .repeatForever(autoreverses: true)
             ) {
                 cubeAngle = 180
@@ -317,7 +386,7 @@ struct ImageAnimations: View {
             flipAngle = 0
             withAnimation(
                 Animation
-                    .easeInOut(duration: 3.5)
+                    .easeInOut(duration: 1.5)
                     .repeatForever(autoreverses: true)
             ) {
                 flipAngle = 180
@@ -326,6 +395,53 @@ struct ImageAnimations: View {
         case .slider:
             // Initialize slider to middle
             sliderPosition = width * 0.5
+            
+        case .cameraAperture:
+            apertureSize = 0
+            let maxRadius = sqrt(pow(width, 2) + pow(height, 2))
+            
+            // Custom sequence: Open quickly, stay open longer, close quickly, stay closed shorter
+            func animateAperture() {
+                // Phase 1: Open aperture quickly (ease-out) - reveals transformed image
+                // Duration: 0.3s
+                withAnimation(
+                    Animation
+                        .easeOut(duration: 0.3)
+                ) {
+                    apertureSize = maxRadius
+                }
+                
+                // Phase 2: Stay open (pause) - show transformed image longer
+                // Wait: 0.3s (animation) + 1.5s (pause) = 1.8s total
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.8) {
+                    // Phase 3: Close aperture quickly (ease-in) - shows original image
+                    // Duration: 0.3s
+                    withAnimation(
+                        Animation
+                            .easeIn(duration: 0.3)
+                    ) {
+                        apertureSize = 0
+                    }
+                    
+                    // Phase 4: Stay closed (pause) - show original image shorter, then repeat
+                    // Wait: 0.3s (animation) + 0.5s (pause) = 0.8s total
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                        animateAperture() // Loop
+                    }
+                }
+            }
+            
+            animateAperture()
+            
+        case .instagramFilter:
+            instagramFilterOpacity = 0
+            withAnimation(
+                Animation
+                    .easeInOut(duration: 2.0)
+                    .repeatForever(autoreverses: true)
+            ) {
+                instagramFilterOpacity = 1.0
+            }
         }
     }
 }

@@ -23,7 +23,7 @@
     "display": {
       "title": "Palette Knife Portrait",
       "imageName": "paletteknifeportrait-man",
-      "imageNameOriginal": "three",
+      "imageNameOriginal": "one",
       "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
     },
     "prompt": "Generate an image from the uploaded photo.\n\nKeep your facial features and skin tone at 100 percent. Keep the look gender neutral.\n\nShow you as a painted figure with thick palette knife texture, visible strokes, fresh oil paint, and a heavy textured canvas surface.\n\nPlace you in a chaotic colorful abstract background with uneven marks and strokes that match the same painted style.\n\nUse close camera framing so you fill most of the scene. Keep strong light from the front to show texture and color contrast."
