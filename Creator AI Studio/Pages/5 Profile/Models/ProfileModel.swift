@@ -997,21 +997,11 @@ class ProfileViewModel: ObservableObject {
             }
         }
 
-        // Try to use main userImages cache if it seems complete (has >= 50 images)
-        // This indicates we likely have a full cache loaded
-        if !forceRefresh, userImages.count >= 50 {
-            let filtered = userImages.filter { $0.model == modelName }
-            if !filtered.isEmpty {
-                // Use first pageSize items from cache
-                let firstPage = Array(filtered.prefix(pageSize))
-                print("✅ Using main cache for \(modelName): \(firstPage.count) images (first page)")
-                // Cache the filtered results for future use
-                modelImagesCache[modelName] = (firstPage, Date())
-                modelCurrentPages[modelName] = 1
-                modelHasMorePages[modelName] = filtered.count > pageSize
-                return firstPage
-            }
-        }
+        // ⚠️ REMOVED: Previous logic tried to use main userImages cache but it was buggy.
+        // The main cache only contains the first 50 images across ALL models, not model-specific.
+        // This caused incorrect `hasMoreModelPages` determination when a model had fewer images
+        // in the first 50 overall but more in the database (e.g., 17 in cache but 77 in DB).
+        // Now we always query the database for model-specific images to get accurate pagination.
 
         // ✅ REQUEST DEDUPLICATION: Check if there's already an in-flight request for this model
         if let existingTask = inFlightModelRequests[modelName] {
