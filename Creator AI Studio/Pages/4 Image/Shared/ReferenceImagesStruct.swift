@@ -8,6 +8,7 @@ struct ReferenceImagesSection: View {
     @Binding var selectedPhotoItems: [PhotosPickerItem]
     @Binding var showCameraSheet: Bool
     let color: Color
+    var disclaimer: String? = nil  // Optional disclaimer text
 
     @State private var showActionSheet: Bool = false
 
@@ -26,7 +27,8 @@ struct ReferenceImagesSection: View {
                 let availableWidth = screenWidth - (horizontalPadding * 2)
                 let squareSize = (availableWidth - (gridSpacing * 2)) / 3
                 
-                HStack {
+                HStack(alignment: .top, spacing: 12) {
+                    // Add Image button on the left
                     Button {
                         showActionSheet = true
                     } label: {
@@ -57,7 +59,22 @@ struct ReferenceImagesSection: View {
                     }
                     .buttonStyle(PlainButtonStyle())
                     
-                    Spacer()
+                    // Disclaimer on the right if provided
+                    if let disclaimer = disclaimer {
+                        HStack(alignment: .top, spacing: 6) {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .font(.system(size: 14))
+                                .foregroundColor(.orange)
+                                .padding(.top, 2) // Align icon to top
+                            Text(disclaimer)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .topLeading)
+                    } else {
+                        // Spacer to push Add Image button to the left when no disclaimer
+                        Spacer()
+                    }
                 }
             } else {
                 // Header section when images exist
@@ -200,7 +217,7 @@ struct ImageSourceSelectionSheet: View {
 
                 PhotosPicker(
                     selection: $selectedPhotoItems,
-                    maxSelectionCount: 5,
+                    maxSelectionCount: 1,
                     matching: .images
                 ) {
                     HStack(spacing: 16) {
@@ -224,17 +241,13 @@ struct ImageSourceSelectionSheet: View {
                 .onChange(of: selectedPhotoItems) { newItems in
                     if !newItems.isEmpty {
                         Task {
-                            var newlyAdded: [UIImage] = []
-                            for item in newItems {
-                                if let data =
-                                    try? await item.loadTransferable(
-                                        type: Data.self),
-                                    let image = UIImage(data: data)
-                                {
-                                    newlyAdded.append(image)
-                                }
+                            // Only take the first image (limit to 1)
+                            if let firstItem = newItems.first,
+                               let data = try? await firstItem.loadTransferable(type: Data.self),
+                               let image = UIImage(data: data) {
+                                // Replace existing images with the new one (limit to 1)
+                                referenceImages = [image]
                             }
-                            referenceImages.append(contentsOf: newlyAdded)
                             selectedPhotoItems.removeAll()
                             showActionSheet = false
                         }

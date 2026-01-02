@@ -190,6 +190,10 @@ struct NotificationThumbnail: View {
 struct NotificationTextContent: View {
     let notification: NotificationData
     @Binding var shimmer: Bool
+    @State private var dynamicMessage: String = ""
+    @State private var timeoutMessage: String = ""
+    @State private var showTimeoutMessage: Bool = false
+    @State private var messageUpdateTimer: Timer?
     
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -197,7 +201,16 @@ struct NotificationTextContent: View {
                 .font(.custom("Nunito-Bold", size: 14))
                 .foregroundColor(.primary)
             
-            Text(notification.message)
+            // Timeout message (shown initially)
+            if showTimeoutMessage && !timeoutMessage.isEmpty {
+                Text(timeoutMessage)
+                    .font(.custom("Nunito-Regular", size: 10))
+                    .foregroundColor(.orange.opacity(0.9))
+                    .lineLimit(2)
+            }
+            
+            // Dynamic message or original message
+            Text(dynamicMessage.isEmpty ? notification.message : dynamicMessage)
                 .font(.custom("Nunito-Regular", size: 12))
                 .foregroundColor(notification.state == .failed ? .red : .secondary)
                 .lineLimit(2)
@@ -217,6 +230,47 @@ struct NotificationTextContent: View {
                     .font(.custom("Nunito-Regular", size: 10))
                     .foregroundColor(.secondary)
             }
+        }
+        .onAppear {
+            updateMessages()
+            // Set up timer to update messages every minute
+            messageUpdateTimer = Timer.scheduledTimer(withTimeInterval: 60.0, repeats: true) { _ in
+                updateMessages()
+            }
+        }
+        .onDisappear {
+            messageUpdateTimer?.invalidate()
+        }
+    }
+    
+    private func updateMessages() {
+        // Don't show timeout messages if generation is completed
+        if notification.state == .completed {
+            dynamicMessage = GenerationMessageHelper.getDynamicMessage(
+                elapsedSeconds: 0,
+                isVideo: false,
+                baseMessage: notification.message,
+                state: notification.state
+            )
+            showTimeoutMessage = false
+            return
+        }
+        
+        let elapsed = Date().timeIntervalSince(notification.createdAt)
+        let isVideo = notification.title.contains("Video") || notification.title.contains("video")
+        
+        // Update dynamic message
+        dynamicMessage = GenerationMessageHelper.getDynamicMessage(
+            elapsedSeconds: elapsed,
+            isVideo: isVideo,
+            baseMessage: notification.message,
+            state: notification.state
+        )
+        
+        // Show timeout message initially (only if not completed)
+        showTimeoutMessage = GenerationMessageHelper.shouldShowTimeoutMessage(elapsedSeconds: elapsed)
+        if showTimeoutMessage {
+            timeoutMessage = GenerationMessageHelper.getTimeoutMessage(isVideo: isVideo)
         }
     }
 }

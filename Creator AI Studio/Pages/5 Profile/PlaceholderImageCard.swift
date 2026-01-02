@@ -14,6 +14,12 @@ struct PlaceholderImageCard: View {
     @State private var isRetrying = false
     @State private var showCopiedConfirmation = false
     @State private var showDetailsSheet = false
+    @State private var dynamicMessage: String = ""
+    @State private var timeoutMessage: String = ""
+    @State private var showTimeoutMessage: Bool = false
+    
+    // Timer to update messages every minute
+    @State private var messageUpdateTimer: Timer?
 
     // Helper to check if image is a placeholder (very small, like 1x1)
     private var isValidImage: Bool {
@@ -166,6 +172,28 @@ struct PlaceholderImageCard: View {
                     }
                 } else {
                     VStack(spacing: 4) {
+                        // Timeout message (shown initially)
+                        if showTimeoutMessage && !timeoutMessage.isEmpty {
+                            Text(timeoutMessage)
+                                .font(.custom("Nunito-Regular", size: 8))
+                                .foregroundColor(.orange.opacity(0.9))
+                                .lineLimit(2)
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal, 8)
+                                .padding(.bottom, 2)
+                        }
+                        
+                        // Dynamic message
+                        if !dynamicMessage.isEmpty {
+                            Text(dynamicMessage)
+                                .font(.custom("Nunito-Regular", size: 9))
+                                .foregroundColor(.secondary)
+                                .lineLimit(2)
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal, 8)
+                                .padding(.bottom, 2)
+                        }
+                        
                         // Progress Bar
                         GeometryReader { geometry in
                             ZStack(alignment: .leading) {
@@ -263,6 +291,17 @@ struct PlaceholderImageCard: View {
             ) {
                 shimmer = true
             }
+            
+            // Initialize messages
+            updateMessages()
+            
+            // Set up timer to update messages every minute
+            messageUpdateTimer = Timer.scheduledTimer(withTimeInterval: 60.0, repeats: true) { _ in
+                updateMessages()
+            }
+        }
+        .onDisappear {
+            messageUpdateTimer?.invalidate()
         }
         .animation(
             .easeInOut(duration: 1).repeatForever(autoreverses: true),
@@ -326,6 +365,37 @@ struct PlaceholderImageCard: View {
             if !success {
                 isRetrying = false
             }
+        }
+    }
+    
+    private func updateMessages() {
+        // Don't show timeout messages if generation is completed
+        if placeholder.state == .completed {
+            dynamicMessage = GenerationMessageHelper.getDynamicMessage(
+                elapsedSeconds: 0,
+                isVideo: false,
+                baseMessage: placeholder.message,
+                state: placeholder.state
+            )
+            showTimeoutMessage = false
+            return
+        }
+        
+        let elapsed = Date().timeIntervalSince(placeholder.createdAt)
+        let isVideo = placeholder.title.contains("Video") || placeholder.title.contains("video")
+        
+        // Update dynamic message
+        dynamicMessage = GenerationMessageHelper.getDynamicMessage(
+            elapsedSeconds: elapsed,
+            isVideo: isVideo,
+            baseMessage: placeholder.message,
+            state: placeholder.state
+        )
+        
+        // Show timeout message initially (only if not completed)
+        showTimeoutMessage = GenerationMessageHelper.shouldShowTimeoutMessage(elapsedSeconds: elapsed)
+        if showTimeoutMessage {
+            timeoutMessage = GenerationMessageHelper.getTimeoutMessage(isVideo: isVideo)
         }
     }
 

@@ -330,18 +330,19 @@ struct VideoModelDetailPage: View {
                             ))
 
                         // Hide reference images section for KlingAI 2.5 Turbo Pro (uses frame images instead)
-                        // Also hide for Sora 2 (cannot accept images with people per terms and conditions)
                         if ModelConfigurationManager.shared.capabilities(
                             for: item)?.contains("Image to Video") == true 
                             && !supportsFrameImages
-                            && item.display.modelName != "Sora 2"
                         {
                             LazyView(
                                 ReferenceImagesSection(
                                     referenceImages: $referenceImages,
                                     selectedPhotoItems: $selectedPhotoItems,
                                     showCameraSheet: $showCameraSheet,
-                                    color: .purple
+                                    color: .purple,
+                                    disclaimer: item.display.modelName == "Sora 2" 
+                                        ? "Sora 2 does not allow reference images with people - these will be rejected. Images of cartoons, animated figures, or landscapes are allowed."
+                                        : nil
                                 ))
                         }
                         
@@ -645,7 +646,8 @@ struct VideoModelDetailPage: View {
         }
         .sheet(isPresented: $showCameraSheet) {
             SimpleCameraPicker(isPresented: $showCameraSheet) { capturedImage in
-                referenceImages.append(capturedImage)
+                // Limit to 1 image - replace existing if any
+                referenceImages = [capturedImage]
             }
         }
         .sheet(isPresented: $showFirstFrameCameraSheet) {

@@ -42,8 +42,10 @@ class VideoGenerationCoordinator: ObservableObject {
         // Get model name for notification (use modelName if available, otherwise use title)
         let modelName = item.display.modelName ?? item.display.title
         
-        // Use the provided image or create a placeholder
-        let thumbnailImage = image ?? createPlaceholderImage()
+        // Prioritize firstFrameImage for models that support it (e.g., Google Veo 3.1 Fast, KlingAI 2.5 Turbo Pro)
+        // Then fall back to the input image for image-to-video models
+        // Finally use a placeholder if neither is available
+        let thumbnailImage = firstFrameImage ?? image ?? createPlaceholderImage()
         
         // Create a notification to show progress to the user.
         let notificationId = NotificationManager.shared.showNotification(

@@ -511,7 +511,8 @@ struct ImageModelDetailPage: View {
         }
         .sheet(isPresented: $showCameraSheet) {
             SimpleCameraPicker(isPresented: $showCameraSheet) { capturedImage in
-                referenceImages.append(capturedImage)
+                // Limit to 1 image - replace existing if any
+                referenceImages = [capturedImage]
             }
         }
         .sheet(isPresented: $showPromptCameraSheet) {

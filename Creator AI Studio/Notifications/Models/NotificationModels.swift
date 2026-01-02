@@ -22,6 +22,7 @@ struct NotificationData: Identifiable, Equatable {
     var prompt: String? // Prompt for retry
     var originalImage: UIImage? // Original image for retry
     var isHiddenFromBar: Bool // Whether notification is hidden from the notification bar but still shows as placeholder
+    var createdAt: Date // When the notification was created
     
     static func == (lhs: NotificationData, rhs: NotificationData) -> Bool {
         lhs.id == rhs.id
@@ -47,7 +48,8 @@ struct NotificationData: Identifiable, Equatable {
         modelName: String? = nil,
         prompt: String? = nil,
         originalImage: UIImage? = nil,
-        isHiddenFromBar: Bool = false
+        isHiddenFromBar: Bool = false,
+        createdAt: Date = Date() // Default to now
     ) {
         self.id = id
         self.title = title
@@ -62,6 +64,7 @@ struct NotificationData: Identifiable, Equatable {
         self.prompt = prompt
         self.originalImage = originalImage
         self.isHiddenFromBar = isHiddenFromBar
+        self.createdAt = createdAt
     }
 }
 
@@ -78,6 +81,7 @@ struct PlaceholderImage: Identifiable {
     let modelName: String? // Model name for retry
     let prompt: String? // Prompt for retry
     let originalImage: UIImage? // Original image for retry
+    let createdAt: Date // When the generation started
     
     init(from notification: NotificationData) {
         self.id = notification.id
@@ -91,6 +95,7 @@ struct PlaceholderImage: Identifiable {
         self.modelName = notification.modelName
         self.prompt = notification.prompt
         self.originalImage = notification.originalImage
+        self.createdAt = notification.createdAt
     }
 }
 
