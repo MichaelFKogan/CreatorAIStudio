@@ -330,8 +330,11 @@ struct VideoModelDetailPage: View {
                             ))
 
                         // Hide reference images section for KlingAI 2.5 Turbo Pro (uses frame images instead)
+                        // Also hide for Sora 2 (cannot accept images with people per terms and conditions)
                         if ModelConfigurationManager.shared.capabilities(
-                            for: item)?.contains("Image to Video") == true && !supportsFrameImages
+                            for: item)?.contains("Image to Video") == true 
+                            && !supportsFrameImages
+                            && item.display.modelName != "Sora 2"
                         {
                             LazyView(
                                 ReferenceImagesSection(

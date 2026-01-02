@@ -325,15 +325,15 @@ struct GenerationRow: View {
                     
                     // Additional metadata - full width
                     HStack(spacing: 8) {
-                        // For videos, show size (file extension), resolution, duration, and aspect ratio
+                        // For videos, show aspect ratio, resolution, and duration
                         if generation.isVideo {
-                            // Size (file extension)
-                            if let fileExtension = generation.file_extension {
+                            // Aspect ratio (for videos) - first in row
+                            if let aspectRatio = generation.aspect_ratio {
                                 HStack(spacing: 3) {
-                                    Image(systemName: "doc.fill")
+                                    Image(systemName: "aspectratio")
                                         .font(.caption2)
                                         .foregroundColor(.secondary)
-                                    Text(fileExtension.uppercased())
+                                    Text(aspectRatio)
                                         .font(.caption2)
                                         .foregroundColor(.secondary)
                                 }
@@ -358,18 +358,6 @@ struct GenerationRow: View {
                                         .font(.caption2)
                                         .foregroundColor(.secondary)
                                     Text(formatDuration(duration))
-                                        .font(.caption2)
-                                        .foregroundColor(.secondary)
-                                }
-                            }
-                            
-                            // Aspect ratio (for videos)
-                            if let aspectRatio = generation.aspect_ratio {
-                                HStack(spacing: 3) {
-                                    Image(systemName: "aspectratio")
-                                        .font(.caption2)
-                                        .foregroundColor(.secondary)
-                                    Text(aspectRatio)
                                         .font(.caption2)
                                         .foregroundColor(.secondary)
                                 }

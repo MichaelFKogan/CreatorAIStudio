@@ -342,7 +342,7 @@ class ModelConfigurationManager {
             "Wavespeed Ghibli": ["Image to Image"],
             
             // Video Models
-            "Sora 2": ["Text to Video", "Image to Video", "Audio"],
+            "Sora 2": ["Text to Video", "Audio"],
             "Google Veo 3": ["Text to Video", "Image to Video", "Audio"],
             "Google Veo 3.1 Fast": ["Text to Video", "Image to Video", "Audio"],
             "Kling AI": ["Text to Video", "Image to Video"],
