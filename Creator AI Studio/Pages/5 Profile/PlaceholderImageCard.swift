@@ -47,6 +47,7 @@ struct PlaceholderImageCard: View {
     @State private var dynamicMessage: String = ""
     @State private var timeoutMessage: String = ""
     @State private var showTimeoutMessage: Bool = false
+    @State private var showCancelButton: Bool = false
     
     // Timer to update messages every minute
     @State private var messageUpdateTimer: Timer?
@@ -289,9 +290,9 @@ struct PlaceholderImageCard: View {
                             .font(.custom("Nunito-Regular", size: 9))
                             .foregroundColor(.secondary)
 
-                        // Cancel button for in-progress tasks (only show if task can still be cancelled)
+                        // Cancel button for in-progress tasks (only show after 2 minutes and if task can still be cancelled)
                         // For fast models like Z-Image-Turbo, the API request may complete before user can cancel
-                        if placeholder.state == .inProgress && ImageGenerationCoordinator.shared.canCancelTask(notificationId: placeholder.id) {
+                        if placeholder.state == .inProgress && showCancelButton {
                             Button(action: {
                                 notificationManager.cancelTask(
                                     notificationId: placeholder.id)
@@ -348,8 +349,8 @@ struct PlaceholderImageCard: View {
             // Initialize messages
             updateMessages()
             
-            // Set up timer to update messages every minute
-            messageUpdateTimer = Timer.scheduledTimer(withTimeInterval: 60.0, repeats: true) { _ in
+            // Set up timer to update messages every 10 seconds to keep in sync with notification bar
+            messageUpdateTimer = Timer.scheduledTimer(withTimeInterval: 10.0, repeats: true) { _ in
                 updateMessages()
             }
         }
@@ -422,6 +423,14 @@ struct PlaceholderImageCard: View {
     }
     
     private func updateMessages() {
+        // Handle failed state - don't show timeout messages
+        if placeholder.state == .failed {
+            showTimeoutMessage = false
+            timeoutMessage = ""
+            showCancelButton = false
+            return
+        }
+        
         // Don't show timeout messages if generation is completed
         if placeholder.state == .completed {
             dynamicMessage = GenerationMessageHelper.getDynamicMessage(
@@ -431,11 +440,14 @@ struct PlaceholderImageCard: View {
                 state: placeholder.state
             )
             showTimeoutMessage = false
+            timeoutMessage = ""
+            showCancelButton = false
             return
         }
         
         let elapsed = Date().timeIntervalSince(placeholder.createdAt)
         let isVideo = placeholder.title.contains("Video") || placeholder.title.contains("video")
+        let elapsedMinutes = Int(elapsed / 60)
         
         // Update dynamic message
         dynamicMessage = GenerationMessageHelper.getDynamicMessage(
@@ -445,10 +457,28 @@ struct PlaceholderImageCard: View {
             state: placeholder.state
         )
         
-        // Show timeout message initially (only if not completed)
-        showTimeoutMessage = GenerationMessageHelper.shouldShowTimeoutMessage(elapsedSeconds: elapsed)
-        if showTimeoutMessage {
+        // Show cancel button when elapsed time >= 2 minutes and task can still be cancelled
+        if elapsedMinutes >= 2 && placeholder.state == .inProgress {
+            let canCancel = ImageGenerationCoordinator.shared.canCancelTask(notificationId: placeholder.id) ||
+                           VideoGenerationCoordinator.shared.canCancelTask(notificationId: placeholder.id)
+            print("🔍 [PlaceholderImageCard] Cancel button check: elapsedMinutes=\(elapsedMinutes), canCancel=\(canCancel), state=\(placeholder.state)")
+            showCancelButton = canCancel
+        } else {
+            print("🔍 [PlaceholderImageCard] Cancel button not shown: elapsedMinutes=\(elapsedMinutes), state=\(placeholder.state)")
+            showCancelButton = false
+        }
+        
+        // Show timeout message in two scenarios:
+        // 1. Initial timeout warning (2-3 minutes)
+        // 2. Countdown timeout warning (3-5 minutes) - shown in dynamicMessage, not timeoutMessage
+        if elapsedMinutes >= 2 && elapsedMinutes < 3 {
+            // Initial timeout message (2-3 minutes)
+            showTimeoutMessage = true
             timeoutMessage = GenerationMessageHelper.getTimeoutMessage(isVideo: isVideo)
+        } else {
+            // No separate timeout message to show (3-5 minute countdown is in dynamicMessage)
+            showTimeoutMessage = false
+            timeoutMessage = ""
         }
     }
 

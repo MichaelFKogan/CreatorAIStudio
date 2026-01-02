@@ -61,8 +61,8 @@ struct GenerationDetailsSheet: View {
             // Initialize messages
             updateMessages()
             
-            // Set up timer to update messages every minute
-            messageUpdateTimer = Timer.scheduledTimer(withTimeInterval: 60.0, repeats: true) { _ in
+            // Set up timer to update messages every 10 seconds to keep in sync with other views
+            messageUpdateTimer = Timer.scheduledTimer(withTimeInterval: 10.0, repeats: true) { _ in
                 updateMessages()
             }
         }
@@ -294,7 +294,7 @@ struct GenerationDetailsSheet: View {
                 .font(.caption)
                 .foregroundColor(.secondary)
             
-            // Cancel button (shown when elapsed time >= 3 minutes)
+            // Cancel button (shown when elapsed time >= 2 minutes)
             if showCancelButton {
                 Button(action: {
                     notificationManager.cancelTask(notificationId: placeholder.id)
@@ -364,13 +364,15 @@ struct GenerationDetailsSheet: View {
             state: placeholder.state
         )
         
-        // Show cancel button when elapsed time >= 3 minutes and task can still be cancelled
-        if elapsedMinutes >= 3 && placeholder.state == .inProgress {
+        // Show cancel button when elapsed time >= 2 minutes and task can still be cancelled
+        if elapsedMinutes >= 2 && placeholder.state == .inProgress {
             // Check if task can still be cancelled
             let canCancel = ImageGenerationCoordinator.shared.canCancelTask(notificationId: placeholder.id) ||
                            VideoGenerationCoordinator.shared.canCancelTask(notificationId: placeholder.id)
+            print("🔍 [GenerationDetailsSheet] Cancel button check: elapsedMinutes=\(elapsedMinutes), canCancel=\(canCancel), state=\(placeholder.state)")
             showCancelButton = canCancel
         } else {
+            print("🔍 [GenerationDetailsSheet] Cancel button not shown: elapsedMinutes=\(elapsedMinutes), state=\(placeholder.state)")
             showCancelButton = false
         }
         

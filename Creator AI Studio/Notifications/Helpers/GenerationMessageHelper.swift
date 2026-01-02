@@ -32,6 +32,11 @@ struct GenerationMessageHelper {
         baseMessage: String,
         state: NotificationState = .inProgress
     ) -> String {
+        // If generation is failed, show failed message
+        if state == .failed {
+            return "Failed"
+        }
+        
         // If generation is completed, show success message
         if state == .completed {
             return "Success"
@@ -39,13 +44,20 @@ struct GenerationMessageHelper {
         
         let elapsedMinutes = Int(elapsedSeconds / 60)
         
-        // After 3 minutes, show timeout warning
-        if elapsedMinutes >= 3 && elapsedMinutes < 5 {
-            let remainingMinutes = 5 - elapsedMinutes
-            return "This will cancel in \(remainingMinutes) minute\(remainingMinutes == 1 ? "" : "s") if no result. You won't be charged for failed generations."
+        // After 3 minutes and before 5 minutes, show timeout warning countdown
+        // After 5 minutes, the generation should have timed out (state should be failed)
+        // But if still in progress, show a final timeout message
+        if elapsedMinutes >= 3 {
+            if elapsedMinutes < 5 {
+                let remainingMinutes = 5 - elapsedMinutes
+                return "This will cancel in \(remainingMinutes) minute\(remainingMinutes == 1 ? "" : "s") if no result. You won't be charged for failed generations."
+            } else {
+                // After 5 minutes, show timeout message (shouldn't happen if state is properly updated)
+                return "Generation timed out"
+            }
         }
         
-        // Rotate messages every minute
+        // Before 3 minutes, rotate messages every minute
         let messageIndex = elapsedMinutes % (isVideo ? videoMessages.count : informativeMessages.count)
         let messages = isVideo ? videoMessages : informativeMessages
         return messages[Int(messageIndex)]

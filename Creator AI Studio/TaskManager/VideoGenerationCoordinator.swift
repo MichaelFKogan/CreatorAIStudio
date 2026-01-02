@@ -204,9 +204,10 @@ class VideoGenerationCoordinator: ObservableObject {
             return false
         }
         
-        // Check if the background task still exists (hasn't been cleaned up yet)
-        // taskId is non-optional in GenerationTaskInfo, so we can use it directly
-        return backgroundTasks[taskInfo.taskId] != nil
+        // For webhook-based tasks, the background task is cleaned up after queuing,
+        // but we can still cancel by deleting the pending job if apiRequestSubmitted is false.
+        // So we return true if apiRequestSubmitted is false, regardless of background task existence.
+        return true
     }
     
     /// Marks that the API request has been submitted for a given notification

@@ -173,8 +173,9 @@ class ImageGenerationCoordinator: ObservableObject {
     
     // MARK: - Check if task can be cancelled
     
-    /// Checks if a task can still be cancelled by verifying if the background task exists
-    /// and if the API request hasn't been submitted yet
+    /// Checks if a task can still be cancelled by verifying if the API request hasn't been submitted yet
+    /// For webhook-based tasks, the background task is cleaned up after queuing, but we can still
+    /// cancel by deleting the pending job if apiRequestSubmitted is false
     /// - Parameter notificationId: The notification ID to check
     /// - Returns: True if the task can be cancelled, false otherwise
     func canCancelTask(notificationId: UUID) -> Bool {
@@ -188,9 +189,10 @@ class ImageGenerationCoordinator: ObservableObject {
             return false
         }
         
-        // Check if the background task still exists (hasn't been cleaned up yet)
-        // taskId is non-optional in GenerationTaskInfo, so we can use it directly
-        return backgroundTasks[taskInfo.taskId] != nil
+        // For webhook-based tasks, the background task is cleaned up after queuing,
+        // but we can still cancel by deleting the pending job if apiRequestSubmitted is false.
+        // So we return true if apiRequestSubmitted is false, regardless of background task existence.
+        return true
     }
     
     /// Marks that the API request has been submitted for a given notification

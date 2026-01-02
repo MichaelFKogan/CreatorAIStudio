@@ -103,6 +103,7 @@ struct NotificationCard: View {
                 NotificationCancelButton(
                     state: notification.state,
                     notificationId: notification.id,
+                    createdAt: notification.createdAt,
                     onCancel: onCancel
                 )
             }
@@ -278,13 +279,21 @@ struct NotificationTextContent: View {
                     .lineLimit(2)
             }
             
-            // Dynamic message or original message
-            Text(dynamicMessage.isEmpty ? notification.message : dynamicMessage)
-                .font(.custom("Nunito-Regular", size: 12))
-                .foregroundColor(notification.state == .failed ? .red : .secondary)
-                .lineLimit(2)
+            // Dynamic message - show "Failed" when state is failed, otherwise show dynamic message
+            if notification.state == .failed {
+                Text("Failed")
+                    .font(.custom("Nunito-Regular", size: 12))
+                    .foregroundColor(.red)
+                    .lineLimit(2)
+            } else {
+                Text(dynamicMessage.isEmpty ? notification.message : dynamicMessage)
+                    .font(.custom("Nunito-Regular", size: 12))
+                    .foregroundColor(.secondary)
+                    .lineLimit(2)
+            }
             
-            if notification.state == .failed, let errorMsg = notification.errorMessage {
+            // Error message details (if available and failed)
+            if notification.state == .failed, let errorMsg = notification.errorMessage, !errorMsg.isEmpty {
                 Text(errorMsg)
                     .font(.custom("Nunito-Regular", size: 10))
                     .foregroundColor(.red.opacity(0.8))
@@ -309,12 +318,13 @@ struct NotificationTextContent: View {
             updateMessages()
             // Only set up timer if notification is still in progress
             if notification.state == .inProgress {
-                messageUpdateTimer = Timer.scheduledTimer(withTimeInterval: 60.0, repeats: true) { _ in
+                // Update every 10 seconds to keep messages in sync and catch time-based changes
+                messageUpdateTimer = Timer.scheduledTimer(withTimeInterval: 10.0, repeats: true) { _ in
                     updateMessages()
                 }
             }
         }
-        .onChange(of: notification.state) { newState in
+        .onChange(of: notification.state) { oldState, newState in
             // Stop timer when notification is completed or failed
             if newState != .inProgress {
                 messageUpdateTimer?.invalidate()
@@ -322,6 +332,10 @@ struct NotificationTextContent: View {
             }
             // Update messages immediately when state changes
             updateMessages()
+            // Force UI update when state changes to failed
+            if newState == .failed {
+                dynamicMessage = "Failed"
+            }
         }
         .onDisappear {
             messageUpdateTimer?.invalidate()
@@ -330,31 +344,24 @@ struct NotificationTextContent: View {
     }
     
     private func updateMessages() {
-        // Don't show timeout messages if generation is completed
-        if notification.state == .completed {
-            dynamicMessage = GenerationMessageHelper.getDynamicMessage(
-                elapsedSeconds: 0,
-                isVideo: false,
-                baseMessage: notification.message,
-                state: notification.state
-            )
+        // Stop timer if notification is completed or failed
+        if notification.state == .completed || notification.state == .failed {
+            messageUpdateTimer?.invalidate()
+            messageUpdateTimer = nil
+            // Set dynamic message to "Failed" immediately when failed
+            if notification.state == .failed {
+                dynamicMessage = "Failed"
+            }
             showTimeoutMessage = false
-            // Stop timer when completed
-            messageUpdateTimer?.invalidate()
-            messageUpdateTimer = nil
+            timeoutMessage = ""
             return
-        }
-        
-        // Stop timer if notification is failed
-        if notification.state == .failed {
-            messageUpdateTimer?.invalidate()
-            messageUpdateTimer = nil
         }
         
         let elapsed = Date().timeIntervalSince(notification.createdAt)
         let isVideo = notification.title.contains("Video") || notification.title.contains("video")
+        let elapsedMinutes = Int(elapsed / 60)
         
-        // Update dynamic message
+        // Update dynamic message (handles all states including failed and completed)
         dynamicMessage = GenerationMessageHelper.getDynamicMessage(
             elapsedSeconds: elapsed,
             isVideo: isVideo,
@@ -362,10 +369,17 @@ struct NotificationTextContent: View {
             state: notification.state
         )
         
-        // Show timeout message initially (only if not completed)
-        showTimeoutMessage = GenerationMessageHelper.shouldShowTimeoutMessage(elapsedSeconds: elapsed)
-        if showTimeoutMessage {
+        // Show timeout message in two scenarios:
+        // 1. Initial timeout warning (2-3 minutes)
+        // 2. Countdown timeout warning (3-5 minutes) - shown in dynamicMessage, not timeoutMessage
+        if elapsedMinutes >= 2 && elapsedMinutes < 3 {
+            // Initial timeout message (2-3 minutes)
+            showTimeoutMessage = true
             timeoutMessage = GenerationMessageHelper.getTimeoutMessage(isVideo: isVideo)
+        } else {
+            // No separate timeout message to show (3-5 minute countdown is in dynamicMessage)
+            showTimeoutMessage = false
+            timeoutMessage = ""
         }
     }
 }
@@ -374,17 +388,57 @@ struct NotificationTextContent: View {
 struct NotificationCancelButton: View {
     let state: NotificationState
     let notificationId: UUID
+    let createdAt: Date
     let onCancel: () -> Void
     
+    @State private var showCancel: Bool = false
+    @State private var updateTimer: Timer?
+    
     var body: some View {
-        // Only show cancel button if task is in progress AND can still be cancelled
-        if state == .inProgress && ImageGenerationCoordinator.shared.canCancelTask(notificationId: notificationId) {
-            Button(action: onCancel) {
-                Text("Cancel")
-                    .font(.custom("Nunito-Bold", size: 13))
-                    .foregroundColor(.red)
+        Group {
+            if state == .inProgress && showCancel {
+                Button(action: onCancel) {
+                    Text("Cancel")
+                        .font(.custom("Nunito-Bold", size: 13))
+                        .foregroundColor(.red)
+                }
             }
         }
+        .onAppear {
+            updateCancelButtonVisibility()
+            // Update every 10 seconds to catch the 2-minute mark
+            updateTimer = Timer.scheduledTimer(withTimeInterval: 10.0, repeats: true) { _ in
+                updateCancelButtonVisibility()
+            }
+        }
+        .onChange(of: state) { newState in
+            if newState != .inProgress {
+                updateTimer?.invalidate()
+                showCancel = false
+            } else {
+                updateCancelButtonVisibility()
+            }
+        }
+        .onDisappear {
+            updateTimer?.invalidate()
+        }
+    }
+    
+    private func updateCancelButtonVisibility() {
+        guard state == .inProgress else {
+            showCancel = false
+            updateTimer?.invalidate()
+            return
+        }
+        
+        let elapsed = Date().timeIntervalSince(createdAt)
+        let elapsedMinutes = Int(elapsed / 60)
+        let canCancel = ImageGenerationCoordinator.shared.canCancelTask(notificationId: notificationId) ||
+                       VideoGenerationCoordinator.shared.canCancelTask(notificationId: notificationId)
+        
+        let shouldShow = elapsedMinutes >= 2 && canCancel
+        print("🔍 [NotificationBar] Cancel button check: elapsedMinutes=\(elapsedMinutes), canCancel=\(canCancel), shouldShow=\(shouldShow), state=\(state)")
+        showCancel = shouldShow
     }
 }
 
