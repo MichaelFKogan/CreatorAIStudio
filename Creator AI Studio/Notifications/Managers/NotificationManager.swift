@@ -164,87 +164,82 @@ class NotificationManager: ObservableObject {
         ImageGenerationCoordinator.shared.cancelTask(taskId: taskId)
         VideoGenerationCoordinator.shared.cancelTask(taskId: taskId)
         
-        // Check if there's a webhook taskId associated with this notification
-        // IMPORTANT: Only delete pending job if API request hasn't been submitted yet
-        // Once the API request is submitted, payment is taken and we can't cancel/refund
+        // Try to find and delete the pending job, and save to user_media as cancelled
+        // Even if the API request was submitted, user can choose to stop waiting for the result
         Task {
-            // Check if the task can still be cancelled (API request not submitted)
-            let canCancel = ImageGenerationCoordinator.shared.canCancelTask(notificationId: notificationId) ||
-                           VideoGenerationCoordinator.shared.canCancelTask(notificationId: notificationId)
-            
-            if canCancel {
-                // Find webhook taskId by reverse lookup in JobStatusManager
-                if let webhookTaskId = await JobStatusManager.shared.getWebhookTaskId(for: notificationId) {
-                    // Fetch the pending job before deleting it so we can save to user_media
-                    do {
-                        if let pendingJob = try await SupabaseManager.shared.fetchPendingJob(taskId: webhookTaskId) {
-                            // Get user ID from current session
-                            if let session = try? await SupabaseManager.shared.client.auth.session {
-                                let userId = session.user.id.uuidString
+            // Find webhook taskId by reverse lookup in JobStatusManager
+            if let webhookTaskId = await JobStatusManager.shared.getWebhookTaskId(for: notificationId) {
+                print("🔍 [NotificationManager] Found webhook taskId for cancellation: \(webhookTaskId)")
+                
+                // Fetch the pending job before deleting it so we can save to user_media
+                do {
+                    if let pendingJob = try await SupabaseManager.shared.fetchPendingJob(taskId: webhookTaskId) {
+                        // Get user ID from current session
+                        if let session = try? await SupabaseManager.shared.client.auth.session {
+                            let userId = session.user.id.uuidString
+                            
+                            // Save cancelled job to user_media for tracking in UsageView
+                            if pendingJob.job_type == "image" {
+                                let cancelledMetadata = ImageMetadata(
+                                    userId: userId,
+                                    imageUrl: "", // Empty for cancelled attempts
+                                    model: pendingJob.metadata?.model,
+                                    title: pendingJob.metadata?.title,
+                                    cost: pendingJob.metadata?.cost,
+                                    type: pendingJob.metadata?.type,
+                                    endpoint: pendingJob.metadata?.endpoint,
+                                    prompt: pendingJob.metadata?.prompt,
+                                    aspectRatio: pendingJob.metadata?.aspectRatio,
+                                    provider: pendingJob.provider,
+                                    status: "failed",
+                                    errorMessage: "Cancelled"
+                                )
                                 
-                                // Save cancelled job to user_media for tracking in UsageView
-                                if pendingJob.job_type == "image" {
-                                    let cancelledMetadata = ImageMetadata(
-                                        userId: userId,
-                                        imageUrl: "", // Empty for cancelled attempts
-                                        model: pendingJob.metadata?.model,
-                                        title: pendingJob.metadata?.title,
-                                        cost: pendingJob.metadata?.cost,
-                                        type: pendingJob.metadata?.type,
-                                        endpoint: pendingJob.metadata?.endpoint,
-                                        prompt: pendingJob.metadata?.prompt,
-                                        aspectRatio: pendingJob.metadata?.aspectRatio,
-                                        provider: pendingJob.provider,
-                                        status: "failed",
-                                        errorMessage: "Cancelled"
-                                    )
-                                    
-                                    try? await SupabaseManager.shared.client.database
-                                        .from("user_media")
-                                        .insert(cancelledMetadata)
-                                        .execute()
-                                    
-                                    print("✅ Saved cancelled image job to user_media: \(webhookTaskId)")
-                                } else if pendingJob.job_type == "video" {
-                                    let cancelledMetadata = VideoMetadata(
-                                        userId: userId,
-                                        videoUrl: "", // Empty for cancelled attempts
-                                        thumbnailUrl: nil,
-                                        model: pendingJob.metadata?.model,
-                                        title: pendingJob.metadata?.title,
-                                        cost: pendingJob.metadata?.cost,
-                                        type: pendingJob.metadata?.type,
-                                        endpoint: pendingJob.metadata?.endpoint,
-                                        fileExtension: "mp4",
-                                        prompt: pendingJob.metadata?.prompt,
-                                        aspectRatio: pendingJob.metadata?.aspectRatio,
-                                        duration: pendingJob.metadata?.duration,
-                                        resolution: pendingJob.metadata?.resolution,
-                                        status: "failed",
-                                        errorMessage: "Cancelled"
-                                    )
-                                    
-                                    try? await SupabaseManager.shared.client.database
-                                        .from("user_media")
-                                        .insert(cancelledMetadata)
-                                        .execute()
-                                    
-                                    print("✅ Saved cancelled video job to user_media: \(webhookTaskId)")
-                                }
+                                try? await SupabaseManager.shared.client.database
+                                    .from("user_media")
+                                    .insert(cancelledMetadata)
+                                    .execute()
+                                
+                                print("✅ Saved cancelled image job to user_media: \(webhookTaskId)")
+                            } else if pendingJob.job_type == "video" {
+                                let cancelledMetadata = VideoMetadata(
+                                    userId: userId,
+                                    videoUrl: "", // Empty for cancelled attempts
+                                    thumbnailUrl: nil,
+                                    model: pendingJob.metadata?.model,
+                                    title: pendingJob.metadata?.title,
+                                    cost: pendingJob.metadata?.cost,
+                                    type: pendingJob.metadata?.type,
+                                    endpoint: pendingJob.metadata?.endpoint,
+                                    fileExtension: "mp4",
+                                    prompt: pendingJob.metadata?.prompt,
+                                    aspectRatio: pendingJob.metadata?.aspectRatio,
+                                    duration: pendingJob.metadata?.duration,
+                                    resolution: pendingJob.metadata?.resolution,
+                                    status: "failed",
+                                    errorMessage: "Cancelled"
+                                )
+                                
+                                try? await SupabaseManager.shared.client.database
+                                    .from("user_media")
+                                    .insert(cancelledMetadata)
+                                    .execute()
+                                
+                                print("✅ Saved cancelled video job to user_media: \(webhookTaskId)")
                             }
                         }
-                        
-                        // Now delete the pending job
-                        try await SupabaseManager.shared.deletePendingJob(taskId: webhookTaskId)
-                        print("🧹 Deleted pending job from database after cancellation: \(webhookTaskId)")
-                    } catch {
-                        print("⚠️ Failed to delete pending job after cancellation: \(error)")
                     }
-                    // Remove the notification mapping
-                    await JobStatusManager.shared.removeNotificationMapping(for: webhookTaskId)
+                    
+                    // Now delete the pending job
+                    try await SupabaseManager.shared.deletePendingJob(taskId: webhookTaskId)
+                    print("🧹 Deleted pending job from database after cancellation: \(webhookTaskId)")
+                } catch {
+                    print("⚠️ Failed to handle pending job cancellation: \(error)")
                 }
+                // Remove the notification mapping
+                await JobStatusManager.shared.removeNotificationMapping(for: webhookTaskId)
             } else {
-                print("⚠️ Cannot delete pending job - API request already submitted, payment taken")
+                print("⚠️ [NotificationManager] No webhook taskId found for notificationId: \(notificationId)")
             }
         }
         

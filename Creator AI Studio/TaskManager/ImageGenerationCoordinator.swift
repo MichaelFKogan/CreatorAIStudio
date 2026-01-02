@@ -173,25 +173,28 @@ class ImageGenerationCoordinator: ObservableObject {
     
     // MARK: - Check if task can be cancelled
     
-    /// Checks if a task can still be cancelled by verifying if the API request hasn't been submitted yet
-    /// For webhook-based tasks, the background task is cleaned up after queuing, but we can still
-    /// cancel by deleting the pending job if apiRequestSubmitted is false
+    /// Checks if a task can still be cancelled
+    /// For webhook-based tasks that are waiting for callback, user can still "cancel" by
+    /// deleting the pending job and giving up on waiting for the result
     /// - Parameter notificationId: The notification ID to check
-    /// - Returns: True if the task can be cancelled, false otherwise
+    /// - Returns: True if the task exists and can be cancelled, false otherwise
     func canCancelTask(notificationId: UUID) -> Bool {
+        // Log all currently tracked tasks for debugging
+        print("🔍 [ImageGenerationCoordinator] canCancelTask called for notificationId: \(notificationId)")
+        print("🔍 [ImageGenerationCoordinator] Currently tracking \(generationTasks.count) tasks:")
+        for (taskId, taskInfo) in generationTasks {
+            print("   - taskId: \(taskId), notificationId: \(taskInfo.notificationId), apiRequestSubmitted: \(taskInfo.apiRequestSubmitted)")
+        }
+        
         // Find the task ID associated with this notification
         guard let taskInfo = generationTasks.values.first(where: { $0.notificationId == notificationId }) else {
+            print("🔍 [ImageGenerationCoordinator] canCancelTask: task NOT FOUND for notificationId: \(notificationId)")
             return false
         }
         
-        // Can't cancel if API request has already been submitted (past point of no return)
-        if taskInfo.apiRequestSubmitted {
-            return false
-        }
-        
-        // For webhook-based tasks, the background task is cleaned up after queuing,
-        // but we can still cancel by deleting the pending job if apiRequestSubmitted is false.
-        // So we return true if apiRequestSubmitted is false, regardless of background task existence.
+        // Task exists - it can be cancelled (even if API request was submitted)
+        // User can still delete the pending job and give up on waiting for the result
+        print("🔍 [ImageGenerationCoordinator] canCancelTask: task FOUND, returning true for notificationId: \(notificationId)")
         return true
     }
     

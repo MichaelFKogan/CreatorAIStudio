@@ -448,6 +448,7 @@ struct PlaceholderImageCard: View {
         let elapsed = Date().timeIntervalSince(placeholder.createdAt)
         let isVideo = placeholder.title.contains("Video") || placeholder.title.contains("video")
         let elapsedMinutes = Int(elapsed / 60)
+        print("🔍 [PlaceholderImageCard] updateMessages: elapsed=\(elapsed)s (\(elapsedMinutes)min), state=\(placeholder.state), id=\(placeholder.id)")
         
         // Update dynamic message
         dynamicMessage = GenerationMessageHelper.getDynamicMessage(
