@@ -233,13 +233,25 @@ struct NotificationTextContent: View {
         }
         .onAppear {
             updateMessages()
-            // Set up timer to update messages every minute
-            messageUpdateTimer = Timer.scheduledTimer(withTimeInterval: 60.0, repeats: true) { _ in
-                updateMessages()
+            // Only set up timer if notification is still in progress
+            if notification.state == .inProgress {
+                messageUpdateTimer = Timer.scheduledTimer(withTimeInterval: 60.0, repeats: true) { _ in
+                    updateMessages()
+                }
             }
+        }
+        .onChange(of: notification.state) { newState in
+            // Stop timer when notification is completed or failed
+            if newState != .inProgress {
+                messageUpdateTimer?.invalidate()
+                messageUpdateTimer = nil
+            }
+            // Update messages immediately when state changes
+            updateMessages()
         }
         .onDisappear {
             messageUpdateTimer?.invalidate()
+            messageUpdateTimer = nil
         }
     }
     
@@ -253,7 +265,16 @@ struct NotificationTextContent: View {
                 state: notification.state
             )
             showTimeoutMessage = false
+            // Stop timer when completed
+            messageUpdateTimer?.invalidate()
+            messageUpdateTimer = nil
             return
+        }
+        
+        // Stop timer if notification is failed
+        if notification.state == .failed {
+            messageUpdateTimer?.invalidate()
+            messageUpdateTimer = nil
         }
         
         let elapsed = Date().timeIntervalSince(notification.createdAt)
