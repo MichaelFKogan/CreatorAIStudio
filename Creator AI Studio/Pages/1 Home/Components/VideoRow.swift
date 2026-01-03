@@ -186,6 +186,8 @@ struct VideoRow: View {
         // Navigate to specific filter template pages
         if item.display.title.lowercased().contains("techno viking") {
             TechnoVikingFilterDetailPage(item: item)
+        } else if item.display.title.lowercased().contains("yeti") {
+            YetiFilterDetailPage(item: item)
         } else {
             // Default placeholder for other filters
             Text("Video Filter: \(item.display.title)")

@@ -13,7 +13,7 @@
     "display": {
       "title": "Yeti",
       "imageName": "yeti",
-      "description": "Another sample video filter template"
+      "description": ""
     },
     "prompt": "Create a video with this style",
     "cost": 1.3,
