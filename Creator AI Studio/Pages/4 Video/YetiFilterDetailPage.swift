@@ -641,13 +641,13 @@ private struct BannerSectionYeti: View {
                 if let player = videoPlayer {
                     VideoPlayer(player: player)
                         .aspectRatio(contentMode: .fill)
-                        .frame(width: 210, height: 294)
+                        .frame(width: 230, height: 254)
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                 } else if getVideoURL(for: item) != nil {
                     // Video URL exists but player not ready yet - show placeholder
                     RoundedRectangle(cornerRadius: 12)
                         .fill(Color.gray.opacity(0.2))
-                        .frame(width: 210, height: 294)
+                        .frame(width: 230, height: 254)
                         .overlay(
                             ProgressView()
                         )
@@ -656,7 +656,7 @@ private struct BannerSectionYeti: View {
                     Image(item.resolvedModelImageName ?? item.display.imageName)
                         .resizable()
                         .aspectRatio(contentMode: .fill)
-                        .frame(width: 210, height: 294)
+                        .frame(width: 230, height: 254)
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
                 
@@ -691,7 +691,7 @@ private struct BannerSectionYeti: View {
                         Image("veo31fast")
                             .resizable()
                             .aspectRatio(1, contentMode: .fill)
-                            .frame(maxWidth: .infinity)
+                            .frame(width: 100, height: 100)
                             .clipShape(RoundedRectangle(cornerRadius: 8))
                         
                         // Model Title and Info - in rows below image
@@ -716,7 +716,7 @@ private struct BannerSectionYeti: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .frame(height: 294)
+            .frame(height: 254)
         }
         .padding(.horizontal)
         .padding(.top, 16)

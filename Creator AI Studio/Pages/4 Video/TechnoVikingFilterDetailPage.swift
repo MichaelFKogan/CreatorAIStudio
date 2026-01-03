@@ -468,13 +468,13 @@ private struct BannerSectionFilter: View {
                 if let player = videoPlayer {
                     VideoPlayer(player: player)
                         .aspectRatio(contentMode: .fill)
-                        .frame(width: 210, height: 294)
+                        .frame(width: 190, height: 254)
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                 } else if getVideoURL(for: item) != nil {
                     // Video URL exists but player not ready yet - show placeholder
                     RoundedRectangle(cornerRadius: 12)
                         .fill(Color.gray.opacity(0.2))
-                        .frame(width: 210, height: 294)
+                        .frame(width: 190, height: 254)
                         .overlay(
                             ProgressView()
                         )
@@ -483,12 +483,13 @@ private struct BannerSectionFilter: View {
                     Image(item.resolvedModelImageName ?? item.display.imageName)
                         .resizable()
                         .aspectRatio(contentMode: .fill)
-                        .frame(width: 210, height: 294)
+                        .frame(width: 190, height: 254)
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
                 
                 VStack(alignment: .leading, spacing: 8) {
-                    Text(item.display.title)
+                    // Text(item.display.title)
+                    Text("Techno Viking Dance")
                         .font(.title2).fontWeight(.bold).foregroundColor(.primary)
                         .fixedSize(horizontal: false, vertical: true)
                     
@@ -519,23 +520,50 @@ private struct BannerSectionFilter: View {
                             .lineLimit(3)
                     }
                     
+                    // Kling VIDEO 2.6 Pro Model Info
+                    VStack(alignment: .leading, spacing: 8) {
+                        // Model Image - full width, square
+                        Image("klingvideo26pro")
+                            .resizable()
+                            .aspectRatio(1, contentMode: .fill)
+                            .frame(width: 100, height: 100)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                        
+                        // Model Title and Info - in rows below image
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Kling VIDEO 2.6 Pro")
+                                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                                .foregroundColor(.primary)
+                            
+                            HStack(spacing: 6) {
+                                Image(systemName: "video.fill")
+                                    .font(.system(size: 10))
+                                    .foregroundColor(.purple)
+                                Text("Video Generation Model")
+                                    .font(.system(size: 10, weight: .medium, design: .rounded))
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                    }
+                    .padding(.top, 8)
+                    
                     Spacer()
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .frame(height: 294)
+            .frame(height: 254)
             
-            // Filter Description
-            if let description = item.resolvedModelDescription ?? item.display.description,
-                !description.isEmpty
-            {
-                Text(description)
-                    .font(.system(size: 14))
-                    .foregroundColor(.secondary)
-                    .lineSpacing(4)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(.top, 4)
-            }
+            // // Filter Description
+            // if let description = item.resolvedModelDescription ?? item.display.description,
+            //     !description.isEmpty
+            // {
+            //     Text(description)
+            //         .font(.system(size: 14))
+            //         .foregroundColor(.secondary)
+            //         .lineSpacing(4)
+            //         .fixedSize(horizontal: false, vertical: true)
+            //         .padding(.top, 4)
+            // }
         }
         .padding(.horizontal)
         .padding(.top, 16)

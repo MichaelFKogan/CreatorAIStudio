@@ -3,7 +3,7 @@
     "display": {
       "title": "Techno Viking",
       "imageName": "techno-viking",
-      "description": "A sample video filter template"
+      "description": "Transform your image into a Techno Viking video"
     },
     "prompt": "Create a video with this style",
     "cost": 1.1,
