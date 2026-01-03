@@ -19,7 +19,7 @@ struct CategoryRow: View {
     private var animationType: ImageDiffAnimation? {
         switch rowIndex {
         case 0: return .scanHorizontal   // Row 1: Anime
-        case 1: return .scanVertical       // Row 2: Art
+        case 1: return .scanHorizontal       // Row 2: Art
         case 2: return .flipCard         // Row 3: Character
         case 3: return .scanHorizontal       // Row 4: Video Games
         case 4: return .cameraAperture   // Row 5: Photography

@@ -347,7 +347,7 @@ struct ImageAnimations: View {
                     Animation
                         .easeInOut(duration: 0.7)
                 ) {
-                    scanPosition = 0
+                    scanPosition = -2
                 }
                 
                 // Phase 2: Stay at transformed (pause) - show transformed image longer
@@ -363,7 +363,7 @@ struct ImageAnimations: View {
                     
                     // Phase 4: Stay at original (pause) - show original image shorter, then repeat
                     // Wait: 0.3s (animation) + 0.5s (pause) = 0.8s total
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
                         animateScanHorizontal() // Loop
                     }
                 }
@@ -518,7 +518,7 @@ struct ImageAnimations: View {
                 
                 // Phase 2: Stay at transformed (pause) - show transformed image longer
                 // Wait: 0.6s (animation) + 1.5s (pause) = 2.1s total
-                DispatchQueue.main.asyncAfter(deadline: .now() + 2.1) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2.4) {
                     // Phase 3: Quickly turn back to show original (smooth easeInOut)
                     withAnimation(
                         Animation
@@ -550,7 +550,7 @@ struct ImageAnimations: View {
                 
                 // Phase 2: Stay at transformed (pause) - show transformed image longer
                 // Wait: 0.5s (animation) + 1.5s (pause) = 2.0s total
-                DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2.4) {
                     // Phase 3: Quickly flip back to show original (smooth easeInOut)
                     withAnimation(
                         Animation
@@ -589,7 +589,7 @@ struct ImageAnimations: View {
                 
                 // Phase 2: Stay open (pause) - show transformed image longer
                 // Wait: 0.3s (animation) + 1.5s (pause) = 1.8s total
-                DispatchQueue.main.asyncAfter(deadline: .now() + 2.3) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2.7) {
                     // Phase 3: Close aperture quickly (ease-in) - shows original image
                     // Duration: 0.3s
                     withAnimation(
@@ -601,7 +601,7 @@ struct ImageAnimations: View {
                     
                     // Phase 4: Stay closed (pause) - show original image shorter, then repeat
                     // Wait: 0.3s (animation) + 0.5s (pause) = 0.8s total
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
                         animateAperture() // Loop
                     }
                 }
