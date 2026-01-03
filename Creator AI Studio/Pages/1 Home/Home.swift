@@ -39,7 +39,7 @@ struct Home: View {
                         // Video Filters Row
                         if !videoFilters.isEmpty {
                             VideoRow(
-                                title: "🎬 Viral Videos",
+                                title: "🎬 Create Viral Videos",
                                 items: videoFilters,
                                 seeAllDestination: nil // TODO: Add VideoFiltersPage when ready
                             )
