@@ -1,0 +1,22 @@
+[
+  {
+    "display": {
+      "title": "Techno Viking",
+      "imageName": "techno-viking",
+      "description": "A sample video filter template"
+    },
+    "prompt": "Create a video with this style",
+    "cost": 0.1,
+    "type": "Video Filter"
+  },
+  {
+    "display": {
+      "title": "Yeti",
+      "imageName": "yeti",
+      "description": "Another sample video filter template"
+    },
+    "prompt": "Create a video with this style",
+    "cost": 0.1,
+    "type": "Video Filter"
+  }
+]

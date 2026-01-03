@@ -4,6 +4,7 @@ struct Home: View {
     @Environment(\.colorScheme) var colorScheme
     @EnvironmentObject var authViewModel: AuthViewModel
     @StateObject private var filtersViewModel = PhotoFiltersViewModel.shared
+    @StateObject private var videoFiltersViewModel = VideoFiltersViewModel.shared
     @State private var showSubscriptionSheet: Bool = false
     @State private var showSignInSheet: Bool = false
     let resetTrigger: UUID
@@ -18,6 +19,11 @@ struct Home: View {
     private var videoModels: [InfoPacket] {
         VideoModelsViewModel.loadVideoModels()
     }
+    
+    // Load video filters
+    private var videoFilters: [InfoPacket] {
+        videoFiltersViewModel.allVideoFilters
+    }
 
     var body: some View {
         NavigationStack {
@@ -29,6 +35,16 @@ struct Home: View {
                     
                     // Rest of content can go here
                     VStack(spacing: 20) {
+
+                        // Video Filters Row
+                        if !videoFilters.isEmpty {
+                            VideoRow(
+                                title: "🎬 Video Filters",
+                                items: videoFilters,
+                                seeAllDestination: nil // TODO: Add VideoFiltersPage when ready
+                            )
+                        }
+
                         // Category Rows - manually listed
                         if hasCategoryItems("Anime") {
                             CategoryRow(categoryName: "Anime", animationType: .scanHorizontal)
