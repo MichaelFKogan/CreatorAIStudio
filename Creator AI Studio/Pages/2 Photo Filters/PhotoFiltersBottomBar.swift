@@ -7,6 +7,7 @@ struct PhotoFiltersBottomBar: View {
     let cost: Decimal
     @State private var isSubscribed: Bool = false // TODO: Connect to actual subscription status
     @State private var hasCredits: Bool = true // TODO: Connect to actual credits check
+    @ObservedObject private var networkMonitor = NetworkMonitor.shared
     
     @EnvironmentObject var authViewModel: AuthViewModel
 
@@ -31,7 +32,8 @@ struct PhotoFiltersBottomBar: View {
                     showActionSheet: $showPhotoPicker,
                     isLoggedIn: authViewModel.user != nil,
                     isSubscribed: isSubscribed,
-                    hasCredits: hasCredits
+                    hasCredits: hasCredits,
+                    isConnected: networkMonitor.isConnected
                 )
                     .photosPicker(
                         isPresented: $showPhotoPicker,

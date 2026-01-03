@@ -10,11 +10,11 @@ struct Profile: View {
         NavigationStack {
             ZStack {
                 // Always show gallery content (with placeholders if not signed in)
-                if authViewModel.isCheckingSession {
-                    // Show loading while checking session
-                    ProgressView("Loading…")
-                        .padding()
-                } else {
+                // if authViewModel.isCheckingSession {
+                //     // Show loading while checking session
+                //     ProgressView("Loading…")
+                //         .padding()
+                // } else {
                     ProfileViewContent(viewModel: viewModel, isSignedIn: authViewModel.user != nil)
                         .environmentObject(authViewModel)
                         .onAppear {
@@ -55,7 +55,7 @@ struct Profile: View {
                                 }
                             }
                         }
-                }
+                // }
                 
                 // Show sign-in overlay when not signed in
                 if !authViewModel.isCheckingSession && authViewModel.user == nil {

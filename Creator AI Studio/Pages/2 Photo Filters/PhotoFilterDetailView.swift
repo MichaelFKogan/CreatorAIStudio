@@ -25,6 +25,7 @@ struct PhotoFilterDetailView: View {
     @State private var showPurchaseCreditsView: Bool = false
     @AppStorage("testSubscriptionStatus") private var isSubscribed: Bool = false  // Testing: Toggle in Settings
     @State private var hasCredits: Bool = true  // TODO: Connect to actual credits check
+    @ObservedObject private var networkMonitor = NetworkMonitor.shared
 
     @EnvironmentObject var authViewModel: AuthViewModel
 
@@ -78,6 +79,7 @@ struct PhotoFilterDetailView: View {
     // Computed property to check if user can upload
     private var canUpload: Bool {
         guard authViewModel.user != nil else { return false }
+        guard networkMonitor.isConnected else { return false }
         return isSubscribed && hasCredits
     }
 
@@ -229,6 +231,24 @@ struct PhotoFilterDetailView: View {
                     let createButtonWidth = pageInnerWidth - addPhotoWidth - 16  // account for spacing
                     let controlHeight: CGFloat = 250
 
+                    // Network connectivity disclaimer (shown when no internet)
+                    if !networkMonitor.isConnected {
+                        VStack(spacing: 4) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "exclamationmark.circle.fill")
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.red)
+                                Text(
+                                    "No internet connection. Please connect to the internet."
+                                )
+                                .font(.caption)
+                                .foregroundColor(.red)
+                            }
+                        }
+                        .padding(.horizontal)
+                        .padding(.bottom, 8)
+                    }
+                    
                     // Login disclaimer (shown when not logged in)
                     if authViewModel.user == nil {
                         VStack(spacing: 4) {
@@ -341,7 +361,8 @@ struct PhotoFilterDetailView: View {
                             showActionSheet: $showActionSheet,
                             isLoggedIn: authViewModel.user != nil,
                             isSubscribed: isSubscribed,
-                            hasCredits: hasCredits
+                            hasCredits: hasCredits,
+                            isConnected: networkMonitor.isConnected
                         )
                     }
                     .padding(.horizontal, 16)
@@ -680,12 +701,13 @@ struct SpinningPlusButton: View {
     let isLoggedIn: Bool
     let isSubscribed: Bool
     let hasCredits: Bool
+    let isConnected: Bool
     @State private var rotation: Double = 0
     @State private var shine = false
     @State private var isAnimating = false
 
     private var canUpload: Bool {
-        isLoggedIn && isSubscribed && hasCredits
+        isLoggedIn && isSubscribed && hasCredits && isConnected
     }
 
     var body: some View {

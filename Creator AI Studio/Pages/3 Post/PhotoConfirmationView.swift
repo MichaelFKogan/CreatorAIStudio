@@ -28,6 +28,7 @@ struct PhotoConfirmationView: View {
     @State private var showPurchaseCreditsView: Bool = false
     @AppStorage("testSubscriptionStatus") private var isSubscribed: Bool = false  // Testing: Toggle in Settings
     @State private var hasCredits: Bool = true  // TODO: Connect to actual credits check
+    @ObservedObject private var networkMonitor = NetworkMonitor.shared
 
     // Primary initializer for multiple images
     init(
@@ -67,6 +68,7 @@ struct PhotoConfirmationView: View {
     // Computed property to check if user can generate
     private var canGenerate: Bool {
         guard authViewModel.user != nil else { return false }
+        guard networkMonitor.isConnected else { return false }
         return isSubscribed && hasCredits
     }
 
@@ -515,6 +517,11 @@ struct PhotoConfirmationView: View {
 
     private var generateButtonSection: some View {
         VStack(spacing: 4) {
+            if !networkMonitor.isConnected {
+                networkErrorMessage
+                    .padding(.bottom, 12)
+            }
+            
             if authViewModel.user == nil {
                 loginDisclaimer
 
@@ -536,6 +543,19 @@ struct PhotoConfirmationView: View {
         .padding(.horizontal)
     }
 
+    private var networkErrorMessage: some View {
+        HStack(spacing: 6) {
+            Spacer()
+            Image(systemName: "exclamationmark.circle.fill")
+                .font(.system(size: 14))
+                .foregroundColor(.red)
+            Text("No internet connection. Please connect to the internet.")
+                .font(.caption)
+                .foregroundColor(.red)
+            Spacer()
+        }
+    }
+    
     private var loginDisclaimer: some View {
         HStack(spacing: 6) {
             Spacer()
