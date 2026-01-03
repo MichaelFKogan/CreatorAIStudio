@@ -250,6 +250,151 @@ func uploadImageToRunware(image: UIImage) async throws -> String {
     )
 }
 
+// MARK: - Upload Video to Runware
+
+func uploadVideoToRunware(videoURL: URL) async throws -> String {
+    print("[Runware] Uploading video to get UUID…")
+    
+    // Read video data from URL
+    let videoData = try Data(contentsOf: videoURL)
+    
+    // Convert to base64
+    let base64 = videoData.base64EncodedString()
+    
+    // Determine MIME type from file extension
+    let fileExtension = videoURL.pathExtension.lowercased()
+    let mimeType: String
+    switch fileExtension {
+    case "mp4":
+        mimeType = "video/mp4"
+    case "mov":
+        mimeType = "video/quicktime"
+    case "webm":
+        mimeType = "video/webm"
+    case "m4v":
+        mimeType = "video/mp4"
+    default:
+        mimeType = "video/mp4"
+    }
+    
+    let dataURI = "data:\(mimeType);base64,\(base64)"
+    
+    let uploadTask: [String: Any] = [
+        "taskType": "videoUpload",
+        "taskUUID": UUID().uuidString,
+        "video": dataURI,
+    ]
+    
+    let requestBody: [[String: Any]] = [
+        ["taskType": "authentication", "apiKey": runwareApiKey],
+        uploadTask,
+    ]
+    
+    let url = URL(string: "https://api.runware.ai/v1")!
+    var request = URLRequest(url: url)
+    request.httpMethod = "POST"
+    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+    request.httpBody = try JSONSerialization.data(withJSONObject: requestBody)
+    
+    let (data, response) = try await URLSession.shared.data(for: request)
+    
+    guard let http = response as? HTTPURLResponse,
+          (200 ... 299).contains(http.statusCode)
+    else {
+        print("[Runware] Video upload HTTP error: \((response as? HTTPURLResponse)?.statusCode ?? -1)")
+        throw NSError(
+            domain: "RunwareAPI",
+            code: (response as? HTTPURLResponse)?.statusCode ?? -1,
+            userInfo: [
+                NSLocalizedDescriptionKey:
+                    "Runware video upload returned HTTP \((response as? HTTPURLResponse)?.statusCode ?? -1)",
+            ]
+        )
+    }
+    
+    // Parse the response - Runware can return different formats
+    let json = try JSONSerialization.jsonObject(with: data)
+    
+    // Debug: print raw response (first 500 chars)
+    if let jsonString = String(data: data, encoding: .utf8) {
+        print("[Runware] Video upload response (first 500 chars): \(String(jsonString.prefix(500)))")
+    }
+    
+    // Try parsing as dictionary with data array (actual format from Runware)
+    if let responseDict = json as? [String: Any],
+       let dataArray = responseDict["data"] as? [[String: Any]]
+    {
+        // The data array contains objects with videoUUID
+        for item in dataArray {
+            if let videoUUID = (item["videoUUID"] as? String)
+                ?? (item["videoUuid"] as? String)
+                ?? (item["video_uuid"] as? String)
+            {
+                print("[Runware] Video uploaded successfully, UUID: \(videoUUID)")
+                return videoUUID
+            }
+        }
+    }
+    
+    // Try parsing as array of responses (alternative format)
+    if let responseArray = json as? [[String: Any]] {
+        // Find the response that contains the videoUUID (skip authentication response)
+        for response in responseArray {
+            if let dataDict = response["data"] as? [String: Any] {
+                let videoUUID = (dataDict["videoUUID"] as? String)
+                    ?? (dataDict["videoUuid"] as? String)
+                    ?? (dataDict["video_uuid"] as? String)
+                
+                if let uuid = videoUUID {
+                    print("[Runware] Video uploaded successfully, UUID: \(uuid)")
+                    return uuid
+                }
+            }
+            // Also check if videoUUID is directly in the response
+            if let videoUUID = (response["videoUUID"] as? String)
+                ?? (response["videoUuid"] as? String)
+                ?? (response["video_uuid"] as? String)
+            {
+                print("[Runware] Video uploaded successfully, UUID: \(videoUUID)")
+                return videoUUID
+            }
+        }
+    }
+    
+    // Try parsing as single dictionary with nested data dictionary
+    if let responseDict = json as? [String: Any] {
+        if let dataDict = responseDict["data"] as? [String: Any] {
+            let videoUUID = (dataDict["videoUUID"] as? String)
+                ?? (dataDict["videoUuid"] as? String)
+                ?? (dataDict["video_uuid"] as? String)
+            
+            if let uuid = videoUUID {
+                print("[Runware] Video uploaded successfully, UUID: \(uuid)")
+                return uuid
+            }
+        }
+        
+        // Check if videoUUID is directly in the response
+        if let videoUUID = (responseDict["videoUUID"] as? String)
+            ?? (responseDict["videoUuid"] as? String)
+            ?? (responseDict["video_uuid"] as? String)
+        {
+            print("[Runware] Video uploaded successfully, UUID: \(videoUUID)")
+            return videoUUID
+        }
+    }
+    
+    // If all parsing attempts fail, throw error with response info
+    let responseString = String(data: data, encoding: .utf8) ?? "Unable to decode response"
+    throw NSError(
+        domain: "RunwareAPI", code: -1,
+        userInfo: [
+            NSLocalizedDescriptionKey: "Invalid response format from video upload",
+            "response": responseString,
+        ]
+    )
+}
+
 // MARK: - Async Send Image to Runware
 
 func sendImageToRunware(
@@ -502,6 +647,7 @@ func sendVideoToRunware(
     generateAudio: Bool? = nil,
     firstFrameImage: UIImage? = nil,
     lastFrameImage: UIImage? = nil,
+    referenceVideoURL: URL? = nil,
     onPollingProgress: ((Int, Int) -> Void)? = nil
 ) async throws -> RunwareResponse {
     print("[Runware] Preparing video request…")
@@ -579,6 +725,23 @@ func sendVideoToRunware(
             ]
         ]
         print("[Runware] Kling VIDEO 2.6 Pro image-to-video enabled with inputs.frameImages: \(imageUUID)")
+        
+        task["inputs"] = inputs
+    }
+    
+    // MARK: - Handle reference videos for motion control (Kling VIDEO 2.6 Pro)
+    
+    // Handle reference video for motion control (Kling VIDEO 2.6 Pro)
+    if isKlingVideo26Pro, let refVideoURL = referenceVideoURL {
+        // Upload reference video to get UUID
+        let videoUUID = try await uploadVideoToRunware(videoURL: refVideoURL)
+        
+        // Initialize inputs object if it doesn't exist
+        var inputs = task["inputs"] as? [String: Any] ?? [:]
+        
+        // Add reference video to inputs.referenceVideos
+        inputs["referenceVideos"] = [videoUUID]
+        print("[Runware] Kling VIDEO 2.6 Pro motion control enabled with inputs.referenceVideos: \(videoUUID)")
         
         task["inputs"] = inputs
     }
@@ -749,15 +912,34 @@ func sendVideoToRunware(
     
     // MARK: - Provider-specific settings for KlingAI models
     
-    // Kling VIDEO 2.6 Pro supports sound parameter for audio generation
+    // Kling VIDEO 2.6 Pro supports sound parameter for audio generation and motion control
     if model.lowercased().contains("klingai:") {
+        var providerSettings = task["providerSettings"] as? [String: Any] ?? [:]
+        var klingSettings = providerSettings["klingai"] as? [String: Any] ?? [:]
+        
+        // Add sound parameter if provided
         if let generateAudio = generateAudio {
-            var providerSettings = task["providerSettings"] as? [String: Any] ?? [:]
-            var klingSettings: [String: Any] = [:]
             klingSettings["sound"] = generateAudio
+        }
+        
+        // Add motion control settings if reference video is provided (motion control mode)
+        if isKlingVideo26Pro && referenceVideoURL != nil {
+            klingSettings["characterOrientation"] = "image"
+            klingSettings["keepOriginalSound"] = false
+            // Enable sound by default for motion control (unless explicitly disabled)
+            if klingSettings["sound"] == nil {
+                klingSettings["sound"] = true
+            }
+            print("[Runware] Added KlingAI motion control settings - characterOrientation: image, keepOriginalSound: false, sound: \(klingSettings["sound"] ?? true)")
+        }
+        
+        // Only set provider settings if we have any KlingAI settings
+        if !klingSettings.isEmpty {
             providerSettings["klingai"] = klingSettings
             task["providerSettings"] = providerSettings
-            print("[Runware] Added KlingAI provider settings - sound: \(generateAudio)")
+            if referenceVideoURL == nil {
+                print("[Runware] Added KlingAI provider settings - sound: \(klingSettings["sound"] ?? "N/A")")
+            }
         }
     }
     
@@ -1200,7 +1382,8 @@ func submitVideoToRunwareWithWebhook(
     runwareConfig: RunwareConfig? = nil,
     generateAudio: Bool? = nil,
     firstFrameImage: UIImage? = nil,
-    lastFrameImage: UIImage? = nil
+    lastFrameImage: UIImage? = nil,
+    referenceVideoURL: URL? = nil
 ) async throws -> RunwareWebhookSubmissionResponse {
     print("[Runware] Preparing webhook request for video…")
     print("[Runware] Task UUID: \(taskUUID)")
@@ -1266,6 +1449,23 @@ func submitVideoToRunwareWithWebhook(
             ]
         ]
         print("[Runware] Kling VIDEO 2.6 Pro image-to-video enabled with inputs.frameImages (webhook): \(imageUUID)")
+        
+        task["inputs"] = inputs
+    }
+    
+    // MARK: - Handle reference videos for motion control (Kling VIDEO 2.6 Pro) - webhook
+    
+    // Handle reference video for motion control (Kling VIDEO 2.6 Pro)
+    if isKlingVideo26Pro, let refVideoURL = referenceVideoURL {
+        // Upload reference video to get UUID
+        let videoUUID = try await uploadVideoToRunware(videoURL: refVideoURL)
+        
+        // Initialize inputs object if it doesn't exist
+        var inputs = task["inputs"] as? [String: Any] ?? [:]
+        
+        // Add reference video to inputs.referenceVideos
+        inputs["referenceVideos"] = [videoUUID]
+        print("[Runware] Kling VIDEO 2.6 Pro motion control enabled with inputs.referenceVideos (webhook): \(videoUUID)")
         
         task["inputs"] = inputs
     }
@@ -1394,15 +1594,34 @@ func submitVideoToRunwareWithWebhook(
         }
     }
     
-    // KlingAI provider settings (sound/audio generation)
+    // KlingAI provider settings (sound/audio generation and motion control)
     if model.lowercased().contains("klingai:") {
+        var providerSettings = task["providerSettings"] as? [String: Any] ?? [:]
+        var klingSettings = providerSettings["klingai"] as? [String: Any] ?? [:]
+        
+        // Add sound parameter if provided
         if let generateAudio = generateAudio {
-            var providerSettings = task["providerSettings"] as? [String: Any] ?? [:]
-            var klingSettings: [String: Any] = [:]
             klingSettings["sound"] = generateAudio
+        }
+        
+        // Add motion control settings if reference video is provided (motion control mode)
+        if isKlingVideo26Pro && referenceVideoURL != nil {
+            klingSettings["characterOrientation"] = "image"
+            klingSettings["keepOriginalSound"] = false
+            // Enable sound by default for motion control (unless explicitly disabled)
+            if klingSettings["sound"] == nil {
+                klingSettings["sound"] = true
+            }
+            print("[Runware] Added KlingAI motion control settings (webhook) - characterOrientation: image, keepOriginalSound: false, sound: \(klingSettings["sound"] ?? true)")
+        }
+        
+        // Only set provider settings if we have any KlingAI settings
+        if !klingSettings.isEmpty {
             providerSettings["klingai"] = klingSettings
             task["providerSettings"] = providerSettings
-            print("[Runware] Added KlingAI provider settings (webhook) - sound: \(generateAudio)")
+            if referenceVideoURL == nil {
+                print("[Runware] Added KlingAI provider settings (webhook) - sound: \(klingSettings["sound"] ?? "N/A")")
+            }
         }
     }
     

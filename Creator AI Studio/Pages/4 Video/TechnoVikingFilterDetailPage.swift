@@ -326,19 +326,34 @@ struct TechnoVikingFilterDetailPage: View {
         let defaultDuration = 5.0
         var modifiedItem = item
         
+        // Set the model to Kling VIDEO 2.6 Pro for motion control
+        modifiedItem.display.modelName = "Kling VIDEO 2.6 Pro"
+        
         // Set the prompt for Techno Viking transformation
         // The prompt should instruct the model to transform the image into a dancing video
-        modifiedItem.prompt = item.prompt ?? "Transform this image into a dancing video with the Techno Viking dance style"
+        modifiedItem.prompt = item.prompt ?? "Character performs the same movements from the reference video"
         
-        // Use resolvedAPIConfig as base, then modify aspectRatio
+        // Use resolvedAPIConfig as base, then modify aspectRatio and model
         var config = modifiedItem.resolvedAPIConfig
         config.aspectRatio = defaultAspectRatio
+        // Set the Runware model to Kling VIDEO 2.6 Pro
+        config.runwareModel = "klingai:kling-video@2.6-pro"
         modifiedItem.apiConfig = config
+        
+        // Get the reference video URL from the bundle (separate from UI preview video)
+        let referenceVideoURL = getReferenceVideoURL()
         
         guard let userId = authViewModel.user?.id.uuidString.lowercased(),
             !userId.isEmpty
         else {
             isGenerating = false
+            return
+        }
+        
+        // Ensure we have a reference video URL
+        guard let refVideoURL = referenceVideoURL else {
+            isGenerating = false
+            print("Error: Reference video not found for Techno Viking filter")
             return
         }
         
@@ -350,9 +365,10 @@ struct TechnoVikingFilterDetailPage: View {
                 duration: defaultDuration,
                 aspectRatio: defaultAspectRatio,
                 resolution: nil,
-                generateAudio: nil,
+                generateAudio: true, // Enable audio for motion control
                 firstFrameImage: nil,
                 lastFrameImage: nil,
+                referenceVideoURL: refVideoURL, // Pass the reference video for motion control
                 onVideoGenerated: { _ in
                     isGenerating = false
                 },
@@ -362,6 +378,36 @@ struct TechnoVikingFilterDetailPage: View {
                 }
             )
         }
+    }
+    
+    // MARK: REFERENCE VIDEO HELPER
+    
+    /// Gets the reference video URL for motion control (separate from UI preview video)
+    private func getReferenceVideoURL() -> URL? {
+        let referenceVideoName = "technoVikingReference"
+        
+        // Check if it's a URL string
+        if referenceVideoName.hasPrefix("http://") || referenceVideoName.hasPrefix("https://") {
+            return URL(string: referenceVideoName)
+        }
+        
+        // Check if it's a video file in the bundle
+        // Try common video extensions
+        let videoExtensions = ["mp4", "mov", "m4v", "webm"]
+        for ext in videoExtensions {
+            if let url = Bundle.main.url(forResource: referenceVideoName, withExtension: ext) {
+                return url
+            }
+        }
+        
+        // Check in Video Filters subdirectory
+        for ext in videoExtensions {
+            if let url = Bundle.main.url(forResource: referenceVideoName, withExtension: ext, subdirectory: "Video Filters") {
+                return url
+            }
+        }
+        
+        return nil
     }
     
     // MARK: VIDEO PLAYER HELPERS

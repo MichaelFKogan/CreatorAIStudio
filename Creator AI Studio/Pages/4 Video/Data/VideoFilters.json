@@ -1,9 +1,19 @@
 [
   {
     "display": {
-      "title": "Techno Viking",
+      "title": "Techno Viking Dance",
       "imageName": "techno-viking",
       "description": "Transform your image into a Techno Viking video"
+    },
+    "prompt": "Create a video with this style",
+    "cost": 1.1,
+    "type": "Video Filter"
+  },
+  {
+    "display": {
+      "title": "Gangnam Style Dance",
+      "imageName": "gangnamStyleReference",
+      "description": "Transform your image into a Gangnam Style video"
     },
     "prompt": "Create a video with this style",
     "cost": 1.1,

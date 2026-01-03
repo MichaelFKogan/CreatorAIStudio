@@ -34,10 +34,13 @@ class VideoGenerationTask: MediaGenerationTask {
     let firstFrameImage: UIImage?
     let lastFrameImage: UIImage?
     
+    // Reference video URL for motion control (e.g., Kling VIDEO 2.6 Pro)
+    let referenceVideoURL: URL?
+    
     // Whether to use webhook mode (returns immediately) or polling mode (waits for result)
     let useWebhook: Bool
 
-    init(item: InfoPacket, image: UIImage?, userId: String, duration: Double, aspectRatio: String, resolution: String? = nil, generateAudio: Bool? = nil, firstFrameImage: UIImage? = nil, lastFrameImage: UIImage? = nil, useWebhook: Bool = false) {
+    init(item: InfoPacket, image: UIImage?, userId: String, duration: Double, aspectRatio: String, resolution: String? = nil, generateAudio: Bool? = nil, firstFrameImage: UIImage? = nil, lastFrameImage: UIImage? = nil, referenceVideoURL: URL? = nil, useWebhook: Bool = false) {
         self.item = item
         self.image = image
         self.userId = userId
@@ -47,6 +50,7 @@ class VideoGenerationTask: MediaGenerationTask {
         self.generateAudio = generateAudio
         self.firstFrameImage = firstFrameImage
         self.lastFrameImage = lastFrameImage
+        self.referenceVideoURL = referenceVideoURL
         self.useWebhook = useWebhook && WebhookConfig.useWebhooks
     }
     
@@ -161,6 +165,7 @@ class VideoGenerationTask: MediaGenerationTask {
                     generateAudio: self.generateAudio,
                     firstFrameImage: self.firstFrameImage,
                     lastFrameImage: self.lastFrameImage,
+                    referenceVideoURL: self.referenceVideoURL,
                     onPollingProgress: { attempt, maxAttempts in
                         let progress = 0.1 + (Double(attempt) / Double(maxAttempts)) * 0.4 // 0.1 to 0.5
                         Task { @MainActor in
@@ -469,7 +474,8 @@ class VideoGenerationTask: MediaGenerationTask {
                 runwareConfig: apiConfig.runwareConfig,
                 generateAudio: generateAudio,
                 firstFrameImage: firstFrameImage,
-                lastFrameImage: lastFrameImage
+                lastFrameImage: lastFrameImage,
+                referenceVideoURL: referenceVideoURL
             )
             print("✅ Runware video webhook request submitted")
             
