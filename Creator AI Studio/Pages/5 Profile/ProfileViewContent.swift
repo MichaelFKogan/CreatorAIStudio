@@ -747,6 +747,7 @@ struct ProfileViewContent: View {
                 selectedImageIds: $selectedImageIds,
                 isFavoritesTab: selectedTab == .favorites
             )
+            Color.clear.frame(height: 160)
         }
     }
 

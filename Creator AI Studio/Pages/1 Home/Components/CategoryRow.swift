@@ -2,35 +2,29 @@ import SwiftUI
 import UIKit
 
 struct CategoryRow: View {
-    let title: String
-    let items: [InfoPacket]
-    let rowIndex: Int
-
+    let categoryName: String
+    let animationType: ImageDiffAnimation?
+    
     @State private var lastOffset: CGFloat = 0
     @State private var feedback: UISelectionFeedbackGenerator?
     
-    // Extract category name from title (removes emoji prefix like "✨ Anime" -> "Anime")
-    private var categoryName: String {
-        let components = title.split(separator: " ", maxSplits: 1)
-        return components.count > 1 ? String(components[1]) : title
+    private let categoryManager = CategoryConfigurationManager.shared
+    private let filtersViewModel = PhotoFiltersViewModel.shared
+    
+    // Get items for this category
+    private var items: [InfoPacket] {
+        filtersViewModel.filters(for: categoryName)
     }
     
-    // Determine which animation to use based on row index
-    private var animationType: ImageDiffAnimation? {
-        switch rowIndex {
-        case 0: return .scanHorizontal   // Row 1: Anime
-        case 1: return .scanHorizontal       // Row 2: Art
-        case 2: return .flipCard         // Row 3: Character
-        case 3: return .scanHorizontal       // Row 4: Video Games
-        case 4: return .cameraAperture   // Row 5: Photography
-        // case 5: return .instagramFilter  // Row 6: Instagram
-        default: return nil
-        }
+    // Get title with emoji
+    private var title: String {
+        let emoji = categoryManager.emoji(for: categoryName)
+        return "\(emoji) \(categoryName)"
     }
     
     // Check if this row should use animation
     private var shouldUseAnimation: Bool {
-        rowIndex < 6 && animationType != nil
+        animationType != nil
     }
 
     var body: some View {

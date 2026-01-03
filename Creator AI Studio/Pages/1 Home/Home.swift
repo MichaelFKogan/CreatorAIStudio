@@ -29,7 +29,17 @@ struct Home: View {
                     
                     // Rest of content can go here
                     VStack(spacing: 20) {
-                        // Image Models Row
+                        // Category Rows - manually listed
+                        if hasCategoryItems("Anime") {
+                            CategoryRow(categoryName: "Anime", animationType: .scanHorizontal)
+                                .padding(.top, 16)
+                        }
+                        
+                        if hasCategoryItems("Art") {
+                            CategoryRow(categoryName: "Art", animationType: .scanHorizontal)
+                        }
+                        
+                        // Image Models Row (inserted after 2nd category)
                         if !imageModels.isEmpty {
                             ModelRow(
                                 title: "Image Models",
@@ -37,10 +47,9 @@ struct Home: View {
                                 items: imageModels,
                                 seeAllDestination: AnyView(ImageModelsPage())
                             )
-                            .padding(.top, 16)
                         }
-                        
-                        // Video Models Row
+
+                        // Video Models Row (inserted after 3rd category)
                         if !videoModels.isEmpty {
                             ModelRow(
                                 title: "Video Models",
@@ -50,14 +59,47 @@ struct Home: View {
                             )
                         }
                         
-                        // Display all categories in order
-                        ForEach(Array(sortedCategoryNames.enumerated()), id: \.element) { index, categoryName in
-                            let items = filtersViewModel.filters(for: categoryName)
-                            if !items.isEmpty {
-                                let emoji = categoryManager.emoji(for: categoryName)
-                                CategoryRow(title: "\(emoji) \(categoryName)", items: items, rowIndex: index)
-                            }
+                        if hasCategoryItems("Character") {
+                            CategoryRow(categoryName: "Character", animationType: .flipCard)
                         }
+                        
+                        if hasCategoryItems("Video Games") {
+                            CategoryRow(categoryName: "Video Games", animationType: .scanHorizontal)
+                        }
+                        if hasCategoryItems("Photography") {
+                            CategoryRow(categoryName: "Photography", animationType: .cameraAperture)
+                        }
+                        if hasCategoryItems("Instagram") {
+                            CategoryRow(categoryName: "Instagram", animationType: nil)
+                        }
+                        if hasCategoryItems("Photobooth") {
+                            CategoryRow(categoryName: "Photobooth", animationType: nil)
+                        }
+                        if hasCategoryItems("Fashion") {
+                            CategoryRow(categoryName: "Fashion", animationType: nil)
+                        }
+                        if hasCategoryItems("Spooky") {
+                            CategoryRow(categoryName: "Spooky", animationType: nil)
+                        }
+                        if hasCategoryItems("Luxury") {
+                            CategoryRow(categoryName: "Luxury", animationType: nil)
+                        }
+                        if hasCategoryItems("Professional") {
+                            CategoryRow(categoryName: "Professional", animationType: nil)
+                        }
+                        if hasCategoryItems("Chibi") {
+                            CategoryRow(categoryName: "Chibi", animationType: nil)
+                        }
+                        if hasCategoryItems("Just For Fun") {
+                            CategoryRow(categoryName: "Just For Fun", animationType: nil)
+                        }
+                        if hasCategoryItems("Back In Time") {
+                            CategoryRow(categoryName: "Back In Time", animationType: nil)
+                        }
+                        if hasCategoryItems("Men's") {
+                            CategoryRow(categoryName: "Men's", animationType: nil)
+                        }
+                        
                         Color.clear.frame(height: 160)
                     }
                 }
@@ -140,6 +182,11 @@ struct Home: View {
     
     private var sortedCategoryNames: [String] {
         filtersViewModel.sortedCategoryNames
+    }
+    
+    // Helper to check if a category has items
+    private func hasCategoryItems(_ categoryName: String) -> Bool {
+        !filtersViewModel.filters(for: categoryName).isEmpty
     }
 
     private var titleGradient: [Color] {
