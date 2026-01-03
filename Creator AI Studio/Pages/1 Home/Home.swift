@@ -9,6 +9,15 @@ struct Home: View {
     let resetTrigger: UUID
     
     private let categoryManager = CategoryConfigurationManager.shared
+    
+    // Load image and video models
+    private var imageModels: [InfoPacket] {
+        ImageModelsViewModel.loadImageModels()
+    }
+    
+    private var videoModels: [InfoPacket] {
+        VideoModelsViewModel.loadVideoModels()
+    }
 
     var body: some View {
         NavigationStack {
@@ -20,13 +29,33 @@ struct Home: View {
                     
                     // Rest of content can go here
                     VStack(spacing: 20) {
+                        // Image Models Row
+                        if !imageModels.isEmpty {
+                            ModelRow(
+                                title: "Image Models",
+                                iconName: "photo.on.rectangle",
+                                items: imageModels,
+                                seeAllDestination: AnyView(ImageModelsPage())
+                            )
+                            .padding(.top, 16)
+                        }
+                        
+                        // Video Models Row
+                        if !videoModels.isEmpty {
+                            ModelRow(
+                                title: "Video Models",
+                                iconName: "video.fill",
+                                items: videoModels,
+                                seeAllDestination: AnyView(VideoModelsPage())
+                            )
+                        }
+                        
                         // Display all categories in order
                         ForEach(Array(sortedCategoryNames.enumerated()), id: \.element) { index, categoryName in
                             let items = filtersViewModel.filters(for: categoryName)
                             if !items.isEmpty {
                                 let emoji = categoryManager.emoji(for: categoryName)
                                 CategoryRow(title: "\(emoji) \(categoryName)", items: items, rowIndex: index)
-                                    .padding(.top, index == 0 ? 16 : 0)
                             }
                         }
                         Color.clear.frame(height: 160)

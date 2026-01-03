@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		271631AE2EFF81FF00BC0309 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 271631AD2EFF81FF00BC0309 /* GoogleSignIn */; };
 		271631B02EFF81FF00BC0309 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 271631AF2EFF81FF00BC0309 /* GoogleSignInSwift */; };
-		276DCC712F08BCE600D3A3AB /* Config.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 276DCC702F08BCE600D3A3AB /* Config.xcconfig */; };
 		277F96BD2ED2A9CD002B7782 /* Auth in Frameworks */ = {isa = PBXBuildFile; productRef = 277F96BC2ED2A9CD002B7782 /* Auth */; };
 		277F96BF2ED2A9CD002B7782 /* PostgREST in Frameworks */ = {isa = PBXBuildFile; productRef = 277F96BE2ED2A9CD002B7782 /* PostgREST */; };
 		277F96C12ED2A9CD002B7782 /* Storage in Frameworks */ = {isa = PBXBuildFile; productRef = 277F96C02ED2A9CD002B7782 /* Storage */; };
@@ -35,7 +34,6 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		276DCC702F08BCE600D3A3AB /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 		277F96772ED2A6C7002B7782 /* Creator AI Studio.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Creator AI Studio.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		277F96872ED2A6CA002B7782 /* Creator AI StudioTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Creator AI StudioTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		277F96912ED2A6CA002B7782 /* Creator AI StudioUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Creator AI StudioUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -99,7 +97,6 @@
 				277F96942ED2A6CA002B7782 /* Creator AI StudioUITests */,
 				277F96C22ED2AA6C002B7782 /* Frameworks */,
 				277F96782ED2A6C7002B7782 /* Products */,
-				276DCC702F08BCE600D3A3AB /* Config.xcconfig */,
 			);
 			sourceTree = "<group>";
 		};
@@ -252,7 +249,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				276DCC712F08BCE600D3A3AB /* Config.xcconfig in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
