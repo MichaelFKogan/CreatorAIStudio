@@ -183,11 +183,15 @@ struct VideoRow: View {
     
     @ViewBuilder
     private func destinationView(for item: InfoPacket) -> some View {
-        // For now, return a placeholder view
-        // Later, this will navigate to a specific video filter template page
-        Text("Video Filter: \(item.display.title)")
-            .font(.title)
-            .padding()
+        // Navigate to specific filter template pages
+        if item.display.title.lowercased().contains("techno viking") {
+            TechnoVikingFilterDetailPage(item: item)
+        } else {
+            // Default placeholder for other filters
+            Text("Video Filter: \(item.display.title)")
+                .font(.title)
+                .padding()
+        }
     }
     
     private func handleScrollFeedback(newOffset: CGFloat) {
