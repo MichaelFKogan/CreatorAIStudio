@@ -331,21 +331,6 @@ struct PlaceholderImageCard: View {
                         Text("\(Int(placeholder.progress * 100))%")
                             .font(.custom("Nunito-Regular", size: 9))
                             .foregroundColor(.secondary)
-
-                        // Cancel button for in-progress tasks (only show after 2 minutes and if task can still be cancelled)
-                        // For fast models like Z-Image-Turbo, the API request may complete before user can cancel
-                        if placeholder.state == .inProgress && showCancelButton {
-                            Button(action: {
-                                notificationManager.cancelTask(
-                                    notificationId: placeholder.id)
-                            }) {
-                                Text("Cancel")
-                                    .font(.custom("Nunito-Bold", size: 10))
-                                    .foregroundColor(.red)
-                            }
-                            .padding(.top, 4)
-                            .padding(.bottom, 8) // Add extra spacing before Tap To View
-                        }
                         
                         // Tap To View button (for in-progress items too)
                         Button(action: {
@@ -355,7 +340,7 @@ struct PlaceholderImageCard: View {
                                 .font(.custom("Nunito-Regular", size: 9))
                                 .foregroundColor(.blue)
                         }
-                        .padding(.top, placeholder.state == .inProgress && showCancelButton ? 0 : 2)
+                        .padding(.top, 2)
                     }
                 }
             }
@@ -501,16 +486,8 @@ struct PlaceholderImageCard: View {
             state: placeholder.state
         )
         
-        // Show cancel button when elapsed time >= 5 minutes and task can still be cancelled
-        if elapsedMinutes >= 5 && placeholder.state == .inProgress {
-            let canCancel = ImageGenerationCoordinator.shared.canCancelTask(notificationId: placeholder.id) ||
-                           VideoGenerationCoordinator.shared.canCancelTask(notificationId: placeholder.id)
-            print("🔍 [PlaceholderImageCard] Cancel button check: elapsedMinutes=\(elapsedMinutes), canCancel=\(canCancel), state=\(placeholder.state)")
-            showCancelButton = canCancel
-        } else {
-            print("🔍 [PlaceholderImageCard] Cancel button not shown: elapsedMinutes=\(elapsedMinutes), state=\(placeholder.state)")
-            showCancelButton = false
-        }
+        // Cancel button disabled - users cannot cancel generations
+        showCancelButton = false
         
         // Show timeout message in two scenarios:
         // 1. Initial timeout warning (5-6 minutes)

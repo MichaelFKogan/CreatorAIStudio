@@ -30,6 +30,7 @@ struct GangnamStyleFilterDetailPage: View {
     @State private var selectedAspectIndex: Int = 0
     @State private var selectedDurationIndex: Int = 0
     @State private var videoPlayer: AVPlayer? = nil
+    @State private var isVideoMuted: Bool = true // Start muted for autoplay compliance
     
     @EnvironmentObject var authViewModel: AuthViewModel
     
@@ -94,7 +95,7 @@ struct GangnamStyleFilterDetailPage: View {
                     VStack(spacing: 24) {
                         LazyView(
                             BannerSectionFilter(
-                                item: item, price: currentPrice, videoPlayer: $videoPlayer))
+                                item: item, price: currentPrice, videoPlayer: $videoPlayer, isVideoMuted: $isVideoMuted))
                         
                         Divider().padding(.horizontal)
                         
@@ -353,7 +354,7 @@ struct GangnamStyleFilterDetailPage: View {
         
         // Duration is unknown until video is generated, so we'll pass a default for the API call
         // but store nil in the database to indicate it's not user-selected
-        let apiDuration = 15.0 // Default for API call
+        let apiDuration = 5.0 // Default for API call
         
         var modifiedItem = item
         
@@ -529,7 +530,7 @@ struct GangnamStyleFilterDetailPage: View {
         guard let videoURL = getVideoURL(for: item) else { return }
         
         let player = AVPlayer(url: videoURL)
-        player.isMuted = true // Mute by default for autoplay
+        player.isMuted = isVideoMuted // Sync with state
         player.actionAtItemEnd = .none // Don't pause at end
         
         // Loop the video
@@ -565,6 +566,7 @@ private struct BannerSectionFilter: View {
     let item: InfoPacket
     let price: Decimal?
     @Binding var videoPlayer: AVPlayer?
+    @Binding var isVideoMuted: Bool
     
     private func getVideoURL(for item: InfoPacket) -> URL? {
         let imageName = item.display.imageName
@@ -598,10 +600,13 @@ private struct BannerSectionFilter: View {
             HStack(alignment: .top, spacing: 16) {
                 // Try to display video first, fallback to image
                 if let player = videoPlayer {
-                    VideoPlayer(player: player)
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: 190, height: 254)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                    VideoPlayerWithMuteButton(
+                        player: player,
+                        isMuted: $isVideoMuted,
+                        width: 190,
+                        height: 254
+                    )
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
                 } else if getVideoURL(for: item) != nil {
                     // Video URL exists but player not ready yet - show placeholder
                     RoundedRectangle(cornerRadius: 12)
@@ -645,12 +650,12 @@ private struct BannerSectionFilter: View {
                         Text("per video").font(.caption).foregroundColor(.secondary)
                     }
                     
-                    if let description = item.display.description, !description.isEmpty {
-                        Text(description)
-                            .font(.system(size: 12, weight: .medium, design: .rounded))
-                            .foregroundColor(.purple)
-                            .lineLimit(3)
-                    }
+                    // if let description = item.display.description, !description.isEmpty {
+                    //     Text(description)
+                    //         .font(.system(size: 12, weight: .medium, design: .rounded))
+                    //         .foregroundColor(.purple)
+                    //         .lineLimit(3)
+                    // }
                     
                     // Kling VIDEO 2.6 Pro Model Info
                     VStack(alignment: .leading, spacing: 8) {
@@ -683,19 +688,19 @@ private struct BannerSectionFilter: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .frame(height: 254)
+            .frame(height: 274)
             
-            // // Filter Description
-            // if let description = item.resolvedModelDescription ?? item.display.description,
-            //     !description.isEmpty
-            // {
-            //     Text(description)
-            //         .font(.system(size: 14))
-            //         .foregroundColor(.secondary)
-            //         .lineSpacing(4)
-            //         .fixedSize(horizontal: false, vertical: true)
-            //         .padding(.top, 4)
-            // }
+            // Filter Description
+            if let description = item.resolvedModelDescription ?? item.display.description,
+                !description.isEmpty
+            {
+                Text(description)
+                    .font(.system(size: 14))
+                    .foregroundColor(.secondary)
+                    .lineSpacing(4)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 4)
+            }
         }
         .padding(.horizontal)
         .padding(.top, 16)
@@ -733,8 +738,8 @@ private struct ImageUploadSectionFilter: View {
                 ZStack(alignment: .topTrailing) {
                     Image(uiImage: image)
                         .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(height: 300)
+                        .aspectRatio(contentMode: .fit)
+                        .frame(maxWidth: 140, maxHeight: 196)
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                         .overlay(
                             RoundedRectangle(cornerRadius: 12)

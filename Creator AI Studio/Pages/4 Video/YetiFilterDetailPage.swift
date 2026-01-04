@@ -9,6 +9,7 @@ import Kingfisher
 import PhotosUI
 import SwiftUI
 import AVKit
+import UIKit
 
 //struct LazyView<Content: View>: View {
 //    let build: () -> Content
@@ -37,6 +38,7 @@ struct YetiFilterDetailPage: View {
     @State private var selectedResolutionIndex: Int = 0
     @State private var generateAudio: Bool = true  // Default to ON for audio generation
     @State private var videoPlayer: AVPlayer? = nil
+    @State private var isVideoMuted: Bool = true
     @State private var keyboardHeight: CGFloat = 0
     
     @EnvironmentObject var authViewModel: AuthViewModel
@@ -201,7 +203,7 @@ struct YetiFilterDetailPage: View {
                     VStack(spacing: 24) {
                         LazyView(
                             BannerSectionYeti(
-                                item: item, price: currentPrice, videoPlayer: $videoPlayer))
+                                item: item, price: currentPrice, videoPlayer: $videoPlayer, isVideoMuted: $isVideoMuted))
                         
                         Divider().padding(.horizontal)
                         
@@ -342,12 +344,12 @@ struct YetiFilterDetailPage: View {
                         
                         Divider().padding(.horizontal)
                         
-                        // Audio toggle - only show for models that support audio generation
-                        if supportsAudio {
-                            AudioToggleSectionYeti(
-                                generateAudio: $generateAudio
-                            )
-                        }
+                        // // Audio toggle - only show for models that support audio generation
+                        // if supportsAudio {
+                        //     AudioToggleSectionYeti(
+                        //         generateAudio: $generateAudio
+                        //     )
+                        // }
                         
                         LazyView(
                             AspectRatioSectionYeti(
@@ -606,6 +608,7 @@ private struct BannerSectionYeti: View {
     let item: InfoPacket
     let price: Decimal?
     @Binding var videoPlayer: AVPlayer?
+    @Binding var isVideoMuted: Bool
     
     private func getVideoURL(for item: InfoPacket) -> URL? {
         let imageName = item.display.imageName
@@ -639,10 +642,13 @@ private struct BannerSectionYeti: View {
             HStack(alignment: .top, spacing: 16) {
                 // Try to display video first, fallback to image
                 if let player = videoPlayer {
-                    VideoPlayer(player: player)
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: 230, height: 254)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                    VideoPlayerWithMuteButton(
+                        player: player,
+                        isMuted: $isVideoMuted,
+                        width: 230,
+                        height: 254
+                    )
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
                 } else if getVideoURL(for: item) != nil {
                     // Video URL exists but player not ready yet - show placeholder
                     RoundedRectangle(cornerRadius: 12)
@@ -1443,4 +1449,3 @@ private struct AudioToggleSectionYeti: View {
         .padding(.horizontal)
     }
 }
-

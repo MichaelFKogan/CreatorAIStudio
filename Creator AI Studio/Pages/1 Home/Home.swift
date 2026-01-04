@@ -55,25 +55,25 @@ struct Home: View {
                             CategoryRow(categoryName: "Art", animationType: .scanHorizontal)
                         }
                         
-                        // Image Models Row (inserted after 2nd category)
-                        if !imageModels.isEmpty {
-                            ModelRow(
-                                title: "Image Models",
-                                iconName: "photo.on.rectangle",
-                                items: imageModels,
-                                seeAllDestination: AnyView(ImageModelsPage())
-                            )
-                        }
+                        // // Image Models Row (inserted after 2nd category)
+                        // if !imageModels.isEmpty {
+                        //     ModelRow(
+                        //         title: "Image Models",
+                        //         iconName: "photo.on.rectangle",
+                        //         items: imageModels,
+                        //         seeAllDestination: AnyView(ImageModelsPage())
+                        //     )
+                        // }
 
-                        // Video Models Row (inserted after 3rd category)
-                        if !videoModels.isEmpty {
-                            ModelRow(
-                                title: "Video Models",
-                                iconName: "video.fill",
-                                items: videoModels,
-                                seeAllDestination: AnyView(VideoModelsPage())
-                            )
-                        }
+                        // // Video Models Row (inserted after 3rd category)
+                        // if !videoModels.isEmpty {
+                        //     ModelRow(
+                        //         title: "Video Models",
+                        //         iconName: "video.fill",
+                        //         items: videoModels,
+                        //         seeAllDestination: AnyView(VideoModelsPage())
+                        //     )
+                        // }
                         
                         if hasCategoryItems("Character") {
                             CategoryRow(categoryName: "Character", animationType: .flipCard)

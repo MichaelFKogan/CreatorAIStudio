@@ -73,7 +73,7 @@ struct VideoRow: View {
                     handleScrollFeedback(newOffset: newOffset)
                 })
             }
-            .frame(height: 220)
+            .frame(height: 196)
         }
         .onAppear {
             if feedback == nil {

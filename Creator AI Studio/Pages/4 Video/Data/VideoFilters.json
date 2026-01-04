@@ -12,7 +12,7 @@
   {
     "display": {
       "title": "Gangnam Style Dance",
-      "imageName": "gangnamStyleReference",
+      "imageName": "gangnam-style",
       "description": "Transform your image into a Gangnam Style video"
     },
     "prompt": "Create a video with this style",

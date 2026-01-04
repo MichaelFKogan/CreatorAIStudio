@@ -7,6 +7,7 @@
 
 import SwiftUI
 import GoogleSignIn
+import AVFoundation
 
 @main
 struct Creator_AI_StudioApp: App {
@@ -17,6 +18,19 @@ struct Creator_AI_StudioApp: App {
     init() {
         // Enable webhook mode for image and video generation
         WebhookConfig.useWebhooks = true
+        
+        // Configure audio session at app startup to allow autoplay
+        // This primes the audio session early, which can help with autoplay restrictions
+        do {
+            try AVAudioSession.sharedInstance().setCategory(
+                .playback,
+                mode: .default,
+                options: [.mixWithOthers, .duckOthers]
+            )
+            try AVAudioSession.sharedInstance().setActive(true, options: [])
+        } catch {
+            print("Failed to configure audio session at app startup: \(error)")
+        }
     }
 
     var body: some Scene {

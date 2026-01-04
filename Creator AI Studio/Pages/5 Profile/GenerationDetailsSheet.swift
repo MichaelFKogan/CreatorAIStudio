@@ -293,27 +293,6 @@ struct GenerationDetailsSheet: View {
             Text("\(Int(placeholder.progress * 100))%")
                 .font(.caption)
                 .foregroundColor(.secondary)
-            
-            // Cancel button (shown when elapsed time >= 2 minutes)
-            if showCancelButton {
-                Button(action: {
-                    notificationManager.cancelTask(notificationId: placeholder.id)
-                    // Close the sheet after cancellation
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                        isPresented = false
-                    }
-                }) {
-                    Text("Cancel")
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.red)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 10)
-                        .background(Color.red.opacity(0.1))
-                        .cornerRadius(8)
-                }
-                .padding(.top, 8)
-            }
         }
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -364,17 +343,8 @@ struct GenerationDetailsSheet: View {
             state: placeholder.state
         )
         
-        // Show cancel button when elapsed time >= 5 minutes and task can still be cancelled
-        if elapsedMinutes >= 5 && placeholder.state == .inProgress {
-            // Check if task can still be cancelled
-            let canCancel = ImageGenerationCoordinator.shared.canCancelTask(notificationId: placeholder.id) ||
-                           VideoGenerationCoordinator.shared.canCancelTask(notificationId: placeholder.id)
-            print("🔍 [GenerationDetailsSheet] Cancel button check: elapsedMinutes=\(elapsedMinutes), canCancel=\(canCancel), state=\(placeholder.state)")
-            showCancelButton = canCancel
-        } else {
-            print("🔍 [GenerationDetailsSheet] Cancel button not shown: elapsedMinutes=\(elapsedMinutes), state=\(placeholder.state)")
-            showCancelButton = false
-        }
+        // Cancel button disabled - users cannot cancel generations
+        showCancelButton = false
         
         // Show timeout message in two scenarios:
         // 1. Initial timeout warning (5-6 minutes)

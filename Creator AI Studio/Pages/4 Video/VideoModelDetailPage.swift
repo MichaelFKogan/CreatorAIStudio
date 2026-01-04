@@ -50,7 +50,6 @@ struct VideoModelDetailPage: View {
     @State private var showPurchaseCreditsView: Bool = false
     @AppStorage("testSubscriptionStatus") private var isSubscribed: Bool = false  // Testing: Toggle in Settings
     @State private var hasCredits: Bool = true  // TODO: Connect to actual credits check
-    @ObservedObject private var networkMonitor = NetworkMonitor.shared
 
     @EnvironmentObject var authViewModel: AuthViewModel
 
@@ -375,28 +374,6 @@ struct VideoModelDetailPage: View {
                             .padding(.bottom, -16)
                         }
 
-                        // Network connectivity disclaimer (shown when no internet)
-                        if !networkMonitor.isConnected {
-                            VStack(spacing: 4) {
-                                HStack(spacing: 6) {
-                                    Spacer()
-                                    Image(
-                                        systemName:
-                                            "exclamationmark.circle.fill"
-                                    )
-                                    .font(.system(size: 14))
-                                    .foregroundColor(.red)
-                                    Text(
-                                        "No internet connection. Please connect to the internet."
-                                    )
-                                    .font(.caption)
-                                    .foregroundColor(.red)
-                                    Spacer()
-                                }
-                            }
-                            .padding(.horizontal)
-                        }
-                        
                         // Login disclaimer (shown when not logged in)
                         if authViewModel.user == nil {
                             VStack(spacing: 4) {
@@ -534,7 +511,6 @@ struct VideoModelDetailPage: View {
                                 isLoggedIn: authViewModel.user != nil,
                                 isSubscribed: isSubscribed,
                                 hasCredits: hasCredits,
-                                isConnected: networkMonitor.isConnected,
                                 onSignInTap: {
                                     showSignInSheet = true
                                 },
@@ -1545,12 +1521,11 @@ private struct GenerateButtonVideo: View {
     let isLoggedIn: Bool
     let isSubscribed: Bool
     let hasCredits: Bool
-    let isConnected: Bool
     let onSignInTap: () -> Void
     let action: () -> Void
 
     private var canGenerate: Bool {
-        isLoggedIn && isSubscribed && hasCredits && isConnected
+        isLoggedIn && isSubscribed && hasCredits
     }
 
     var body: some View {
