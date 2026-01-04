@@ -7,7 +7,8 @@
     },
     "prompt": "Create a video with this style",
     "cost": 1.1,
-    "type": "Video Filter"
+    "type": "Video Filter",
+    "referenceVideoName": "technoVikingReference"
   },
   {
     "display": {
@@ -17,7 +18,8 @@
     },
     "prompt": "Create a video with this style",
     "cost": 1.1,
-    "type": "Video Filter"
+    "type": "Video Filter",
+    "referenceVideoName": "gangnamStyleReference"
   },
   {
     "display": {

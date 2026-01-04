@@ -155,10 +155,11 @@ struct VideoRow: View {
     @ViewBuilder
     private func destinationView(for item: InfoPacket) -> some View {
         // Navigate to specific filter template pages
-        if item.display.title.lowercased().contains("techno viking") {
-            TechnoVikingFilterDetailPage(item: item)
-        } else if item.display.title.lowercased().contains("gangnam style") {
-            GangnamStyleFilterDetailPage(item: item)
+        // Use generic DanceFilterDetailPage for dance filters (those with referenceVideoName)
+        if item.referenceVideoName != nil || 
+           item.display.title.lowercased().contains("techno viking") ||
+           item.display.title.lowercased().contains("gangnam style") {
+            DanceFilterDetailPage(item: item)
         } else if item.display.title.lowercased().contains("yeti") {
             YetiFilterDetailPage(item: item)
         } else {
