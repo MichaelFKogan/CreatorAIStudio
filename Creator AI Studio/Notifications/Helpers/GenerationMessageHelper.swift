@@ -44,15 +44,15 @@ struct GenerationMessageHelper {
         
         let elapsedMinutes = Int(elapsedSeconds / 60)
         
-        // After 3 minutes and before 5 minutes, show timeout warning countdown
-        // After 5 minutes, the generation should have timed out (state should be failed)
+        // After 5 minutes and before 10 minutes, show timeout warning countdown
+        // After 10 minutes, the generation should have timed out (state should be failed)
         // But if still in progress, show a final timeout message
-        if elapsedMinutes >= 3 {
-            if elapsedMinutes < 5 {
-                let remainingMinutes = 5 - elapsedMinutes
+        if elapsedMinutes >= 5 {
+            if elapsedMinutes < 10 {
+                let remainingMinutes = 10 - elapsedMinutes
                 return "This will cancel in \(remainingMinutes) minute\(remainingMinutes == 1 ? "" : "s") if no result. You won't be charged for failed generations."
             } else {
-                // After 5 minutes, show timeout message (shouldn't happen if state is properly updated)
+                // After 10 minutes, show timeout message (shouldn't happen if state is properly updated)
                 return "Generation timed out"
             }
         }
@@ -66,16 +66,16 @@ struct GenerationMessageHelper {
     /// Get the timeout message to show initially
     static func getTimeoutMessage(isVideo: Bool) -> String {
         if isVideo {
-            return "Video will timeout in 3 minutes if no video is generated"
+            return "Video will timeout in 5 minutes if no video is generated"
         } else {
-            return "Image will timeout in 3 minutes if no image is generated"
+            return "Image will timeout in 5 minutes if no image is generated"
         }
     }
     
-    /// Check if we should show the timeout message (after 2 minutes)
+    /// Check if we should show the timeout message (after 5 minutes)
     static func shouldShowTimeoutMessage(elapsedSeconds: TimeInterval) -> Bool {
         let elapsedMinutes = elapsedSeconds / 60
-        return elapsedMinutes >= 2 && elapsedMinutes < 3
+        return elapsedMinutes >= 5 && elapsedMinutes < 6
     }
 }
 

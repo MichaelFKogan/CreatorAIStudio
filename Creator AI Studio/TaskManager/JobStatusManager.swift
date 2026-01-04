@@ -150,12 +150,12 @@ class JobStatusManager: ObservableObject {
         do {
             // Get stuck jobs before they're deleted so we can update notifications
             let now = Date()
-            // Both video and image jobs timeout after 5 minutes
-            let timeoutCutoff = Calendar.current.date(byAdding: .minute, value: -5, to: now)!
+            // Both video and image jobs timeout after 10 minutes
+            let timeoutCutoff = Calendar.current.date(byAdding: .minute, value: -10, to: now)!
             
             let timeoutCutoffString = ISO8601DateFormatter().string(from: timeoutCutoff)
             
-            // Fetch stuck jobs (both video and image timeout after 5 minutes)
+            // Fetch stuck jobs (both video and image timeout after 10 minutes)
             let stuckJobs: [PendingJob] = try await SupabaseManager.shared.client.database
                 .from("pending_jobs")
                 .select()
@@ -166,7 +166,7 @@ class JobStatusManager: ObservableObject {
             
             // Update notifications for stuck jobs before they're deleted
             for job in stuckJobs {
-                let errorMessage = "Generation timed out after 5 minutes. Please try again."
+                let errorMessage = "Generation timed out after 10 minutes. Please try again."
                 
                 if let notificationId = taskNotificationMap[job.task_id] {
                     await MainActor.run {
@@ -279,11 +279,11 @@ class JobStatusManager: ObservableObject {
             for job in jobs where !job.isComplete {
                 guard let createdAt = job.created_at else { continue }
                 let jobAge = now.timeIntervalSince(createdAt) // Positive value for past dates
-                let timeoutMinutes: Double = 5 // Both video and image timeout after 5 minutes
+                let timeoutMinutes: Double = 10 // Both video and image timeout after 10 minutes
                 
                 if jobAge > timeoutMinutes * 60 {
                     // Job is stuck, get actual error from provider if possible
-                    let defaultErrorMessage = "Generation timed out after 5 minutes. Please try again."
+                    let defaultErrorMessage = "Generation timed out after 10 minutes. Please try again."
                     let actualErrorMessage = await getActualErrorMessage(for: job, defaultMessage: defaultErrorMessage)
                     
                     // Update notification if one exists
@@ -404,7 +404,7 @@ class JobStatusManager: ObservableObject {
             
             let jobs = try supabaseDecoder.decode([PendingJob].self, from: response.data)
             let now = Date()
-            let timeoutSeconds: Double = 5 * 60 // 5 minutes
+            let timeoutSeconds: Double = 10 * 60 // 10 minutes
             
             for job in jobs {
                 guard let createdAt = job.created_at else { continue }
@@ -412,7 +412,7 @@ class JobStatusManager: ObservableObject {
                 
                 if jobAge > timeoutSeconds {
                     // Job has timed out, get actual error from provider if possible
-                    let defaultErrorMessage = "Generation timed out after 5 minutes. Please try again."
+                    let defaultErrorMessage = "Generation timed out after 10 minutes. Please try again."
                     let actualErrorMessage = await getActualErrorMessage(for: job, defaultMessage: defaultErrorMessage)
                     
                     // Update notification if one exists
@@ -602,7 +602,7 @@ class JobStatusManager: ObservableObject {
                 await MainActor.run {
                     NotificationManager.shared.markAsFailed(
                         id: notificationId,
-                        errorMessage: "Generation timed out after 5 minutes. Please try again."
+                        errorMessage: "Generation timed out after 10 minutes. Please try again."
                     )
                     print("[JobStatusManager] ⚠️ Marked notification as failed for deleted job: \(taskId)")
                 }

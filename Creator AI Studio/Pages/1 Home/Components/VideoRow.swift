@@ -94,7 +94,7 @@ struct VideoRow: View {
         // Try to get video URL from display.imageName
         // This could be a bundle resource name or a URL string
         if let videoURL = getVideoURL(for: item) {
-            VideoPlayer(player: getOrCreatePlayer(for: item, url: videoURL))
+            VideoRowPlayerView(item: item, videoURL: videoURL, playingVideos: $playingVideos)
                 .aspectRatio(contentMode: .fill)
                 .frame(width: 140, height: 196)
                 .clipped()
@@ -135,38 +135,9 @@ struct VideoRow: View {
         return nil
     }
     
-    private func getOrCreatePlayer(for item: InfoPacket, url: URL) -> AVPlayer {
-        if let existingPlayer = playingVideos[item.id] {
-            return existingPlayer
-        }
-        
-        let player = AVPlayer(url: url)
-        player.isMuted = true // Mute by default for autoplay
-        player.actionAtItemEnd = .none // Don't pause at end
-        
-        // Loop the video
-        NotificationCenter.default.addObserver(
-            forName: .AVPlayerItemDidPlayToEndTime,
-            object: player.currentItem,
-            queue: .main
-        ) { _ in
-            player.seek(to: .zero)
-            player.play()
-        }
-        
-        playingVideos[item.id] = player
-        player.play()
-        
-        return player
-    }
-    
     private func setupVideoPlayers() {
-        // Pre-setup players for first few items for better performance
-        for item in items.prefix(3) {
-            if let videoURL = getVideoURL(for: item) {
-                _ = getOrCreatePlayer(for: item, url: videoURL)
-            }
-        }
+        // Players are now created lazily in VideoPlayerView.onAppear
+        // This method is kept for potential future pre-loading optimizations
     }
     
     private func cleanupVideoPlayers() {
@@ -199,10 +170,16 @@ struct VideoRow: View {
     }
     
     private func handleScrollFeedback(newOffset: CGFloat) {
-        let delta = abs(newOffset - lastOffset)
-        if delta > 40 {
-            feedback?.selectionChanged()
-            lastOffset = newOffset
+        // Guard against invalid values
+        guard newOffset.isFinite && !newOffset.isNaN else { return }
+        
+        // Use async dispatch to avoid modifying state during view update
+        Task { @MainActor in
+            let delta = abs(newOffset - lastOffset)
+            if delta > 40 {
+                feedback?.selectionChanged()
+                lastOffset = newOffset
+            }
         }
     }
 }
@@ -244,10 +221,65 @@ private struct ScrollOffsetReader: View {
     
     var body: some View {
         GeometryReader { geo in
+            let minX = geo.frame(in: .global).minX
+            // Only send valid frame values
             Color.clear
-                .preference(key: ScrollOffsetKey.self, value: geo.frame(in: .global).minX)
+                .preference(key: ScrollOffsetKey.self, value: minX.isFinite && !minX.isNaN ? minX : 0)
         }
         .onPreferenceChange(ScrollOffsetKey.self, perform: onChange)
+    }
+}
+
+// MARK: - Video Row Player View (separate view to avoid state modification during body rendering)
+private struct VideoRowPlayerView: View {
+    let item: InfoPacket
+    let videoURL: URL
+    @Binding var playingVideos: [UUID: AVPlayer]
+    @State private var player: AVPlayer?
+    
+    var body: some View {
+        Group {
+            if let player = player {
+                VideoPlayer(player: player)
+            } else {
+                Color.clear
+                    .onAppear {
+                        setupPlayer()
+                    }
+            }
+        }
+    }
+    
+    private func setupPlayer() {
+        // Check if player already exists
+        if let existingPlayer = playingVideos[item.id] {
+            player = existingPlayer
+            return
+        }
+        
+        // Create new player
+        let newPlayer = AVPlayer(url: videoURL)
+        newPlayer.isMuted = true
+        newPlayer.actionAtItemEnd = .none
+        
+        // Loop the video
+        NotificationCenter.default.addObserver(
+            forName: .AVPlayerItemDidPlayToEndTime,
+            object: newPlayer.currentItem,
+            queue: .main
+        ) { _ in
+            Task { @MainActor in
+                newPlayer.seek(to: .zero)
+                newPlayer.play()
+            }
+        }
+        
+        // Update state asynchronously
+        Task { @MainActor in
+            playingVideos[item.id] = newPlayer
+            player = newPlayer
+            newPlayer.play()
+        }
     }
 }
 

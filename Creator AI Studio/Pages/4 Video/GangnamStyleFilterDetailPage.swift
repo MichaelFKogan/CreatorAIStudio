@@ -215,6 +215,19 @@ struct GangnamStyleFilterDetailPage: View {
                             .padding(.horizontal)
                         }
                         
+                        // Full body image disclaimer
+                        HStack(spacing: 6) {
+                            Spacer()
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .font(.system(size: 14))
+                                .foregroundColor(.yellow)
+                            Text("Please upload a full body image")
+                                .font(.caption)
+                                .foregroundColor(.yellow)
+                            Spacer()
+                        }
+                        .padding(.horizontal)
+                        
                         LazyView(
                             GenerateButtonFilter(
                                 isGenerating: $isGenerating,
@@ -383,19 +396,31 @@ struct GangnamStyleFilterDetailPage: View {
     // MARK: REFERENCE VIDEO HELPER
     
     /// Gets the reference video URL for motion control (separate from UI preview video)
+    /// Uses a pre-hosted Supabase URL to avoid uploading the same video with every request
     private func getReferenceVideoURL() -> URL? {
-        let referenceVideoName = "gangnamStyleReference"
+        // IMPORTANT: Replace this with your actual Supabase Storage URL after uploading gangnamStyleReference.mp4
+        // Example: "https://your-project-id.supabase.co/storage/v1/object/public/videos/gangnamStyleReference.mp4"
+        let supabaseVideoURL = "https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/reference-videos/gangnamStyleReference.mp4"
         
-        // Check if it's a URL string
-        if referenceVideoName.hasPrefix("http://") || referenceVideoName.hasPrefix("https://") {
-            return URL(string: referenceVideoName)
+        // Use the hosted URL if available (preferred for efficiency)
+        if !supabaseVideoURL.isEmpty {
+            return URL(string: supabaseVideoURL)
         }
         
-        // Check if it's a video file in the bundle
-        // Try common video extensions
+        // Fallback to local bundle (for development/testing)
+        let referenceVideoName = "gangnamStyleReference"
         let videoExtensions = ["mp4", "mov", "m4v", "webm"]
+        
+        // Check bundle root
         for ext in videoExtensions {
             if let url = Bundle.main.url(forResource: referenceVideoName, withExtension: ext) {
+                return url
+            }
+        }
+        
+        // Check in Videos subdirectory
+        for ext in videoExtensions {
+            if let url = Bundle.main.url(forResource: referenceVideoName, withExtension: ext, subdirectory: "Videos") {
                 return url
             }
         }

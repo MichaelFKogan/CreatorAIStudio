@@ -40,6 +40,17 @@ struct ImageAnimations: View {
         return imageName
     }
     
+    // Validate frame dimensions to prevent invalid frame errors
+    private var validWidth: CGFloat {
+        guard width.isFinite && !width.isNaN && width > 0 else { return 140 }
+        return width
+    }
+    
+    private var validHeight: CGFloat {
+        guard height.isFinite && !height.isNaN && height > 0 else { return 196 }
+        return height
+    }
+    
     var body: some View {
         ZStack {
             switch animation {
@@ -65,7 +76,7 @@ struct ImageAnimations: View {
                 instagramFilter
             }
         }
-        .frame(width: width, height: height)
+        .frame(width: validWidth, height: validHeight)
         .clipped()
         .onAppear {
             // Only start animation once to prevent restarting when view reappears
@@ -83,24 +94,24 @@ struct ImageAnimations: View {
             Image(assetName(from: transformedImageName))
                 .resizable()
                 .aspectRatio(contentMode: .fill)
-                .frame(width: width, height: height)
+                .frame(width: validWidth, height: validHeight)
                 .clipped()
             
             Image(assetName(from: originalImageName))
                 .resizable()
                 .aspectRatio(contentMode: .fill)
-                .frame(width: width, height: height)
+                .frame(width: validWidth, height: validHeight)
                 .clipped()
                 .mask(
                     Rectangle()
-                        .frame(width: scanPosition)
+                        .frame(width: max(0, scanPosition))
                         .frame(maxWidth: .infinity, alignment: .leading)
                 )
             
             Rectangle()
                 .fill(Color.white)
                 .frame(width: 2)
-                .frame(height: height)
+                .frame(height: validHeight)
                 .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 0)
                 .offset(x: scanPosition)
         }
@@ -112,17 +123,17 @@ struct ImageAnimations: View {
                 Image(assetName(from: transformedImageName))
                     .resizable()
                     .aspectRatio(contentMode: .fill)
-                    .frame(width: width, height: height)
+                    .frame(width: validWidth, height: validHeight)
                     .clipped()
                 
                 Image(assetName(from: originalImageName))
                     .resizable()
                     .aspectRatio(contentMode: .fill)
-                    .frame(width: width, height: height)
+                    .frame(width: validWidth, height: validHeight)
                     .clipped()
                     .mask(
                         Rectangle()
-                            .frame(height: geometry.size.height - scanPositionVertical)
+                            .frame(height: max(0, geometry.size.height - scanPositionVertical))
                             .frame(maxHeight: .infinity, alignment: .bottom)
                     )
                 
@@ -135,12 +146,12 @@ struct ImageAnimations: View {
                 Rectangle()
                     .fill(Color.white)
                     .frame(height: 2)
-                    .frame(width: width)
+                    .frame(width: validWidth)
                     .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 0)
-                    .position(x: geometry.size.width / 2, y: scanPositionVertical)
+                    .position(x: geometry.size.width / 2, y: max(0, scanPositionVertical))
             }
         }
-        .frame(width: width, height: height)
+        .frame(width: validWidth, height: validHeight)
     }
     
     private var crossfade: some View {
@@ -148,13 +159,13 @@ struct ImageAnimations: View {
             Image(assetName(from: transformedImageName))
                 .resizable()
                 .aspectRatio(contentMode: .fill)
-                .frame(width: width, height: height)
+                .frame(width: validWidth, height: validHeight)
                 .clipped()
             
             Image(assetName(from: originalImageName))
                 .resizable()
                 .aspectRatio(contentMode: .fill)
-                .frame(width: width, height: height)
+                .frame(width: validWidth, height: validHeight)
                 .clipped()
                 .opacity(fadeToOriginal ? 1.0 : 0.0)
         }
@@ -167,7 +178,7 @@ struct ImageAnimations: View {
                 Image(assetName(from: transformedImageName))
                     .resizable()
                     .aspectRatio(contentMode: .fill)
-                    .frame(width: width, height: height)
+                    .frame(width: validWidth, height: validHeight)
                     .clipped()
                 
                 let currentX = sliderPosition ?? totalWidth * 0.5
@@ -175,11 +186,11 @@ struct ImageAnimations: View {
                 Image(assetName(from: originalImageName))
                     .resizable()
                     .aspectRatio(contentMode: .fill)
-                    .frame(width: width, height: height)
+                    .frame(width: validWidth, height: validHeight)
                     .clipped()
                     .mask(
                         Rectangle()
-                            .frame(width: currentX)
+                            .frame(width: max(0, currentX))
                             .frame(maxWidth: .infinity, alignment: .leading)
                     )
                 
@@ -188,7 +199,7 @@ struct ImageAnimations: View {
                     Rectangle()
                         .fill(Color.white)
                         .frame(width: 2)
-                        .frame(height: height)
+                        .frame(height: validHeight)
                         .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 0)
                     Circle()
                         .fill(Color.white)
@@ -206,7 +217,7 @@ struct ImageAnimations: View {
                 )
             }
         }
-        .frame(width: width, height: height)
+        .frame(width: validWidth, height: validHeight)
     }
     
     private var flipCard: some View {
@@ -215,7 +226,7 @@ struct ImageAnimations: View {
             Image(assetName(from: originalImageName))
                 .resizable()
                 .aspectRatio(contentMode: .fill)
-                .frame(width: width, height: height)
+                .frame(width: validWidth, height: validHeight)
                 .clipped()
                 .opacity(flipAngle < 90 ? 1 : 0)
             
@@ -223,7 +234,7 @@ struct ImageAnimations: View {
             Image(assetName(from: transformedImageName))
                 .resizable()
                 .aspectRatio(contentMode: .fill)
-                .frame(width: width, height: height)
+                .frame(width: validWidth, height: validHeight)
                 .clipped()
                 .opacity(flipAngle >= 90 ? 1 : 0)
         }
@@ -240,7 +251,7 @@ struct ImageAnimations: View {
             Image(assetName(from: originalImageName))
                 .resizable()
                 .aspectRatio(contentMode: .fill)
-                .frame(width: width, height: height)
+                .frame(width: validWidth, height: validHeight)
                 .clipped()
                 .rotation3DEffect(
                     .degrees(cubeAngle),
@@ -254,7 +265,7 @@ struct ImageAnimations: View {
             Image(assetName(from: transformedImageName))
                 .resizable()
                 .aspectRatio(contentMode: .fill)
-                .frame(width: width, height: height)
+                .frame(width: validWidth, height: validHeight)
                 .clipped()
                 .rotation3DEffect(
                     .degrees(cubeAngle - 180),
@@ -280,7 +291,7 @@ struct ImageAnimations: View {
                 Image(assetName(from: originalImageName))
                     .resizable()
                     .aspectRatio(contentMode: .fill)
-                    .frame(width: width, height: height)
+                    .frame(width: validWidth, height: validHeight)
                     .clipped()
                     .overlay(
                         // Black overlay that fades out as aperture opens
@@ -291,7 +302,7 @@ struct ImageAnimations: View {
                 Image(assetName(from: transformedImageName))
                     .resizable()
                     .aspectRatio(contentMode: .fill)
-                    .frame(width: width, height: height)
+                    .frame(width: validWidth, height: validHeight)
                     .clipped()
                     .mask(
                         Circle()
@@ -300,7 +311,7 @@ struct ImageAnimations: View {
                     )
             }
         }
-        .frame(width: width, height: height)
+        .frame(width: validWidth, height: validHeight)
     }
     
     private var instagramFilter: some View {
@@ -309,14 +320,14 @@ struct ImageAnimations: View {
             Image(assetName(from: originalImageName))
                 .resizable()
                 .aspectRatio(contentMode: .fill)
-                .frame(width: width, height: height)
+                .frame(width: validWidth, height: validHeight)
                 .clipped()
             
             // Transformed image with filter overlay effect
             Image(assetName(from: transformedImageName))
                 .resizable()
                 .aspectRatio(contentMode: .fill)
-                .frame(width: width, height: height)
+                .frame(width: validWidth, height: validHeight)
                 .clipped()
                 .opacity(instagramFilterOpacity)
                 .overlay(
@@ -340,7 +351,7 @@ struct ImageAnimations: View {
         switch animation {
         case .scanHorizontal:
             // Start showing original (mask at full width)
-            scanPosition = width
+            scanPosition = validWidth
             func animateScanHorizontal() {
                 // Phase 1: Quickly scan to reveal transformed (smooth easeInOut)
                 withAnimation(
@@ -358,7 +369,7 @@ struct ImageAnimations: View {
                         Animation
                             .easeInOut(duration: 0.7)
                     ) {
-                        scanPosition = width
+                        scanPosition = validWidth
                     }
                     
                     // Phase 4: Stay at original (pause) - show original image shorter, then repeat
@@ -372,7 +383,7 @@ struct ImageAnimations: View {
             
         case .scanVertical:
             // Start showing original (mask at full height)
-            scanPositionVertical = height
+            scanPositionVertical = validHeight
             func animateScanVertical() {
                 // Phase 1: Quickly scan to reveal transformed (smooth easeInOut)
                 withAnimation(
@@ -390,7 +401,7 @@ struct ImageAnimations: View {
                         Animation
                             .easeInOut(duration: 0.9)
                     ) {
-                        scanPositionVertical = height
+                        scanPositionVertical = validHeight
                     }
                     
                     // Phase 4: Stay at original (pause) - show original image shorter, then repeat
@@ -405,7 +416,7 @@ struct ImageAnimations: View {
         case .scanHorizontalVarying:
             scanHorizontalDuration = Double.random(in: 1.0...2.0)
             // Start showing original (mask at full width)
-            scanPosition = width
+            scanPosition = validWidth
             func animateScanHorizontalVarying() {
                 let revealDuration = scanHorizontalDuration * 0.3
                 // Phase 1: Scan to reveal transformed (smooth easeInOut)
@@ -424,7 +435,7 @@ struct ImageAnimations: View {
                         Animation
                             .easeInOut(duration: revealDuration * 0.75)
                     ) {
-                        scanPosition = width
+                        scanPosition = validWidth
                     }
                     
                     // Phase 4: Stay at original (pause) - show original image shorter, then repeat
@@ -440,7 +451,7 @@ struct ImageAnimations: View {
         case .scanVerticalVarying:
             scanVerticalDuration = Double.random(in: 1.0...2.0)
             // Start showing original (mask at full height)
-            scanPositionVertical = height
+            scanPositionVertical = validHeight
             func animateScanVerticalVarying() {
                 let revealDuration = scanVerticalDuration * 0.3
                 // Phase 1: Scan to reveal transformed (smooth easeInOut)
@@ -459,7 +470,7 @@ struct ImageAnimations: View {
                         Animation
                             .easeInOut(duration: revealDuration * 0.75)
                     ) {
-                        scanPositionVertical = height
+                        scanPositionVertical = validHeight
                     }
                     
                     // Phase 4: Stay at original (pause) - show original image shorter, then repeat
@@ -570,11 +581,11 @@ struct ImageAnimations: View {
             
         case .slider:
             // Initialize slider to middle
-            sliderPosition = width * 0.5
+            sliderPosition = validWidth * 0.5
             
         case .cameraAperture:
             apertureSize = 0
-            let maxRadius = sqrt(pow(width, 2) + pow(height, 2))
+            let maxRadius = sqrt(pow(validWidth, 2) + pow(validHeight, 2))
             
             // Custom sequence: Open quickly, stay open longer, close quickly, stay closed shorter
             func animateAperture() {

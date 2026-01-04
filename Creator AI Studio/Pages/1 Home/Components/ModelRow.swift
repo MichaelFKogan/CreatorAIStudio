@@ -89,10 +89,16 @@ struct ModelRow: View {
     }
     
     private func handleScrollFeedback(newOffset: CGFloat) {
-        let delta = abs(newOffset - lastOffset)
-        if delta > 40 {
-            feedback?.selectionChanged()
-            lastOffset = newOffset
+        // Guard against invalid values
+        guard newOffset.isFinite && !newOffset.isNaN else { return }
+        
+        // Use async dispatch to avoid modifying state during view update
+        Task { @MainActor in
+            let delta = abs(newOffset - lastOffset)
+            if delta > 40 {
+                feedback?.selectionChanged()
+                lastOffset = newOffset
+            }
         }
     }
 }
@@ -147,8 +153,10 @@ private struct ScrollOffsetReader: View {
     
     var body: some View {
         GeometryReader { geo in
+            let minX = geo.frame(in: .global).minX
+            // Only send valid frame values
             Color.clear
-                .preference(key: ScrollOffsetKey.self, value: geo.frame(in: .global).minX)
+                .preference(key: ScrollOffsetKey.self, value: minX.isFinite && !minX.isNaN ? minX : 0)
         }
         .onPreferenceChange(ScrollOffsetKey.self, perform: onChange)
     }

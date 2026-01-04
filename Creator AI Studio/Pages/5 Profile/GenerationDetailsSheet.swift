@@ -364,8 +364,8 @@ struct GenerationDetailsSheet: View {
             state: placeholder.state
         )
         
-        // Show cancel button when elapsed time >= 2 minutes and task can still be cancelled
-        if elapsedMinutes >= 2 && placeholder.state == .inProgress {
+        // Show cancel button when elapsed time >= 5 minutes and task can still be cancelled
+        if elapsedMinutes >= 5 && placeholder.state == .inProgress {
             // Check if task can still be cancelled
             let canCancel = ImageGenerationCoordinator.shared.canCancelTask(notificationId: placeholder.id) ||
                            VideoGenerationCoordinator.shared.canCancelTask(notificationId: placeholder.id)
@@ -377,16 +377,16 @@ struct GenerationDetailsSheet: View {
         }
         
         // Show timeout message in two scenarios:
-        // 1. Initial timeout warning (2-3 minutes)
-        // 2. Countdown timeout warning (3-5 minutes)
-        if elapsedMinutes >= 2 && elapsedMinutes < 3 {
-            // Initial timeout message (2-3 minutes)
+        // 1. Initial timeout warning (5-6 minutes)
+        // 2. Countdown timeout warning (5-10 minutes)
+        if elapsedMinutes >= 5 && elapsedMinutes < 6 {
+            // Initial timeout message (5-6 minutes)
             showTimeoutMessage = true
             timeoutMessage = GenerationMessageHelper.getTimeoutMessage(isVideo: isVideo)
-        } else if elapsedMinutes >= 3 && elapsedMinutes < 5 {
-            // Countdown timeout message (3-5 minutes)
+        } else if elapsedMinutes >= 5 && elapsedMinutes < 10 {
+            // Countdown timeout message (5-10 minutes)
             showTimeoutMessage = true
-            let remainingMinutes = 5 - elapsedMinutes
+            let remainingMinutes = 10 - elapsedMinutes
             timeoutMessage = "This will cancel in \(remainingMinutes) minute\(remainingMinutes == 1 ? "" : "s") if no result. You won't be charged for failed generations."
         } else {
             // No timeout message to show

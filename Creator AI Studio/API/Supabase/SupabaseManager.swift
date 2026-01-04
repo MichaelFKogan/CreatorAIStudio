@@ -472,8 +472,8 @@ class SupabaseManager {
         let now = Date()
         
         // Fetch stuck jobs (pending or processing status for too long)
-        // Both video and image jobs timeout after 5 minutes
-        let timeoutCutoff = Calendar.current.date(byAdding: .minute, value: -(olderThanMinutes ?? 5), to: now)!
+        // Both video and image jobs timeout after 10 minutes
+        let timeoutCutoff = Calendar.current.date(byAdding: .minute, value: -(olderThanMinutes ?? 10), to: now)!
         
         let timeoutCutoffString = ISO8601DateFormatter().string(from: timeoutCutoff)
         
@@ -491,7 +491,7 @@ class SupabaseManager {
         if count > 0 {
             // Save each stuck job to user_media before deleting from pending_jobs
             for job in stuckJobs {
-                let errorMessage = "Generation timed out after 5 minutes. Please try again."
+                let errorMessage = "Generation timed out after 10 minutes. Please try again."
                 
                 // Save to user_media for tracking in UsageView
                 if job.job_type == "image" {

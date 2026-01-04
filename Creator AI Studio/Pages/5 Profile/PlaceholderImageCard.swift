@@ -70,12 +70,12 @@ struct PlaceholderImageCard: View {
                         .stroke(borderColor, lineWidth: 2)
                 )
 
-            VStack(spacing: 8) {
+            VStack(spacing: 6) {
                 // Tappable area for image and title/message
                 Button(action: {
                     showDetailsSheet = true
                 }) {
-                    VStack(spacing: 8) {
+                    VStack(spacing: 6) {
                         // Thumbnail or Icon
                         if let thumbnail = placeholder.thumbnailImage, isValidImage {
                             Image(uiImage: thumbnail)
@@ -152,7 +152,7 @@ struct PlaceholderImageCard: View {
                         }
 
                         // Title and Message
-                        VStack(spacing: 4) {
+                        VStack(spacing: 3) {
                             Text(placeholder.title)
                                 .font(.custom("Nunito-Bold", size: 11))
                                 .foregroundColor(.primary)
@@ -176,12 +176,26 @@ struct PlaceholderImageCard: View {
                 if placeholder.state == .failed {
                     VStack(spacing: 6) {
                         if let errorMsg = placeholder.errorMessage {
-                            Text(errorMsg)
-                                .font(.custom("Nunito-Regular", size: 8))
-                                .foregroundColor(.red.opacity(0.8))
-                                .lineLimit(2)
-                                .multilineTextAlignment(.center)
+                            Button(action: {
+                                showDetailsSheet = true
+                            }) {
+                                VStack(spacing: 2) {
+                                    Text(errorMsg)
+                                        .font(.custom("Nunito-Regular", size: 8))
+                                        .foregroundColor(.red.opacity(0.8))
+                                        .lineLimit(2)
+                                        .multilineTextAlignment(.center)
+                                    
+                                    // Show indicator if text might be truncated
+                                    if errorMsg.count > 60 {
+                                        Text("Tap for full message")
+                                            .font(.custom("Nunito-Regular", size: 7))
+                                            .foregroundColor(.red.opacity(0.6))
+                                    }
+                                }
                                 .padding(.horizontal, 8)
+                            }
+                            .buttonStyle(PlainButtonStyle())
                         }
 
                         // Retry button
@@ -228,24 +242,52 @@ struct PlaceholderImageCard: View {
                     VStack(spacing: 4) {
                         // Timeout message (shown initially)
                         if showTimeoutMessage && !timeoutMessage.isEmpty {
-                            Text(timeoutMessage)
-                                .font(.custom("Nunito-Regular", size: 8))
-                                .foregroundColor(.orange.opacity(0.9))
-                                .lineLimit(2)
-                                .multilineTextAlignment(.center)
+                            Button(action: {
+                                showDetailsSheet = true
+                            }) {
+                                VStack(spacing: 2) {
+                                    Text(timeoutMessage)
+                                        .font(.custom("Nunito-Regular", size: 8))
+                                        .foregroundColor(.orange.opacity(0.9))
+                                        .lineLimit(2)
+                                        .multilineTextAlignment(.center)
+                                    
+                                    // Show indicator if text might be truncated
+                                    if timeoutMessage.count > 60 {
+                                        Text("Tap for full message")
+                                            .font(.custom("Nunito-Regular", size: 7))
+                                            .foregroundColor(.orange.opacity(0.7))
+                                    }
+                                }
                                 .padding(.horizontal, 8)
                                 .padding(.bottom, 2)
+                            }
+                            .buttonStyle(PlainButtonStyle())
                         }
                         
                         // Dynamic message
                         if !dynamicMessage.isEmpty {
-                            Text(dynamicMessage)
-                                .font(.custom("Nunito-Regular", size: 9))
-                                .foregroundColor(.secondary)
-                                .lineLimit(2)
-                                .multilineTextAlignment(.center)
+                            Button(action: {
+                                showDetailsSheet = true
+                            }) {
+                                VStack(spacing: 2) {
+                                    Text(dynamicMessage)
+                                        .font(.custom("Nunito-Regular", size: 9))
+                                        .foregroundColor(.secondary)
+                                        .lineLimit(2)
+                                        .multilineTextAlignment(.center)
+                                    
+                                    // Show indicator if text might be truncated
+                                    if dynamicMessage.count > 60 {
+                                        Text("Tap for full message")
+                                            .font(.custom("Nunito-Regular", size: 7))
+                                            .foregroundColor(.secondary.opacity(0.7))
+                                    }
+                                }
                                 .padding(.horizontal, 8)
                                 .padding(.bottom, 2)
+                            }
+                            .buttonStyle(PlainButtonStyle())
                         }
                         
                         // Progress Bar
@@ -301,7 +343,8 @@ struct PlaceholderImageCard: View {
                                     .font(.custom("Nunito-Bold", size: 10))
                                     .foregroundColor(.red)
                             }
-                            .padding(.top, 2)
+                            .padding(.top, 4)
+                            .padding(.bottom, 8) // Add extra spacing before Tap To View
                         }
                         
                         // Tap To View button (for in-progress items too)
@@ -312,11 +355,11 @@ struct PlaceholderImageCard: View {
                                 .font(.custom("Nunito-Regular", size: 9))
                                 .foregroundColor(.blue)
                         }
-                        .padding(.top, 2)
+                        .padding(.top, placeholder.state == .inProgress && showCancelButton ? 0 : 2)
                     }
                 }
             }
-            .padding(.vertical, 12)
+            .padding(.vertical, 10)
         }
         .frame(width: itemWidth, height: itemHeight)
         .overlay(alignment: .topTrailing) {
@@ -458,8 +501,8 @@ struct PlaceholderImageCard: View {
             state: placeholder.state
         )
         
-        // Show cancel button when elapsed time >= 2 minutes and task can still be cancelled
-        if elapsedMinutes >= 2 && placeholder.state == .inProgress {
+        // Show cancel button when elapsed time >= 5 minutes and task can still be cancelled
+        if elapsedMinutes >= 5 && placeholder.state == .inProgress {
             let canCancel = ImageGenerationCoordinator.shared.canCancelTask(notificationId: placeholder.id) ||
                            VideoGenerationCoordinator.shared.canCancelTask(notificationId: placeholder.id)
             print("🔍 [PlaceholderImageCard] Cancel button check: elapsedMinutes=\(elapsedMinutes), canCancel=\(canCancel), state=\(placeholder.state)")
@@ -470,14 +513,14 @@ struct PlaceholderImageCard: View {
         }
         
         // Show timeout message in two scenarios:
-        // 1. Initial timeout warning (2-3 minutes)
-        // 2. Countdown timeout warning (3-5 minutes) - shown in dynamicMessage, not timeoutMessage
-        if elapsedMinutes >= 2 && elapsedMinutes < 3 {
-            // Initial timeout message (2-3 minutes)
+        // 1. Initial timeout warning (5-6 minutes)
+        // 2. Countdown timeout warning (5-10 minutes) - shown in dynamicMessage, not timeoutMessage
+        if elapsedMinutes >= 5 && elapsedMinutes < 6 {
+            // Initial timeout message (5-6 minutes)
             showTimeoutMessage = true
             timeoutMessage = GenerationMessageHelper.getTimeoutMessage(isVideo: isVideo)
         } else {
-            // No separate timeout message to show (3-5 minute countdown is in dynamicMessage)
+            // No separate timeout message to show (5-10 minute countdown is in dynamicMessage)
             showTimeoutMessage = false
             timeoutMessage = ""
         }

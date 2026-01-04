@@ -709,15 +709,53 @@ func sendVideoToRunware(
     // Check if model is Sora 2 (uses frameImages at top level, no "frame" property)
     let isSora2 = model.lowercased() == "openai:3@1" || model.lowercased() == "openai:3@2"
     
-    // Handle Kling VIDEO 2.6 Pro - uses inputs.frameImages with "image" property (not "inputImage")
-    if isKlingVideo26Pro && isImageToVideo, let seedImage = image {
+    // Check if this is motion control mode (has reference video)
+    let isMotionControlMode = isKlingVideo26Pro && referenceVideoURL != nil
+    
+    // Handle Kling VIDEO 2.6 Pro MOTION CONTROL mode
+    // For motion control: use inputs.referenceImages (for character) + inputs.referenceVideos (for motion)
+    // Duration is determined by the reference video, not user-specified
+    if isMotionControlMode && isImageToVideo, let seedImage = image, let refVideoURL = referenceVideoURL {
+        // Upload user's image first to get UUID
+        let imageUUID = try await uploadImageToRunware(image: seedImage)
+        
+        // Initialize inputs object
+        var inputs = task["inputs"] as? [String: Any] ?? [:]
+        
+        // For motion control, use referenceImages for character appearance (not frameImages)
+        inputs["referenceImages"] = [imageUUID]
+        print("[Runware] Kling VIDEO 2.6 Pro motion control: referenceImages (character): \(imageUUID)")
+        
+        // Handle reference video for motion
+        if refVideoURL.scheme == "file" || refVideoURL.isFileURL {
+            // Local file - upload to get UUID
+            let videoUUID = try await uploadVideoToRunware(videoURL: refVideoURL)
+            inputs["referenceVideos"] = [videoUUID]
+            print("[Runware] Kling VIDEO 2.6 Pro motion control: referenceVideos UUID: \(videoUUID)")
+        } else {
+            // Remote URL - try using URL directly
+            inputs["referenceVideos"] = [refVideoURL.absoluteString]
+            print("[Runware] Kling VIDEO 2.6 Pro motion control: referenceVideos URL: \(refVideoURL.absoluteString)")
+        }
+        
+        task["inputs"] = inputs
+        
+        // For motion control: remove parameters that are not supported
+        // Duration is determined by the reference video
+        task.removeValue(forKey: "width")
+        task.removeValue(forKey: "height")
+        task.removeValue(forKey: "duration")
+        print("[Runware] Kling VIDEO 2.6 Pro motion control: removed width/height/duration (inferred from inputs)")
+    }
+    // Handle Kling VIDEO 2.6 Pro standard image-to-video (NO motion control)
+    else if isKlingVideo26Pro && isImageToVideo && !isMotionControlMode, let seedImage = image {
         // Upload image first to get UUID (required for inputs.frameImages)
         let imageUUID = try await uploadImageToRunware(image: seedImage)
         
         // Initialize inputs object if it doesn't exist
         var inputs = task["inputs"] as? [String: Any] ?? [:]
         
-        // Kling VIDEO 2.6 Pro uses "image" property (not "inputImage") and requires "frame"
+        // Standard image-to-video uses inputs.frameImages
         inputs["frameImages"] = [
             [
                 "image": imageUUID,
@@ -727,24 +765,15 @@ func sendVideoToRunware(
         print("[Runware] Kling VIDEO 2.6 Pro image-to-video enabled with inputs.frameImages: \(imageUUID)")
         
         task["inputs"] = inputs
+        
+        // For image-to-video, dimensions are inferred from input image
+        task.removeValue(forKey: "width")
+        task.removeValue(forKey: "height")
+        print("[Runware] Kling VIDEO 2.6 Pro image-to-video: dimensions will be inferred from input image")
     }
     
-    // MARK: - Handle reference videos for motion control (Kling VIDEO 2.6 Pro)
-    
-    // Handle reference video for motion control (Kling VIDEO 2.6 Pro)
-    if isKlingVideo26Pro, let refVideoURL = referenceVideoURL {
-        // Upload reference video to get UUID
-        let videoUUID = try await uploadVideoToRunware(videoURL: refVideoURL)
-        
-        // Initialize inputs object if it doesn't exist
-        var inputs = task["inputs"] as? [String: Any] ?? [:]
-        
-        // Add reference video to inputs.referenceVideos
-        inputs["referenceVideos"] = [videoUUID]
-        print("[Runware] Kling VIDEO 2.6 Pro motion control enabled with inputs.referenceVideos: \(videoUUID)")
-        
-        task["inputs"] = inputs
-    }
+    // Note: Motion control reference video is handled above in the isMotionControlMode block
+    // No separate handling needed here
     
     // Handle Sora 2 and Sora 2 Pro - uses frameImages at top level, no "frame" property
     if isSora2 && isImageToVideo, let seedImage = image {
@@ -917,27 +946,30 @@ func sendVideoToRunware(
         var providerSettings = task["providerSettings"] as? [String: Any] ?? [:]
         var klingSettings = providerSettings["klingai"] as? [String: Any] ?? [:]
         
-        // Add sound parameter if provided
-        if let generateAudio = generateAudio {
-            klingSettings["sound"] = generateAudio
-        }
+        // Check if this is motion control mode
+        let isMotionControl = isKlingVideo26Pro && referenceVideoURL != nil
         
-        // Add motion control settings if reference video is provided (motion control mode)
-        if isKlingVideo26Pro && referenceVideoURL != nil {
+        // Add motion control settings if reference video is provided
+        if isMotionControl {
+            // For motion control, only these two parameters are allowed:
+            // - characterOrientation
+            // - keepOriginalSound
+            // Note: "sound" is NOT supported for motion control mode
             klingSettings["characterOrientation"] = "image"
-            klingSettings["keepOriginalSound"] = false
-            // Enable sound by default for motion control (unless explicitly disabled)
-            if klingSettings["sound"] == nil {
-                klingSettings["sound"] = true
+            klingSettings["keepOriginalSound"] = true  // Include audio from reference video
+            print("[Runware] Added KlingAI motion control settings - characterOrientation: image, keepOriginalSound: true")
+        } else {
+            // For non-motion-control modes, add sound parameter if provided
+            if let generateAudio = generateAudio {
+                klingSettings["sound"] = generateAudio
             }
-            print("[Runware] Added KlingAI motion control settings - characterOrientation: image, keepOriginalSound: false, sound: \(klingSettings["sound"] ?? true)")
         }
         
         // Only set provider settings if we have any KlingAI settings
         if !klingSettings.isEmpty {
             providerSettings["klingai"] = klingSettings
             task["providerSettings"] = providerSettings
-            if referenceVideoURL == nil {
+            if !isMotionControl {
                 print("[Runware] Added KlingAI provider settings - sound: \(klingSettings["sound"] ?? "N/A")")
             }
         }
@@ -1433,42 +1465,70 @@ func submitVideoToRunwareWithWebhook(
     // Check if model is Sora 2 (uses frameImages at top level, no "frame" property)
     let isSora2 = model.lowercased() == "openai:3@1" || model.lowercased() == "openai:3@2"
     
-    // Handle Kling VIDEO 2.6 Pro - uses inputs.frameImages with "image" property (not "inputImage")
-    if isKlingVideo26Pro && isImageToVideo, let seedImage = image {
+    // Check if this is motion control mode (has reference video)
+    let isMotionControlMode = isKlingVideo26Pro && referenceVideoURL != nil
+    
+    // Handle Kling VIDEO 2.6 Pro MOTION CONTROL mode (webhook)
+    // For motion control: use inputs.referenceImages (for character) + inputs.referenceVideos (for motion)
+    // Duration is determined by the reference video, not user-specified
+    if isMotionControlMode && isImageToVideo, let seedImage = image, let refVideoURL = referenceVideoURL {
+        // Upload user's image first to get UUID
+        let imageUUID = try await uploadImageToRunware(image: seedImage)
+        
+        // Initialize inputs object
+        var inputs = task["inputs"] as? [String: Any] ?? [:]
+        
+        // For motion control, use referenceImages for character appearance (not frameImages)
+        inputs["referenceImages"] = [imageUUID]
+        print("[Runware] Kling VIDEO 2.6 Pro motion control (webhook): referenceImages (character): \(imageUUID)")
+        
+        // Handle reference video for motion
+        if refVideoURL.scheme == "file" || refVideoURL.isFileURL {
+            // Local file - upload to get UUID
+            let videoUUID = try await uploadVideoToRunware(videoURL: refVideoURL)
+            inputs["referenceVideos"] = [videoUUID]
+            print("[Runware] Kling VIDEO 2.6 Pro motion control (webhook): referenceVideos UUID: \(videoUUID)")
+        } else {
+            // Remote URL - try using URL directly
+            inputs["referenceVideos"] = [refVideoURL.absoluteString]
+            print("[Runware] Kling VIDEO 2.6 Pro motion control (webhook): referenceVideos URL: \(refVideoURL.absoluteString)")
+        }
+        
+        task["inputs"] = inputs
+        
+        // For motion control: remove parameters that are not supported
+        // Duration is determined by the reference video
+        task.removeValue(forKey: "width")
+        task.removeValue(forKey: "height")
+        task.removeValue(forKey: "duration")
+        print("[Runware] Kling VIDEO 2.6 Pro motion control (webhook): removed width/height/duration (inferred from inputs)")
+    }
+    // Handle Kling VIDEO 2.6 Pro standard image-to-video (NO motion control) - webhook
+    else if isKlingVideo26Pro && isImageToVideo && !isMotionControlMode, let seedImage = image {
         // Upload image first to get UUID (required for inputs.frameImages)
         let imageUUID = try await uploadImageToRunware(image: seedImage)
         
         // Initialize inputs object if it doesn't exist
         var inputs = task["inputs"] as? [String: Any] ?? [:]
         
-        // Kling VIDEO 2.6 Pro uses "image" property (not "inputImage") and requires "frame"
+        // Standard image-to-video uses inputs.frameImages
         inputs["frameImages"] = [
             [
                 "image": imageUUID,
                 "frame": "first"
             ]
         ]
-        print("[Runware] Kling VIDEO 2.6 Pro image-to-video enabled with inputs.frameImages (webhook): \(imageUUID)")
+        print("[Runware] Kling VIDEO 2.6 Pro image-to-video (webhook) enabled with inputs.frameImages: \(imageUUID)")
         
         task["inputs"] = inputs
+        
+        // For image-to-video, dimensions are inferred from input image
+        task.removeValue(forKey: "width")
+        task.removeValue(forKey: "height")
+        print("[Runware] Kling VIDEO 2.6 Pro image-to-video (webhook): dimensions will be inferred from input image")
     }
     
-    // MARK: - Handle reference videos for motion control (Kling VIDEO 2.6 Pro) - webhook
-    
-    // Handle reference video for motion control (Kling VIDEO 2.6 Pro)
-    if isKlingVideo26Pro, let refVideoURL = referenceVideoURL {
-        // Upload reference video to get UUID
-        let videoUUID = try await uploadVideoToRunware(videoURL: refVideoURL)
-        
-        // Initialize inputs object if it doesn't exist
-        var inputs = task["inputs"] as? [String: Any] ?? [:]
-        
-        // Add reference video to inputs.referenceVideos
-        inputs["referenceVideos"] = [videoUUID]
-        print("[Runware] Kling VIDEO 2.6 Pro motion control enabled with inputs.referenceVideos (webhook): \(videoUUID)")
-        
-        task["inputs"] = inputs
-    }
+    // Note: Motion control reference video is handled above in the isMotionControlMode block
     
     // Handle Sora 2 and Sora 2 Pro - uses frameImages at top level, no "frame" property
     if isSora2 && isImageToVideo, let seedImage = image {
@@ -1599,27 +1659,30 @@ func submitVideoToRunwareWithWebhook(
         var providerSettings = task["providerSettings"] as? [String: Any] ?? [:]
         var klingSettings = providerSettings["klingai"] as? [String: Any] ?? [:]
         
-        // Add sound parameter if provided
-        if let generateAudio = generateAudio {
-            klingSettings["sound"] = generateAudio
-        }
+        // Check if this is motion control mode
+        let isMotionControl = isKlingVideo26Pro && referenceVideoURL != nil
         
-        // Add motion control settings if reference video is provided (motion control mode)
-        if isKlingVideo26Pro && referenceVideoURL != nil {
+        // Add motion control settings if reference video is provided
+        if isMotionControl {
+            // For motion control, only these two parameters are allowed:
+            // - characterOrientation
+            // - keepOriginalSound
+            // Note: "sound" is NOT supported for motion control mode
             klingSettings["characterOrientation"] = "image"
-            klingSettings["keepOriginalSound"] = false
-            // Enable sound by default for motion control (unless explicitly disabled)
-            if klingSettings["sound"] == nil {
-                klingSettings["sound"] = true
+            klingSettings["keepOriginalSound"] = true  // Include audio from reference video
+            print("[Runware] Added KlingAI motion control settings (webhook) - characterOrientation: image, keepOriginalSound: true")
+        } else {
+            // For non-motion-control modes, add sound parameter if provided
+            if let generateAudio = generateAudio {
+                klingSettings["sound"] = generateAudio
             }
-            print("[Runware] Added KlingAI motion control settings (webhook) - characterOrientation: image, keepOriginalSound: false, sound: \(klingSettings["sound"] ?? true)")
         }
         
         // Only set provider settings if we have any KlingAI settings
         if !klingSettings.isEmpty {
             providerSettings["klingai"] = klingSettings
             task["providerSettings"] = providerSettings
-            if referenceVideoURL == nil {
+            if !isMotionControl {
                 print("[Runware] Added KlingAI provider settings (webhook) - sound: \(klingSettings["sound"] ?? "N/A")")
             }
         }

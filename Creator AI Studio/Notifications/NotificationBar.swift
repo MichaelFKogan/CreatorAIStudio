@@ -370,14 +370,14 @@ struct NotificationTextContent: View {
         )
         
         // Show timeout message in two scenarios:
-        // 1. Initial timeout warning (2-3 minutes)
-        // 2. Countdown timeout warning (3-5 minutes) - shown in dynamicMessage, not timeoutMessage
-        if elapsedMinutes >= 2 && elapsedMinutes < 3 {
-            // Initial timeout message (2-3 minutes)
+        // 1. Initial timeout warning (5-6 minutes)
+        // 2. Countdown timeout warning (5-10 minutes) - shown in dynamicMessage, not timeoutMessage
+        if elapsedMinutes >= 5 && elapsedMinutes < 6 {
+            // Initial timeout message (5-6 minutes)
             showTimeoutMessage = true
             timeoutMessage = GenerationMessageHelper.getTimeoutMessage(isVideo: isVideo)
         } else {
-            // No separate timeout message to show (3-5 minute countdown is in dynamicMessage)
+            // No separate timeout message to show (5-10 minute countdown is in dynamicMessage)
             showTimeoutMessage = false
             timeoutMessage = ""
         }
@@ -406,7 +406,7 @@ struct NotificationCancelButton: View {
         }
         .onAppear {
             updateCancelButtonVisibility()
-            // Update every 10 seconds to catch the 2-minute mark
+            // Update every 10 seconds to catch the 5-minute mark
             updateTimer = Timer.scheduledTimer(withTimeInterval: 10.0, repeats: true) { _ in
                 updateCancelButtonVisibility()
             }
@@ -436,7 +436,7 @@ struct NotificationCancelButton: View {
         let canCancel = ImageGenerationCoordinator.shared.canCancelTask(notificationId: notificationId) ||
                        VideoGenerationCoordinator.shared.canCancelTask(notificationId: notificationId)
         
-        let shouldShow = elapsedMinutes >= 2 && canCancel
+        let shouldShow = elapsedMinutes >= 5 && canCancel
         print("🔍 [NotificationBar] Cancel button check: elapsedMinutes=\(elapsedMinutes), canCancel=\(canCancel), shouldShow=\(shouldShow), state=\(state)")
         showCancel = shouldShow
     }
