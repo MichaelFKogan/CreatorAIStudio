@@ -200,7 +200,11 @@ struct YetiFilterDetailPage: View {
         GeometryReader { _ in
             ZStack(alignment: .bottom) {
                 ScrollView {
-                    VStack(spacing: 24) {
+                    VStack(spacing: 16) {
+                        // Page Title - Animated
+                        AnimatedTitle(text: "Yeti Vlog")
+                            .padding(.top, 16)
+                        
                         LazyView(
                             BannerSectionYeti(
                                 item: item, price: currentPrice, videoPlayer: $videoPlayer, isVideoMuted: $isVideoMuted))
@@ -638,15 +642,17 @@ private struct BannerSectionYeti: View {
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(alignment: .top, spacing: 16) {
-                // Try to display video first, fallback to image
+        VStack(alignment: .leading, spacing: 16) {
+            // Video centered
+            HStack {
+                Spacer()
                 if let player = videoPlayer {
                     VideoPlayerWithMuteButton(
                         player: player,
                         isMuted: $isVideoMuted,
                         width: 230,
-                        height: 254
+                        height: 254,
+                        cornerRadius: 12
                     )
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                 } else if getVideoURL(for: item) != nil {
@@ -665,9 +671,21 @@ private struct BannerSectionYeti: View {
                         .frame(width: 230, height: 254)
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
+                Spacer()
+            }
+            .padding(.top, 8)
+            .padding(.bottom, 8)
+            
+            // Horizontal row with model image, title, pill, pricing, model info
+            HStack(alignment: .top, spacing: 16) {
+                Image("veo31fast")
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: 120, height: 120)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
                 
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Yeti Vlog")
+                    Text("Google Veo 3.1 Fast")
                         .font(.title2).fontWeight(.bold).foregroundColor(.primary)
                         .fixedSize(horizontal: false, vertical: true)
                     
@@ -691,41 +709,31 @@ private struct BannerSectionYeti: View {
                         Text("per video").font(.caption).foregroundColor(.secondary)
                     }
                     
-                    // Google Veo 3.1 Fast Model Info
-                    VStack(alignment: .leading, spacing: 8) {
-                        // Model Image - full width, square
-                        Image("veo31fast")
-                            .resizable()
-                            .aspectRatio(1, contentMode: .fill)
-                            .frame(width: 100, height: 100)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                        
-                        // Model Title and Info - in rows below image
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Google Veo 3.1 Fast")
-                                .font(.system(size: 14, weight: .semibold, design: .rounded))
-                                .foregroundColor(.primary)
-                            
-                            HStack(spacing: 6) {
-                                Image(systemName: "video.fill")
-                                    .font(.system(size: 10))
-                                    .foregroundColor(.purple)
-                                Text("Video Generation Model")
-                                    .font(.system(size: 10, weight: .medium, design: .rounded))
-                                    .foregroundColor(.secondary)
-                            }
-                        }
+                    HStack(spacing: 6) {
+                        Image(systemName: "video.fill").font(.caption)
+                        Text("Video Generation Model").font(.caption)
                     }
-                    .padding(.top, 8)
+                    .foregroundColor(.purple)
                     
                     Spacer()
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .frame(height: 254)
+            .frame(height: 120)
+            
+            // Filter Description
+            if let description = item.resolvedModelDescription ?? item.display.description,
+                !description.isEmpty
+            {
+                Text(description)
+                    .font(.system(size: 14))
+                    .foregroundColor(.secondary)
+                    .lineSpacing(4)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 4)
+            }
         }
         .padding(.horizontal)
-        .padding(.top, 16)
     }
 }
 

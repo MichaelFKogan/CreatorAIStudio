@@ -94,7 +94,11 @@ struct TechnoVikingFilterDetailPage: View {
         GeometryReader { _ in
             ZStack(alignment: .bottom) {
                 ScrollView {
-                    VStack(spacing: 24) {
+                    VStack(spacing: 16) {
+                        // Page Title - Animated
+                        AnimatedTitle(text: "Techno Viking Dance")
+                            .padding(.top, 16)
+                        
                         LazyView(
                             BannerSectionFilter(
                                 item: item, price: currentPrice, videoPlayer: $videoPlayer, isVideoMuted: $isVideoMuted))
@@ -657,15 +661,17 @@ private struct BannerSectionFilter: View {
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(alignment: .top, spacing: 16) {
-                // Try to display video first, fallback to image
+        VStack(alignment: .leading, spacing: 16) {
+            // Video centered
+            HStack {
+                Spacer()
                 if let player = videoPlayer {
                     VideoPlayerWithMuteButton(
                         player: player,
                         isMuted: $isVideoMuted,
                         width: 190,
-                        height: 254
+                        height: 254,
+                        cornerRadius: 12
                     )
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                 } else if getVideoURL(for: item) != nil {
@@ -684,12 +690,27 @@ private struct BannerSectionFilter: View {
                         .frame(width: 190, height: 254)
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
+                Spacer()
+            }
+            .padding(.top, 8)
+            .padding(.bottom, 8)
+            
+            // Horizontal row with model image, title, pill, pricing, model info
+            HStack(alignment: .top, spacing: 16) {
+                Image("klingvideo26pro")
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: 120, height: 120)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
                 
                 VStack(alignment: .leading, spacing: 8) {
-                    // Text(item.display.title)
-                    Text("Techno Viking Dance")
+                    Text("Kling VIDEO 2.6 Pro")
                         .font(.title2).fontWeight(.bold).foregroundColor(.primary)
                         .fixedSize(horizontal: false, vertical: true)
+
+                    Text("With Motion Control")
+                        .font(.headline).fontWeight(.semibold).foregroundColor(.primary)
+                        .fixedSize(horizontal: false, vertical: true)                        
                     
                     HStack(spacing: 6) {
                         Image(systemName: "wand.and.stars").font(.caption)
@@ -711,45 +732,17 @@ private struct BannerSectionFilter: View {
                         Text("per video").font(.caption).foregroundColor(.secondary)
                     }
                     
-                    // if let description = item.display.description, !description.isEmpty {
-                    //     Text(description)
-                    //         .font(.system(size: 12, weight: .medium, design: .rounded))
-                    //         .foregroundColor(.purple)
-                    //         .lineLimit(3)
-                    // }
-                    
-                    // Kling VIDEO 2.6 Pro Model Info
-                    VStack(alignment: .leading, spacing: 8) {
-                        // Model Image - full width, square
-                        Image("klingvideo26pro")
-                            .resizable()
-                            .aspectRatio(1, contentMode: .fill)
-                            .frame(width: 100, height: 100)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                        
-                        // Model Title and Info - in rows below image
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Kling VIDEO 2.6 Pro")
-                                .font(.system(size: 14, weight: .semibold, design: .rounded))
-                                .foregroundColor(.primary)
-                            
-                            HStack(spacing: 6) {
-                                Image(systemName: "video.fill")
-                                    .font(.system(size: 10))
-                                    .foregroundColor(.purple)
-                                Text("Video Generation Model")
-                                    .font(.system(size: 10, weight: .medium, design: .rounded))
-                                    .foregroundColor(.secondary)
-                            }
-                        }
+                    HStack(spacing: 6) {
+                        Image(systemName: "video.fill").font(.caption)
+                        Text("Video Generation Model").font(.caption)
                     }
-                    .padding(.top, 8)
+                    .foregroundColor(.purple)
                     
                     Spacer()
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .frame(height: 274)
+            .frame(height: 120)
             
             // Filter Description
             if let description = item.resolvedModelDescription ?? item.display.description,
@@ -764,7 +757,6 @@ private struct BannerSectionFilter: View {
             }
         }
         .padding(.horizontal)
-        .padding(.top, 16)
     }
 }
 
@@ -1127,12 +1119,3 @@ private struct SingleImageSourceSelectionSheet: View {
         .presentationDetents([.height(250)])
     }
 }
-
-//// MARK: LazyView helper
-//
-//struct LazyView<Content: View>: View {
-//    let build: () -> Content
-//    init(_ build: @autoclosure @escaping () -> Content) { self.build = build }
-//    var body: some View { build() }
-//}
-
