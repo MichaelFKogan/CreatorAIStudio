@@ -27,6 +27,10 @@ class VideoGenerationTask: MediaGenerationTask {
     let aspectRatio: String
     let resolution: String?
     
+    // Optional duration to store in database (if nil, uses duration value)
+    // This allows API calls to use a duration while storing nil in database for filter pages
+    let storedDuration: Double?
+    
     // Audio generation (for models that support it, e.g., Google Veo 3.1 Fast)
     let generateAudio: Bool?
     
@@ -40,13 +44,14 @@ class VideoGenerationTask: MediaGenerationTask {
     // Whether to use webhook mode (returns immediately) or polling mode (waits for result)
     let useWebhook: Bool
 
-    init(item: InfoPacket, image: UIImage?, userId: String, duration: Double, aspectRatio: String, resolution: String? = nil, generateAudio: Bool? = nil, firstFrameImage: UIImage? = nil, lastFrameImage: UIImage? = nil, referenceVideoURL: URL? = nil, useWebhook: Bool = false) {
+    init(item: InfoPacket, image: UIImage?, userId: String, duration: Double, aspectRatio: String, resolution: String? = nil, storedDuration: Double? = nil, generateAudio: Bool? = nil, firstFrameImage: UIImage? = nil, lastFrameImage: UIImage? = nil, referenceVideoURL: URL? = nil, useWebhook: Bool = false) {
         self.item = item
         self.image = image
         self.userId = userId
         self.duration = duration
         self.aspectRatio = aspectRatio
         self.resolution = resolution
+        self.storedDuration = storedDuration
         self.generateAudio = generateAudio
         self.firstFrameImage = firstFrameImage
         self.lastFrameImage = lastFrameImage
@@ -311,7 +316,7 @@ class VideoGenerationTask: MediaGenerationTask {
                 fileExtension: fileExtension,
                 prompt: (item.prompt?.isEmpty == false ? item.prompt : nil),
                 aspectRatio: aspectRatio,
-                duration: duration,
+                duration: storedDuration ?? duration, // Use storedDuration if provided, otherwise use duration
                 resolution: resolution
             )
             

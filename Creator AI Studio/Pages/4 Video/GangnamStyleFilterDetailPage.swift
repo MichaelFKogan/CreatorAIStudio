@@ -216,15 +216,28 @@ struct GangnamStyleFilterDetailPage: View {
                         }
                         
                         // Full body image disclaimer
-                        HStack(spacing: 6) {
-                            Spacer()
-                            Image(systemName: "exclamationmark.triangle.fill")
-                                .font(.system(size: 14))
-                                .foregroundColor(.yellow)
-                            Text("Please upload a full body image")
-                                .font(.caption)
-                                .foregroundColor(.yellow)
-                            Spacer()
+                        VStack(spacing: 6) {
+                            HStack(spacing: 6) {
+                                Spacer()
+                                Image(systemName: "exclamationmark.triangle.fill")
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.yellow)
+                                Text("Please upload a full body image")
+                                    .font(.caption)
+                                    .foregroundColor(.yellow)
+                                Spacer()
+                            }
+                            
+                            HStack(alignment: .top, spacing: 6) {
+                                Spacer()
+                                Image(systemName: "info.circle.fill")
+                                    .font(.system(size: 12))
+                                    .foregroundColor(.blue)
+                                Text("Uploading a square photo will result in a square video. Please upload the photo size that you want the video result to be (see instructions below)")
+                                    .font(.caption)
+                                    .foregroundColor(.blue)
+                                Spacer()
+                            }
                         }
                         .padding(.horizontal)
                         
@@ -334,9 +347,14 @@ struct GangnamStyleFilterDetailPage: View {
         guard !isGenerating else { return }
         
         isGenerating = true
-        // Use default aspect ratio (9:16) and duration (5 seconds)
-        let defaultAspectRatio = "9:16"
-        let defaultDuration = 5.0
+        
+        // Calculate aspect ratio from the uploaded image
+        let imageAspectRatio = calculateAspectRatio(from: image)
+        
+        // Duration is unknown until video is generated, so we'll pass a default for the API call
+        // but store nil in the database to indicate it's not user-selected
+        let apiDuration = 15.0 // Default for API call
+        
         var modifiedItem = item
         
         // Set the model to Kling VIDEO 2.6 Pro for motion control
@@ -348,7 +366,7 @@ struct GangnamStyleFilterDetailPage: View {
         
         // Use resolvedAPIConfig as base, then modify aspectRatio and model
         var config = modifiedItem.resolvedAPIConfig
-        config.aspectRatio = defaultAspectRatio
+        config.aspectRatio = imageAspectRatio
         // Set the Runware model to Kling VIDEO 2.6 Pro
         config.runwareModel = "klingai:kling-video@2.6-pro"
         modifiedItem.apiConfig = config
@@ -375,9 +393,10 @@ struct GangnamStyleFilterDetailPage: View {
                 item: modifiedItem,
                 image: image,
                 userId: userId,
-                duration: defaultDuration,
-                aspectRatio: defaultAspectRatio,
+                duration: apiDuration,
+                aspectRatio: imageAspectRatio,
                 resolution: nil,
+                storedDuration: nil, // Store nil in database since actual duration is unknown
                 generateAudio: true, // Enable audio for motion control
                 firstFrameImage: nil,
                 lastFrameImage: nil,
@@ -391,6 +410,48 @@ struct GangnamStyleFilterDetailPage: View {
                 }
             )
         }
+    }
+    
+    // MARK: - Helper to calculate aspect ratio from image
+    
+    private func calculateAspectRatio(from image: UIImage) -> String {
+        let width = image.size.width
+        let height = image.size.height
+        
+        // Calculate GCD to simplify the ratio
+        let gcd = greatestCommonDivisor(Int(width), Int(height))
+        let simplifiedWidth = Int(width) / gcd
+        let simplifiedHeight = Int(height) / gcd
+        
+        // Return common aspect ratios or the simplified ratio
+        let ratio = Double(width) / Double(height)
+        
+        // Check for common aspect ratios with tolerance
+        if abs(ratio - (16.0/9.0)) < 0.1 {
+            return "16:9"
+        } else if abs(ratio - (9.0/16.0)) < 0.1 {
+            return "9:16"
+        } else if abs(ratio - 1.0) < 0.1 {
+            return "1:1"
+        } else if abs(ratio - (4.0/3.0)) < 0.1 {
+            return "4:3"
+        } else if abs(ratio - (3.0/4.0)) < 0.1 {
+            return "3:4"
+        } else {
+            // Return simplified ratio
+            return "\(simplifiedWidth):\(simplifiedHeight)"
+        }
+    }
+    
+    private func greatestCommonDivisor(_ a: Int, _ b: Int) -> Int {
+        var a = a
+        var b = b
+        while b != 0 {
+            let temp = b
+            b = a % b
+            a = temp
+        }
+        return a
     }
     
     // MARK: REFERENCE VIDEO HELPER
