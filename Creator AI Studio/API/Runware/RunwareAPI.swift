@@ -955,9 +955,9 @@ func sendVideoToRunware(
             // - characterOrientation
             // - keepOriginalSound
             // Note: "sound" is NOT supported for motion control mode
-            klingSettings["characterOrientation"] = "image"
+            klingSettings["characterOrientation"] = "video"
             klingSettings["keepOriginalSound"] = true  // Include audio from reference video
-            print("[Runware] Added KlingAI motion control settings - characterOrientation: image, keepOriginalSound: true")
+            print("[Runware] Added KlingAI motion control settings - characterOrientation: video, keepOriginalSound: true")
         } else {
             // For non-motion-control modes, add sound parameter if provided
             if let generateAudio = generateAudio {
@@ -1668,9 +1668,9 @@ func submitVideoToRunwareWithWebhook(
             // - characterOrientation
             // - keepOriginalSound
             // Note: "sound" is NOT supported for motion control mode
-            klingSettings["characterOrientation"] = "image"
+            klingSettings["characterOrientation"] = "video"
             klingSettings["keepOriginalSound"] = true  // Include audio from reference video
-            print("[Runware] Added KlingAI motion control settings (webhook) - characterOrientation: image, keepOriginalSound: true")
+            print("[Runware] Added KlingAI motion control settings (webhook) - characterOrientation: video, keepOriginalSound: true")
         } else {
             // For non-motion-control modes, add sound parameter if provided
             if let generateAudio = generateAudio {

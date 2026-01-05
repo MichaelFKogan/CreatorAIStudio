@@ -6,7 +6,7 @@
       "description": "Transform your image into a Techno Viking video"
     },
     "prompt": "Create a video with this style",
-    "cost": 1.1,
+    "cost": 1.10,
     "type": "Video Filter",
     "referenceVideoName": "technoVikingReference"
   },
@@ -17,10 +17,44 @@
       "description": "Transform your image into a Gangnam Style video"
     },
     "prompt": "Create a video with this style",
-    "cost": 1.1,
+    "cost": 1.10,
     "type": "Video Filter",
     "referenceVideoName": "gangnamStyleReference"
   },
+  {
+    "display": {
+      "title": "Fortnite Default Dance",
+      "imageName": "fortnite-default",
+      "description": "Transform your image into a Fortnite Dance video"
+    },
+    "prompt": "Create a video with this style",
+    "cost": 1.10,
+    "type": "Video Filter",
+    "referenceVideoName": "fortniteDefaultReference"
+  },
+  {
+    "display": {
+      "title": "Rat Dance",
+      "imageName": "rat-dance",
+      "description": "Transform your image into a Rat Dance video"
+    },
+    "prompt": "Create a video with this style",
+    "cost": 1.10,
+    "type": "Video Filter",
+    "referenceVideoName": "ratDanceReference"
+  },
+  {
+    "display": {
+      "title": "Mamushi",
+      "imageName": "mamushi",
+      "description": "Transform your image into a Mamushi video"
+    },
+    "prompt": "Create a video with this style",
+    "cost": 1.10,
+    "type": "Video Filter",
+    "referenceVideoName": "mamushiReference"
+  },
+
   {
     "display": {
       "title": "Yeti Vlog",
