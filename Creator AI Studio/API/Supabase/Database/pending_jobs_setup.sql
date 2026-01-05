@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS pending_jobs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     task_id TEXT NOT NULL UNIQUE,  -- Runware taskUUID or WaveSpeed job ID
-    provider TEXT NOT NULL CHECK (provider IN ('runware', 'wavespeed')),
+    provider TEXT NOT NULL CHECK (provider IN ('runware', 'wavespeed', 'falai')),
     job_type TEXT NOT NULL CHECK (job_type IN ('image', 'video')),
     status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'processing', 'completed', 'failed')),
     result_url TEXT,                -- URL returned by webhook (temporary API URL)

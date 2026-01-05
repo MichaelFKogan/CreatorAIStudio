@@ -385,7 +385,7 @@ struct DanceFilterDetailPage: View {
         
         // Set the prompt for transformation
         // The prompt should instruct the model to transform the image into a dancing video
-        modifiedItem.prompt = item.prompt ?? "Character performs the same movements from the reference video"
+        modifiedItem.prompt = item.prompt ?? "The subject performs the same movements from the reference video while preserving their original appearance, anatomy, and physical characteristics. Only apply the motion pattern, not the body structure."
         
         // Use resolvedAPIConfig as base, then modify aspectRatio and model
         var config = modifiedItem.resolvedAPIConfig
@@ -646,6 +646,203 @@ struct DanceFilterDetailPage: View {
     }
 }
 
+// MARK: VIDEO CONTENT VIEW (Helper for sizing)
+
+private struct VideoContentView: View {
+    let item: InfoPacket
+    let videoPlayer: AVPlayer?
+    @Binding var isVideoMuted: Bool
+    let getVideoURL: (InfoPacket) -> URL?
+    let getVideoAspectRatio: (AVPlayer?) -> CGFloat?
+    
+    private var aspectRatio: CGFloat {
+        if let player = videoPlayer {
+            return getVideoAspectRatio(player) ?? (9.0 / 16.0)
+        }
+        return 9.0 / 16.0 // Default aspect ratio
+    }
+    
+    var body: some View {
+        let contentWidth: CGFloat = 350
+        let contentHeight = contentWidth / aspectRatio
+        
+        Group {
+            if let player = videoPlayer {
+                VideoPlayerWithMuteButton(
+                    player: player,
+                    isMuted: $isVideoMuted,
+                    width: contentWidth,
+                    height: contentHeight,
+                    cornerRadius: 12
+                )
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .frame(width: contentWidth, height: contentHeight)
+            } else if getVideoURL(item) != nil {
+                // Video URL exists but player not ready yet - show placeholder
+                let placeholderHeight = contentWidth / (9.0 / 16.0)
+                
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color.gray.opacity(0.2))
+                    .frame(width: contentWidth, height: placeholderHeight)
+                    .overlay(
+                        ProgressView()
+                    )
+            } else {
+                // Fallback to image
+                let imageHeight = contentWidth / (9.0 / 16.0)
+                
+                Image(item.resolvedModelImageName ?? item.display.imageName)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: contentWidth, height: imageHeight)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+            }
+        }
+        .frame(width: contentWidth, height: contentHeight)
+    }
+}
+
+// MARK: - Diagonal Overlapping Video Images
+struct DiagonalOverlappingVideoImages: View {
+    let leftImageName: String
+    let videoPlayer: AVPlayer?
+    @Binding var isVideoMuted: Bool
+
+    @State private var arrowWiggle: Bool = false
+
+    var body: some View {
+        // Calculate height based on available width (screen width minus horizontal padding)
+        // This ensures consistent sizing across devices
+        let availableWidth = UIScreen.main.bounds.width - 40  // Account for horizontal padding (20 on each side)
+        let leftImageWidth = availableWidth * 0.20625  // 10% bigger (0.1875 * 1.10)
+        let rightVideoWidth = availableWidth * 0.825  // 10% bigger (0.75 * 1.10)
+        let leftImageHeight = leftImageWidth * 1.38
+        let rightVideoHeight = rightVideoWidth * 1.38
+        let contentHeight = max(leftImageHeight, rightVideoHeight) + 40  // Extra space for shadows and arrow
+        let calculatedHeight = max(280, min(400, contentHeight))  // Clamp between 280 and 400
+
+        GeometryReader { geometry in
+            let leftImageWidth = geometry.size.width * 0.20625  // 10% bigger (0.1875 * 1.10)
+            let rightVideoWidth = geometry.size.width * 0.825  // 10% bigger (0.75 * 1.10)
+            let leftImageHeight = leftImageWidth * 1.38
+            let rightVideoHeight = rightVideoWidth * 1.38
+            
+            // Calculate positions
+            // Right video is centered (no offset)
+            let rightVideoX: CGFloat = 0
+            let rightVideoY: CGFloat = 0
+            
+            // Left image positioned so its bottom-right corner barely overlaps top-left corner of video
+            // Top-left corner of video: (-rightVideoWidth/2, -rightVideoHeight/2)
+            // Bottom-right corner of left image: (leftImageX + leftImageWidth/2, leftImageY + leftImageHeight/2)
+            // Position for slight overlap
+            let overlapOffset: CGFloat = 15  // Small overlap amount
+            let leftImageX = -rightVideoWidth * 0.5 - leftImageWidth * 0.5 + overlapOffset  // Positioned so bottom-right corner overlaps top-left of video
+            let leftImageY = -rightVideoHeight * 0.5 - leftImageHeight * 0.5 + overlapOffset + 30 + 50  // Moved down 50 pixels (was 30, now 80 total)
+            
+            // Arrow position: at the right bottom corner of the left photo
+            // Position arrow at the bottom-right area of the left image
+            let arrowX = leftImageX + leftImageWidth * 0.35  // Positioned at right side of left image
+            let arrowY = leftImageY + leftImageHeight * 0.35  // Positioned at bottom area of left image
+            
+            // Calculate arrow rotation angle (pointing from left image to right video)
+            let deltaX = rightVideoX - arrowX
+            let deltaY = rightVideoY - arrowY
+            let arrowAngle = atan2(deltaY, deltaX) * 180 / .pi  // Convert to degrees
+
+            ZStack(alignment: .center) {
+                // Right video player (centered, larger)
+                if let player = videoPlayer {
+                    VideoPlayerWithMuteButton(
+                        player: player,
+                        isMuted: $isVideoMuted,
+                        width: rightVideoWidth,
+                        height: rightVideoHeight,
+                        cornerRadius: 16
+                    )
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16)
+                            .stroke(
+                                LinearGradient(
+                                    colors: [.white, .gray],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing),
+                                lineWidth: 2
+                            )
+                    )
+                    .shadow(
+                        color: Color.black.opacity(0.25), radius: 12, x: 4, y: 4
+                    )
+                    .offset(x: rightVideoX, y: rightVideoY)
+                } else {
+                    // Fallback to image if video player is not available
+                    Image(leftImageName)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: rightVideoWidth, height: rightVideoHeight)
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 16)
+                                .stroke(
+                                    LinearGradient(
+                                        colors: [.white, .gray],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing),
+                                    lineWidth: 2
+                                )
+                        )
+                        .shadow(
+                            color: Color.black.opacity(0.25), radius: 12, x: 4, y: 4
+                        )
+                        .offset(x: rightVideoX, y: rightVideoY)
+                }
+                
+                // Left image (smaller, overlapping top-left corner)
+                Image(leftImageName)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: leftImageWidth, height: leftImageHeight)
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16)
+                            .stroke(
+                                LinearGradient(
+                                    colors: [.white, .gray],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing),
+                                lineWidth: 2
+                            )
+                    )
+                    .shadow(
+                        color: Color.black.opacity(0.25), radius: 12, x: -4,
+                        y: 4
+                    )
+                    .rotationEffect(.degrees(-6))
+                    .offset(x: leftImageX, y: leftImageY)
+
+                // Arrow pointing from left image center to right video center
+                Image("arrow")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 30, height: 30)  // 25% smaller (40 * 0.75 = 30)
+                    .rotationEffect(.degrees(arrowAngle + (arrowWiggle ? 6 : -6)))
+                    .animation(
+                        .easeInOut(duration: 0.6).repeatForever(
+                            autoreverses: true), value: arrowWiggle
+                    )
+                    .offset(x: arrowX, y: arrowY)
+            }
+            .onAppear {
+                arrowWiggle = true
+            }
+            .frame(width: geometry.size.width, height: geometry.size.height)
+        }
+        .frame(height: calculatedHeight)  // Use calculated height for consistency
+        .padding(.horizontal, 20)
+    }
+}
+
 // MARK: BANNER SECTION
 
 private struct BannerSectionFilter: View {
@@ -681,38 +878,32 @@ private struct BannerSectionFilter: View {
         return nil
     }
     
+    private func getVideoAspectRatio(from player: AVPlayer?) -> CGFloat? {
+        guard let player = player,
+              let playerItem = player.currentItem,
+              let track = playerItem.asset.tracks(withMediaType: .video).first else {
+            return nil
+        }
+        
+        let size = track.naturalSize
+        let transform = track.preferredTransform
+        let width = abs(transform.a) * size.width + abs(transform.b) * size.height
+        let height = abs(transform.c) * size.width + abs(transform.d) * size.height
+        
+        if height > 0 {
+            return width / height
+        }
+        return nil
+    }
+    
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            // Video centered
-            HStack {
-                Spacer()
-                if let player = videoPlayer {
-                    VideoPlayerWithMuteButton(
-                        player: player,
-                        isMuted: $isVideoMuted,
-                        width: 190,
-                        height: 254,
-                        cornerRadius: 12
-                    )
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                } else if getVideoURL(for: item) != nil {
-                    // Video URL exists but player not ready yet - show placeholder
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(Color.gray.opacity(0.2))
-                        .frame(width: 190, height: 254)
-                        .overlay(
-                            ProgressView()
-                        )
-                } else {
-                    // Fallback to image
-                    Image(item.resolvedModelImageName ?? item.display.imageName)
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: 190, height: 254)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
-                }
-                Spacer()
-            }
+        VStack(alignment: .leading, spacing: 8) {
+            // Diagonal Overlapping Images with video on the right
+            DiagonalOverlappingVideoImages(
+                leftImageName: item.display.imageNameOriginal ?? "yourphoto",
+                videoPlayer: videoPlayer,
+                isVideoMuted: $isVideoMuted
+            )
             .padding(.bottom, 8)
             
             // Horizontal row with model image, title, pill, pricing, model info

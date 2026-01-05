@@ -423,16 +423,20 @@ class VideoGenerationTask: MediaGenerationTask {
             // Generate a unique task ID
             let taskId = UUID().uuidString
             
-            guard let runwareModel = apiConfig.runwareModel else {
-                throw NSError(
-                    domain: "APIError",
-                    code: -1,
-                    userInfo: [NSLocalizedDescriptionKey: "Missing runware model configuration"]
-                )
+            // Check if this is a motion control request for Video Filters (use fal.ai)
+            let hasReferenceVideo = referenceVideoURL != nil
+            let isVideoFilter = item.type == "Video Filter"
+            let isMotionControl = hasReferenceVideo && isVideoFilter
+            
+            print("[VideoGenerationTask] 🔍 Motion Control Detection:")
+            print("[VideoGenerationTask]   - hasReferenceVideo: \(hasReferenceVideo)")
+            print("[VideoGenerationTask]   - item.type: '\(item.type ?? "nil")'")
+            print("[VideoGenerationTask]   - isVideoFilter: \(isVideoFilter)")
+            print("[VideoGenerationTask]   - isMotionControl: \(isMotionControl)")
+            if let refURL = referenceVideoURL {
+                print("[VideoGenerationTask]   - referenceVideoURL: \(refURL.absoluteString)")
             }
             
-            // Determine if this is image-to-video mode
-            let isImageToVideo = image != nil && image!.size.width > 1 && image!.size.height > 1
             let modelName = item.display.modelName ?? "unknown"
             
             // MARK: Step 1 - Create pending job record
@@ -450,10 +454,13 @@ class VideoGenerationTask: MediaGenerationTask {
                 endpoint: apiConfig.endpoint
             )
             
+            // Determine provider based on request type
+            let provider: JobProvider = isMotionControl ? .falai : .runware
+            
             let pendingJob = PendingJob(
                 userId: userId,
                 taskId: taskId,
-                provider: .runware,  // Videos only use Runware for now
+                provider: provider,
                 jobType: .video,
                 metadata: jobMetadata,
                 deviceToken: nil // TODO: Add device token for push notifications
@@ -462,27 +469,55 @@ class VideoGenerationTask: MediaGenerationTask {
             // Insert pending job into database
             try await SupabaseManager.shared.createPendingJob(pendingJob)
             createdTaskId = taskId  // Track that job was created
-            print("✅ Pending video job created with taskId: \(taskId)")
+            print("✅ Pending video job created with taskId: \(taskId), provider: \(provider.rawValue)")
             
             // MARK: Step 2 - Submit to API with webhook
             await onProgress(TaskProgress(progress: 0.4, message: generateProgressMessage()))
             
-            let _ = try await submitVideoToRunwareWithWebhook(
-                taskUUID: taskId,
-                image: isImageToVideo ? image : nil,
-                prompt: item.prompt ?? "",
-                model: runwareModel,
-                aspectRatio: aspectRatio,
-                duration: duration,
-                resolution: resolution,
-                isImageToVideo: isImageToVideo,
-                runwareConfig: apiConfig.runwareConfig,
-                generateAudio: generateAudio,
-                firstFrameImage: firstFrameImage,
-                lastFrameImage: lastFrameImage,
-                referenceVideoURL: referenceVideoURL
-            )
-            print("✅ Runware video webhook request submitted")
+            if isMotionControl, let image = image, let refVideoURL = referenceVideoURL {
+                // Use fal.ai for motion control
+                print("[VideoGenerationTask] Using fal.ai for motion control")
+                
+                let _ = try await submitVideoToFalAIWithWebhook(
+                    requestId: taskId,
+                    image: image,
+                    videoURL: refVideoURL,
+                    prompt: item.prompt,
+                    characterOrientation: "video",
+                    keepOriginalSound: true,
+                    userId: userId
+                )
+                print("✅ Fal.ai motion control request submitted")
+            } else {
+                // Use Runware for standard video generation
+                guard let runwareModel = apiConfig.runwareModel else {
+                    throw NSError(
+                        domain: "APIError",
+                        code: -1,
+                        userInfo: [NSLocalizedDescriptionKey: "Missing runware model configuration"]
+                    )
+                }
+                
+                // Determine if this is image-to-video mode
+                let isImageToVideo = image != nil && image!.size.width > 1 && image!.size.height > 1
+                
+                let _ = try await submitVideoToRunwareWithWebhook(
+                    taskUUID: taskId,
+                    image: isImageToVideo ? image : nil,
+                    prompt: item.prompt ?? "",
+                    model: runwareModel,
+                    aspectRatio: aspectRatio,
+                    duration: duration,
+                    resolution: resolution,
+                    isImageToVideo: isImageToVideo,
+                    runwareConfig: apiConfig.runwareConfig,
+                    generateAudio: generateAudio,
+                    firstFrameImage: firstFrameImage,
+                    lastFrameImage: lastFrameImage,
+                    referenceVideoURL: referenceVideoURL
+                )
+                print("✅ Runware video webhook request submitted")
+            }
             
             // Mark API request as submitted AFTER successful submission - this will hide the Cancel button
             // At this point, the API request has been sent and cannot be cancelled
