@@ -213,6 +213,7 @@ struct VideoRowTitle: View {
             }
         }
         .padding(.horizontal)
+        .padding(.bottom, 8)
     }
 }
 

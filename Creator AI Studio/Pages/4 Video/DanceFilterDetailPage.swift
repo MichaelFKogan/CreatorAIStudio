@@ -385,7 +385,7 @@ struct DanceFilterDetailPage: View {
         
         // Set the prompt for transformation
         // The prompt should instruct the model to transform the image into a dancing video
-        modifiedItem.prompt = item.prompt ?? "Character performs the same movements from the reference video"
+        modifiedItem.prompt = item.prompt ?? "The subject performs the same movements from the reference video while preserving their original appearance, anatomy, and physical characteristics. Only apply the motion pattern, not the body structure."
         
         // Use resolvedAPIConfig as base, then modify aspectRatio and model
         var config = modifiedItem.resolvedAPIConfig
@@ -646,6 +646,78 @@ struct DanceFilterDetailPage: View {
     }
 }
 
+// MARK: VIDEO CONTENT VIEW (Helper for sizing)
+
+private struct VideoContentView: View {
+    let item: InfoPacket
+    let videoPlayer: AVPlayer?
+    @Binding var isVideoMuted: Bool
+    let getVideoURL: (InfoPacket) -> URL?
+    let getVideoAspectRatio: (AVPlayer?) -> CGFloat?
+    
+    private var aspectRatio: CGFloat {
+        if let player = videoPlayer {
+            return getVideoAspectRatio(player) ?? (9.0 / 16.0)
+        }
+        return 9.0 / 16.0 // Default aspect ratio
+    }
+    
+    var body: some View {
+        Group {
+            if let player = videoPlayer {
+                GeometryReader { geometry in
+                    let screenWidth = geometry.size.width
+                    let contentWidth = screenWidth * 0.75
+                    let contentHeight = contentWidth / aspectRatio
+                    
+                    VideoPlayerWithMuteButton(
+                        player: player,
+                        isMuted: $isVideoMuted,
+                        width: contentWidth,
+                        height: contentHeight,
+                        cornerRadius: 12
+                    )
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .frame(width: contentWidth, height: contentHeight)
+                    .frame(maxWidth: .infinity)
+                }
+                .frame(height: (UIScreen.main.bounds.width * 0.75) / aspectRatio)
+            } else if getVideoURL(item) != nil {
+                // Video URL exists but player not ready yet - show placeholder
+                GeometryReader { geometry in
+                    let screenWidth = geometry.size.width
+                    let contentWidth = screenWidth * 0.75
+                    let placeholderHeight = contentWidth / (9.0 / 16.0)
+                    
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color.gray.opacity(0.2))
+                        .frame(width: contentWidth, height: placeholderHeight)
+                        .overlay(
+                            ProgressView()
+                        )
+                        .frame(maxWidth: .infinity)
+                }
+                .frame(height: (UIScreen.main.bounds.width * 0.75) / (9.0 / 16.0))
+            } else {
+                // Fallback to image
+                GeometryReader { geometry in
+                    let screenWidth = geometry.size.width
+                    let contentWidth = screenWidth * 0.75
+                    let imageHeight = contentWidth / (9.0 / 16.0)
+                    
+                    Image(item.resolvedModelImageName ?? item.display.imageName)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: contentWidth, height: imageHeight)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .frame(maxWidth: .infinity)
+                }
+                .frame(height: (UIScreen.main.bounds.width * 0.75) / (9.0 / 16.0))
+            }
+        }
+    }
+}
+
 // MARK: BANNER SECTION
 
 private struct BannerSectionFilter: View {
@@ -681,36 +753,36 @@ private struct BannerSectionFilter: View {
         return nil
     }
     
+    private func getVideoAspectRatio(from player: AVPlayer?) -> CGFloat? {
+        guard let player = player,
+              let playerItem = player.currentItem,
+              let track = playerItem.asset.tracks(withMediaType: .video).first else {
+            return nil
+        }
+        
+        let size = track.naturalSize
+        let transform = track.preferredTransform
+        let width = abs(transform.a) * size.width + abs(transform.b) * size.height
+        let height = abs(transform.c) * size.width + abs(transform.d) * size.height
+        
+        if height > 0 {
+            return width / height
+        }
+        return nil
+    }
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             // Video centered
             HStack {
                 Spacer()
-                if let player = videoPlayer {
-                    VideoPlayerWithMuteButton(
-                        player: player,
-                        isMuted: $isVideoMuted,
-                        width: 190,
-                        height: 254,
-                        cornerRadius: 12
-                    )
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                } else if getVideoURL(for: item) != nil {
-                    // Video URL exists but player not ready yet - show placeholder
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(Color.gray.opacity(0.2))
-                        .frame(width: 190, height: 254)
-                        .overlay(
-                            ProgressView()
-                        )
-                } else {
-                    // Fallback to image
-                    Image(item.resolvedModelImageName ?? item.display.imageName)
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: 190, height: 254)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
-                }
+                VideoContentView(
+                    item: item,
+                    videoPlayer: videoPlayer,
+                    isVideoMuted: $isVideoMuted,
+                    getVideoURL: getVideoURL,
+                    getVideoAspectRatio: getVideoAspectRatio
+                )
                 Spacer()
             }
             .padding(.bottom, 8)

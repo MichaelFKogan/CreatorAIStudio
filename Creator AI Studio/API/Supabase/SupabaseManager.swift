@@ -384,6 +384,25 @@ class SupabaseManager {
         print("[PendingJobs] Updated job \(taskId) to status: \(status.rawValue)")
     }
     
+    /// Updates the provider for a pending job
+    /// - Parameters:
+    ///   - taskId: The task ID to update
+    ///   - provider: The new provider name
+    func updatePendingJobProvider(taskId: String, provider: String) async throws {
+        let updateData: [String: AnyJSON] = [
+            "provider": .string(provider),
+            "updated_at": .string(ISO8601DateFormatter().string(from: Date()))
+        ]
+        
+        try await client.database
+            .from("pending_jobs")
+            .update(updateData)
+            .eq("task_id", value: taskId)
+            .execute()
+        
+        print("[PendingJobs] Updated job \(taskId) provider to: \(provider)")
+    }
+    
     /// Deletes a pending job
     /// - Parameter taskId: The task ID to delete
     func deletePendingJob(taskId: String) async throws {

@@ -118,6 +118,7 @@ enum JobStatus: String, Codable {
 enum JobProvider: String, Codable {
     case runware = "runware"
     case wavespeed = "wavespeed"
+    case falai = "falai"
 }
 
 // MARK: - Job Type Enum
