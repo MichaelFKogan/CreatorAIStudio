@@ -714,16 +714,16 @@ struct DiagonalOverlappingVideoImages: View {
         // Calculate height based on available width (screen width minus horizontal padding)
         // This ensures consistent sizing across devices
         let availableWidth = UIScreen.main.bounds.width - 40  // Account for horizontal padding (20 on each side)
-        let leftImageWidth = availableWidth * 0.1875  // 25% larger (0.15 * 1.25)
-        let rightVideoWidth = availableWidth * 0.85  // Larger right video
+        let leftImageWidth = availableWidth * 0.20625  // 10% bigger (0.1875 * 1.10)
+        let rightVideoWidth = availableWidth * 0.825  // 10% bigger (0.75 * 1.10)
         let leftImageHeight = leftImageWidth * 1.38
         let rightVideoHeight = rightVideoWidth * 1.38
         let contentHeight = max(leftImageHeight, rightVideoHeight) + 40  // Extra space for shadows and arrow
         let calculatedHeight = max(280, min(400, contentHeight))  // Clamp between 280 and 400
 
         GeometryReader { geometry in
-            let leftImageWidth = geometry.size.width * 0.1875  // 25% larger (0.15 * 1.25)
-            let rightVideoWidth = geometry.size.width * 0.75  // Larger right video
+            let leftImageWidth = geometry.size.width * 0.20625  // 10% bigger (0.1875 * 1.10)
+            let rightVideoWidth = geometry.size.width * 0.825  // 10% bigger (0.75 * 1.10)
             let leftImageHeight = leftImageWidth * 1.38
             let rightVideoHeight = rightVideoWidth * 1.38
             
@@ -732,15 +732,18 @@ struct DiagonalOverlappingVideoImages: View {
             let rightVideoX: CGFloat = 0
             let rightVideoY: CGFloat = 0
             
-            // Left image overlaps top-left corner of right video
-            // Position left image even further left and higher up
-            let leftImageX = -geometry.size.width * 0.5 + leftImageWidth * 0.5 - 10  // Further to left edge
-            let leftImageY = -rightVideoHeight * 0.5 + leftImageHeight * 0.5 - 40  // Higher up
+            // Left image positioned so its bottom-right corner barely overlaps top-left corner of video
+            // Top-left corner of video: (-rightVideoWidth/2, -rightVideoHeight/2)
+            // Bottom-right corner of left image: (leftImageX + leftImageWidth/2, leftImageY + leftImageHeight/2)
+            // Position for slight overlap
+            let overlapOffset: CGFloat = 15  // Small overlap amount
+            let leftImageX = -rightVideoWidth * 0.5 - leftImageWidth * 0.5 + overlapOffset  // Positioned so bottom-right corner overlaps top-left of video
+            let leftImageY = -rightVideoHeight * 0.5 - leftImageHeight * 0.5 + overlapOffset + 30 + 50  // Moved down 50 pixels (was 30, now 80 total)
             
-            // Arrow position: overlapping the left image (positioned at right edge/center-right of left image)
-            // Position arrow to overlap the left photo, starting from its right side
-            let arrowX = leftImageX + leftImageWidth * 0.3  // Overlap on the right side of left image
-            let arrowY = leftImageY  // Same vertical position as left image center
+            // Arrow position: at the right bottom corner of the left photo
+            // Position arrow at the bottom-right area of the left image
+            let arrowX = leftImageX + leftImageWidth * 0.35  // Positioned at right side of left image
+            let arrowY = leftImageY + leftImageHeight * 0.35  // Positioned at bottom area of left image
             
             // Calculate arrow rotation angle (pointing from left image to right video)
             let deltaX = rightVideoX - arrowX
@@ -822,7 +825,7 @@ struct DiagonalOverlappingVideoImages: View {
                 Image("arrow")
                     .resizable()
                     .aspectRatio(contentMode: .fit)
-                    .frame(width: 40, height: 40)  // Smaller arrow (was 62x62)
+                    .frame(width: 30, height: 30)  // 25% smaller (40 * 0.75 = 30)
                     .rotationEffect(.degrees(arrowAngle + (arrowWiggle ? 6 : -6)))
                     .animation(
                         .easeInOut(duration: 0.6).repeatForever(
