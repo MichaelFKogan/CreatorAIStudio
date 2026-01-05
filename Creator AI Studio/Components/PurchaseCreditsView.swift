@@ -8,15 +8,15 @@
 import SwiftUI
 
 enum PaymentMethod: String, CaseIterable {
-    case apple = "Apple"
     case external = "External"
+    case apple = "Apple"
     
     var displayName: String {
         switch self {
         case .apple:
             return "Apple Payment"
         case .external:
-            return "Credit Card or Apple Pay"
+            return "Credit Card"
         }
     }
     
@@ -67,7 +67,7 @@ struct PurchaseCreditsView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var showSubscriptionView: Bool = false
     @State private var isSubscribed: Bool = false // TODO: Connect to actual subscription status
-    @State private var selectedPaymentMethod: PaymentMethod = .apple
+    @State private var selectedPaymentMethod: PaymentMethod = .external
     
     var body: some View {
         NavigationStack {
@@ -75,11 +75,11 @@ struct PurchaseCreditsView: View {
                 VStack(spacing: 24) {
                     // Header
                     VStack(spacing: 12) {
-                        Image(systemName: "diamond.fill")
+                        Image(systemName: "crown.fill")
                             .font(.system(size: 56))
                             .foregroundStyle(
                                 LinearGradient(
-                                    colors: [.blue, .purple],
+                                    colors: [.yellow, .orange],
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
                                 )
@@ -248,6 +248,17 @@ struct CreditPackageCard: View {
         return Int(baseCreditsValue / costPerImage)
     }
     
+    // Calculate video generation range (cost ranges from $1.10 to $0.30 per video)
+    // For $5.00 pack: 4-20 videos as specified, calculate others proportionally
+    private var videoGenerationsRange: (min: Int, max: Int) {
+        let minCostPerVideo = 1.10
+        let minVideos = Int(baseCreditsValue / minCostPerVideo)
+        // Use proportional multiplier based on $5.00 = 4-20 example
+        // Max videos = credits * 4 (since $5.00 * 4 = 20)
+        let maxVideos = Int(baseCreditsValue * 4)
+        return (min: minVideos, max: maxVideos)
+    }
+    
     var body: some View {
         Button(action: {
             // TODO: Handle purchase logic with selected payment method
@@ -261,17 +272,37 @@ struct CreditPackageCard: View {
                             .foregroundColor(.primary)
                         
                         HStack(spacing: 6) {
-                            Image(systemName: "diamond.fill")
+                            Image(systemName: "crown.fill")
                                 .font(.system(size: 12))
-                                .foregroundColor(.blue)
+                                .foregroundStyle(
+                                    LinearGradient(
+                                        colors: [.yellow, .orange],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
                             Text(PriceCalculator.formatPrice(baseCreditsValue))
                                 .font(.system(size: 16, weight: .semibold, design: .rounded))
                                 .foregroundColor(.primary)
                         }
                         
-                        Text("About \(imageGenerations)+ image generations")
-                            .font(.system(size: 13, design: .rounded))
-                            .foregroundColor(.secondary)
+                        HStack(spacing: 6) {
+                            Image(systemName: "checkmark.circle.fill")
+                                .font(.system(size: 12))
+                                .foregroundColor(.green)
+                            Text("About \(imageGenerations)+ image generations")
+                                .font(.system(size: 13, design: .rounded))
+                                .foregroundColor(.secondary)
+                        }
+                        
+                        HStack(spacing: 6) {
+                            Image(systemName: "checkmark.circle.fill")
+                                .font(.system(size: 12))
+                                .foregroundColor(.green)
+                            Text("\(videoGenerationsRange.min)-\(videoGenerationsRange.max) video generations")
+                                .font(.system(size: 13, design: .rounded))
+                                .foregroundColor(.secondary)
+                        }
                     }
                     
                     Spacer()
@@ -281,9 +312,25 @@ struct CreditPackageCard: View {
                             .font(.system(size: 20, weight: .bold, design: .rounded))
                             .foregroundColor(.primary)
                         
-                        Text(paymentMethod == .apple ? "Apple fee (30%): \(PriceCalculator.formatPrice(feeAmount))" : "Credit Card fee (3% + $0.30): \(PriceCalculator.formatPrice(feeAmount))")
-                            .font(.system(size: 12, weight: .medium, design: .rounded))
-                            .foregroundColor(.secondary)
+                        if paymentMethod == .apple {
+                            VStack(alignment: .trailing, spacing: 2) {
+                                Text("Apple Fee")
+                                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                                    .foregroundColor(.secondary)
+                                Text("(30%) = \(PriceCalculator.formatPrice(feeAmount))")
+                                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                                    .foregroundColor(.secondary)
+                            }
+                        } else {
+                            VStack(alignment: .trailing, spacing: 2) {
+                                Text("Credit Card Fee")
+                                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                                    .foregroundColor(.secondary)
+                                Text("(3% + $0.30) = \(PriceCalculator.formatPrice(feeAmount))")
+                                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                                    .foregroundColor(.secondary)
+                            }
+                        }
                         
                         if let badge = badge {
                             Text(badge)
