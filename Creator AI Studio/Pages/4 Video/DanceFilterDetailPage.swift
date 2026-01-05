@@ -663,58 +663,180 @@ private struct VideoContentView: View {
     }
     
     var body: some View {
+        let contentWidth: CGFloat = 350
+        let contentHeight = contentWidth / aspectRatio
+        
         Group {
             if let player = videoPlayer {
-                GeometryReader { geometry in
-                    let screenWidth = geometry.size.width
-                    let contentWidth = screenWidth * 0.75
-                    let contentHeight = contentWidth / aspectRatio
-                    
+                VideoPlayerWithMuteButton(
+                    player: player,
+                    isMuted: $isVideoMuted,
+                    width: contentWidth,
+                    height: contentHeight,
+                    cornerRadius: 12
+                )
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .frame(width: contentWidth, height: contentHeight)
+            } else if getVideoURL(item) != nil {
+                // Video URL exists but player not ready yet - show placeholder
+                let placeholderHeight = contentWidth / (9.0 / 16.0)
+                
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color.gray.opacity(0.2))
+                    .frame(width: contentWidth, height: placeholderHeight)
+                    .overlay(
+                        ProgressView()
+                    )
+            } else {
+                // Fallback to image
+                let imageHeight = contentWidth / (9.0 / 16.0)
+                
+                Image(item.resolvedModelImageName ?? item.display.imageName)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: contentWidth, height: imageHeight)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+            }
+        }
+        .frame(width: contentWidth, height: contentHeight)
+    }
+}
+
+// MARK: - Diagonal Overlapping Video Images
+struct DiagonalOverlappingVideoImages: View {
+    let leftImageName: String
+    let videoPlayer: AVPlayer?
+    @Binding var isVideoMuted: Bool
+
+    @State private var arrowWiggle: Bool = false
+
+    var body: some View {
+        // Calculate height based on available width (screen width minus horizontal padding)
+        // This ensures consistent sizing across devices
+        let availableWidth = UIScreen.main.bounds.width - 40  // Account for horizontal padding (20 on each side)
+        let leftImageWidth = availableWidth * 0.1875  // 25% larger (0.15 * 1.25)
+        let rightVideoWidth = availableWidth * 0.85  // Larger right video
+        let leftImageHeight = leftImageWidth * 1.38
+        let rightVideoHeight = rightVideoWidth * 1.38
+        let contentHeight = max(leftImageHeight, rightVideoHeight) + 40  // Extra space for shadows and arrow
+        let calculatedHeight = max(280, min(400, contentHeight))  // Clamp between 280 and 400
+
+        GeometryReader { geometry in
+            let leftImageWidth = geometry.size.width * 0.1875  // 25% larger (0.15 * 1.25)
+            let rightVideoWidth = geometry.size.width * 0.75  // Larger right video
+            let leftImageHeight = leftImageWidth * 1.38
+            let rightVideoHeight = rightVideoWidth * 1.38
+            
+            // Calculate positions
+            // Right video is centered (no offset)
+            let rightVideoX: CGFloat = 0
+            let rightVideoY: CGFloat = 0
+            
+            // Left image overlaps top-left corner of right video
+            // Position left image even further left and higher up
+            let leftImageX = -geometry.size.width * 0.5 + leftImageWidth * 0.5 - 10  // Further to left edge
+            let leftImageY = -rightVideoHeight * 0.5 + leftImageHeight * 0.5 - 40  // Higher up
+            
+            // Arrow position: overlapping the left image (positioned at right edge/center-right of left image)
+            // Position arrow to overlap the left photo, starting from its right side
+            let arrowX = leftImageX + leftImageWidth * 0.3  // Overlap on the right side of left image
+            let arrowY = leftImageY  // Same vertical position as left image center
+            
+            // Calculate arrow rotation angle (pointing from left image to right video)
+            let deltaX = rightVideoX - arrowX
+            let deltaY = rightVideoY - arrowY
+            let arrowAngle = atan2(deltaY, deltaX) * 180 / .pi  // Convert to degrees
+
+            ZStack(alignment: .center) {
+                // Right video player (centered, larger)
+                if let player = videoPlayer {
                     VideoPlayerWithMuteButton(
                         player: player,
                         isMuted: $isVideoMuted,
-                        width: contentWidth,
-                        height: contentHeight,
-                        cornerRadius: 12
+                        width: rightVideoWidth,
+                        height: rightVideoHeight,
+                        cornerRadius: 16
                     )
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                    .frame(width: contentWidth, height: contentHeight)
-                    .frame(maxWidth: .infinity)
-                }
-                .frame(height: (UIScreen.main.bounds.width * 0.75) / aspectRatio)
-            } else if getVideoURL(item) != nil {
-                // Video URL exists but player not ready yet - show placeholder
-                GeometryReader { geometry in
-                    let screenWidth = geometry.size.width
-                    let contentWidth = screenWidth * 0.75
-                    let placeholderHeight = contentWidth / (9.0 / 16.0)
-                    
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(Color.gray.opacity(0.2))
-                        .frame(width: contentWidth, height: placeholderHeight)
-                        .overlay(
-                            ProgressView()
-                        )
-                        .frame(maxWidth: .infinity)
-                }
-                .frame(height: (UIScreen.main.bounds.width * 0.75) / (9.0 / 16.0))
-            } else {
-                // Fallback to image
-                GeometryReader { geometry in
-                    let screenWidth = geometry.size.width
-                    let contentWidth = screenWidth * 0.75
-                    let imageHeight = contentWidth / (9.0 / 16.0)
-                    
-                    Image(item.resolvedModelImageName ?? item.display.imageName)
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16)
+                            .stroke(
+                                LinearGradient(
+                                    colors: [.white, .gray],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing),
+                                lineWidth: 2
+                            )
+                    )
+                    .shadow(
+                        color: Color.black.opacity(0.25), radius: 12, x: 4, y: 4
+                    )
+                    .offset(x: rightVideoX, y: rightVideoY)
+                } else {
+                    // Fallback to image if video player is not available
+                    Image(leftImageName)
                         .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: contentWidth, height: imageHeight)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
-                        .frame(maxWidth: .infinity)
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: rightVideoWidth, height: rightVideoHeight)
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 16)
+                                .stroke(
+                                    LinearGradient(
+                                        colors: [.white, .gray],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing),
+                                    lineWidth: 2
+                                )
+                        )
+                        .shadow(
+                            color: Color.black.opacity(0.25), radius: 12, x: 4, y: 4
+                        )
+                        .offset(x: rightVideoX, y: rightVideoY)
                 }
-                .frame(height: (UIScreen.main.bounds.width * 0.75) / (9.0 / 16.0))
+                
+                // Left image (smaller, overlapping top-left corner)
+                Image(leftImageName)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: leftImageWidth, height: leftImageHeight)
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16)
+                            .stroke(
+                                LinearGradient(
+                                    colors: [.white, .gray],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing),
+                                lineWidth: 2
+                            )
+                    )
+                    .shadow(
+                        color: Color.black.opacity(0.25), radius: 12, x: -4,
+                        y: 4
+                    )
+                    .rotationEffect(.degrees(-6))
+                    .offset(x: leftImageX, y: leftImageY)
+
+                // Arrow pointing from left image center to right video center
+                Image("arrow")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 40, height: 40)  // Smaller arrow (was 62x62)
+                    .rotationEffect(.degrees(arrowAngle + (arrowWiggle ? 6 : -6)))
+                    .animation(
+                        .easeInOut(duration: 0.6).repeatForever(
+                            autoreverses: true), value: arrowWiggle
+                    )
+                    .offset(x: arrowX, y: arrowY)
             }
+            .onAppear {
+                arrowWiggle = true
+            }
+            .frame(width: geometry.size.width, height: geometry.size.height)
         }
+        .frame(height: calculatedHeight)  // Use calculated height for consistency
+        .padding(.horizontal, 20)
     }
 }
 
@@ -772,19 +894,13 @@ private struct BannerSectionFilter: View {
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            // Video centered
-            HStack {
-                Spacer()
-                VideoContentView(
-                    item: item,
-                    videoPlayer: videoPlayer,
-                    isVideoMuted: $isVideoMuted,
-                    getVideoURL: getVideoURL,
-                    getVideoAspectRatio: getVideoAspectRatio
-                )
-                Spacer()
-            }
+        VStack(alignment: .leading, spacing: 8) {
+            // Diagonal Overlapping Images with video on the right
+            DiagonalOverlappingVideoImages(
+                leftImageName: item.display.imageNameOriginal ?? "yourphoto",
+                videoPlayer: videoPlayer,
+                isVideoMuted: $isVideoMuted
+            )
             .padding(.bottom, 8)
             
             // Horizontal row with model image, title, pill, pricing, model info
