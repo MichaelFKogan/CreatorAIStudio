@@ -27,9 +27,7 @@ struct YetiFilterDetailPage: View {
     @State private var isGenerating: Bool = false
     @State private var showEmptyPromptAlert: Bool = false
     @State private var showSignInSheet: Bool = false
-    @State private var showSubscriptionView: Bool = false
     @State private var showPurchaseCreditsView: Bool = false
-    @AppStorage("testSubscriptionStatus") private var isSubscribed: Bool = false
     @State private var hasCredits: Bool = true
     @ObservedObject private var networkMonitor = NetworkMonitor.shared
     
@@ -263,41 +261,6 @@ struct YetiFilterDetailPage: View {
                                 }
                             }
                             .padding(.horizontal)
-                        } else if !isSubscribed {
-                            VStack(spacing: 8) {
-                                HStack {
-                                    Spacer()
-                                    Button(action: {
-                                        showSubscriptionView = true
-                                    }) {
-                                        Image(systemName: "crown.fill")
-                                            .font(.system(size: 11, weight: .semibold, design: .rounded))
-                                            .foregroundStyle(
-                                                LinearGradient(
-                                                    colors: [.yellow, .orange],
-                                                    startPoint: .topLeading,
-                                                    endPoint: .bottomTrailing
-                                                )
-                                            )
-                                        Text("Subscribe")
-                                            .font(.system(size: 15, weight: .medium, design: .rounded))
-                                            .foregroundColor(.blue)
-                                    }
-                                    Spacer()
-                                }
-                                
-                                HStack(spacing: 6) {
-                                    Spacer()
-                                    Image(systemName: "exclamationmark.circle.fill")
-                                        .font(.system(size: 14))
-                                        .foregroundColor(.orange)
-                                    Text("Please Subscribe to create a video")
-                                        .font(.caption)
-                                        .foregroundColor(.orange)
-                                    Spacer()
-                                }
-                            }
-                            .padding(.horizontal)
                         } else if !hasCredits {
                             VStack(spacing: 8) {
                                 HStack(spacing: 6) {
@@ -337,7 +300,6 @@ struct YetiFilterDetailPage: View {
                                     ? videoResolutionOptions[selectedResolutionIndex].id : nil,
                                 selectedDuration: "\(Int(videoDurationOptions[selectedDurationIndex].duration))s",
                                 isLoggedIn: authViewModel.user != nil,
-                                isSubscribed: isSubscribed,
                                 hasCredits: hasCredits,
                                 isConnected: networkMonitor.isConnected,
                                 onSignInTap: {
@@ -455,11 +417,6 @@ struct YetiFilterDetailPage: View {
         }
         .sheet(isPresented: $showSignInSheet) {
             SignInView()
-                .environmentObject(authViewModel)
-                .presentationDragIndicator(.visible)
-        }
-        .sheet(isPresented: $showSubscriptionView) {
-            SubscriptionView()
                 .environmentObject(authViewModel)
                 .presentationDragIndicator(.visible)
         }
@@ -1301,14 +1258,13 @@ private struct GenerateButtonYeti: View {
     let selectedResolution: String?
     let selectedDuration: String
     let isLoggedIn: Bool
-    let isSubscribed: Bool
     let hasCredits: Bool
     let isConnected: Bool
     let onSignInTap: () -> Void
     let action: () -> Void
     
     private var canGenerate: Bool {
-        isLoggedIn && isSubscribed && hasCredits && isConnected
+        isLoggedIn && hasCredits && isConnected
     }
     
     var body: some View {

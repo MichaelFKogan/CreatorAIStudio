@@ -24,9 +24,7 @@ struct PhotoConfirmationView: View {
     @State private var selectedAspectIndex: Int = 0
     @State private var sizeButtonTapped: Bool = false
     @State private var showSignInSheet: Bool = false
-    @State private var showSubscriptionView: Bool = false
     @State private var showPurchaseCreditsView: Bool = false
-    @AppStorage("testSubscriptionStatus") private var isSubscribed: Bool = false  // Testing: Toggle in Settings
     @State private var hasCredits: Bool = true  // TODO: Connect to actual credits check
     @ObservedObject private var networkMonitor = NetworkMonitor.shared
 
@@ -69,7 +67,7 @@ struct PhotoConfirmationView: View {
     private var canGenerate: Bool {
         guard authViewModel.user != nil else { return false }
         guard networkMonitor.isConnected else { return false }
-        return isSubscribed && hasCredits
+        return hasCredits
     }
 
     // Calculate total price: sum of all filter costs × number of images
@@ -130,11 +128,6 @@ struct PhotoConfirmationView: View {
         .toolbar { toolbarContent }
         .sheet(isPresented: $showSignInSheet) {
             SignInView()
-                .environmentObject(authViewModel)
-                .presentationDragIndicator(.visible)
-        }
-        .sheet(isPresented: $showSubscriptionView) {
-            SubscriptionView()
                 .environmentObject(authViewModel)
                 .presentationDragIndicator(.visible)
         }
@@ -527,9 +520,6 @@ struct PhotoConfirmationView: View {
 
                 signInTextLink
                     .padding(.bottom, 12)
-            } else if !isSubscribed {
-                subscriptionRequiredMessage
-                    .padding(.bottom, 12)
             } else if !hasCredits {
                 creditsRequiredMessage
                     .padding(.bottom, 12)
@@ -642,48 +632,6 @@ struct PhotoConfirmationView: View {
         }
     }
 
-    private var subscriptionRequiredMessage: some View {
-        VStack(spacing: 8) {
-
-            HStack {
-                Spacer()
-                Button(action: {
-                    showSubscriptionView = true
-                }) {
-                    Image(systemName: "crown.fill")
-                        .font(
-                            .system(
-                                size: 11, weight: .semibold,
-                                design: .rounded)
-                        )
-                        .foregroundStyle(
-                            LinearGradient(
-                                colors: [.yellow, .orange],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                    Text("Subscribe")
-                        .font(
-                            .system(size: 15, weight: .medium, design: .rounded)
-                        )
-                        .foregroundColor(.blue)
-                }
-                Spacer()
-            }
-
-            HStack(spacing: 6) {
-                Spacer()
-                Image(systemName: "exclamationmark.circle.fill")
-                    .font(.system(size: 14))
-                    .foregroundColor(.orange)
-                Text("Please Subscribe to generate this image")
-                    .font(.caption)
-                    .foregroundColor(.orange)
-                Spacer()
-            }
-        }
-    }
 
     private var creditsRequiredMessage: some View {
         VStack(spacing: 8) {

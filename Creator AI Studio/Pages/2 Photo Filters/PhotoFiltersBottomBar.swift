@@ -5,7 +5,6 @@ struct PhotoFiltersBottomBar: View {
     @Binding var showPhotoPicker: Bool
     @Binding var selectedPhotoItem: PhotosPickerItem?
     let cost: Decimal
-    @State private var isSubscribed: Bool = false // TODO: Connect to actual subscription status
     @State private var hasCredits: Bool = true // TODO: Connect to actual credits check
     @ObservedObject private var networkMonitor = NetworkMonitor.shared
     
@@ -31,7 +30,6 @@ struct PhotoFiltersBottomBar: View {
                 SpinningPlusButton(
                     showActionSheet: $showPhotoPicker,
                     isLoggedIn: authViewModel.user != nil,
-                    isSubscribed: isSubscribed,
                     hasCredits: hasCredits,
                     isConnected: networkMonitor.isConnected
                 )

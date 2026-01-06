@@ -38,9 +38,7 @@ struct ImageModelDetailPage: View {
     @State private var selectedAspectIndex: Int = 0
     @State private var selectedGenerationMode: Int = 0
     @State private var showSignInSheet: Bool = false
-    @State private var showSubscriptionView: Bool = false
     @State private var showPurchaseCreditsView: Bool = false
-    @AppStorage("testSubscriptionStatus") private var isSubscribed: Bool = false  // Testing: Toggle in Settings
     @State private var hasCredits: Bool = true  // TODO: Connect to actual credits check
     @ObservedObject private var networkMonitor = NetworkMonitor.shared
 
@@ -270,55 +268,6 @@ struct ImageModelDetailPage: View {
                                 }
                             }
                             .padding(.horizontal)
-                        } else if !isSubscribed {
-                            VStack(spacing: 8) {
-
-                                HStack {
-                                    Spacer()
-                                    Button(action: {
-                                        showSubscriptionView = true
-                                    }) {
-                                        Image(systemName: "crown.fill")
-                                            .font(
-                                                .system(
-                                                    size: 11, weight: .semibold,
-                                                    design: .rounded)
-                                            )
-                                            .foregroundStyle(
-                                                LinearGradient(
-                                                    colors: [.yellow, .orange],
-                                                    startPoint: .topLeading,
-                                                    endPoint: .bottomTrailing
-                                                )
-                                            )
-                                        Text("Subscribe")
-                                            .font(
-                                                .system(
-                                                    size: 15, weight: .medium,
-                                                    design: .rounded)
-                                            )
-                                            .foregroundColor(.blue)
-                                    }
-                                    Spacer()
-                                }
-
-                                HStack(spacing: 6) {
-                                    Spacer()
-                                    Image(
-                                        systemName:
-                                            "exclamationmark.circle.fill"
-                                    )
-                                    .font(.system(size: 14))
-                                    .foregroundColor(.orange)
-                                    Text(
-                                        "Please Subscribe to generate an image"
-                                    )
-                                    .font(.caption)
-                                    .foregroundColor(.orange)
-                                    Spacer()
-                                }
-                            }
-                            .padding(.horizontal)
                         } else if !hasCredits {
                             VStack(spacing: 8) {
                                 HStack(spacing: 6) {
@@ -361,7 +310,6 @@ struct ImageModelDetailPage: View {
                                 keyboardHeight: $keyboardHeight,
                                 costString: costString,
                                 isLoggedIn: authViewModel.user != nil,
-                                isSubscribed: isSubscribed,
                                 hasCredits: hasCredits,
                                 isConnected: networkMonitor.isConnected,
                                 onSignInTap: {
@@ -552,11 +500,6 @@ struct ImageModelDetailPage: View {
         }
         .sheet(isPresented: $showSignInSheet) {
             SignInView()
-                .environmentObject(authViewModel)
-                .presentationDragIndicator(.visible)
-        }
-        .sheet(isPresented: $showSubscriptionView) {
-            SubscriptionView()
                 .environmentObject(authViewModel)
                 .presentationDragIndicator(.visible)
         }
@@ -889,14 +832,13 @@ struct GenerateButton: View {
     @Binding var keyboardHeight: CGFloat
     let costString: String
     let isLoggedIn: Bool
-    let isSubscribed: Bool
     let hasCredits: Bool
     let isConnected: Bool
     let onSignInTap: () -> Void
     let action: () -> Void
 
     private var canGenerate: Bool {
-        isLoggedIn && isSubscribed && hasCredits && isConnected
+        isLoggedIn && hasCredits && isConnected
     }
 
     var body: some View {

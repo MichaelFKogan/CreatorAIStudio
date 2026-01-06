@@ -65,8 +65,6 @@ struct PriceCalculator {
 struct PurchaseCreditsView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
     @Environment(\.dismiss) private var dismiss
-    @State private var showSubscriptionView: Bool = false
-    @State private var isSubscribed: Bool = false  // TODO: Connect to actual subscription status
     @State private var selectedPaymentMethod: PaymentMethod = .external
 
     var body: some View {
@@ -125,7 +123,7 @@ struct PurchaseCreditsView: View {
                         CreditPackageCard(
                             title: "Pro Pack",
                             baseCreditsValue: 10.00,
-                            paymentMethod: selectedPaymentMethod,
+                            paymentMethod: selectedPaymentMethod
                         )
 
                         CreditPackageCard(
@@ -138,7 +136,7 @@ struct PurchaseCreditsView: View {
                         CreditPackageCard(
                             title: "Ultra Pack",
                             baseCreditsValue: 50.00,
-                            paymentMethod: selectedPaymentMethod,
+                            paymentMethod: selectedPaymentMethod
                         )
                     }
                     .padding(.horizontal)
@@ -155,11 +153,6 @@ struct PurchaseCreditsView: View {
                     }
                 }
             }
-        }
-        .sheet(isPresented: $showSubscriptionView) {
-            SubscriptionView()
-                .environmentObject(authViewModel)
-                .presentationDragIndicator(.visible)
         }
     }
 }

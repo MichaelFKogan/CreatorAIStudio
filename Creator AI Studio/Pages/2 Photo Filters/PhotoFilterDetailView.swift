@@ -21,9 +21,7 @@ struct PhotoFilterDetailView: View {
     @State private var createArrowMove: Bool = false
     @State private var navigateToConfirmation: Bool = false
     @State private var showSignInSheet: Bool = false
-    @State private var showSubscriptionView: Bool = false
     @State private var showPurchaseCreditsView: Bool = false
-    @AppStorage("testSubscriptionStatus") private var isSubscribed: Bool = false  // Testing: Toggle in Settings
     @State private var hasCredits: Bool = true  // TODO: Connect to actual credits check
     @ObservedObject private var networkMonitor = NetworkMonitor.shared
 
@@ -80,7 +78,7 @@ struct PhotoFilterDetailView: View {
     private var canUpload: Bool {
         guard authViewModel.user != nil else { return false }
         guard networkMonitor.isConnected else { return false }
-        return isSubscribed && hasCredits
+        return hasCredits
     }
 
     var body: some View {
@@ -282,49 +280,6 @@ struct PhotoFilterDetailView: View {
                         }
                         .padding(.horizontal)
                         .padding(.bottom, 8)
-                    } else if !isSubscribed {
-                        VStack(spacing: 8) {
-
-                            HStack {
-                                Spacer()
-                                Button(action: {
-                                    showSubscriptionView = true
-                                }) {
-                                    Image(systemName: "crown.fill")
-                                        .font(
-                                            .system(
-                                                size: 11, weight: .semibold,
-                                                design: .rounded)
-                                        )
-                                        .foregroundStyle(
-                                            LinearGradient(
-                                                colors: [.yellow, .orange],
-                                                startPoint: .topLeading,
-                                                endPoint: .bottomTrailing
-                                            )
-                                        )
-                                    Text("Subscribe")
-                                        .font(
-                                            .system(
-                                                size: 15, weight: .medium,
-                                                design: .rounded)
-                                        )
-                                        .foregroundColor(.blue)
-                                }
-                                Spacer()
-                            }
-                            
-                            HStack(spacing: 6) {
-                                Image(systemName: "exclamationmark.circle.fill")
-                                    .font(.system(size: 14))
-                                    .foregroundColor(.orange)
-                                Text("Please Subscribe to generate this image")
-                                    .font(.caption)
-                                    .foregroundColor(.orange)
-                            }
-                        }
-                        .padding(.horizontal)
-                        .padding(.bottom, 8)
                     } else if !hasCredits {
                         VStack(spacing: 8) {
                             HStack(spacing: 6) {
@@ -360,7 +315,6 @@ struct PhotoFilterDetailView: View {
                         SpinningPlusButton(
                             showActionSheet: $showActionSheet,
                             isLoggedIn: authViewModel.user != nil,
-                            isSubscribed: isSubscribed,
                             hasCredits: hasCredits,
                             isConnected: networkMonitor.isConnected
                         )
@@ -533,11 +487,6 @@ struct PhotoFilterDetailView: View {
                 .environmentObject(authViewModel)
                 .presentationDragIndicator(.visible)
         }
-        .sheet(isPresented: $showSubscriptionView) {
-            SubscriptionView()
-                .environmentObject(authViewModel)
-                .presentationDragIndicator(.visible)
-        }
         .sheet(isPresented: $showPurchaseCreditsView) {
             PurchaseCreditsView()
                 .environmentObject(authViewModel)
@@ -699,7 +648,6 @@ struct DiagonalOverlappingImages: View {
 struct SpinningPlusButton: View {
     @Binding var showActionSheet: Bool
     let isLoggedIn: Bool
-    let isSubscribed: Bool
     let hasCredits: Bool
     let isConnected: Bool
     @State private var rotation: Double = 0
@@ -707,7 +655,7 @@ struct SpinningPlusButton: View {
     @State private var isAnimating = false
 
     private var canUpload: Bool {
-        isLoggedIn && isSubscribed && hasCredits && isConnected
+        isLoggedIn && hasCredits && isConnected
     }
 
     var body: some View {

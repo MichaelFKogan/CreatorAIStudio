@@ -8,14 +8,12 @@
 import SwiftUI
 
 /// A reusable credits badge component that shows "Sign in" when logged out,
-/// "Subscribe" when logged in but not subscribed, and displays credits when logged in and subscribed.
-/// Handles sign-in, subscription, and purchase credits sheet presentation.
+/// and displays credits when logged in.
+/// Handles sign-in and purchase credits sheet presentation.
 struct CreditsBadge: View {
     @EnvironmentObject var authViewModel: AuthViewModel
     @State private var showSignInSheet: Bool = false
     @State private var showPurchaseCreditsSheet: Bool = false
-    @State private var showSubscriptionSheet: Bool = false
-    @State private var isSubscribed: Bool = false // TODO: Connect to actual subscription status
     
     // Customization options
     let diamondColor: Color
@@ -47,29 +45,8 @@ struct CreditsBadge: View {
                         )
                         .foregroundColor(.primary)
                 }
- 
-            } else if !isSubscribed {
-                // Show "Subscribe" button when logged in but not subscribed
-                Button(action: {
-                    showSubscriptionSheet = true
-                }) {
-                    Image(systemName: "crown.fill")
-                        .font(
-                            .system(
-                                size: 14, weight: .semibold,
-                                design: .rounded)
-                        )
-                        .foregroundStyle(
-                            LinearGradient(
-                                colors: [.yellow, .orange],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                }
-                
             } else {
-                // Show credits badge when logged in and subscribed - make it tappable
+                // Show credits badge when logged in - make it tappable
                 Button(action: {
                     showPurchaseCreditsSheet = true
                 }) {
@@ -118,11 +95,6 @@ struct CreditsBadge: View {
         }
         .sheet(isPresented: $showSignInSheet) {
             SignInView()
-                .environmentObject(authViewModel)
-                .presentationDragIndicator(.visible)
-        }
-        .sheet(isPresented: $showSubscriptionSheet) {
-            SubscriptionView()
                 .environmentObject(authViewModel)
                 .presentationDragIndicator(.visible)
         }

@@ -5,8 +5,8 @@ struct Home: View {
     @EnvironmentObject var authViewModel: AuthViewModel
     @StateObject private var filtersViewModel = PhotoFiltersViewModel.shared
     @StateObject private var videoFiltersViewModel = VideoFiltersViewModel.shared
-    @State private var showSubscriptionSheet: Bool = false
     @State private var showSignInSheet: Bool = false
+    @State private var showPurchaseCreditsView: Bool = false
     let resetTrigger: UUID
     
     private let categoryManager = CategoryConfigurationManager.shared
@@ -161,11 +161,11 @@ struct Home: View {
                                         .foregroundColor(.primary)
                                 }
                             } else {
-                                // Show crown icon when logged in
+                                // Show credits badge when logged in
                                 Button(action: {
-                                    showSubscriptionSheet = true
+                                    showPurchaseCreditsView = true
                                 }) {
-                                    Image(systemName: "crown.fill")
+                                    Image(systemName: "diamond.fill")
                                         .font(
                                             .system(
                                                 size: 14, weight: .semibold,
@@ -188,8 +188,8 @@ struct Home: View {
                     .environmentObject(authViewModel)
                     .presentationDragIndicator(.visible)
             }
-            .sheet(isPresented: $showSubscriptionSheet) {
-                SubscriptionView()
+            .sheet(isPresented: $showPurchaseCreditsView) {
+                PurchaseCreditsView()
                     .environmentObject(authViewModel)
                     .presentationDragIndicator(.visible)
             }

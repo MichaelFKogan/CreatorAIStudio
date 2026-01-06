@@ -9,9 +9,7 @@ struct Settings: View {
     @State private var isSigningOut = false
     @State private var showSignedOutAlert = false
     @State private var showSignInSheet = false
-    @State private var showSubscriptionView = false
     @State private var showPurchaseCreditsView = false
-    @AppStorage("testSubscriptionStatus") private var isSubscribed: Bool = false // Testing: Toggle subscription status
     
     // ProfileViewModel for cache clearing
     var profileViewModel: ProfileViewModel?
@@ -206,29 +204,6 @@ struct Settings: View {
                 }
             }
 
-            // Testing (for development)
-            Section("Testing") {
-                HStack {
-                    Image(systemName: "crown.fill")
-                        .foregroundStyle(
-                            LinearGradient(
-                                colors: [.yellow, .orange],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Test Subscription Status")
-                            .font(.body)
-                        Text(isSubscribed ? "Subscription enabled for testing" : "Subscription disabled")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                    Spacer()
-                    Toggle("", isOn: $isSubscribed)
-                        .labelsHidden()
-                }
-            }
 
             // About
             Section("About") {
@@ -324,11 +299,6 @@ struct Settings: View {
         }
         .sheet(isPresented: $showSignInSheet) {
             SignInView()
-                .environmentObject(authViewModel)
-                .presentationDragIndicator(.visible)
-        }
-        .sheet(isPresented: $showSubscriptionView) {
-            SubscriptionView()
                 .environmentObject(authViewModel)
                 .presentationDragIndicator(.visible)
         }
