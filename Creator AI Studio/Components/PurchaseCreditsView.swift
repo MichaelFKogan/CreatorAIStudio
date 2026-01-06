@@ -97,26 +97,6 @@ struct PurchaseCreditsView: View {
                             .foregroundColor(.secondary)
                     }
 
-                    // Info banner for non-subscribers
-                    if !isSubscribed {
-                        HStack(spacing: 8) {
-                            Image(systemName: "info.circle.fill")
-                                .font(.system(size: 16))
-                                .foregroundColor(.blue)
-
-                            Text("Subscription required to purchase credits")
-                                .font(.system(size: 13, design: .rounded))
-                                .foregroundColor(.secondary)
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding()
-                        .background(
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(Color.blue.opacity(0.1))
-                        )
-                        .padding(.horizontal)
-                    }
-
                     // Payment Method Selector
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Payment Method")
@@ -146,19 +126,19 @@ struct PurchaseCreditsView: View {
                             title: "Pro Pack",
                             baseCreditsValue: 10.00,
                             paymentMethod: selectedPaymentMethod,
-                            badge: "Best Value"
                         )
 
                         CreditPackageCard(
                             title: "Mega Pack",
                             baseCreditsValue: 20.00,
-                            paymentMethod: selectedPaymentMethod
+                            paymentMethod: selectedPaymentMethod,
+                            badge: "Best Value"
                         )
 
                         CreditPackageCard(
                             title: "Ultra Pack",
                             baseCreditsValue: 50.00,
-                            paymentMethod: selectedPaymentMethod
+                            paymentMethod: selectedPaymentMethod,
                         )
                     }
                     .padding(.horizontal)

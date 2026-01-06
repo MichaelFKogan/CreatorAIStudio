@@ -80,43 +80,10 @@ struct Settings: View {
                 }
             }
             
-            // Subscription section
-            Section("Subscription") {
-                HStack {
-                    Image(systemName: "crown.fill")
-                        .foregroundStyle(
-                            LinearGradient(
-                                colors: [.yellow, .orange],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(isSubscribed ? "Premium Active" : "Premium Subscription")
-                            .font(.body)
-                        Text(isSubscribed ? "Renews monthly" : "$5.00/month")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                    Spacer()
-                    if isSubscribed {
-                        Image(systemName: "checkmark.circle.fill")
-                            .foregroundColor(.green)
-                    } else {
-                        Image(systemName: "chevron.right")
-                            .foregroundColor(.gray)
-                    }
-                }
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    showSubscriptionView = true
-                }
-            }
-            
             // Purchase Credits section
             Section("Credits") {
                 HStack {
-                    Image(systemName: "diamond.fill")
+                    Image(systemName: "crown.fill")
                         .foregroundStyle(
                             LinearGradient(
                                 colors: [.blue, .purple],
