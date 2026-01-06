@@ -65,12 +65,32 @@ struct NotificationCard: View {
     @State private var shimmer = false
     @State private var pulseAnimation = false
     @State private var showDetailsSheet = false
+    @State private var isRetrying = false
     
     var body: some View {
         VStack(spacing: 0) {
-            // Chevron down button to hide this individual notification - aligned right
+            // Top row with chevron down and retry button (when failed)
             HStack {
                 Spacer()
+                // Retry button (only shown when failed)
+                if notification.state == .failed {
+                    Button(action: {
+                        retryGeneration()
+                    }) {
+                        if isRetrying {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: .blue))
+                                .scaleEffect(0.8)
+                        } else {
+                            Text("Retry")
+                                .font(.custom("Nunito-Regular", size: 13))
+                                .foregroundColor(.blue)
+                        }
+                    }
+                    .disabled(isRetrying)
+                    .padding(.trailing, 12)
+                }
+                // Chevron down button to hide this individual notification
                 Button(action: onDismiss) {
                     Image(systemName: "chevron.down")
                         .font(.system(size: 14, weight: .semibold))
@@ -159,6 +179,28 @@ struct NotificationCard: View {
         case .failed: return Color.red.opacity(0.3)
         case .completed: return Color.green.opacity(0.3)
         default: return Color.gray.opacity(0.15)
+        }
+    }
+    
+    private func retryGeneration() {
+        guard !isRetrying else { return }
+        isRetrying = true
+
+        Task {
+            let success = ImageGenerationCoordinator.shared
+                .retryImageGeneration(
+                    notificationId: notification.id,
+                    onImageGenerated: { _ in
+                        isRetrying = false
+                    },
+                    onError: { _ in
+                        isRetrying = false
+                    }
+                )
+
+            if !success {
+                isRetrying = false
+            }
         }
     }
 }
