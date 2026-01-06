@@ -119,6 +119,7 @@ struct PhotoFilters: View {
     @StateObject private var viewModel = PhotoFiltersViewModel()
 //    @StateObject private var presetViewModel = PresetViewModel()
     @EnvironmentObject var authViewModel: AuthViewModel
+    @StateObject private var creditsViewModel = CreditsViewModel()
     @State private var selectedFilter: InfoPacket? = nil
     @State private var selectedPhotoItem: PhotosPickerItem?
     @State private var selectedImage: UIImage?
@@ -415,7 +416,7 @@ struct PhotoFilters: View {
                     CreditsBadge(
                         diamondColor: .teal,
                         borderColor: .mint,
-                        creditsAmount: "$10.00"
+                        creditsAmount: creditsViewModel.formattedBalance()
                     )
                 }
             }
@@ -432,6 +433,12 @@ struct PhotoFilters: View {
         .onChange(of: selectedPhotoItem, perform: loadPhoto)
         .onAppear {
             setDefaultFilter()
+            // Fetch credit balance if user is signed in
+            if let userId = authViewModel.user?.id {
+                Task {
+                    await creditsViewModel.fetchBalance(userId: userId)
+                }
+            }
 //            // Load presets if user is signed in
 //            if let userId = authViewModel.user?.id.uuidString {
 //                presetViewModel.userId = userId
@@ -439,6 +446,17 @@ struct PhotoFilters: View {
 //                    await presetViewModel.fetchPresets()
 //                }
 //            }
+        }
+        .onChange(of: authViewModel.user) { newUser in
+            // Refresh credits when user signs in or changes
+            if let userId = newUser?.id {
+                Task {
+                    await creditsViewModel.fetchBalance(userId: userId)
+                }
+            } else {
+                // Reset balance when user signs out
+                creditsViewModel.balance = 0.00
+            }
         }
     }
 

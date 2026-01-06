@@ -10,6 +10,7 @@ struct Settings: View {
     @State private var showSignedOutAlert = false
     @State private var showSignInSheet = false
     @State private var showPurchaseCreditsView = false
+    @State private var showTestCreditsView = false
     
     // ProfileViewModel for cache clearing
     var profileViewModel: ProfileViewModel?
@@ -103,6 +104,25 @@ struct Settings: View {
                 .contentShape(Rectangle())
                 .onTapGesture {
                     showPurchaseCreditsView = true
+                }
+                
+                HStack {
+                    Image(systemName: "flask.fill")
+                        .foregroundColor(.purple)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Test Credits")
+                            .font(.body)
+                        Text("Set credit balance for testing")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .foregroundColor(.gray)
+                }
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    showTestCreditsView = true
                 }
             }
             
@@ -304,6 +324,11 @@ struct Settings: View {
         }
         .sheet(isPresented: $showPurchaseCreditsView) {
             PurchaseCreditsView()
+                .environmentObject(authViewModel)
+                .presentationDragIndicator(.visible)
+        }
+        .sheet(isPresented: $showTestCreditsView) {
+            TestCreditsView()
                 .environmentObject(authViewModel)
                 .presentationDragIndicator(.visible)
         }
