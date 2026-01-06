@@ -84,7 +84,7 @@ struct Settings: View {
                     Image(systemName: "crown.fill")
                         .foregroundStyle(
                             LinearGradient(
-                                colors: [.blue, .purple],
+                                colors: [.yellow, .orange],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
