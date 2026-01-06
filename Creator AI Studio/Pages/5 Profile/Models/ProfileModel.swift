@@ -372,23 +372,15 @@ class ProfileViewModel: ObservableObject {
         setupVideoSavedNotification()
     }
     
-    /// Decodes the stats cache and loads stats for the last known user
+    /// Decodes the stats cache (but doesn't load stats - wait for user to be set)
+    /// This prevents loading stats for the wrong user if user switches accounts
     private func decodeStatsCache() {
-        // Decode cached stats
+        // Decode cached stats but DON'T load them yet
+        // Wait until we know the current user to avoid loading wrong user's stats
         if let data = try? JSONDecoder().decode([String: UserStats].self, from: cachedUserStatsData),
            !data.isEmpty {
             cachedUserStatsMap = data
-            
-            // If we have a last known user, load their stats immediately
-            if !lastUserId.isEmpty, let stats = cachedUserStatsMap[lastUserId] {
-                favoriteCount = stats.favorite_count
-                imageCount = stats.image_count
-                videoCount = stats.video_count
-                modelCounts = stats.model_counts
-                videoModelCounts = stats.video_model_counts
-                hasLoadedStats = true
-                print("✅ Pre-loaded cached stats in init() for user: \(lastUserId)")
-            }
+            print("✅ Decoded stats cache with \(data.count) user(s)")
         }
     }
     
@@ -534,6 +526,9 @@ class ProfileViewModel: ObservableObject {
     }
 
     private func handleUserChange(userId: String) {
+        // CRITICAL: Clear userImages array immediately to prevent showing previous user's data
+        userImages = []
+        
         // Reset pagination state for the new user
         currentPage = 0
         hasMorePages = true
@@ -551,7 +546,6 @@ class ProfileViewModel: ObservableObject {
         modelHasMorePages.removeAll()
         
         // ALWAYS reset stats when user changes to prevent showing previous user's counts
-        // The loadCachedStats() call below will restore the correct stats for this user
         favoriteCount = 0
         imageCount = 0
         videoCount = 0
@@ -559,10 +553,12 @@ class ProfileViewModel: ObservableObject {
         videoModelCounts = [:]
         hasLoadedStats = false
 
-        // Load cached data for this user if available
-        // This will restore the correct stats and images for the new user
+        // Load cached images for this user if available (for faster initial display)
         loadCachedImages(for: userId)
-        loadCachedStats(for: userId)
+        
+        // DON'T load cached stats here - wait for fresh stats from database via fetchUserStats()
+        // This prevents showing wrong stats from cache when switching users
+        // ProfileMainView will call fetchUserStats() which will fetch fresh stats from database
     }
     
     private func loadCachedStats(for userId: String) {
@@ -1177,6 +1173,9 @@ class ProfileViewModel: ObservableObject {
                 
                 // Update published properties from stats
                 print("📊 Current counts before update: favorites=\(favoriteCount), images=\(imageCount), videos=\(videoCount)")
+                print("📊 Fetched stats from DB: favorites=\(stats.favorite_count), images=\(stats.image_count), videos=\(stats.video_count)")
+                
+                // Update counts from database (source of truth)
                 favoriteCount = stats.favorite_count
                 imageCount = stats.image_count
                 videoCount = stats.video_count

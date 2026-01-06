@@ -503,15 +503,14 @@ struct ProfileViewContent: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
                     // All pill
+                    // ALWAYS use database stats as source of truth
+                    // userImages is paginated and incomplete, so counting from it gives wrong results
                     GalleryTabPill(
                         title: "All",
                         icon: "photo.on.rectangle.angled",
                         isSelected: selectedTab == .all && selectedModel == nil
                             && selectedVideoModel == nil,
-                        // Use actual counts to ensure accuracy, fall back to stats if userImages is empty
-                        count: viewModel.userImages.isEmpty 
-                            ? (viewModel.imageCount + viewModel.videoCount)
-                            : (viewModel.actualImageCount + viewModel.actualVideoCount),
+                        count: viewModel.imageCount + viewModel.videoCount,
                         isSignedIn: isSignedIn
                     ) {
                         selectedTab = .all
@@ -520,16 +519,15 @@ struct ProfileViewContent: View {
                     }
 
                     // Favorites pill
+                    // ALWAYS use database stats (favoriteCount) as source of truth
+                    // userImages is paginated and incomplete, so counting from it gives wrong results
                     GalleryTabPill(
                         title: "Favorites",
                         icon: "heart.fill",
                         isSelected: selectedTab == .favorites
                             && selectedModel == nil
                             && selectedVideoModel == nil,
-                        // Use actualFavoriteCount to ensure it includes both images and videos
-                        // This counts from actual data, ensuring videos are included
-                        // Falls back to favoriteCount from stats if userImages is empty
-                        count: viewModel.userImages.isEmpty ? viewModel.favoriteCount : viewModel.actualFavoriteCount,
+                        count: viewModel.favoriteCount,
                         isSignedIn: isSignedIn,
                         selectedColor: .red
                     ) {
@@ -543,15 +541,15 @@ struct ProfileViewContent: View {
                     }
 
                     // Images pill
+                    // ALWAYS use database stats (imageCount) as source of truth
+                    // userImages is paginated and incomplete, so counting from it gives wrong results
                     GalleryTabPill(
                         title: "Images",
                         icon: "photo.fill",
                         isSelected: selectedTab == .images
                             && selectedModel == nil
                             && selectedVideoModel == nil,
-                        // Use actualImageCount to ensure it's always accurate based on actual data
-                        // Falls back to imageCount from stats if userImages is empty
-                        count: viewModel.userImages.isEmpty ? viewModel.imageCount : viewModel.actualImageCount,
+                        count: viewModel.imageCount,
                         isSignedIn: isSignedIn,
                         selectedColor: .blue
                     ) {
@@ -561,15 +559,15 @@ struct ProfileViewContent: View {
                     }
 
                     // Videos pill
+                    // ALWAYS use database stats (videoCount) as source of truth
+                    // userImages is paginated and incomplete, so counting from it gives wrong results
                     GalleryTabPill(
                         title: "Videos",
                         icon: "video.fill",
                         isSelected: selectedTab == .videos
                             && selectedModel == nil
                             && selectedVideoModel == nil,
-                        // Use actualVideoCount to ensure it's always accurate based on actual data
-                        // Falls back to videoCount from stats if userImages is empty
-                        count: viewModel.userImages.isEmpty ? viewModel.videoCount : viewModel.actualVideoCount,
+                        count: viewModel.videoCount,
                         isSignedIn: isSignedIn,
                         selectedColor: .purple
                     ) {

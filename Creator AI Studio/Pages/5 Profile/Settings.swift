@@ -6,6 +6,8 @@ struct Settings: View {
     @State private var showCopiedAlert = false
     @State private var showCacheClearedAlert = false
     @State private var isClearing = false
+    @State private var isResyncing = false
+    @State private var showStatsResyncedAlert = false
     @State private var isSigningOut = false
     @State private var showSignedOutAlert = false
     @State private var showSignInSheet = false
@@ -141,6 +143,32 @@ struct Settings: View {
                         }
                     }
                 }
+            }
+            
+            // Gallery section
+            Section("Gallery") {
+                Button(action: {
+                    resyncStats()
+                }) {
+                    HStack {
+                        Image(systemName: "arrow.clockwise")
+                            .foregroundColor(.blue)
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Resync Stats")
+                                .font(.body)
+                                .foregroundColor(.primary)
+                            Text("Recalculate favorites, images, and videos counts")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        Spacer()
+                        if isResyncing {
+                            ProgressView()
+                                .scaleEffect(0.8)
+                        }
+                    }
+                }
+                .disabled(isResyncing)
             }
 
             // // App preferences
@@ -312,6 +340,11 @@ struct Settings: View {
         } message: {
             Text("Gallery cache has been cleared and stats have been resynced from the database.")
         }
+        .alert("Stats Resynced", isPresented: $showStatsResyncedAlert) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Gallery statistics have been recalculated from the database. The counts should now be accurate.")
+        }
         .alert("Signed Out", isPresented: $showSignedOutAlert) {
             Button("OK", role: .cancel) {}
         } message: {
@@ -351,4 +384,24 @@ struct Settings: View {
 //            }
 //        }
 //    }
+    
+    private func resyncStats() {
+        guard profileViewModel != nil else { return }
+        
+        isResyncing = true
+        
+        Task {
+            // Resync stats by recomputing from user_media table
+            await profileViewModel?.resyncUserStats()
+            
+            await MainActor.run {
+                // Haptic feedback
+                let generator = UINotificationFeedbackGenerator()
+                generator.notificationOccurred(.success)
+                
+                isResyncing = false
+                showStatsResyncedAlert = true
+            }
+        }
+    }
 }

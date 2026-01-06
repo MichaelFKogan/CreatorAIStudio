@@ -458,6 +458,14 @@ struct PhotoFilters: View {
                 creditsViewModel.balance = 0.00
             }
         }
+        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("CreditsBalanceUpdated"))) { notification in
+            // Refresh credits when balance is updated (e.g., after image/video generation)
+            if let userId = authViewModel.user?.id {
+                Task {
+                    await creditsViewModel.fetchBalance(userId: userId)
+                }
+            }
+        }
     }
 
     // @ViewBuilder

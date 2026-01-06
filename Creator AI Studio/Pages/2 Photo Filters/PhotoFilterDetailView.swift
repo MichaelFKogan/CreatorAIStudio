@@ -356,14 +356,14 @@ struct PhotoFilterDetailView: View {
 
                         HStack(spacing: 6) {
                             if PricingManager.displayMode == .credits {
-                                Image(systemName: "diamond.fill")
+                                Image(systemName: "crown.fill")
                                     .foregroundStyle(
                                         LinearGradient(
-                                            colors: [.blue, .purple],
+                                            colors: [.yellow, .orange],
                                             startPoint: .topLeading,
                                             endPoint: .bottomTrailing)
                                     )
-                                    .font(.system(size: 11))
+                                    .font(.system(size: 12))
                             }
 
                             PriceDisplayView(

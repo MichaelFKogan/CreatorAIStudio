@@ -51,15 +51,15 @@ struct CreditsBadge: View {
                     showPurchaseCreditsSheet = true
                 }) {
                     HStack(spacing: 6) {
-                        Image(systemName: "diamond.fill")
+                        Image(systemName: "crown.fill")
                             .foregroundStyle(
                                 LinearGradient(
-                                    colors: [diamondColor, diamondColor],
+                                    colors: [.yellow, .orange],
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
                                 )
                             )
-                            .font(.system(size: 8))
+                            .font(.system(size: 12))
                         
                         Text(creditsAmount)
                             .font(

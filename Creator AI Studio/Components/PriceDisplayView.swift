@@ -45,7 +45,7 @@ struct PriceBadge: View {
     var body: some View {
         HStack(spacing: 4) {
             if PricingManager.displayMode == .credits {
-                Image(systemName: "diamond.fill")
+                Image(systemName: "crown.fill")
                     .font(.caption2)
             }
             PriceDisplayView(price: price, showUnit: false)

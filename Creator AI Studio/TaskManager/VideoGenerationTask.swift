@@ -325,6 +325,50 @@ class VideoGenerationTask: MediaGenerationTask {
             // Save with retry logic
             try await saveMetadataWithRetry(metadata)
             
+            // Fetch the inserted video to get its ID for credit deduction
+            let insertedResponse: PostgrestResponse<[UserImage]> = try await SupabaseManager.shared.client.database
+                .from("user_media")
+                .select()
+                .eq("user_id", value: userId)
+                .eq("video_url", value: supabaseVideoURL)
+                .order("created_at", ascending: false)
+                .limit(1)
+                .execute()
+            
+            let insertedVideo = insertedResponse.value.first
+            
+            // MARK: Deduct Credits
+            if let cost = metadata.cost, cost > 0, let userIdUUID = UUID(uuidString: userId) {
+                do {
+                    let mediaId: UUID? = {
+                        guard let idString = insertedVideo?.id else { return nil }
+                        return UUID(uuidString: idString)
+                    }()
+                    let _ = try await CreditsManager.shared.deductCredits(
+                        userId: userIdUUID,
+                        amount: cost,
+                        description: "Video generation - \(metadata.title ?? metadata.model ?? "Unknown model")",
+                        relatedMediaId: mediaId
+                    )
+                    print("✅ [VideoGenerationTask] Deducted $\(String(format: "%.4f", cost)) credits for video generation")
+                    
+                    // Post notification to refresh credit balance in UI
+                    await MainActor.run {
+                        NotificationCenter.default.post(
+                            name: NSNotification.Name("CreditsBalanceUpdated"),
+                            object: nil,
+                            userInfo: ["userId": userId]
+                        )
+                    }
+                } catch {
+                    print("❌ [VideoGenerationTask] Error deducting credits: \(error)")
+                    // Don't fail the entire generation if credit deduction fails
+                    // The cost is already recorded in metadata for audit purposes
+                }
+            } else {
+                print("⚠️ [VideoGenerationTask] Skipping credit deduction - cost: \(metadata.cost ?? 0), userId: \(userId)")
+            }
+            
             // Small delay to ensure database transaction is fully committed
             try? await Task.sleep(for: .milliseconds(500))
             
