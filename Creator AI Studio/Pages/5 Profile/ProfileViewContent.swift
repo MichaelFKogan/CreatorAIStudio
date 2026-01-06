@@ -508,8 +508,10 @@ struct ProfileViewContent: View {
                         icon: "photo.on.rectangle.angled",
                         isSelected: selectedTab == .all && selectedModel == nil
                             && selectedVideoModel == nil,
-                        // Stats are pre-loaded from cache in init(), so this should show correct count immediately
-                        count: viewModel.imageCount + viewModel.videoCount,
+                        // Use actual counts to ensure accuracy, fall back to stats if userImages is empty
+                        count: viewModel.userImages.isEmpty 
+                            ? (viewModel.imageCount + viewModel.videoCount)
+                            : (viewModel.actualImageCount + viewModel.actualVideoCount),
                         isSignedIn: isSignedIn
                     ) {
                         selectedTab = .all
@@ -547,7 +549,9 @@ struct ProfileViewContent: View {
                         isSelected: selectedTab == .images
                             && selectedModel == nil
                             && selectedVideoModel == nil,
-                        count: viewModel.imageCount,
+                        // Use actualImageCount to ensure it's always accurate based on actual data
+                        // Falls back to imageCount from stats if userImages is empty
+                        count: viewModel.userImages.isEmpty ? viewModel.imageCount : viewModel.actualImageCount,
                         isSignedIn: isSignedIn,
                         selectedColor: .blue
                     ) {
@@ -563,7 +567,9 @@ struct ProfileViewContent: View {
                         isSelected: selectedTab == .videos
                             && selectedModel == nil
                             && selectedVideoModel == nil,
-                        count: viewModel.videoCount,
+                        // Use actualVideoCount to ensure it's always accurate based on actual data
+                        // Falls back to videoCount from stats if userImages is empty
+                        count: viewModel.userImages.isEmpty ? viewModel.videoCount : viewModel.actualVideoCount,
                         isSignedIn: isSignedIn,
                         selectedColor: .purple
                     ) {

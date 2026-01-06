@@ -906,6 +906,46 @@ class ProfileViewModel: ObservableObject {
                     return aDate > bDate // Descending order (newest first)
                 }
                 userImages.insert(contentsOf: sortedFreshItems, at: 0)
+                
+                // Update counts for all new images (similar to addImage logic)
+                // This ensures the pill counts are accurate immediately
+                var newImageCount = 0
+                var newVideoCount = 0
+                var newFavoriteCount = 0
+                
+                // Update model counts for all new images (batch update)
+                for image in sortedFreshItems {
+                    // Update image/video counts
+                    if image.isImage {
+                        newImageCount += 1
+                    } else if image.isVideo {
+                        newVideoCount += 1
+                    }
+                    
+                    // Update favorite count
+                    if image.is_favorite == true {
+                        newFavoriteCount += 1
+                    }
+                    
+                    // Update model counts (update dictionaries, but don't call updateUserStats yet)
+                    if let model = image.model {
+                        if image.isImage {
+                            modelCounts[model, default: 0] += 1
+                        } else if image.isVideo {
+                            videoModelCounts[model, default: 0] += 1
+                        }
+                    }
+                }
+                
+                // Update the count properties
+                imageCount += newImageCount
+                videoCount += newVideoCount
+                favoriteCount += newFavoriteCount
+                
+                // Sync all updates with database in one call (more efficient than calling for each image)
+                await updateUserStats()
+                
+                print("📊 refreshLatest: Updated counts - +\(newImageCount) images, +\(newVideoCount) videos, +\(newFavoriteCount) favorites")
             }
 
             // Update pagination marker to reflect total cached items
@@ -1621,6 +1661,18 @@ class ProfileViewModel: ObservableObject {
     /// This ensures the count is always accurate, even if database stats are out of sync
     var actualFavoriteCount: Int {
         return userImages.filter { $0.is_favorite == true }.count
+    }
+    
+    /// Computes the actual image count from userImages
+    /// This ensures the count is always accurate, even if database stats are out of sync
+    var actualImageCount: Int {
+        return userImages.filter { $0.isImage }.count
+    }
+    
+    /// Computes the actual video count from userImages
+    /// This ensures the count is always accurate, even if database stats are out of sync
+    var actualVideoCount: Int {
+        return userImages.filter { $0.isVideo }.count
     }
 
     /// Gets unique list of models from user images (images only)
