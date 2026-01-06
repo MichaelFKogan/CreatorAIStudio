@@ -865,6 +865,7 @@ private struct BannerSectionFilter: View {
             
             // Horizontal row with model image, title, pill, pricing, model info
             HStack(alignment: .top, spacing: 16) {
+                Spacer()
                 Image("klingvideo26pro")
                     .resizable()
                     .aspectRatio(contentMode: .fill)
@@ -909,6 +910,7 @@ private struct BannerSectionFilter: View {
                     Spacer()
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
+                Spacer()
             }
             .frame(height: 128)
             

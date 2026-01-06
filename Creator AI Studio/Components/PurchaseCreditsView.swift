@@ -388,7 +388,7 @@ struct CreditPackageCard: View {
                                         .frame(width: 20)
 
                                         Text(
-                                            "~\(imageGenerations) image generations"
+                                            "Approx. \(imageGenerations) images"
                                         )
                                         .font(
                                             .system(
@@ -408,7 +408,7 @@ struct CreditPackageCard: View {
                                             .frame(width: 20)
 
                                         Text(
-                                            "~\(videoGenerationsRange.min)–\(videoGenerationsRange.max) video generations"
+                                            "Approx. \(videoGenerationsRange.min)–\(videoGenerationsRange.max) videos"
                                         )
                                         .font(
                                             .system(
@@ -436,7 +436,7 @@ struct CreditPackageCard: View {
                             }
 
                             Text(
-                                "(You can use credits for both images and videos)"
+                                "Use credits for both images and videos"
                             )
                             .font(.system(size: 11, design: .rounded))
                             .foregroundColor(.secondary)

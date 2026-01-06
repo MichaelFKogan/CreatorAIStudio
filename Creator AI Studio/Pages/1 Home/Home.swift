@@ -146,39 +146,51 @@ struct Home: View {
 
                     // MARK: Sign In / Crown Icon for Subscription
                     ToolbarItem(placement: .navigationBarTrailing) {
-                        Group {
-                            if authViewModel.user == nil {
-                                // Show "Sign in" button when logged out
-                                Button(action: {
-                                    showSignInSheet = true
-                                }) {
-                                    Text("Sign in")
-                                        .font(
-                                            .system(
-                                                size: 16, weight: .semibold,
-                                                design: .rounded)
-                                        )
-                                        .foregroundColor(.primary)
-                                }
-                            } else {
-                                // Show credits badge when logged in
-                                Button(action: {
-                                    showPurchaseCreditsView = true
-                                }) {
-                                    Image(systemName: "diamond.fill")
-                                        .font(
-                                            .system(
-                                                size: 14, weight: .semibold,
-                                                design: .rounded)
-                                        )
-                                        .foregroundStyle(
-                                            LinearGradient(
-                                                colors: [.yellow, .orange],
-                                                startPoint: .topLeading,
-                                                endPoint: .bottomTrailing
+                        HStack(spacing: 16) {
+                            Group {
+                                if authViewModel.user == nil {
+                                    // Show "Sign in" button when logged out
+                                    Button(action: {
+                                        showSignInSheet = true
+                                    }) {
+                                        Text("Sign in")
+                                            .font(
+                                                .system(
+                                                    size: 16, weight: .semibold,
+                                                    design: .rounded)
                                             )
-                                        )
+                                            .foregroundColor(.primary)
+                                    }
+                                } else {
+                                    // Show credits badge when logged in
+                                    Button(action: {
+                                        showPurchaseCreditsView = true
+                                    }) {
+                                        Image(systemName: "crown.fill")
+                                            .font(
+                                                .system(
+                                                    size: 14, weight: .semibold,
+                                                    design: .rounded)
+                                            )
+                                            .foregroundStyle(
+                                                LinearGradient(
+                                                    colors: [.yellow, .orange],
+                                                    startPoint: .topLeading,
+                                                    endPoint: .bottomTrailing
+                                                )
+                                            )
+                                    }
                                 }
+                            }
+                            
+                            // Settings button
+                            NavigationLink(
+                                destination: Settings(profileViewModel: nil)
+                                    .environmentObject(authViewModel)
+                            ) {
+                                Image(systemName: "gearshape")
+                                    .font(.body)
+                                    .foregroundColor(.gray)
                             }
                         }
                     }
