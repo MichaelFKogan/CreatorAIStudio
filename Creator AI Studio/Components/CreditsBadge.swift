@@ -10,24 +10,23 @@ import SwiftUI
 /// A reusable credits badge component that shows "Sign in" when logged out,
 /// and displays credits when logged in.
 /// Handles sign-in and purchase credits sheet presentation.
+/// Automatically fetches and updates credit balance.
 struct CreditsBadge: View {
     @EnvironmentObject var authViewModel: AuthViewModel
+    @StateObject private var creditsViewModel = CreditsViewModel()
     @State private var showSignInSheet: Bool = false
     @State private var showPurchaseCreditsSheet: Bool = false
     
     // Customization options
     let diamondColor: Color
     let borderColor: Color
-    let creditsAmount: String
     
     init(
         diamondColor: Color = .purple,
-        borderColor: Color = .purple,
-        creditsAmount: String = "$1.97"
+        borderColor: Color = .purple
     ) {
         self.diamondColor = diamondColor
         self.borderColor = borderColor
-        self.creditsAmount = creditsAmount
     }
     
     var body: some View {
@@ -51,17 +50,17 @@ struct CreditsBadge: View {
                     showPurchaseCreditsSheet = true
                 }) {
                     HStack(spacing: 6) {
-                        Image(systemName: "diamond.fill")
+                        Image(systemName: "crown.fill")
                             .foregroundStyle(
                                 LinearGradient(
-                                    colors: [diamondColor, diamondColor],
+                                    colors: [.yellow, .orange],
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
                                 )
                             )
-                            .font(.system(size: 8))
+                            .font(.system(size: 12))
                         
-                        Text(creditsAmount)
+                        Text(creditsViewModel.formattedBalance())
                             .font(
                                 .system(
                                     size: 14, weight: .semibold,
@@ -102,6 +101,33 @@ struct CreditsBadge: View {
             PurchaseCreditsView()
                 .environmentObject(authViewModel)
                 .presentationDragIndicator(.visible)
+        }
+        .onAppear {
+            // Fetch credit balance when badge appears
+            if let userId = authViewModel.user?.id {
+                Task {
+                    await creditsViewModel.fetchBalance(userId: userId)
+                }
+            }
+        }
+        .onChange(of: authViewModel.user) { newUser in
+            // Refresh credits when user signs in or changes
+            if let userId = newUser?.id {
+                Task {
+                    await creditsViewModel.fetchBalance(userId: userId)
+                }
+            } else {
+                // Reset balance when user signs out
+                creditsViewModel.balance = 0.00
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("CreditsBalanceUpdated"))) { notification in
+            // Refresh credits when balance is updated (e.g., after purchase or generation)
+            if let userId = authViewModel.user?.id {
+                Task {
+                    await creditsViewModel.fetchBalance(userId: userId)
+                }
+            }
         }
     }
 }

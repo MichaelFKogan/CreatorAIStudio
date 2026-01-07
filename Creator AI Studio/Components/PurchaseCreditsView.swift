@@ -65,6 +65,7 @@ struct PriceCalculator {
 struct PurchaseCreditsView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
     @Environment(\.dismiss) private var dismiss
+    @StateObject private var creditsViewModel = CreditsViewModel()
     @State private var selectedPaymentMethod: PaymentMethod = .external
 
     var body: some View {
@@ -93,6 +94,26 @@ struct PurchaseCreditsView: View {
                         Text("Choose a credit package")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
+                    }
+                    
+                    // Current Balance Display
+                    if let userId = authViewModel.user?.id {
+                        VStack(spacing: 8) {
+                            Text("Current Balance")
+                                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                                .foregroundColor(.secondary)
+                            
+                            Text(creditsViewModel.formattedBalance())
+                                .font(.system(size: 32, weight: .bold, design: .rounded))
+                                .foregroundColor(.primary)
+                        }
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .background(
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(Color(.secondarySystemBackground))
+                        )
+                        .padding(.horizontal)
                     }
 
                     // Payment Method Selector
@@ -150,6 +171,21 @@ struct PurchaseCreditsView: View {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Done") {
                         dismiss()
+                    }
+                }
+            }
+            .onAppear {
+                if let userId = authViewModel.user?.id {
+                    Task {
+                        await creditsViewModel.fetchBalance(userId: userId)
+                    }
+                }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("CreditsBalanceUpdated"))) { notification in
+                // Refresh credits when balance is updated (e.g., after image/video generation)
+                if let userId = authViewModel.user?.id {
+                    Task {
+                        await creditsViewModel.fetchBalance(userId: userId)
                     }
                 }
             }
@@ -396,6 +432,7 @@ struct CreditPackageCard: View {
                                         )
                                         .foregroundColor(.secondary)
                                     }
+                                    .padding(.leading, -3)
 
                                     HStack(spacing: 8) {
                                         Image(systemName: "video.fill")
@@ -434,13 +471,17 @@ struct CreditPackageCard: View {
                                 }
 
                             }
+                            .padding(.leading, 20)
 
-                            Text(
-                                "Use credits for both images and videos"
-                            )
-                            .font(.system(size: 11, design: .rounded))
-                            .foregroundColor(.secondary)
-                            .italic()
+                            HStack{
+                                Text(
+                                    "Use credits for both images and videos"
+                                )
+                                .font(.system(size: 11, design: .rounded))
+                                .foregroundColor(.secondary)
+                                .italic()
+                            }
+                            .padding(.leading, 16)
                         }
 
                         Spacer()
@@ -538,6 +579,20 @@ struct CreditPackageCard: View {
                                     )
                                     .font(.system(size: 11, design: .rounded))
                                     .foregroundColor(.secondary)
+                                }
+
+                                HStack {
+                                    Text("Total Fees")
+                                        .font(
+                                            .system(size: 11, weight: .semibold, design: .rounded)
+                                        )
+                                        .foregroundColor(.primary)
+                                    Spacer()
+                                    Text(
+                                        "= \(PriceCalculator.formatPrice(paymentProcessorFee + profitFee))"
+                                    )
+                                    .font(.system(size: 11, weight: .semibold, design: .rounded))
+                                    .foregroundColor(.primary)
                                 }
                             }
                         }

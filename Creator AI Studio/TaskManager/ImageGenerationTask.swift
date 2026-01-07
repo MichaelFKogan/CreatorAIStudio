@@ -242,6 +242,38 @@ class ImageGenerationTask: MediaGenerationTask {
             // Saves with exponential backoff retry for reliability.
             // Returns the inserted image so we can get the ID for the notification
             let insertedImage = try await saveMetadataWithRetry(metadata)
+            
+            // MARK: STEP 5 — DEDUCT CREDITS
+            if let cost = metadata.cost, cost > 0, let userIdUUID = UUID(uuidString: userId) {
+                do {
+                    let mediaId: UUID? = {
+                        guard let idString = insertedImage?.id else { return nil }
+                        return UUID(uuidString: idString)
+                    }()
+                    let _ = try await CreditsManager.shared.deductCredits(
+                        userId: userIdUUID,
+                        amount: cost,
+                        description: "Image generation - \(metadata.title ?? metadata.model ?? "Unknown model")",
+                        relatedMediaId: mediaId
+                    )
+                    print("✅ [ImageGenerationTask] Deducted $\(String(format: "%.4f", cost)) credits for image generation")
+                    
+                    // Post notification to refresh credit balance in UI
+                    await MainActor.run {
+                        NotificationCenter.default.post(
+                            name: NSNotification.Name("CreditsBalanceUpdated"),
+                            object: nil,
+                            userInfo: ["userId": userId]
+                        )
+                    }
+                } catch {
+                    print("❌ [ImageGenerationTask] Error deducting credits: \(error)")
+                    // Don't fail the entire generation if credit deduction fails
+                    // The cost is already recorded in metadata for audit purposes
+                }
+            } else {
+                print("⚠️ [ImageGenerationTask] Skipping credit deduction - cost: \(metadata.cost ?? 0), userId: \(userId)")
+            }
 
             // Increased delay to ensure database transaction is fully committed
             // This is especially important when multiple images are saved concurrently

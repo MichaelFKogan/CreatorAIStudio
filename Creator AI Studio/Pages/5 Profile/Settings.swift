@@ -6,10 +6,14 @@ struct Settings: View {
     @State private var showCopiedAlert = false
     @State private var showCacheClearedAlert = false
     @State private var isClearing = false
+    @State private var isResyncing = false
+    @State private var showStatsResyncedAlert = false
     @State private var isSigningOut = false
     @State private var showSignedOutAlert = false
     @State private var showSignInSheet = false
     @State private var showPurchaseCreditsView = false
+    @State private var showTestCreditsView = false
+    @StateObject private var creditsViewModel = CreditsViewModel()
     
     // ProfileViewModel for cache clearing
     var profileViewModel: ProfileViewModel?
@@ -80,6 +84,30 @@ struct Settings: View {
             
             // Purchase Credits section
             Section("Credits") {
+                // Current Balance
+                HStack {
+                    Image(systemName: "dollarsign.circle.fill")
+                        .foregroundColor(.green)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Current Balance")
+                            .font(.body)
+                        if creditsViewModel.isLoading {
+                            Text("Loading...")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        } else {
+                            Text(creditsViewModel.formattedBalance())
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    Spacer()
+                    if creditsViewModel.isLoading {
+                        ProgressView()
+                            .scaleEffect(0.8)
+                    }
+                }
+                
                 HStack {
                     Image(systemName: "crown.fill")
                         .foregroundStyle(
@@ -104,6 +132,25 @@ struct Settings: View {
                 .onTapGesture {
                     showPurchaseCreditsView = true
                 }
+                
+                HStack {
+                    Image(systemName: "flask.fill")
+                        .foregroundColor(.purple)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Test Credits")
+                            .font(.body)
+                        Text("Set credit balance for testing")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .foregroundColor(.gray)
+                }
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    showTestCreditsView = true
+                }
             }
             
             // Usage section
@@ -121,6 +168,55 @@ struct Settings: View {
                         }
                     }
                 }
+            }
+            
+            // Gallery section
+            Section("Gallery") {
+                Button(action: {
+                    resyncStats()
+                }) {
+                    HStack {
+                        Image(systemName: "arrow.clockwise")
+                            .foregroundColor(.blue)
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Resync Stats")
+                                .font(.body)
+                                .foregroundColor(.primary)
+                            Text("Recalculate favorites, images, and videos counts")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        Spacer()
+                        if isResyncing {
+                            ProgressView()
+                                .scaleEffect(0.8)
+                        }
+                    }
+                }
+                .disabled(isResyncing)
+                
+                Button(action: {
+                    diagnoseStats()
+                }) {
+                    HStack {
+                        Image(systemName: "stethoscope")
+                            .foregroundColor(.orange)
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Diagnose Video Counts")
+                                .font(.body)
+                                .foregroundColor(.primary)
+                            Text("Compare actual vs stored video model counts")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        Spacer()
+                        if isResyncing {
+                            ProgressView()
+                                .scaleEffect(0.8)
+                        }
+                    }
+                }
+                .disabled(isResyncing)
             }
 
             // // App preferences
@@ -292,6 +388,11 @@ struct Settings: View {
         } message: {
             Text("Gallery cache has been cleared and stats have been resynced from the database.")
         }
+        .alert("Stats Resynced", isPresented: $showStatsResyncedAlert) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Gallery statistics have been recalculated from the database. The counts should now be accurate. Check Xcode console for diagnostic details.")
+        }
         .alert("Signed Out", isPresented: $showSignedOutAlert) {
             Button("OK", role: .cancel) {}
         } message: {
@@ -306,6 +407,27 @@ struct Settings: View {
             PurchaseCreditsView()
                 .environmentObject(authViewModel)
                 .presentationDragIndicator(.visible)
+        }
+        .sheet(isPresented: $showTestCreditsView) {
+            TestCreditsView()
+                .environmentObject(authViewModel)
+                .presentationDragIndicator(.visible)
+        }
+        .onAppear {
+            // Fetch balance when view appears
+            if let userId = authViewModel.user?.id {
+                Task {
+                    await creditsViewModel.fetchBalance(userId: userId)
+                }
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("CreditsBalanceUpdated"))) { _ in
+            // Refresh credits when balance is updated (e.g., after purchase or generation)
+            if let userId = authViewModel.user?.id {
+                Task {
+                    await creditsViewModel.fetchBalance(userId: userId)
+                }
+            }
         }
     }
     
@@ -326,4 +448,45 @@ struct Settings: View {
 //            }
 //        }
 //    }
+    
+    private func resyncStats() {
+        guard profileViewModel != nil else { return }
+        
+        isResyncing = true
+        
+        Task {
+            // Resync stats by recomputing from user_media table
+            await profileViewModel?.resyncUserStats()
+            
+            await MainActor.run {
+                // Haptic feedback
+                let generator = UINotificationFeedbackGenerator()
+                generator.notificationOccurred(.success)
+                
+                isResyncing = false
+                showStatsResyncedAlert = true
+            }
+        }
+    }
+    
+    private func diagnoseStats() {
+        guard profileViewModel != nil else { return }
+        
+        isResyncing = true
+        
+        Task {
+            // Run diagnostic to compare actual vs stored counts
+            await profileViewModel?.diagnoseVideoModelCounts()
+            
+            await MainActor.run {
+                // Haptic feedback
+                let generator = UINotificationFeedbackGenerator()
+                generator.notificationOccurred(.success)
+                
+                isResyncing = false
+                // Show alert with instructions to check console
+                showStatsResyncedAlert = true
+            }
+        }
+    }
 }

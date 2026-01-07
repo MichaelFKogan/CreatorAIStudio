@@ -6,7 +6,7 @@
       "description": "Transform your image into a Techno Viking video"
     },
     "prompt": "The subject in the image performs the same movements and poses from the reference video, while maintaining their original appearance, anatomy, and physical characteristics. Only the motion pattern is applied, not the body structure.",
-    "cost": 1.1,
+    "cost": 1.10,
     "type": "Video Filter",
     "referenceVideoName": "technoVikingReference"
   },
@@ -17,7 +17,7 @@
       "description": "Transform your image into a Gangnam Style video"
     },
     "prompt": "The subject in the image performs the same movements and poses from the reference video, while maintaining their original appearance, anatomy, and physical characteristics. Only the motion pattern is applied, not the body structure.",
-    "cost": 1.1,
+    "cost": 1.10,
     "type": "Video Filter",
     "referenceVideoName": "gangnamStyleReference"
   },
@@ -28,7 +28,7 @@
       "description": "Transform your image into a Fortnite Dance video"
     },
     "prompt": "The subject in the image performs the same movements and poses from the reference video, while maintaining their original appearance, anatomy, and physical characteristics. Only the motion pattern is applied, not the body structure.",
-    "cost": 1.1,
+    "cost": 1.10,
     "type": "Video Filter",
     "referenceVideoName": "fortniteDefaultReference"
   },
@@ -39,7 +39,7 @@
       "description": "Transform your image into a Rat Dance video"
     },
     "prompt": "The subject in the image performs the same movements and poses from the reference video, while maintaining their original appearance, anatomy, and physical characteristics. Only the motion pattern is applied, not the body structure.",
-    "cost": 1.1,
+    "cost": 1.10,
     "type": "Video Filter",
     "referenceVideoName": "ratDanceReference"
   },
@@ -50,7 +50,7 @@
       "description": "Transform your image into a Mamushi video"
     },
     "prompt": "The subject in the image performs the same movements and poses from the reference video, while maintaining their original appearance, anatomy, and physical characteristics. Only the motion pattern is applied, not the body structure.",
-    "cost": 1.1,
+    "cost": 1.10,
     "type": "Video Filter",
     "referenceVideoName": "mamushiReference"
   },
@@ -62,7 +62,7 @@
       "description": ""
     },
     "prompt": "Create a video with this style",
-    "cost": 1.3,
+    "cost": 1.30,
     "type": "Video Filter"
   }
 ]

@@ -129,7 +129,7 @@ struct HomeOne: View {
 
                 ToolbarItem(placement: .navigationBarTrailing) {
                     HStack(spacing: 6) {
-                        Image(systemName: "diamond.fill")
+                        Image(systemName: "crown.fill")
                             .foregroundStyle(
                                 LinearGradient(colors: [.blue, .purple], startPoint: .topLeading, endPoint: .bottomTrailing)
                             )

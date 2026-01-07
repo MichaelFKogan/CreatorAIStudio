@@ -817,12 +817,46 @@ class JobStatusManager: ObservableObject {
                     provider: job.provider
                 )
                 
-                try await SupabaseManager.shared.client.database
+                let insertedResponse: PostgrestResponse<[UserImage]> = try await SupabaseManager.shared.client.database
                     .from("user_media")
                     .insert(imageMetadata)
+                    .select()
                     .execute()
                 
+                let insertedImage = insertedResponse.value.first
                 print("[JobStatusManager] 💾 Image metadata saved to database")
+                
+                // MARK: Deduct Credits
+                if let cost = imageMetadata.cost, cost > 0, let userIdUUID = UUID(uuidString: userId) {
+                    do {
+                        let mediaId: UUID? = {
+                            guard let idString = insertedImage?.id else { return nil }
+                            return UUID(uuidString: idString)
+                        }()
+                        let _ = try await CreditsManager.shared.deductCredits(
+                            userId: userIdUUID,
+                            amount: cost,
+                            description: "Image generation - \(imageMetadata.title ?? imageMetadata.model ?? "Unknown model")",
+                            relatedMediaId: mediaId
+                        )
+                        print("[JobStatusManager] ✅ Deducted $\(String(format: "%.4f", cost)) credits for image generation")
+                        
+                        // Post notification to refresh credit balance in UI
+                        await MainActor.run {
+                            NotificationCenter.default.post(
+                                name: NSNotification.Name("CreditsBalanceUpdated"),
+                                object: nil,
+                                userInfo: ["userId": userId]
+                            )
+                        }
+                    } catch {
+                        print("[JobStatusManager] ❌ Error deducting credits: \(error)")
+                        // Don't fail the entire job if credit deduction fails
+                        // The cost is already recorded in metadata for audit purposes
+                    }
+                } else {
+                    print("[JobStatusManager] ⚠️ Skipping credit deduction - cost: \(imageMetadata.cost ?? 0), userId: \(userId)")
+                }
                 
                 // Post notification that image was saved (for Profile page refresh)
                 await MainActor.run {
@@ -937,12 +971,46 @@ class JobStatusManager: ObservableObject {
                     resolution: metadata?.resolution
                 )
                 
-                try await SupabaseManager.shared.client.database
+                let insertedResponse: PostgrestResponse<[UserImage]> = try await SupabaseManager.shared.client.database
                     .from("user_media")
                     .insert(videoMetadata)
+                    .select()
                     .execute()
                 
+                let insertedVideo = insertedResponse.value.first
                 print("[JobStatusManager] 💾 Video metadata saved to database")
+                
+                // MARK: Deduct Credits
+                if let cost = videoMetadata.cost, cost > 0, let userIdUUID = UUID(uuidString: userId) {
+                    do {
+                        let mediaId: UUID? = {
+                            guard let idString = insertedVideo?.id else { return nil }
+                            return UUID(uuidString: idString)
+                        }()
+                        let _ = try await CreditsManager.shared.deductCredits(
+                            userId: userIdUUID,
+                            amount: cost,
+                            description: "Video generation - \(videoMetadata.title ?? videoMetadata.model ?? "Unknown model")",
+                            relatedMediaId: mediaId
+                        )
+                        print("[JobStatusManager] ✅ Deducted $\(String(format: "%.4f", cost)) credits for video generation")
+                        
+                        // Post notification to refresh credit balance in UI
+                        await MainActor.run {
+                            NotificationCenter.default.post(
+                                name: NSNotification.Name("CreditsBalanceUpdated"),
+                                object: nil,
+                                userInfo: ["userId": userId]
+                            )
+                        }
+                    } catch {
+                        print("[JobStatusManager] ❌ Error deducting credits: \(error)")
+                        // Don't fail the entire job if credit deduction fails
+                        // The cost is already recorded in metadata for audit purposes
+                    }
+                } else {
+                    print("[JobStatusManager] ⚠️ Skipping credit deduction - cost: \(videoMetadata.cost ?? 0), userId: \(userId)")
+                }
                 
                 // Post notification that video was saved (for Profile page refresh)
                 await MainActor.run {

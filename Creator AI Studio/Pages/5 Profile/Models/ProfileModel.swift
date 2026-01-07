@@ -256,6 +256,7 @@ private struct MediaStats: Codable {
     let model: String?
     let media_type: String?
     let is_favorite: Bool?
+    let status: String? // "success", "failed", or nil
     
     var isImage: Bool {
         media_type == "image" || media_type == nil
@@ -263,6 +264,12 @@ private struct MediaStats: Codable {
     
     var isVideo: Bool {
         media_type == "video"
+    }
+    
+    /// Returns true if the media item is successful (not failed)
+    /// Only count successful items in stats
+    var isSuccess: Bool {
+        status == "success" || status == nil // nil means success (backward compatibility)
     }
 }
 
@@ -372,23 +379,15 @@ class ProfileViewModel: ObservableObject {
         setupVideoSavedNotification()
     }
     
-    /// Decodes the stats cache and loads stats for the last known user
+    /// Decodes the stats cache (but doesn't load stats - wait for user to be set)
+    /// This prevents loading stats for the wrong user if user switches accounts
     private func decodeStatsCache() {
-        // Decode cached stats
+        // Decode cached stats but DON'T load them yet
+        // Wait until we know the current user to avoid loading wrong user's stats
         if let data = try? JSONDecoder().decode([String: UserStats].self, from: cachedUserStatsData),
            !data.isEmpty {
             cachedUserStatsMap = data
-            
-            // If we have a last known user, load their stats immediately
-            if !lastUserId.isEmpty, let stats = cachedUserStatsMap[lastUserId] {
-                favoriteCount = stats.favorite_count
-                imageCount = stats.image_count
-                videoCount = stats.video_count
-                modelCounts = stats.model_counts
-                videoModelCounts = stats.video_model_counts
-                hasLoadedStats = true
-                print("✅ Pre-loaded cached stats in init() for user: \(lastUserId)")
-            }
+            print("✅ Decoded stats cache with \(data.count) user(s)")
         }
     }
     
@@ -534,6 +533,9 @@ class ProfileViewModel: ObservableObject {
     }
 
     private func handleUserChange(userId: String) {
+        // CRITICAL: Clear userImages array immediately to prevent showing previous user's data
+        userImages = []
+        
         // Reset pagination state for the new user
         currentPage = 0
         hasMorePages = true
@@ -551,7 +553,6 @@ class ProfileViewModel: ObservableObject {
         modelHasMorePages.removeAll()
         
         // ALWAYS reset stats when user changes to prevent showing previous user's counts
-        // The loadCachedStats() call below will restore the correct stats for this user
         favoriteCount = 0
         imageCount = 0
         videoCount = 0
@@ -559,10 +560,12 @@ class ProfileViewModel: ObservableObject {
         videoModelCounts = [:]
         hasLoadedStats = false
 
-        // Load cached data for this user if available
-        // This will restore the correct stats and images for the new user
+        // Load cached images for this user if available (for faster initial display)
         loadCachedImages(for: userId)
-        loadCachedStats(for: userId)
+        
+        // DON'T load cached stats here - wait for fresh stats from database via fetchUserStats()
+        // This prevents showing wrong stats from cache when switching users
+        // ProfileMainView will call fetchUserStats() which will fetch fresh stats from database
     }
     
     private func loadCachedStats(for userId: String) {
@@ -907,45 +910,12 @@ class ProfileViewModel: ObservableObject {
                 }
                 userImages.insert(contentsOf: sortedFreshItems, at: 0)
                 
-                // Update counts for all new images (similar to addImage logic)
-                // This ensures the pill counts are accurate immediately
-                var newImageCount = 0
-                var newVideoCount = 0
-                var newFavoriteCount = 0
-                
-                // Update model counts for all new images (batch update)
-                for image in sortedFreshItems {
-                    // Update image/video counts
-                    if image.isImage {
-                        newImageCount += 1
-                    } else if image.isVideo {
-                        newVideoCount += 1
-                    }
-                    
-                    // Update favorite count
-                    if image.is_favorite == true {
-                        newFavoriteCount += 1
-                    }
-                    
-                    // Update model counts (update dictionaries, but don't call updateUserStats yet)
-                    if let model = image.model {
-                        if image.isImage {
-                            modelCounts[model, default: 0] += 1
-                        } else if image.isVideo {
-                            videoModelCounts[model, default: 0] += 1
-                        }
-                    }
-                }
-                
-                // Update the count properties
-                imageCount += newImageCount
-                videoCount += newVideoCount
-                favoriteCount += newFavoriteCount
-                
-                // Sync all updates with database in one call (more efficient than calling for each image)
-                await updateUserStats()
-                
-                print("📊 refreshLatest: Updated counts - +\(newImageCount) images, +\(newVideoCount) videos, +\(newFavoriteCount) favorites")
+                // IMPORTANT: Do NOT increment counts here!
+                // These items may already be counted in the database stats (if they were filtered out
+                // from cache due to invalid URLs or duplicates). Instead, refetch stats from the
+                // database to get accurate counts. The database stats are the source of truth.
+                print("📊 refreshLatest: Refetching stats from database to get accurate counts")
+                await fetchUserStats()
             }
 
             // Update pagination marker to reflect total cached items
@@ -1177,6 +1147,9 @@ class ProfileViewModel: ObservableObject {
                 
                 // Update published properties from stats
                 print("📊 Current counts before update: favorites=\(favoriteCount), images=\(imageCount), videos=\(videoCount)")
+                print("📊 Fetched stats from DB: favorites=\(stats.favorite_count), images=\(stats.image_count), videos=\(stats.video_count)")
+                
+                // Update counts from database (source of truth)
                 favoriteCount = stats.favorite_count
                 imageCount = stats.image_count
                 videoCount = stats.video_count
@@ -1217,6 +1190,157 @@ class ProfileViewModel: ObservableObject {
         await initializeUserStats()
     }
     
+    /// Diagnostic function to compare actual video model counts vs stored counts
+    /// This helps identify model name mismatches or counting errors
+    func diagnoseVideoModelCounts() async {
+        guard let userId = userId else {
+            print("❌ Cannot diagnose: userId is nil")
+            return
+        }
+        
+        print("🔍 DIAGNOSING VIDEO MODEL COUNTS...")
+        print(String(repeating: "=", count: 60))
+        
+        do {
+            // Fetch all videos from database
+            let response: PostgrestResponse<[MediaStats]> = try await client.database
+                .from("user_media")
+                .select("model,media_type,status")
+                .eq("user_id", value: userId)
+                .eq("media_type", value: "video")
+                .limit(10000)
+                .execute()
+            
+            let allVideos = response.value ?? []
+            print("📊 Total videos in database: \(allVideos.count)")
+            
+            // Count by actual model names in database (EXCLUDE failed videos)
+            var actualCounts: [String: Int] = [:]
+            var failedVideoCount = 0
+            
+            for video in allVideos {
+                // Only count successful videos
+                guard video.isSuccess else {
+                    failedVideoCount += 1
+                    continue
+                }
+                
+                let modelName = video.model ?? "(null)"
+                actualCounts[modelName, default: 0] += 1
+            }
+            
+            if failedVideoCount > 0 {
+                print("⚠️ Excluded \(failedVideoCount) failed video(s) from counts")
+            }
+            
+            print("\n📊 ACTUAL COUNTS FROM DATABASE (user_media, successful only):")
+            print(String(repeating: "-", count: 60))
+            for (model, count) in actualCounts.sorted(by: { $0.key < $1.key }) {
+                print("  \(model): \(count)")
+            }
+            
+            print("\n📊 STORED COUNTS IN user_stats:")
+            print(String(repeating: "-", count: 60))
+            for (model, count) in videoModelCounts.sorted(by: { $0.key < $1.key }) {
+                print("  \(model): \(count)")
+            }
+            
+            print("\n🔍 COMPARISON:")
+            print(String(repeating: "-", count: 60))
+            
+            // Find mismatches
+            var totalActual = 0
+            var totalStored = 0
+            
+            let allModelNames = Set(actualCounts.keys).union(Set(videoModelCounts.keys))
+            
+            for modelName in allModelNames.sorted() {
+                let actual = actualCounts[modelName] ?? 0
+                let stored = videoModelCounts[modelName] ?? 0
+                totalActual += actual
+                totalStored += stored
+                
+                if actual != stored {
+                    print("  ⚠️ MISMATCH: \(modelName)")
+                    print("     Actual: \(actual), Stored: \(stored), Difference: \(actual - stored)")
+                } else {
+                    print("  ✅ Match: \(modelName) = \(actual)")
+                }
+            }
+            
+            print("\n📊 TOTALS:")
+            print(String(repeating: "-", count: 60))
+            print("  Actual successful videos (from user_media, excluding failed): \(totalActual)")
+            print("  Failed videos excluded: \(failedVideoCount)")
+            print("  Stored video_count: \(videoCount)")
+            print("  Sum of stored model counts: \(totalStored)")
+            
+            // Check for videos with null model
+            let nullModelCount = actualCounts["(null)"] ?? 0
+            if nullModelCount > 0 {
+                print("\n⚠️ WARNING: Found \(nullModelCount) video(s) with null model name")
+                print("   These videos are counted in the total but not assigned to any model")
+            }
+            
+            // Compare with loaded videos in userImages array
+            print("\n📊 LOADED VIDEOS IN APP (userImages array):")
+            print(String(repeating: "-", count: 60))
+            let loadedVideos = userImages.filter { $0.isVideo }
+            print("  Total loaded videos: \(loadedVideos.count)")
+            
+            var loadedCounts: [String: Int] = [:]
+            for video in loadedVideos {
+                let modelName = video.model ?? "(null)"
+                loadedCounts[modelName, default: 0] += 1
+            }
+            
+            print("  Loaded videos by model:")
+            for (model, count) in loadedCounts.sorted(by: { $0.key < $1.key }) {
+                let dbCount = actualCounts[model] ?? 0
+                if count != dbCount {
+                    print("    ⚠️ \(model): Loaded=\(count), DB=\(dbCount)")
+                } else {
+                    print("    ✅ \(model): \(count)")
+                }
+            }
+            
+            // Check for model name mismatches
+            print("\n🔍 MODEL NAME ANALYSIS:")
+            print(String(repeating: "-", count: 60))
+            print("  Checking for potential model name mismatches...")
+            
+            // Get all unique model names from both sources
+            let dbModelNames = Set(actualCounts.keys.filter { $0 != "(null)" })
+            let loadedModelNames = Set(loadedCounts.keys.filter { $0 != "(null)" })
+            
+            let onlyInDB = dbModelNames.subtracting(loadedModelNames)
+            let onlyInLoaded = loadedModelNames.subtracting(dbModelNames)
+            
+            if !onlyInDB.isEmpty {
+                print("  ⚠️ Model names only in database (not in loaded videos):")
+                for model in onlyInDB.sorted() {
+                    print("     - \(model) (count: \(actualCounts[model] ?? 0))")
+                }
+            }
+            
+            if !onlyInLoaded.isEmpty {
+                print("  ⚠️ Model names only in loaded videos (not in database):")
+                for model in onlyInLoaded.sorted() {
+                    print("     - \(model) (count: \(loadedCounts[model] ?? 0))")
+                }
+            }
+            
+            if onlyInDB.isEmpty && onlyInLoaded.isEmpty {
+                print("  ✅ All model names match between database and loaded videos")
+            }
+            
+            print(String(repeating: "=", count: 60))
+            
+        } catch {
+            print("❌ Failed to diagnose video model counts: \(error)")
+        }
+    }
+    
     /// Fallback method to compute stats directly from user_media when user_stats table doesn't exist
     private func computeStatsFromDatabase() async {
         guard let userId = userId else { return }
@@ -1225,22 +1349,29 @@ class ProfileViewModel: ObservableObject {
             // Fetch only the fields we need for stats computation (lightweight query)
             let response: PostgrestResponse<[MediaStats]> = try await client.database
                 .from("user_media")
-                .select("model,media_type,is_favorite")
+                .select("model,media_type,is_favorite,status")
                 .eq("user_id", value: userId)
                 .limit(10000) // High limit to get all
                 .execute()
             
             let allMedia = response.value ?? []
             
-            // Compute counts
+            // Compute counts (EXCLUDE failed items - only count successful ones)
             var computedFavoriteCount = 0
             var computedImageCount = 0
             var computedVideoCount = 0
             var computedModelCounts: [String: Int] = [:]
             var computedVideoModelCounts: [String: Int] = [:]
+            var failedCount = 0 // Track failed items for logging
             
             print("📊 Computing stats from \(allMedia.count) media items...")
             for media in allMedia {
+                // Skip failed items - only count successful ones
+                guard media.isSuccess else {
+                    failedCount += 1
+                    continue
+                }
+                
                 // Count favorites (handle both true and nil as false)
                 if media.is_favorite == true {
                     computedFavoriteCount += 1
@@ -1253,14 +1384,19 @@ class ProfileViewModel: ObservableObject {
                     computedVideoCount += 1
                 }
                 
-                // Count by model
-                if let model = media.model {
+                // Count by model (exclude null/empty model names from model-specific counts)
+                // These are still counted in total counts, but not assigned to a model
+                if let model = media.model, !model.isEmpty, model != "(null)" {
                     if media.isImage {
                         computedModelCounts[model, default: 0] += 1
                     } else if media.isVideo {
                         computedVideoModelCounts[model, default: 0] += 1
                     }
                 }
+            }
+            
+            if failedCount > 0 {
+                print("⚠️ Excluded \(failedCount) failed item(s) from counts")
             }
             
             // Update published properties on main thread
@@ -1296,7 +1432,7 @@ class ProfileViewModel: ObservableObject {
             // Fetch only the fields we need for stats computation (lightweight query)
             let response: PostgrestResponse<[MediaStats]> = try await client.database
                 .from("user_media")
-                .select("model,media_type,is_favorite")
+                .select("model,media_type,is_favorite,status")
                 .eq("user_id", value: userId)
                 .limit(10000) // High limit to get all
                 .execute()
@@ -1305,14 +1441,21 @@ class ProfileViewModel: ObservableObject {
             
             print("📊 Computing stats from \(allMedia.count) media items...")
             
-            // Compute counts
+            // Compute counts (EXCLUDE failed items - only count successful ones)
             var favoriteCount = 0
             var imageCount = 0
             var videoCount = 0
             var modelCounts: [String: Int] = [:]
             var videoModelCounts: [String: Int] = [:]
+            var failedCount = 0 // Track failed items for logging
             
             for media in allMedia {
+                // Skip failed items - only count successful ones
+                guard media.isSuccess else {
+                    failedCount += 1
+                    continue
+                }
+                
                 // Count favorites (handle both true and nil as false)
                 if media.is_favorite == true {
                     favoriteCount += 1
@@ -1325,14 +1468,19 @@ class ProfileViewModel: ObservableObject {
                     videoCount += 1
                 }
                 
-                // Count by model
-                if let model = media.model {
+                // Count by model (exclude null/empty model names from model-specific counts)
+                // These are still counted in total image_count/video_count, but not assigned to a model
+                if let model = media.model, !model.isEmpty, model != "(null)" {
                     if media.isImage {
                         modelCounts[model, default: 0] += 1
                     } else if media.isVideo {
                         videoModelCounts[model, default: 0] += 1
                     }
                 }
+            }
+            
+            if failedCount > 0 {
+                print("⚠️ Excluded \(failedCount) failed item(s) from counts")
             }
             
             // Create stats record (IMPORTANT: include image_count and video_count!)
@@ -1477,7 +1625,9 @@ class ProfileViewModel: ObservableObject {
     
     /// Updates model counts when an image is added
     private func updateModelCountsForImage(_ image: UserImage, increment: Bool) async {
-        guard let model = image.model else { return }
+        // Don't update model counts for null/empty model names
+        // These are still counted in total image_count/video_count, but not assigned to a model
+        guard let model = image.model, !model.isEmpty, model != "(null)" else { return }
         
         if image.isImage {
             if increment {
