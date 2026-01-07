@@ -231,34 +231,32 @@ struct DanceFilterDetailPage: View {
                                     .padding()
                                     .background(
                                         LinearGradient(
-                                            colors: [.purple.opacity(0.8), .pink],
+                                            colors: [.purple, .pink],
                                             startPoint: .leading,
                                             endPoint: .trailing
                                         )
                                     )
                                     .clipShape(RoundedRectangle(cornerRadius: 12))
-                                    .shadow(color: Color.purple.opacity(0.4), radius: 8, x: 0, y: 4)
+                                    .shadow(color: Color.purple.opacity(0.3), radius: 8, x: 0, y: 4)
                                 }
                             }
                             .padding(.horizontal)
                         }
 
                         
-                        if hasEnoughCredits {
-                            LazyView(
-                                GenerateButtonFilter(
-                                    isGenerating: $isGenerating,
-                                    price: currentPrice,
-                                    isLoggedIn: authViewModel.user != nil,
-                                    hasCredits: hasEnoughCredits,
-                                    isConnected: networkMonitor.isConnected,
-                                    hasImage: referenceImage != nil,
-                                    onSignInTap: {
-                                        showSignInSheet = true
-                                    },
-                                    action: generate
-                                ))
-                        }
+                        LazyView(
+                            GenerateButtonFilter(
+                                isGenerating: $isGenerating,
+                                price: currentPrice,
+                                isLoggedIn: authViewModel.user != nil,
+                                hasCredits: hasEnoughCredits,
+                                isConnected: networkMonitor.isConnected,
+                                hasImage: referenceImage != nil,
+                                onSignInTap: {
+                                    showSignInSheet = true
+                                },
+                                action: generate
+                            ))
                         
                         // Informative text about aspect ratio matching
                         LazyView(

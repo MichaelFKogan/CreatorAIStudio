@@ -561,12 +561,10 @@ struct PhotoConfirmationView: View {
                     .padding(.bottom, 12)
             }
 
-            if hasEnoughCredits {
-                generateButton
-                    .onAppear {
-                        setupGenerateButtonAnimations()
-                    }
-            }
+            generateButton
+                .onAppear {
+                    setupGenerateButtonAnimations()
+                }
         }
         .padding(.horizontal)
     }

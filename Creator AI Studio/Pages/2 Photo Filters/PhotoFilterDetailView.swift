@@ -337,20 +337,18 @@ struct PhotoFilterDetailView: View {
                         .padding(.bottom, 8)
                     }
 
-                    if hasEnoughCredits {
-                        HStack(alignment: .center, spacing: 16) {
-                            SpinningPlusButton(
-                                showActionSheet: $showActionSheet,
-                                isLoggedIn: authViewModel.user != nil,
-                                hasCredits: hasEnoughCredits,
-                                isConnected: networkMonitor.isConnected
-                            )
-                        }
-                        .padding(.horizontal, 16)
-                        .cornerRadius(16)
-                        .shadow(
-                            color: Color.black.opacity(0.05), radius: 8, x: 0, y: 2)
+                    HStack(alignment: .center, spacing: 16) {
+                        SpinningPlusButton(
+                            showActionSheet: $showActionSheet,
+                            isLoggedIn: authViewModel.user != nil,
+                            hasCredits: hasEnoughCredits,
+                            isConnected: networkMonitor.isConnected
+                        )
                     }
+                    .padding(.horizontal, 16)
+                    .cornerRadius(16)
+                    .shadow(
+                        color: Color.black.opacity(0.05), radius: 8, x: 0, y: 2)
 
                     // Disclaimer text for multi-select
                     if let additionalFilters = additionalFilters,

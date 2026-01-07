@@ -459,42 +459,40 @@ struct VideoModelDetailPage: View {
                                     .padding()
                                     .background(
                                         LinearGradient(
-                                            colors: [Color.purple.opacity(0.8), Color.pink],
+                                            colors: [.purple, .pink],
                                             startPoint: .leading,
                                             endPoint: .trailing
                                         )
                                     )
                                     .clipShape(RoundedRectangle(cornerRadius: 12))
-                                    .shadow(color: Color.purple.opacity(0.4), radius: 8, x: 0, y: 4)
+                                    .shadow(color: Color.purple.opacity(0.3), radius: 8, x: 0, y: 4)
                                 }
                             }
                             .padding(.horizontal)
                         }
 
-                        if hasEnoughCredits {
-                            LazyView(
-                                GenerateButtonVideo(
-                                    prompt: prompt,
-                                    isGenerating: $isGenerating,
-                                    keyboardHeight: $keyboardHeight,
-                                    price: currentPrice,
-                                    selectedSize: videoAspectOptions[
-                                        selectedAspectIndex
-                                    ].id,
-                                    selectedResolution: hasVariableResolution
-                                        ? videoResolutionOptions[
-                                            selectedResolutionIndex
-                                        ].id : nil,
-                                    selectedDuration:
-                                        "\(Int(videoDurationOptions[selectedDurationIndex].duration))s",
-                                    isLoggedIn: authViewModel.user != nil,
-                                    hasCredits: hasEnoughCredits,
-                                    onSignInTap: {
-                                        showSignInSheet = true
-                                    },
-                                    action: generate
-                                ))
-                        }
+                        LazyView(
+                            GenerateButtonVideo(
+                                prompt: prompt,
+                                isGenerating: $isGenerating,
+                                keyboardHeight: $keyboardHeight,
+                                price: currentPrice,
+                                selectedSize: videoAspectOptions[
+                                    selectedAspectIndex
+                                ].id,
+                                selectedResolution: hasVariableResolution
+                                    ? videoResolutionOptions[
+                                        selectedResolutionIndex
+                                    ].id : nil,
+                                selectedDuration:
+                                    "\(Int(videoDurationOptions[selectedDurationIndex].duration))s",
+                                isLoggedIn: authViewModel.user != nil,
+                                hasCredits: hasEnoughCredits,
+                                onSignInTap: {
+                                    showSignInSheet = true
+                                },
+                                action: generate
+                            ))
 
                         Divider().padding(.horizontal)
 
