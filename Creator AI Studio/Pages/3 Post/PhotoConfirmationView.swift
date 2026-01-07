@@ -670,18 +670,42 @@ struct PhotoConfirmationView: View {
 
 
     private var creditsRequiredMessage: some View {
-        VStack(spacing: 8) {
-            HStack(spacing: 6) {
+        VStack(spacing: 12) {
+            // Informational card showing what they need
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(images.count > 1 ? "Generate Images" : "Generate Image")
+                        .font(.headline)
+                        .foregroundColor(.primary)
+                    HStack(spacing: 4) {
+                        PriceDisplayView(
+                            price: totalPrice,
+                            showUnit: true,
+                            font: .subheadline,
+                            fontWeight: .semibold,
+                            foregroundColor: .secondary
+                        )
+                        Text("required")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                }
                 Spacer()
-                Image(systemName: "exclamationmark.circle.fill")
-                    .font(.system(size: 14))
-                    .foregroundColor(.orange)
-                Text("Insufficient credits to generate")
-                    .font(.caption)
-                    .foregroundColor(.orange)
-                Spacer()
+                VStack(alignment: .trailing, spacing: 4) {
+                    Text("Your balance")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Text(creditsViewModel.formattedBalance())
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.primary)
+                }
             }
-
+            .padding()
+            .background(Color.gray.opacity(0.1))
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            
+            // Single full-width Buy Credits button
             Button(action: {
                 showPurchaseCreditsView = true
             }) {

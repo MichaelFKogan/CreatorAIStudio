@@ -293,16 +293,42 @@ struct PhotoFilterDetailView: View {
                         .padding(.horizontal)
                         .padding(.bottom, 8)
                     } else if !hasEnoughCredits {
-                        VStack(spacing: 8) {
-                            HStack(spacing: 6) {
-                                Image(systemName: "exclamationmark.circle.fill")
-                                    .font(.system(size: 14))
-                                    .foregroundColor(.orange)
-                                Text("Insufficient credits to upload")
-                                    .font(.caption)
-                                    .foregroundColor(.orange)
+                        VStack(spacing: 12) {
+                            // Informational card showing what they need
+                            HStack {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Upload Photo")
+                                        .font(.headline)
+                                        .foregroundColor(.primary)
+                                    HStack(spacing: 4) {
+                                        PriceDisplayView(
+                                            price: totalPrice,
+                                            showUnit: true,
+                                            font: .subheadline,
+                                            fontWeight: .semibold,
+                                            foregroundColor: .secondary
+                                        )
+                                        Text("required")
+                                            .font(.subheadline)
+                                            .foregroundColor(.secondary)
+                                    }
+                                }
+                                Spacer()
+                                VStack(alignment: .trailing, spacing: 4) {
+                                    Text("Your balance")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                    Text(creditsViewModel.formattedBalance())
+                                        .font(.subheadline)
+                                        .fontWeight(.semibold)
+                                        .foregroundColor(.primary)
+                                }
                             }
-
+                            .padding()
+                            .background(Color.gray.opacity(0.1))
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                            
+                            // Single full-width Buy Credits button
                             Button(action: {
                                 showPurchaseCreditsView = true
                             }) {
@@ -337,18 +363,20 @@ struct PhotoFilterDetailView: View {
                         .padding(.bottom, 8)
                     }
 
-                    HStack(alignment: .center, spacing: 16) {
-                        SpinningPlusButton(
-                            showActionSheet: $showActionSheet,
-                            isLoggedIn: authViewModel.user != nil,
-                            hasCredits: hasEnoughCredits,
-                            isConnected: networkMonitor.isConnected
-                        )
+                    if hasEnoughCredits {
+                        HStack(alignment: .center, spacing: 16) {
+                            SpinningPlusButton(
+                                showActionSheet: $showActionSheet,
+                                isLoggedIn: authViewModel.user != nil,
+                                hasCredits: hasEnoughCredits,
+                                isConnected: networkMonitor.isConnected
+                            )
+                        }
+                        .padding(.horizontal, 16)
+                        .cornerRadius(16)
+                        .shadow(
+                            color: Color.black.opacity(0.05), radius: 8, x: 0, y: 2)
                     }
-                    .padding(.horizontal, 16)
-                    .cornerRadius(16)
-                    .shadow(
-                        color: Color.black.opacity(0.05), radius: 8, x: 0, y: 2)
 
                     // Disclaimer text for multi-select
                     if let additionalFilters = additionalFilters,

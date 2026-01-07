@@ -282,21 +282,42 @@ struct ImageModelDetailPage: View {
                             }
                             .padding(.horizontal)
                         } else if !hasEnoughCredits {
-                            VStack(spacing: 8) {
-                                HStack(spacing: 6) {
+                            VStack(spacing: 12) {
+                                // Informational card showing what they need
+                                HStack {
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text("Generate Image")
+                                            .font(.headline)
+                                            .foregroundColor(.primary)
+                                        HStack(spacing: 4) {
+                                            PriceDisplayView(
+                                                price: item.resolvedCost ?? 0,
+                                                showUnit: true,
+                                                font: .subheadline,
+                                                fontWeight: .semibold,
+                                                foregroundColor: .secondary
+                                            )
+                                            Text("required")
+                                                .font(.subheadline)
+                                                .foregroundColor(.secondary)
+                                        }
+                                    }
                                     Spacer()
-                                    Image(
-                                        systemName:
-                                            "exclamationmark.circle.fill"
-                                    )
-                                    .font(.system(size: 14))
-                                    .foregroundColor(.orange)
-                                    Text("Insufficient credits to generate")
-                                        .font(.caption)
-                                        .foregroundColor(.orange)
-                                    Spacer()
+                                    VStack(alignment: .trailing, spacing: 4) {
+                                        Text("Your balance")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                        Text(creditsViewModel.formattedBalance())
+                                            .font(.subheadline)
+                                            .fontWeight(.semibold)
+                                            .foregroundColor(.primary)
+                                    }
                                 }
-
+                                .padding()
+                                .background(Color.gray.opacity(0.1))
+                                .clipShape(RoundedRectangle(cornerRadius: 12))
+                                
+                                // Single full-width Buy Credits button
                                 Button(action: {
                                     showPurchaseCreditsView = true
                                 }) {
@@ -330,20 +351,22 @@ struct ImageModelDetailPage: View {
                             .padding(.horizontal)
                         }
 
-                        LazyView(
-                            GenerateButton(
-                                prompt: prompt,
-                                isGenerating: $isGenerating,
-                                keyboardHeight: $keyboardHeight,
-                                costString: costString,
-                                isLoggedIn: authViewModel.user != nil,
-                                hasCredits: hasEnoughCredits,
-                                isConnected: networkMonitor.isConnected,
-                                onSignInTap: {
-                                    showSignInSheet = true
-                                },
-                                action: generate
-                            ))
+                        if hasEnoughCredits {
+                            LazyView(
+                                GenerateButton(
+                                    prompt: prompt,
+                                    isGenerating: $isGenerating,
+                                    keyboardHeight: $keyboardHeight,
+                                    costString: costString,
+                                    isLoggedIn: authViewModel.user != nil,
+                                    hasCredits: hasEnoughCredits,
+                                    isConnected: networkMonitor.isConnected,
+                                    onSignInTap: {
+                                        showSignInSheet = true
+                                    },
+                                    action: generate
+                                ))
+                        }
 
                         Divider().padding(.horizontal)
 
