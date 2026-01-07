@@ -280,17 +280,17 @@ struct DanceFilterDetailPage: View {
         .toolbarBackground(Color(UIColor.systemBackground), for: .navigationBar)
         .toolbarBackground(.visible, for: .navigationBar)
         .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Text("Video Filters")
-                    .font(.system(size: 28, weight: .bold, design: .rounded))
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [.purple, .pink],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
-            }
+            // ToolbarItem(placement: .navigationBarLeading) {
+            //     Text("Video Filters")
+            //         .font(.system(size: 28, weight: .bold, design: .rounded))
+            //         .foregroundStyle(
+            //             LinearGradient(
+            //                 colors: [.purple, .pink],
+            //                 startPoint: .leading,
+            //                 endPoint: .trailing
+            //             )
+            //         )
+            // }
             ToolbarItem(placement: .navigationBarTrailing) {
                 CreditsBadge(
                     diamondColor: .purple,

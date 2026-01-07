@@ -495,15 +495,16 @@ struct ImageModelDetailPage: View {
         .toolbar {
             // Leading title
             ToolbarItem(placement: .navigationBarLeading) {
-                Text("Image Models")
+                Text(item.display.title)
                     .font(.system(size: 28, weight: .bold, design: .rounded))
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [.blue, .cyan],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
+                    .foregroundColor(.white)
+                    // .foregroundStyle(
+                    //     LinearGradient(
+                    //         colors: [.blue, .cyan],
+                    //         startPoint: .leading,
+                    //         endPoint: .trailing
+                    //     )
+                    // )
             }
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()

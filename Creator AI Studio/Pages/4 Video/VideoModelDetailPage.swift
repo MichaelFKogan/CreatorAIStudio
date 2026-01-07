@@ -586,15 +586,16 @@ struct VideoModelDetailPage: View {
         .toolbar {
             // Leading title
             ToolbarItem(placement: .navigationBarLeading) {
-                Text("Video Models")
+                Text(item.display.title)
                     .font(.system(size: 28, weight: .bold, design: .rounded))
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [.purple, .pink],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
+                    .foregroundColor(.white)
+                    // .foregroundStyle(
+                    //     LinearGradient(
+                    //         colors: [.purple, .pink],
+                    //         startPoint: .leading,
+                    //         endPoint: .trailing
+                    //     )
+                    // )
             }
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()

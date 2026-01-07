@@ -432,7 +432,7 @@ struct CreditPackageCard: View {
                                         )
                                         .foregroundColor(.secondary)
                                     }
-                                    .padding(.leading, -2)
+                                    .padding(.leading, -3)
 
                                     HStack(spacing: 8) {
                                         Image(systemName: "video.fill")
@@ -471,7 +471,7 @@ struct CreditPackageCard: View {
                                 }
 
                             }
-                            .padding(.leading, 16)
+                            .padding(.leading, 20)
 
                             HStack{
                                 Text(
@@ -579,6 +579,20 @@ struct CreditPackageCard: View {
                                     )
                                     .font(.system(size: 11, design: .rounded))
                                     .foregroundColor(.secondary)
+                                }
+
+                                HStack {
+                                    Text("Total Fees")
+                                        .font(
+                                            .system(size: 11, weight: .semibold, design: .rounded)
+                                        )
+                                        .foregroundColor(.primary)
+                                    Spacer()
+                                    Text(
+                                        "= \(PriceCalculator.formatPrice(paymentProcessorFee + profitFee))"
+                                    )
+                                    .font(.system(size: 11, weight: .semibold, design: .rounded))
+                                    .foregroundColor(.primary)
                                 }
                             }
                         }

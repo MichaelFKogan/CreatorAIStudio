@@ -13,6 +13,7 @@ struct Settings: View {
     @State private var showSignInSheet = false
     @State private var showPurchaseCreditsView = false
     @State private var showTestCreditsView = false
+    @StateObject private var creditsViewModel = CreditsViewModel()
     
     // ProfileViewModel for cache clearing
     var profileViewModel: ProfileViewModel?
@@ -83,6 +84,30 @@ struct Settings: View {
             
             // Purchase Credits section
             Section("Credits") {
+                // Current Balance
+                HStack {
+                    Image(systemName: "dollarsign.circle.fill")
+                        .foregroundColor(.green)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Current Balance")
+                            .font(.body)
+                        if creditsViewModel.isLoading {
+                            Text("Loading...")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        } else {
+                            Text(creditsViewModel.formattedBalance())
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    Spacer()
+                    if creditsViewModel.isLoading {
+                        ProgressView()
+                            .scaleEffect(0.8)
+                    }
+                }
+                
                 HStack {
                     Image(systemName: "crown.fill")
                         .foregroundStyle(
@@ -387,6 +412,22 @@ struct Settings: View {
             TestCreditsView()
                 .environmentObject(authViewModel)
                 .presentationDragIndicator(.visible)
+        }
+        .onAppear {
+            // Fetch balance when view appears
+            if let userId = authViewModel.user?.id {
+                Task {
+                    await creditsViewModel.fetchBalance(userId: userId)
+                }
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("CreditsBalanceUpdated"))) { _ in
+            // Refresh credits when balance is updated (e.g., after purchase or generation)
+            if let userId = authViewModel.user?.id {
+                Task {
+                    await creditsViewModel.fetchBalance(userId: userId)
+                }
+            }
         }
     }
     

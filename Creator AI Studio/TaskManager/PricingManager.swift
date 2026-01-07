@@ -497,7 +497,7 @@ extension PricingManager {
         formatter.numberStyle = .currency
         formatter.currencySymbol = "$"
         formatter.maximumFractionDigits = 10
-        formatter.minimumFractionDigits = 0
+        formatter.minimumFractionDigits = 2
         return formatter.string(from: NSDecimalNumber(decimal: price)) ?? "$\(NSDecimalNumber(decimal: price).stringValue)"
     }
     
