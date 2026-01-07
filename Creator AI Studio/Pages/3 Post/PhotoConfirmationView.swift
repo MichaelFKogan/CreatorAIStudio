@@ -561,10 +561,12 @@ struct PhotoConfirmationView: View {
                     .padding(.bottom, 12)
             }
 
-            generateButton
-                .onAppear {
-                    setupGenerateButtonAnimations()
-                }
+            if hasEnoughCredits {
+                generateButton
+                    .onAppear {
+                        setupGenerateButtonAnimations()
+                    }
+            }
         }
         .padding(.horizontal)
     }
@@ -682,40 +684,34 @@ struct PhotoConfirmationView: View {
                 Spacer()
             }
 
-            HStack {
-                Spacer()
-                Button(action: {
-                    showPurchaseCreditsView = true
-                }) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "crown.fill")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundStyle(
-                                LinearGradient(
-                                    colors: [.yellow, .orange],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
+            Button(action: {
+                showPurchaseCreditsView = true
+            }) {
+                HStack(spacing: 8) {
+                    Image(systemName: "crown.fill")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [.yellow, .orange],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
                             )
-                        Text("Buy Credits")
-                            .font(
-                                .system(size: 15, weight: .semibold, design: .rounded)
-                            )
-                            .foregroundColor(.white)
-                    }
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 12)
-                    .background(
-                        LinearGradient(
-                            colors: [.blue, .purple],
-                            startPoint: .leading,
-                            endPoint: .trailing
                         )
-                    )
-                    .cornerRadius(12)
-                    .shadow(color: Color.blue.opacity(0.3), radius: 8, x: 0, y: 4)
+                    Text("Buy Credits")
+                        .font(.system(size: 18, weight: .bold, design: .rounded))
+                        .foregroundColor(.white)
                 }
-                Spacer()
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 16)
+                .background(
+                    LinearGradient(
+                        colors: [.blue, .purple],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+                .cornerRadius(12)
+                .shadow(color: Color.blue.opacity(0.3), radius: 8, x: 0, y: 4)
             }
         }
     }

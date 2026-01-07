@@ -28,7 +28,8 @@ struct YetiFilterDetailPage: View {
     @State private var showEmptyPromptAlert: Bool = false
     @State private var showSignInSheet: Bool = false
     @State private var showPurchaseCreditsView: Bool = false
-    @State private var hasCredits: Bool = true
+    @State private var showInsufficientCreditsAlert: Bool = false
+    @StateObject private var creditsViewModel = CreditsViewModel()
     @ObservedObject private var networkMonitor = NetworkMonitor.shared
     
     @State private var selectedAspectIndex: Int = 0
@@ -179,6 +180,18 @@ struct YetiFilterDetailPage: View {
         return item.resolvedCost
     }
     
+    // Calculate required credits as Double
+    private var requiredCredits: Double {
+        let price = currentPrice ?? item.resolvedCost ?? 0
+        return NSDecimalNumber(decimal: price).doubleValue
+    }
+    
+    // Check if user has enough credits
+    private var hasEnoughCredits: Bool {
+        guard let userId = authViewModel.user?.id else { return false }
+        return creditsViewModel.hasEnoughCredits(requiredAmount: requiredCredits)
+    }
+    
     private let examplePrompts: [String] = [
         "A majestic yeti walking through a snowy mountain landscape",
         "A friendly yeti playing in a winter wonderland",
@@ -261,7 +274,7 @@ struct YetiFilterDetailPage: View {
                                 }
                             }
                             .padding(.horizontal)
-                        } else if !hasCredits {
+                        } else if !hasEnoughCredits {
                             VStack(spacing: 8) {
                                 HStack(spacing: 6) {
                                     Spacer()
@@ -274,39 +287,59 @@ struct YetiFilterDetailPage: View {
                                     Spacer()
                                 }
                                 
-                                HStack {
-                                    Spacer()
-                                    Button(action: {
-                                        showPurchaseCreditsView = true
-                                    }) {
+                                Button(action: {
+                                    showPurchaseCreditsView = true
+                                }) {
+                                    HStack(spacing: 8) {
+                                        Image(systemName: "crown.fill")
+                                            .font(.system(size: 14, weight: .semibold))
+                                            .foregroundStyle(
+                                                LinearGradient(
+                                                    colors: [.yellow, .orange],
+                                                    startPoint: .topLeading,
+                                                    endPoint: .bottomTrailing
+                                                )
+                                            )
                                         Text("Buy Credits")
-                                            .font(.system(size: 15, weight: .medium, design: .rounded))
-                                            .foregroundColor(.blue)
+                                            .fontWeight(.semibold)
+                                            .foregroundColor(.white)
                                     }
-                                    Spacer()
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                                    .background(
+                                        LinearGradient(
+                                            colors: [.purple.opacity(0.8), .pink],
+                                            startPoint: .leading,
+                                            endPoint: .trailing
+                                        )
+                                    )
+                                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                                    .shadow(color: Color.purple.opacity(0.4), radius: 8, x: 0, y: 4)
                                 }
                             }
                             .padding(.horizontal)
                         }
                         
-                        LazyView(
-                            GenerateButtonYeti(
-                                prompt: prompt,
-                                isGenerating: $isGenerating,
-                                keyboardHeight: $keyboardHeight,
-                                price: currentPrice,
-                                selectedSize: videoAspectOptions[selectedAspectIndex].id,
-                                selectedResolution: hasVariableResolution
-                                    ? videoResolutionOptions[selectedResolutionIndex].id : nil,
-                                selectedDuration: "\(Int(videoDurationOptions[selectedDurationIndex].duration))s",
-                                isLoggedIn: authViewModel.user != nil,
-                                hasCredits: hasCredits,
-                                isConnected: networkMonitor.isConnected,
-                                onSignInTap: {
-                                    showSignInSheet = true
-                                },
-                                action: generate
-                            ))
+                        if hasEnoughCredits {
+                            LazyView(
+                                GenerateButtonYeti(
+                                    prompt: prompt,
+                                    isGenerating: $isGenerating,
+                                    keyboardHeight: $keyboardHeight,
+                                    price: currentPrice,
+                                    selectedSize: videoAspectOptions[selectedAspectIndex].id,
+                                    selectedResolution: hasVariableResolution
+                                        ? videoResolutionOptions[selectedResolutionIndex].id : nil,
+                                    selectedDuration: "\(Int(videoDurationOptions[selectedDurationIndex].duration))s",
+                                    isLoggedIn: authViewModel.user != nil,
+                                    hasCredits: hasEnoughCredits,
+                                    isConnected: networkMonitor.isConnected,
+                                    onSignInTap: {
+                                        showSignInSheet = true
+                                    },
+                                    action: generate
+                                ))
+                        }
                         
                         Divider().padding(.horizontal)
                         
@@ -414,6 +447,14 @@ struct YetiFilterDetailPage: View {
         } message: {
             Text("Please enter a prompt to generate a video.")
         }
+        .alert("Insufficient Credits", isPresented: $showInsufficientCreditsAlert) {
+            Button("Purchase Credits") {
+                showPurchaseCreditsView = true
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("You need \(String(format: "$%.2f", requiredCredits)) to generate this. Your current balance is \(creditsViewModel.formattedBalance()).")
+        }
         .sheet(isPresented: $showSignInSheet) {
             SignInView()
                 .environmentObject(authViewModel)
@@ -428,6 +469,13 @@ struct YetiFilterDetailPage: View {
             // Setup video player if video is available
             setupVideoPlayer()
             
+            // Fetch credit balance when view appears
+            if let userId = authViewModel.user?.id {
+                Task {
+                    await creditsViewModel.fetchBalance(userId: userId)
+                }
+            }
+            
             // Validate and reset indices if they're out of bounds for model-specific options
             if selectedAspectIndex >= videoAspectOptions.count {
                 selectedAspectIndex = 0
@@ -437,6 +485,14 @@ struct YetiFilterDetailPage: View {
             }
             if selectedResolutionIndex >= videoResolutionOptions.count {
                 selectedResolutionIndex = 0
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("CreditsBalanceUpdated"))) { notification in
+            // Refresh credits when balance is updated (e.g., after purchase)
+            if let userId = authViewModel.user?.id {
+                Task {
+                    await creditsViewModel.fetchBalance(userId: userId)
+                }
             }
         }
         .onDisappear {
@@ -453,6 +509,12 @@ struct YetiFilterDetailPage: View {
             return
         }
         guard !isGenerating else { return }
+        
+        // Check credits before generating
+        if !hasEnoughCredits {
+            showInsufficientCreditsAlert = true
+            return
+        }
         
         isGenerating = true
         let selectedAspectOption = videoAspectOptions[selectedAspectIndex]

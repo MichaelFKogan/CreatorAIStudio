@@ -297,61 +297,55 @@ struct ImageModelDetailPage: View {
                                     Spacer()
                                 }
 
-                                HStack {
-                                    Spacer()
-                                    Button(action: {
-                                        showPurchaseCreditsView = true
-                                    }) {
-                                        HStack(spacing: 8) {
-                                            Image(systemName: "crown.fill")
-                                                .font(.system(size: 14, weight: .semibold))
-                                                .foregroundStyle(
-                                                    LinearGradient(
-                                                        colors: [.yellow, .orange],
-                                                        startPoint: .topLeading,
-                                                        endPoint: .bottomTrailing
-                                                    )
+                                Button(action: {
+                                    showPurchaseCreditsView = true
+                                }) {
+                                    HStack(spacing: 8) {
+                                        Image(systemName: "crown.fill")
+                                            .font(.system(size: 14, weight: .semibold))
+                                            .foregroundStyle(
+                                                LinearGradient(
+                                                    colors: [.yellow, .orange],
+                                                    startPoint: .topLeading,
+                                                    endPoint: .bottomTrailing
                                                 )
-                                            Text("Buy Credits")
-                                                .font(
-                                                    .system(
-                                                        size: 15, weight: .semibold,
-                                                        design: .rounded)
-                                                )
-                                                .foregroundColor(.white)
-                                        }
-                                        .padding(.horizontal, 20)
-                                        .padding(.vertical, 12)
-                                        .background(
-                                            LinearGradient(
-                                                colors: [.blue, .purple],
-                                                startPoint: .leading,
-                                                endPoint: .trailing
                                             )
-                                        )
-                                        .cornerRadius(12)
-                                        .shadow(color: Color.blue.opacity(0.3), radius: 8, x: 0, y: 4)
+                                        Text("Buy Credits")
+                                            .fontWeight(.semibold)
+                                            .foregroundColor(.white)
                                     }
-                                    Spacer()
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                                    .background(
+                                        LinearGradient(
+                                            colors: [Color.blue.opacity(0.8), Color.cyan],
+                                            startPoint: .leading,
+                                            endPoint: .trailing
+                                        )
+                                    )
+                                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                                    .shadow(color: Color.blue.opacity(0.4), radius: 8, x: 0, y: 4)
                                 }
                             }
                             .padding(.horizontal)
                         }
 
-                        LazyView(
-                            GenerateButton(
-                                prompt: prompt,
-                                isGenerating: $isGenerating,
-                                keyboardHeight: $keyboardHeight,
-                                costString: costString,
-                                isLoggedIn: authViewModel.user != nil,
-                                hasCredits: hasEnoughCredits,
-                                isConnected: networkMonitor.isConnected,
-                                onSignInTap: {
-                                    showSignInSheet = true
-                                },
-                                action: generate
-                            ))
+                        if hasEnoughCredits {
+                            LazyView(
+                                GenerateButton(
+                                    prompt: prompt,
+                                    isGenerating: $isGenerating,
+                                    keyboardHeight: $keyboardHeight,
+                                    costString: costString,
+                                    isLoggedIn: authViewModel.user != nil,
+                                    hasCredits: hasEnoughCredits,
+                                    isConnected: networkMonitor.isConnected,
+                                    onSignInTap: {
+                                        showSignInSheet = true
+                                    },
+                                    action: generate
+                                ))
+                        }
 
                         Divider().padding(.horizontal)
 
@@ -494,18 +488,18 @@ struct ImageModelDetailPage: View {
         .toolbarBackground(.visible, for: .navigationBar)
         .toolbar {
             // Leading title
-            ToolbarItem(placement: .navigationBarLeading) {
-                Text(item.display.title)
-                    .font(.system(size: 28, weight: .bold, design: .rounded))
-                    .foregroundColor(.white)
-                    // .foregroundStyle(
-                    //     LinearGradient(
-                    //         colors: [.blue, .cyan],
-                    //         startPoint: .leading,
-                    //         endPoint: .trailing
-                    //     )
-                    // )
-            }
+            // ToolbarItem(placement: .navigationBarLeading) {
+            //     Text(item.display.title)
+            //         .font(.system(size: 28, weight: .bold, design: .rounded))
+            //         .foregroundColor(.white)
+            //         // .foregroundStyle(
+            //         //     LinearGradient(
+            //         //         colors: [.blue, .cyan],
+            //         //         startPoint: .leading,
+            //         //         endPoint: .trailing
+            //         //     )
+            //         // )
+            // }
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()
                 Button("Done") { isPromptFocused = false }

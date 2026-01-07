@@ -303,60 +303,54 @@ struct PhotoFilterDetailView: View {
                                     .foregroundColor(.orange)
                             }
 
-                            HStack {
-                                Spacer()
-                                Button(action: {
-                                    showPurchaseCreditsView = true
-                                }) {
-                                    HStack(spacing: 8) {
-                                        Image(systemName: "crown.fill")
-                                            .font(.system(size: 14, weight: .semibold))
-                                            .foregroundStyle(
-                                                LinearGradient(
-                                                    colors: [.yellow, .orange],
-                                                    startPoint: .topLeading,
-                                                    endPoint: .bottomTrailing
-                                                )
+                            Button(action: {
+                                showPurchaseCreditsView = true
+                            }) {
+                                HStack(spacing: 8) {
+                                    Image(systemName: "crown.fill")
+                                        .font(.system(size: 14, weight: .semibold))
+                                        .foregroundStyle(
+                                            LinearGradient(
+                                                colors: [.yellow, .orange],
+                                                startPoint: .topLeading,
+                                                endPoint: .bottomTrailing
                                             )
-                                        Text("Buy Credits")
-                                            .font(
-                                                .system(
-                                                    size: 15, weight: .semibold,
-                                                    design: .rounded)
-                                            )
-                                            .foregroundColor(.white)
-                                    }
-                                    .padding(.horizontal, 20)
-                                    .padding(.vertical, 12)
-                                    .background(
-                                        LinearGradient(
-                                            colors: [.blue, .purple],
-                                            startPoint: .leading,
-                                            endPoint: .trailing
                                         )
-                                    )
-                                    .cornerRadius(12)
-                                    .shadow(color: Color.blue.opacity(0.3), radius: 8, x: 0, y: 4)
+                                    Text("Buy Credits")
+                                        .font(.system(size: 20, weight: .bold, design: .rounded))
+                                        .foregroundColor(.white)
                                 }
-                                Spacer()
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(
+                                    LinearGradient(
+                                        colors: [.blue, .purple],
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    )
+                                )
+                                .cornerRadius(16)
+                                .shadow(color: Color.blue.opacity(0.3), radius: 8, x: 0, y: 2)
                             }
                         }
                         .padding(.horizontal)
                         .padding(.bottom, 8)
                     }
 
-                    HStack(alignment: .center, spacing: 16) {
-                        SpinningPlusButton(
-                            showActionSheet: $showActionSheet,
-                            isLoggedIn: authViewModel.user != nil,
-                            hasCredits: hasEnoughCredits,
-                            isConnected: networkMonitor.isConnected
-                        )
+                    if hasEnoughCredits {
+                        HStack(alignment: .center, spacing: 16) {
+                            SpinningPlusButton(
+                                showActionSheet: $showActionSheet,
+                                isLoggedIn: authViewModel.user != nil,
+                                hasCredits: hasEnoughCredits,
+                                isConnected: networkMonitor.isConnected
+                            )
+                        }
+                        .padding(.horizontal, 16)
+                        .cornerRadius(16)
+                        .shadow(
+                            color: Color.black.opacity(0.05), radius: 8, x: 0, y: 2)
                     }
-                    .padding(.horizontal, 16)
-                    .cornerRadius(16)
-                    .shadow(
-                        color: Color.black.opacity(0.05), radius: 8, x: 0, y: 2)
 
                     // Disclaimer text for multi-select
                     if let additionalFilters = additionalFilters,

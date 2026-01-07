@@ -44,6 +44,14 @@ struct GenerationDetailsSheet: View {
                     if placeholder.state == .inProgress {
                         progressSection
                     }
+                    
+                    // Footer message
+                    Text("You won't be charged for failed generations")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 8)
                 }
                 .padding()
             }

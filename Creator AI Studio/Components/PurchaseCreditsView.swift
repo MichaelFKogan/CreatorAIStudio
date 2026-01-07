@@ -136,28 +136,39 @@ struct PurchaseCreditsView: View {
                     // Credit Packages
                     VStack(spacing: 12) {
                         CreditPackageCard(
+                            title: "Test Pack",
+                            baseCreditsValue: 1.00,
+                            paymentMethod: selectedPaymentMethod,
+                            description: "Good for testing photos"
+                        )
+
+                        CreditPackageCard(
                             title: "Starter Pack",
                             baseCreditsValue: 5.00,
-                            paymentMethod: selectedPaymentMethod
+                            paymentMethod: selectedPaymentMethod,
+                            description: "Perfect for trying out features"
                         )
 
                         CreditPackageCard(
                             title: "Pro Pack",
                             baseCreditsValue: 10.00,
-                            paymentMethod: selectedPaymentMethod
+                            paymentMethod: selectedPaymentMethod,
+                            description: "Good for testing videos"
                         )
 
                         CreditPackageCard(
                             title: "Mega Pack",
                             baseCreditsValue: 20.00,
                             paymentMethod: selectedPaymentMethod,
-                            badge: "Best Value"
+                            badge: "Best Value",
+                            description: "Great for regular content creation"
                         )
 
                         CreditPackageCard(
                             title: "Ultra Pack",
                             baseCreditsValue: 50.00,
-                            paymentMethod: selectedPaymentMethod
+                            paymentMethod: selectedPaymentMethod,
+                            description: "Ideal for power users and bulk projects"
                         )
                     }
                     .padding(.horizontal)
@@ -244,12 +255,15 @@ struct CreditPackageCard: View {
     let baseCreditsValue: Double  // This is both the credits amount and the base price
     let paymentMethod: PaymentMethod
     var badge: String? = nil
+    var description: String? = nil
 
     @State private var isExpanded: Bool = false
 
     // Calculate app fee (fixed amounts based on pack size)
     private var profitFee: Double {
         switch baseCreditsValue {
+        case 1.00:
+            return 1.00
         case 5.00:
             return 1.00
         case 10.00:
@@ -373,6 +387,13 @@ struct CreditPackageCard: View {
                                     .font(.system(size: 13, design: .rounded))
                                     .foregroundColor(.secondary)
                             }
+                            
+                            if let description = description {
+                                Text(description)
+                                    .font(.system(size: 12, design: .rounded))
+                                    .foregroundColor(.secondary)
+                                    .padding(.top, 2)
+                            }
                         }
 
                         Spacer()
@@ -420,8 +441,9 @@ struct CreditPackageCard: View {
                                             .system(
                                                 size: 14, weight: .medium)
                                         )
+                                        .imageScale(.medium)
                                         .foregroundColor(.blue)
-                                        .frame(width: 20)
+                                        .frame(width: 20, height: 20)
 
                                         Text(
                                             "Approx. \(imageGenerations) images"
@@ -441,8 +463,9 @@ struct CreditPackageCard: View {
                                                     size: 14,
                                                     weight: .medium)
                                             )
+                                            .imageScale(.medium)
                                             .foregroundColor(.purple)
-                                            .frame(width: 20)
+                                            .frame(width: 20, height: 20)
 
                                         Text(
                                             "Approx. \(videoGenerationsRange.min)–\(videoGenerationsRange.max) videos"
@@ -454,6 +477,7 @@ struct CreditPackageCard: View {
                                         .foregroundColor(.secondary)
                                     }
                                 }
+                                .environment(\.font, Font.system(size: 14))
 
                                 VStack(spacing: 6) {
                                     Spacer()

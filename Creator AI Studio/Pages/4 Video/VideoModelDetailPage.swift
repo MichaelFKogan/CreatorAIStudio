@@ -438,69 +438,63 @@ struct VideoModelDetailPage: View {
                                     Spacer()
                                 }
 
-                                HStack {
-                                    Spacer()
-                                    Button(action: {
-                                        showPurchaseCreditsView = true
-                                    }) {
-                                        HStack(spacing: 8) {
-                                            Image(systemName: "crown.fill")
-                                                .font(.system(size: 14, weight: .semibold))
-                                                .foregroundStyle(
-                                                    LinearGradient(
-                                                        colors: [.yellow, .orange],
-                                                        startPoint: .topLeading,
-                                                        endPoint: .bottomTrailing
-                                                    )
+                                Button(action: {
+                                    showPurchaseCreditsView = true
+                                }) {
+                                    HStack(spacing: 8) {
+                                        Image(systemName: "crown.fill")
+                                            .font(.system(size: 14, weight: .semibold))
+                                            .foregroundStyle(
+                                                LinearGradient(
+                                                    colors: [.yellow, .orange],
+                                                    startPoint: .topLeading,
+                                                    endPoint: .bottomTrailing
                                                 )
-                                            Text("Buy Credits")
-                                                .font(
-                                                    .system(
-                                                        size: 15, weight: .semibold,
-                                                        design: .rounded)
-                                                )
-                                                .foregroundColor(.white)
-                                        }
-                                        .padding(.horizontal, 20)
-                                        .padding(.vertical, 12)
-                                        .background(
-                                            LinearGradient(
-                                                colors: [.purple, .pink],
-                                                startPoint: .leading,
-                                                endPoint: .trailing
                                             )
-                                        )
-                                        .cornerRadius(12)
-                                        .shadow(color: Color.purple.opacity(0.3), radius: 8, x: 0, y: 4)
+                                        Text("Buy Credits")
+                                            .fontWeight(.semibold)
+                                            .foregroundColor(.white)
                                     }
-                                    Spacer()
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                                    .background(
+                                        LinearGradient(
+                                            colors: [Color.purple.opacity(0.8), Color.pink],
+                                            startPoint: .leading,
+                                            endPoint: .trailing
+                                        )
+                                    )
+                                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                                    .shadow(color: Color.purple.opacity(0.4), radius: 8, x: 0, y: 4)
                                 }
                             }
                             .padding(.horizontal)
                         }
 
-                        LazyView(
-                            GenerateButtonVideo(
-                                prompt: prompt,
-                                isGenerating: $isGenerating,
-                                keyboardHeight: $keyboardHeight,
-                                price: currentPrice,
-                                selectedSize: videoAspectOptions[
-                                    selectedAspectIndex
-                                ].id,
-                                selectedResolution: hasVariableResolution
-                                    ? videoResolutionOptions[
-                                        selectedResolutionIndex
-                                    ].id : nil,
-                                selectedDuration:
-                                    "\(Int(videoDurationOptions[selectedDurationIndex].duration))s",
-                                isLoggedIn: authViewModel.user != nil,
-                                hasCredits: hasEnoughCredits,
-                                onSignInTap: {
-                                    showSignInSheet = true
-                                },
-                                action: generate
-                            ))
+                        if hasEnoughCredits {
+                            LazyView(
+                                GenerateButtonVideo(
+                                    prompt: prompt,
+                                    isGenerating: $isGenerating,
+                                    keyboardHeight: $keyboardHeight,
+                                    price: currentPrice,
+                                    selectedSize: videoAspectOptions[
+                                        selectedAspectIndex
+                                    ].id,
+                                    selectedResolution: hasVariableResolution
+                                        ? videoResolutionOptions[
+                                            selectedResolutionIndex
+                                        ].id : nil,
+                                    selectedDuration:
+                                        "\(Int(videoDurationOptions[selectedDurationIndex].duration))s",
+                                    isLoggedIn: authViewModel.user != nil,
+                                    hasCredits: hasEnoughCredits,
+                                    onSignInTap: {
+                                        showSignInSheet = true
+                                    },
+                                    action: generate
+                                ))
+                        }
 
                         Divider().padding(.horizontal)
 
@@ -585,18 +579,18 @@ struct VideoModelDetailPage: View {
         .toolbarBackground(.visible, for: .navigationBar)
         .toolbar {
             // Leading title
-            ToolbarItem(placement: .navigationBarLeading) {
-                Text(item.display.title)
-                    .font(.system(size: 28, weight: .bold, design: .rounded))
-                    .foregroundColor(.white)
-                    // .foregroundStyle(
-                    //     LinearGradient(
-                    //         colors: [.purple, .pink],
-                    //         startPoint: .leading,
-                    //         endPoint: .trailing
-                    //     )
-                    // )
-            }
+            // ToolbarItem(placement: .navigationBarLeading) {
+            //     Text(item.display.title)
+            //         .font(.system(size: 28, weight: .bold, design: .rounded))
+            //         .foregroundColor(.white)
+            //         // .foregroundStyle(
+            //         //     LinearGradient(
+            //         //         colors: [.purple, .pink],
+            //         //         startPoint: .leading,
+            //         //         endPoint: .trailing
+            //         //     )
+            //         // )
+            // }
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()
                 Button("Done") { isPromptFocused = false }
