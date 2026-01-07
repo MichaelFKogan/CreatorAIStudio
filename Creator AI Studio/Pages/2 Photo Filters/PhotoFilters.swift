@@ -415,8 +415,7 @@ struct PhotoFilters: View {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     CreditsBadge(
                         diamondColor: .teal,
-                        borderColor: .mint,
-                        creditsAmount: creditsViewModel.formattedBalance()
+                        borderColor: .mint
                     )
                 }
             }

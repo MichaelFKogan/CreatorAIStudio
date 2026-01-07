@@ -169,6 +169,29 @@ struct Settings: View {
                     }
                 }
                 .disabled(isResyncing)
+                
+                Button(action: {
+                    diagnoseStats()
+                }) {
+                    HStack {
+                        Image(systemName: "stethoscope")
+                            .foregroundColor(.orange)
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Diagnose Video Counts")
+                                .font(.body)
+                                .foregroundColor(.primary)
+                            Text("Compare actual vs stored video model counts")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        Spacer()
+                        if isResyncing {
+                            ProgressView()
+                                .scaleEffect(0.8)
+                        }
+                    }
+                }
+                .disabled(isResyncing)
             }
 
             // // App preferences
@@ -343,7 +366,7 @@ struct Settings: View {
         .alert("Stats Resynced", isPresented: $showStatsResyncedAlert) {
             Button("OK", role: .cancel) {}
         } message: {
-            Text("Gallery statistics have been recalculated from the database. The counts should now be accurate.")
+            Text("Gallery statistics have been recalculated from the database. The counts should now be accurate. Check Xcode console for diagnostic details.")
         }
         .alert("Signed Out", isPresented: $showSignedOutAlert) {
             Button("OK", role: .cancel) {}
@@ -400,6 +423,27 @@ struct Settings: View {
                 generator.notificationOccurred(.success)
                 
                 isResyncing = false
+                showStatsResyncedAlert = true
+            }
+        }
+    }
+    
+    private func diagnoseStats() {
+        guard profileViewModel != nil else { return }
+        
+        isResyncing = true
+        
+        Task {
+            // Run diagnostic to compare actual vs stored counts
+            await profileViewModel?.diagnoseVideoModelCounts()
+            
+            await MainActor.run {
+                // Haptic feedback
+                let generator = UINotificationFeedbackGenerator()
+                generator.notificationOccurred(.success)
+                
+                isResyncing = false
+                // Show alert with instructions to check console
                 showStatsResyncedAlert = true
             }
         }

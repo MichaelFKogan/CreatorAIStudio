@@ -34,8 +34,7 @@ struct VideoModelsPage: View {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     CreditsBadge(
                         diamondColor: .purple,
-                        borderColor: .purple,
-                        creditsAmount: "$10.00"
+                        borderColor: .purple
                     )
                 }
             }
@@ -74,8 +73,7 @@ struct VideoModelsPageContent: View {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     CreditsBadge(
                         diamondColor: .purple,
-                        borderColor: .purple,
-                        creditsAmount: "$10.00"
+                        borderColor: .purple
                     )
                 }
             }

@@ -39,7 +39,8 @@ struct ImageModelDetailPage: View {
     @State private var selectedGenerationMode: Int = 0
     @State private var showSignInSheet: Bool = false
     @State private var showPurchaseCreditsView: Bool = false
-    @State private var hasCredits: Bool = true  // TODO: Connect to actual credits check
+    @State private var showInsufficientCreditsAlert: Bool = false
+    @StateObject private var creditsViewModel = CreditsViewModel()
     @ObservedObject private var networkMonitor = NetworkMonitor.shared
 
     @EnvironmentObject var authViewModel: AuthViewModel
@@ -147,6 +148,18 @@ struct ImageModelDetailPage: View {
         formatter.minimumFractionDigits = 0
         return formatter.string(
             from: NSDecimalNumber(decimal: item.resolvedCost ?? 0)) ?? "0"
+    }
+    
+    // Calculate required credits as Double
+    private var requiredCredits: Double {
+        let cost = item.resolvedCost ?? Decimal(0.04)  // Default image cost
+        return NSDecimalNumber(decimal: cost).doubleValue
+    }
+    
+    // Check if user has enough credits
+    private var hasEnoughCredits: Bool {
+        guard let userId = authViewModel.user?.id else { return false }
+        return creditsViewModel.hasEnoughCredits(requiredAmount: requiredCredits)
     }
 
     private var isMidjourney: Bool {
@@ -268,7 +281,7 @@ struct ImageModelDetailPage: View {
                                 }
                             }
                             .padding(.horizontal)
-                        } else if !hasCredits {
+                        } else if !hasEnoughCredits {
                             VStack(spacing: 8) {
                                 HStack(spacing: 6) {
                                     Spacer()
@@ -289,13 +302,35 @@ struct ImageModelDetailPage: View {
                                     Button(action: {
                                         showPurchaseCreditsView = true
                                     }) {
-                                        Text("Buy Credits")
-                                            .font(
-                                                .system(
-                                                    size: 15, weight: .medium,
-                                                    design: .rounded)
+                                        HStack(spacing: 8) {
+                                            Image(systemName: "crown.fill")
+                                                .font(.system(size: 14, weight: .semibold))
+                                                .foregroundStyle(
+                                                    LinearGradient(
+                                                        colors: [.yellow, .orange],
+                                                        startPoint: .topLeading,
+                                                        endPoint: .bottomTrailing
+                                                    )
+                                                )
+                                            Text("Buy Credits")
+                                                .font(
+                                                    .system(
+                                                        size: 15, weight: .semibold,
+                                                        design: .rounded)
+                                                )
+                                                .foregroundColor(.white)
+                                        }
+                                        .padding(.horizontal, 20)
+                                        .padding(.vertical, 12)
+                                        .background(
+                                            LinearGradient(
+                                                colors: [.blue, .purple],
+                                                startPoint: .leading,
+                                                endPoint: .trailing
                                             )
-                                            .foregroundColor(.blue)
+                                        )
+                                        .cornerRadius(12)
+                                        .shadow(color: Color.blue.opacity(0.3), radius: 8, x: 0, y: 4)
                                     }
                                     Spacer()
                                 }
@@ -310,7 +345,7 @@ struct ImageModelDetailPage: View {
                                 keyboardHeight: $keyboardHeight,
                                 costString: costString,
                                 isLoggedIn: authViewModel.user != nil,
-                                hasCredits: hasCredits,
+                                hasCredits: hasEnoughCredits,
                                 isConnected: networkMonitor.isConnected,
                                 onSignInTap: {
                                     showSignInSheet = true
@@ -421,6 +456,28 @@ struct ImageModelDetailPage: View {
             if let capturedImage = capturedImage, referenceImages.isEmpty {
                 referenceImages = [capturedImage]
             }
+            // Fetch credit balance when view appears
+            if let userId = authViewModel.user?.id {
+                Task {
+                    await creditsViewModel.fetchBalance(userId: userId)
+                }
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("CreditsBalanceUpdated"))) { notification in
+            // Refresh credits when balance is updated (e.g., after purchase)
+            if let userId = authViewModel.user?.id {
+                Task {
+                    await creditsViewModel.fetchBalance(userId: userId)
+                }
+            }
+        }
+        .alert("Insufficient Credits", isPresented: $showInsufficientCreditsAlert) {
+            Button("Purchase Credits") {
+                showPurchaseCreditsView = true
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("You need \(String(format: "$%.2f", requiredCredits)) to generate this. Your current balance is \(creditsViewModel.formattedBalance()).")
         }
         .sheet(isPresented: $isExamplePromptsPresented) {
             ExamplePromptsSheet(
@@ -455,8 +512,7 @@ struct ImageModelDetailPage: View {
             ToolbarItem(placement: .navigationBarTrailing) {
                 CreditsBadge(
                     diamondColor: .blue,
-                    borderColor: .cyan,
-                    creditsAmount: "$10.00"
+                    borderColor: .cyan
                 )
             }
         }
@@ -518,6 +574,12 @@ struct ImageModelDetailPage: View {
             return
         }
         guard !isGenerating else { return }
+        
+        // Check credits before generating
+        if !hasEnoughCredits {
+            showInsufficientCreditsAlert = true
+            return
+        }
 
         isGenerating = true
         let selectedAspectOption = imageAspectOptions[selectedAspectIndex]

@@ -22,7 +22,8 @@ struct PhotoFilterDetailView: View {
     @State private var navigateToConfirmation: Bool = false
     @State private var showSignInSheet: Bool = false
     @State private var showPurchaseCreditsView: Bool = false
-    @State private var hasCredits: Bool = true  // TODO: Connect to actual credits check
+    @State private var showInsufficientCreditsAlert: Bool = false
+    @StateObject private var creditsViewModel = CreditsViewModel()
     @ObservedObject private var networkMonitor = NetworkMonitor.shared
 
     @EnvironmentObject var authViewModel: AuthViewModel
@@ -73,12 +74,23 @@ struct PhotoFilterDetailView: View {
             } ?? 0
         return itemPrice + additionalPrice
     }
+    
+    // Calculate required credits as Double
+    private var requiredCredits: Double {
+        NSDecimalNumber(decimal: totalPrice).doubleValue
+    }
+    
+    // Check if user has enough credits
+    private var hasEnoughCredits: Bool {
+        guard let userId = authViewModel.user?.id else { return false }
+        return creditsViewModel.hasEnoughCredits(requiredAmount: requiredCredits)
+    }
 
     // Computed property to check if user can upload
     private var canUpload: Bool {
         guard authViewModel.user != nil else { return false }
         guard networkMonitor.isConnected else { return false }
-        return hasCredits
+        return hasEnoughCredits
     }
 
     var body: some View {
@@ -280,7 +292,7 @@ struct PhotoFilterDetailView: View {
                         }
                         .padding(.horizontal)
                         .padding(.bottom, 8)
-                    } else if !hasCredits {
+                    } else if !hasEnoughCredits {
                         VStack(spacing: 8) {
                             HStack(spacing: 6) {
                                 Image(systemName: "exclamationmark.circle.fill")
@@ -296,13 +308,35 @@ struct PhotoFilterDetailView: View {
                                 Button(action: {
                                     showPurchaseCreditsView = true
                                 }) {
-                                    Text("Buy Credits")
-                                        .font(
-                                            .system(
-                                                size: 15, weight: .medium,
-                                                design: .rounded)
+                                    HStack(spacing: 8) {
+                                        Image(systemName: "crown.fill")
+                                            .font(.system(size: 14, weight: .semibold))
+                                            .foregroundStyle(
+                                                LinearGradient(
+                                                    colors: [.yellow, .orange],
+                                                    startPoint: .topLeading,
+                                                    endPoint: .bottomTrailing
+                                                )
+                                            )
+                                        Text("Buy Credits")
+                                            .font(
+                                                .system(
+                                                    size: 15, weight: .semibold,
+                                                    design: .rounded)
+                                            )
+                                            .foregroundColor(.white)
+                                    }
+                                    .padding(.horizontal, 20)
+                                    .padding(.vertical, 12)
+                                    .background(
+                                        LinearGradient(
+                                            colors: [.blue, .purple],
+                                            startPoint: .leading,
+                                            endPoint: .trailing
                                         )
-                                        .foregroundColor(.blue)
+                                    )
+                                    .cornerRadius(12)
+                                    .shadow(color: Color.blue.opacity(0.3), radius: 8, x: 0, y: 4)
                                 }
                                 Spacer()
                             }
@@ -315,7 +349,7 @@ struct PhotoFilterDetailView: View {
                         SpinningPlusButton(
                             showActionSheet: $showActionSheet,
                             isLoggedIn: authViewModel.user != nil,
-                            hasCredits: hasCredits,
+                            hasCredits: hasEnoughCredits,
                             isConnected: networkMonitor.isConnected
                         )
                     }
@@ -452,8 +486,7 @@ struct PhotoFilterDetailView: View {
             ToolbarItem(placement: .navigationBarTrailing) {
                 CreditsBadge(
                     diamondColor: .teal,
-                    borderColor: .mint,
-                    creditsAmount: "$10.00"
+                    borderColor: .mint
                 )
             }
         }
@@ -481,6 +514,28 @@ struct PhotoFilterDetailView: View {
             prompt = item.prompt ?? ""
             // kick off the subtle arrow motion next to the Create text
             createArrowMove = true
+            // Fetch credit balance when view appears
+            if let userId = authViewModel.user?.id {
+                Task {
+                    await creditsViewModel.fetchBalance(userId: userId)
+                }
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("CreditsBalanceUpdated"))) { notification in
+            // Refresh credits when balance is updated (e.g., after purchase)
+            if let userId = authViewModel.user?.id {
+                Task {
+                    await creditsViewModel.fetchBalance(userId: userId)
+                }
+            }
+        }
+        .alert("Insufficient Credits", isPresented: $showInsufficientCreditsAlert) {
+            Button("Purchase Credits") {
+                showPurchaseCreditsView = true
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("You need \(String(format: "$%.2f", requiredCredits)) to generate this. Your current balance is \(creditsViewModel.formattedBalance()).")
         }
         .sheet(isPresented: $showSignInSheet) {
             SignInView()
@@ -662,6 +717,9 @@ struct SpinningPlusButton: View {
         Button(action: {
             if canUpload {
                 showActionSheet = true
+            } else if isLoggedIn && !hasCredits {
+                // This will be handled by parent view's alert
+                showActionSheet = false
             }
         }) {
             HStack {

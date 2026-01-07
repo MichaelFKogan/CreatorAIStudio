@@ -47,7 +47,8 @@ struct VideoModelDetailPage: View {
     @State private var generateAudio: Bool = true  // Default to ON for audio generation
     @State private var showSignInSheet: Bool = false
     @State private var showPurchaseCreditsView: Bool = false
-    @State private var hasCredits: Bool = true  // TODO: Connect to actual credits check
+    @State private var showInsufficientCreditsAlert: Bool = false
+    @StateObject private var creditsViewModel = CreditsViewModel()
 
     @EnvironmentObject var authViewModel: AuthViewModel
 
@@ -295,6 +296,18 @@ struct VideoModelDetailPage: View {
         // Fallback to base price if variable pricing not found for this combination
         return item.resolvedCost
     }
+    
+    // Calculate required credits as Double
+    private var requiredCredits: Double {
+        let price = currentPrice ?? item.resolvedCost ?? 0
+        return NSDecimalNumber(decimal: price).doubleValue
+    }
+    
+    // Check if user has enough credits
+    private var hasEnoughCredits: Bool {
+        guard let userId = authViewModel.user?.id else { return false }
+        return creditsViewModel.hasEnoughCredits(requiredAmount: requiredCredits)
+    }
 
     private var isMidjourney: Bool {
         item.display.title.lowercased().contains("midjourney")
@@ -409,7 +422,7 @@ struct VideoModelDetailPage: View {
                                 }
                             }
                             .padding(.horizontal)
-                        } else if !hasCredits {
+                        } else if !hasEnoughCredits {
                             VStack(spacing: 8) {
                                 HStack(spacing: 6) {
                                     Spacer()
@@ -430,13 +443,35 @@ struct VideoModelDetailPage: View {
                                     Button(action: {
                                         showPurchaseCreditsView = true
                                     }) {
-                                        Text("Buy Credits")
-                                            .font(
-                                                .system(
-                                                    size: 15, weight: .medium,
-                                                    design: .rounded)
+                                        HStack(spacing: 8) {
+                                            Image(systemName: "crown.fill")
+                                                .font(.system(size: 14, weight: .semibold))
+                                                .foregroundStyle(
+                                                    LinearGradient(
+                                                        colors: [.yellow, .orange],
+                                                        startPoint: .topLeading,
+                                                        endPoint: .bottomTrailing
+                                                    )
+                                                )
+                                            Text("Buy Credits")
+                                                .font(
+                                                    .system(
+                                                        size: 15, weight: .semibold,
+                                                        design: .rounded)
+                                                )
+                                                .foregroundColor(.white)
+                                        }
+                                        .padding(.horizontal, 20)
+                                        .padding(.vertical, 12)
+                                        .background(
+                                            LinearGradient(
+                                                colors: [.purple, .pink],
+                                                startPoint: .leading,
+                                                endPoint: .trailing
                                             )
-                                            .foregroundColor(.blue)
+                                        )
+                                        .cornerRadius(12)
+                                        .shadow(color: Color.purple.opacity(0.3), radius: 8, x: 0, y: 4)
                                     }
                                     Spacer()
                                 }
@@ -460,7 +495,7 @@ struct VideoModelDetailPage: View {
                                 selectedDuration:
                                     "\(Int(videoDurationOptions[selectedDurationIndex].duration))s",
                                 isLoggedIn: authViewModel.user != nil,
-                                hasCredits: hasCredits,
+                                hasCredits: hasEnoughCredits,
                                 onSignInTap: {
                                     showSignInSheet = true
                                 },
@@ -568,8 +603,7 @@ struct VideoModelDetailPage: View {
             ToolbarItem(placement: .navigationBarTrailing) {
                 CreditsBadge(
                     diamondColor: .purple,
-                    borderColor: .pink,
-                    creditsAmount: "$10.00"
+                    borderColor: .pink
                 )
             }
         }
@@ -652,6 +686,29 @@ struct VideoModelDetailPage: View {
                     selectedDurationIndex = defaultIndex
                 }
             }
+            
+            // Fetch credit balance when view appears
+            if let userId = authViewModel.user?.id {
+                Task {
+                    await creditsViewModel.fetchBalance(userId: userId)
+                }
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("CreditsBalanceUpdated"))) { notification in
+            // Refresh credits when balance is updated (e.g., after purchase)
+            if let userId = authViewModel.user?.id {
+                Task {
+                    await creditsViewModel.fetchBalance(userId: userId)
+                }
+            }
+        }
+        .alert("Insufficient Credits", isPresented: $showInsufficientCreditsAlert) {
+            Button("Purchase Credits") {
+                showPurchaseCreditsView = true
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("You need \(String(format: "$%.2f", requiredCredits)) to generate this. Your current balance is \(creditsViewModel.formattedBalance()).")
         }
         .onChange(of: item.display.modelName) { newModelName in
             // Reset indices when model changes (if item changes)
@@ -682,6 +739,12 @@ struct VideoModelDetailPage: View {
             return
         }
         guard !isGenerating else { return }
+        
+        // Check credits before generating
+        if !hasEnoughCredits {
+            showInsufficientCreditsAlert = true
+            return
+        }
 
         isGenerating = true
         let selectedAspectOption = videoAspectOptions[selectedAspectIndex]

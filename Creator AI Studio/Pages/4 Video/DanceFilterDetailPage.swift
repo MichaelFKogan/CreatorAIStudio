@@ -23,7 +23,8 @@ struct DanceFilterDetailPage: View {
     @State private var showActionSheet: Bool = false
     @State private var showSignInSheet: Bool = false
     @State private var showPurchaseCreditsView: Bool = false
-    @State private var hasCredits: Bool = true
+    @State private var showInsufficientCreditsAlert: Bool = false
+    @StateObject private var creditsViewModel = CreditsViewModel()
     @ObservedObject private var networkMonitor = NetworkMonitor.shared
     
     @State private var selectedAspectIndex: Int = 0
@@ -86,6 +87,18 @@ struct DanceFilterDetailPage: View {
         return item.resolvedCost
     }
     
+    // Calculate required credits as Double
+    private var requiredCredits: Double {
+        let price = currentPrice ?? item.resolvedCost ?? 0
+        return NSDecimalNumber(decimal: price).doubleValue
+    }
+    
+    // Check if user has enough credits
+    private var hasEnoughCredits: Bool {
+        guard let userId = authViewModel.user?.id else { return false }
+        return creditsViewModel.hasEnoughCredits(requiredAmount: requiredCredits)
+    }
+    
     // MARK: BODY
     
     var body: some View {
@@ -113,6 +126,33 @@ struct DanceFilterDetailPage: View {
                                 color: .purple
                             ))
                         
+                        // Full body image disclaimer
+                        VStack(spacing: 6) {
+                            HStack(spacing: 6) {
+                                Spacer()
+                                Image(systemName: "exclamationmark.triangle.fill")
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.yellow)
+                                Text("Please upload a full body image")
+                                    .font(.caption)
+                                    .foregroundColor(.yellow)
+                                Spacer()
+                            }
+                            
+                            HStack(alignment: .top, spacing: 6) {
+                                Spacer()
+                                Image(systemName: "info.circle.fill")
+                                    .font(.system(size: 12))
+                                    .foregroundColor(.blue)
+                                Text("Uploading a square photo will result in a square video. Please upload the photo size that you want the video result to be (see instructions below)")
+                                    .font(.caption)
+                                    .foregroundColor(.blue)
+                                Spacer()
+                            }
+                        }
+                        .padding(.horizontal)
+
+
                         // Network connectivity disclaimer
                         if !networkMonitor.isConnected {
                             VStack(spacing: 4) {
@@ -157,7 +197,7 @@ struct DanceFilterDetailPage: View {
                                 }
                             }
                             .padding(.horizontal)
-                        } else if !hasCredits {
+                        } else if !hasEnoughCredits {
                             VStack(spacing: 8) {
                                 HStack(spacing: 6) {
                                     Spacer()
@@ -175,48 +215,45 @@ struct DanceFilterDetailPage: View {
                                     Button(action: {
                                         showPurchaseCreditsView = true
                                     }) {
-                                        Text("Buy Credits")
-                                            .font(.system(size: 15, weight: .medium, design: .rounded))
-                                            .foregroundColor(.blue)
+                                        HStack(spacing: 8) {
+                                            Image(systemName: "crown.fill")
+                                                .font(.system(size: 14, weight: .semibold))
+                                                .foregroundStyle(
+                                                    LinearGradient(
+                                                        colors: [.yellow, .orange],
+                                                        startPoint: .topLeading,
+                                                        endPoint: .bottomTrailing
+                                                    )
+                                                )
+                                            Text("Buy Credits")
+                                                .font(.system(size: 15, weight: .semibold, design: .rounded))
+                                                .foregroundColor(.white)
+                                        }
+                                        .padding(.horizontal, 20)
+                                        .padding(.vertical, 12)
+                                        .background(
+                                            LinearGradient(
+                                                colors: [.purple, .pink],
+                                                startPoint: .leading,
+                                                endPoint: .trailing
+                                            )
+                                        )
+                                        .cornerRadius(12)
+                                        .shadow(color: Color.purple.opacity(0.3), radius: 8, x: 0, y: 4)
                                     }
                                     Spacer()
                                 }
                             }
                             .padding(.horizontal)
                         }
-                        
-                        // Full body image disclaimer
-                        VStack(spacing: 6) {
-                            HStack(spacing: 6) {
-                                Spacer()
-                                Image(systemName: "exclamationmark.triangle.fill")
-                                    .font(.system(size: 14))
-                                    .foregroundColor(.yellow)
-                                Text("Please upload a full body image")
-                                    .font(.caption)
-                                    .foregroundColor(.yellow)
-                                Spacer()
-                            }
-                            
-                            HStack(alignment: .top, spacing: 6) {
-                                Spacer()
-                                Image(systemName: "info.circle.fill")
-                                    .font(.system(size: 12))
-                                    .foregroundColor(.blue)
-                                Text("Uploading a square photo will result in a square video. Please upload the photo size that you want the video result to be (see instructions below)")
-                                    .font(.caption)
-                                    .foregroundColor(.blue)
-                                Spacer()
-                            }
-                        }
-                        .padding(.horizontal)
+
                         
                         LazyView(
                             GenerateButtonFilter(
                                 isGenerating: $isGenerating,
                                 price: currentPrice,
                                 isLoggedIn: authViewModel.user != nil,
-                                hasCredits: hasCredits,
+                                hasCredits: hasEnoughCredits,
                                 isConnected: networkMonitor.isConnected,
                                 hasImage: referenceImage != nil,
                                 onSignInTap: {
@@ -257,8 +294,7 @@ struct DanceFilterDetailPage: View {
             ToolbarItem(placement: .navigationBarTrailing) {
                 CreditsBadge(
                     diamondColor: .purple,
-                    borderColor: .pink,
-                    creditsAmount: "$10.00"
+                    borderColor: .pink
                 )
             }
         }
@@ -310,6 +346,29 @@ struct DanceFilterDetailPage: View {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 setupVideoPlayer()
             }
+            
+            // Fetch credit balance when view appears
+            if let userId = authViewModel.user?.id {
+                Task {
+                    await creditsViewModel.fetchBalance(userId: userId)
+                }
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("CreditsBalanceUpdated"))) { notification in
+            // Refresh credits when balance is updated (e.g., after purchase)
+            if let userId = authViewModel.user?.id {
+                Task {
+                    await creditsViewModel.fetchBalance(userId: userId)
+                }
+            }
+        }
+        .alert("Insufficient Credits", isPresented: $showInsufficientCreditsAlert) {
+            Button("Purchase Credits") {
+                showPurchaseCreditsView = true
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("You need \(String(format: "$%.2f", requiredCredits)) to generate this. Your current balance is \(creditsViewModel.formattedBalance()).")
         }
         .onDisappear {
             // Clean up video player
@@ -325,6 +384,12 @@ struct DanceFilterDetailPage: View {
             return
         }
         guard !isGenerating else { return }
+        
+        // Check credits before generating
+        if !hasEnoughCredits {
+            showInsufficientCreditsAlert = true
+            return
+        }
         
         isGenerating = true
         

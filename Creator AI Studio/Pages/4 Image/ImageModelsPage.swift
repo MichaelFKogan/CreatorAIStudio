@@ -33,8 +33,7 @@ struct ImageModelsPage: View {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     CreditsBadge(
                         diamondColor: .blue,
-                        borderColor: .blue,
-                        creditsAmount: "$10.00"
+                        borderColor: .blue
                     )
                 }
             }
@@ -72,8 +71,7 @@ struct ImageModelsPageContent: View {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     CreditsBadge(
                         diamondColor: .blue,
-                        borderColor: .blue,
-                        creditsAmount: "$10.00"
+                        borderColor: .blue
                     )
                 }
             }

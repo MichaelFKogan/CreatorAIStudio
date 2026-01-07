@@ -389,8 +389,7 @@ struct YetiFilterDetailPage: View {
             ToolbarItem(placement: .navigationBarTrailing) {
                 CreditsBadge(
                     diamondColor: .purple,
-                    borderColor: .pink,
-                    creditsAmount: "$10.00"
+                    borderColor: .pink
                 )
             }
         }

@@ -25,7 +25,8 @@ struct PhotoConfirmationView: View {
     @State private var sizeButtonTapped: Bool = false
     @State private var showSignInSheet: Bool = false
     @State private var showPurchaseCreditsView: Bool = false
-    @State private var hasCredits: Bool = true  // TODO: Connect to actual credits check
+    @State private var showInsufficientCreditsAlert: Bool = false
+    @StateObject private var creditsViewModel = CreditsViewModel()
     @ObservedObject private var networkMonitor = NetworkMonitor.shared
 
     // Primary initializer for multiple images
@@ -63,13 +64,6 @@ struct PhotoConfirmationView: View {
         }
     }
 
-    // Computed property to check if user can generate
-    private var canGenerate: Bool {
-        guard authViewModel.user != nil else { return false }
-        guard networkMonitor.isConnected else { return false }
-        return hasCredits
-    }
-
     // Calculate total price: sum of all filter costs × number of images
     // Each image gets generated with each filter
     private var totalPrice: Decimal {
@@ -81,6 +75,24 @@ struct PhotoConfirmationView: View {
         let totalFilterCost = itemPrice + additionalPrice
         // Each image will be generated with each filter
         return totalFilterCost * Decimal(images.count)
+    }
+    
+    // Calculate required credits as Double
+    private var requiredCredits: Double {
+        NSDecimalNumber(decimal: totalPrice).doubleValue
+    }
+    
+    // Check if user has enough credits
+    private var hasEnoughCredits: Bool {
+        guard let userId = authViewModel.user?.id else { return false }
+        return creditsViewModel.hasEnoughCredits(requiredAmount: requiredCredits)
+    }
+
+    // Computed property to check if user can generate
+    private var canGenerate: Bool {
+        guard authViewModel.user != nil else { return false }
+        guard networkMonitor.isConnected else { return false }
+        return hasEnoughCredits
     }
 
     // MARK: - Aspect Ratio Options
@@ -135,6 +147,30 @@ struct PhotoConfirmationView: View {
             PurchaseCreditsView()
                 .environmentObject(authViewModel)
                 .presentationDragIndicator(.visible)
+        }
+        .onAppear {
+            // Fetch credit balance when view appears
+            if let userId = authViewModel.user?.id {
+                Task {
+                    await creditsViewModel.fetchBalance(userId: userId)
+                }
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("CreditsBalanceUpdated"))) { notification in
+            // Refresh credits when balance is updated (e.g., after purchase)
+            if let userId = authViewModel.user?.id {
+                Task {
+                    await creditsViewModel.fetchBalance(userId: userId)
+                }
+            }
+        }
+        .alert("Insufficient Credits", isPresented: $showInsufficientCreditsAlert) {
+            Button("Purchase Credits") {
+                showPurchaseCreditsView = true
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("You need \(String(format: "$%.2f", requiredCredits)) to generate this. Your current balance is \(creditsViewModel.formattedBalance()).")
         }
     }
 
@@ -520,7 +556,7 @@ struct PhotoConfirmationView: View {
 
                 signInTextLink
                     .padding(.bottom, 12)
-            } else if !hasCredits {
+            } else if !hasEnoughCredits {
                 creditsRequiredMessage
                     .padding(.bottom, 12)
             }
@@ -651,11 +687,33 @@ struct PhotoConfirmationView: View {
                 Button(action: {
                     showPurchaseCreditsView = true
                 }) {
-                    Text("Buy Credits")
-                        .font(
-                            .system(size: 15, weight: .medium, design: .rounded)
+                    HStack(spacing: 8) {
+                        Image(systemName: "crown.fill")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(
+                                LinearGradient(
+                                    colors: [.yellow, .orange],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                        Text("Buy Credits")
+                            .font(
+                                .system(size: 15, weight: .semibold, design: .rounded)
+                            )
+                            .foregroundColor(.white)
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 12)
+                    .background(
+                        LinearGradient(
+                            colors: [.blue, .purple],
+                            startPoint: .leading,
+                            endPoint: .trailing
                         )
-                        .foregroundColor(.blue)
+                    )
+                    .cornerRadius(12)
+                    .shadow(color: Color.blue.opacity(0.3), radius: 8, x: 0, y: 4)
                 }
                 Spacer()
             }
@@ -753,8 +811,7 @@ struct PhotoConfirmationView: View {
         ToolbarItem(placement: .navigationBarTrailing) {
             CreditsBadge(
                 diamondColor: .teal,
-                borderColor: .mint,
-                creditsAmount: "$10.00"
+                borderColor: .mint
             )
         }
     }
@@ -781,6 +838,12 @@ struct PhotoConfirmationView: View {
         else {
             isLoading = false
             showSignInSheet = true
+            return
+        }
+        
+        // Check credits before generating
+        if !hasEnoughCredits {
+            showInsufficientCreditsAlert = true
             return
         }
 
