@@ -170,119 +170,90 @@ struct DanceFilterDetailPage: View {
                             .padding(.horizontal)
                         }
                         
-                        // Login disclaimer
-                        if authViewModel.user == nil {
-                            VStack(spacing: 4) {
-                                HStack(spacing: 6) {
-                                    Spacer()
-                                    Image(systemName: "exclamationmark.circle.fill")
-                                        .font(.system(size: 14))
-                                        .foregroundColor(.red)
-                                    Text("You must be logged in to generate a video")
-                                        .font(.caption)
-                                        .foregroundColor(.red)
-                                    Spacer()
-                                }
-                                
-                                HStack {
-                                    Spacer()
+                        VStack(spacing: 12) {
+                            // Informational card - shown for both logged in and not logged in
+                            if authViewModel.user == nil {
+                                // Not logged in: Show login disclaimer and Sign In button
+                                VStack(spacing: 12) {
+                                    HStack(spacing: 6) {
+                                        Image(systemName: "exclamationmark.circle.fill")
+                                            .font(.system(size: 14))
+                                            .foregroundColor(.red)
+                                        Text("Log in to generate a video")
+                                            .font(.subheadline)
+                                            .foregroundColor(.primary)
+                                        Spacer()
+                                    }
+                                    
                                     Button(action: {
                                         showSignInSheet = true
                                     }) {
                                         Text("Sign In / Sign Up")
                                             .font(.system(size: 15, weight: .medium, design: .rounded))
-                                            .foregroundColor(.blue)
-                                    }
-                                    Spacer()
-                                }
-                            }
-                            .padding(.horizontal)
-                        } else if !hasEnoughCredits {
-                            VStack(spacing: 12) {
-                                // Informational card showing what they need
-                                HStack {
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Text("Generate Video")
-                                            .font(.headline)
-                                            .foregroundColor(.primary)
-                                        HStack(spacing: 4) {
-                                            PriceDisplayView(
-                                                price: currentPrice ?? item.resolvedCost ?? 0,
-                                                showUnit: true,
-                                                font: .subheadline,
-                                                fontWeight: .semibold,
-                                                foregroundColor: .secondary
+                                            .foregroundColor(.white)
+                                            .frame(maxWidth: .infinity)
+                                            .padding()
+                                            .background(
+                                                LinearGradient(
+                                                    colors: [.purple, .pink],
+                                                    startPoint: .leading,
+                                                    endPoint: .trailing
+                                                )
                                             )
-                                            Text("required")
-                                                .font(.subheadline)
-                                                .foregroundColor(.secondary)
-                                        }
-                                    }
-                                    Spacer()
-                                    VStack(alignment: .trailing, spacing: 4) {
-                                        Text("Your balance")
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-                                        Text(creditsViewModel.formattedBalance())
-                                            .font(.subheadline)
-                                            .fontWeight(.semibold)
-                                            .foregroundColor(.primary)
+                                            .clipShape(RoundedRectangle(cornerRadius: 12))
                                     }
                                 }
                                 .padding()
-                                .background(Color.gray.opacity(0.1))
-                                .clipShape(RoundedRectangle(cornerRadius: 12))
-                                
-                                // Single full-width Buy Credits button
-                                Button(action: {
-                                    showPurchaseCreditsView = true
-                                }) {
-                                    HStack(spacing: 8) {
-                                        Image(systemName: "crown.fill")
-                                            .font(.system(size: 14, weight: .semibold))
-                                            .foregroundStyle(
-                                                LinearGradient(
-                                                    colors: [.yellow, .orange],
-                                                    startPoint: .topLeading,
-                                                    endPoint: .bottomTrailing
-                                                )
-                                            )
-                                        Text("Buy Credits")
-                                            .fontWeight(.semibold)
-                                            .foregroundColor(.white)
-                                    }
-                                    .frame(maxWidth: .infinity)
-                                    .padding()
-                                    .background(
-                                        LinearGradient(
-                                            colors: [.purple, .pink],
-                                            startPoint: .leading,
-                                            endPoint: .trailing
-                                        )
+                                .background(
+                                    LinearGradient(
+                                        colors: [Color.purple.opacity(0.08), Color.pink.opacity(0.08)],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
                                     )
-                                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                                    .shadow(color: Color.purple.opacity(0.3), radius: 8, x: 0, y: 4)
-                                }
+                                )
+                                .clipShape(RoundedRectangle(cornerRadius: 12))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .strokeBorder(
+                                            LinearGradient(
+                                                colors: [Color.purple.opacity(0.3), Color.pink.opacity(0.3)],
+                                                startPoint: .topLeading,
+                                                endPoint: .bottomTrailing
+                                            ),
+                                            lineWidth: 1.5
+                                        )
+                                )
+                            } else {
+                                // Logged in: Show enhanced cost card
+                                EnhancedCostCard(
+                                    price: currentPrice ?? item.resolvedCost ?? 0,
+                                    balance: creditsViewModel.formattedBalance(),
+                                    hasEnoughCredits: hasEnoughCredits,
+                                    requiredAmount: requiredCredits,
+                                    primaryColor: .purple,
+                                    secondaryColor: .pink,
+                                    onBuyCredits: {
+                                        showPurchaseCreditsView = true
+                                    }
+                                )
                             }
-                            .padding(.horizontal)
                         }
+                        .padding(.horizontal)
 
                         
-                        if hasEnoughCredits {
-                            LazyView(
-                                GenerateButtonFilter(
-                                    isGenerating: $isGenerating,
-                                    price: currentPrice,
-                                    isLoggedIn: authViewModel.user != nil,
-                                    hasCredits: hasEnoughCredits,
-                                    isConnected: networkMonitor.isConnected,
-                                    hasImage: referenceImage != nil,
-                                    onSignInTap: {
-                                        showSignInSheet = true
-                                    },
-                                    action: generate
-                                ))
-                        }
+                        LazyView(
+                            GenerateButtonFilter(
+                                isGenerating: $isGenerating,
+                                price: currentPrice,
+                                isLoggedIn: authViewModel.user != nil,
+                                hasCredits: hasEnoughCredits,
+                                isConnected: networkMonitor.isConnected,
+                                hasImage: referenceImage != nil,
+                                onSignInTap: {
+                                    showSignInSheet = true
+                                },
+                                action: generate
+                            ))
                         
                         // Informative text about aspect ratio matching
                         LazyView(
@@ -952,7 +923,6 @@ private struct BannerSectionFilter: View {
             
             // Horizontal row with model image, title, pill, pricing, model info
             HStack(alignment: .top, spacing: 16) {
-                Spacer()
                 Image("klingvideo26pro")
                     .resizable()
                     .aspectRatio(contentMode: .fill)
@@ -962,11 +932,13 @@ private struct BannerSectionFilter: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Kling VIDEO 2.6 Pro")
                         .font(.title2).fontWeight(.bold).foregroundColor(.primary)
-                        .fixedSize(horizontal: false, vertical: true)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
 
                     Text("With Motion Control")
                         .font(.headline).fontWeight(.semibold).foregroundColor(.primary)
-                        .fixedSize(horizontal: false, vertical: true)                        
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)                        
                     
                     HStack(spacing: 6) {
                         Image(systemName: "wand.and.stars").font(.caption)
@@ -997,8 +969,8 @@ private struct BannerSectionFilter: View {
                     Spacer()
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                Spacer()
             }
+            .padding(.horizontal)
             .frame(height: 128)
             
             // Filter Description
@@ -1240,18 +1212,8 @@ private struct GenerateButtonFilter: View {
                     } else {
                         Image(systemName: "video.fill")
                     }
-                    HStack(spacing: 4) {
-                        Text(isGenerating ? "Generating..." : "Generate Video - ")
-                            .fontWeight(.semibold)
-                        if !isGenerating {
-                            PriceDisplayView(
-                                price: price ?? 0,
-                                showUnit: true,
-                                fontWeight: .semibold,
-                                foregroundColor: .white
-                            )
-                        }
-                    }
+                    Text(isGenerating ? "Generating..." : "Generate Video")
+                        .fontWeight(.semibold)
                 }
                 .frame(maxWidth: .infinity)
                 .padding()

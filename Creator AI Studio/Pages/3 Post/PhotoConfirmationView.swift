@@ -551,15 +551,75 @@ struct PhotoConfirmationView: View {
                     .padding(.bottom, 12)
             }
             
-            if authViewModel.user == nil {
-                loginDisclaimer
-
-                signInTextLink
-                    .padding(.bottom, 12)
-            } else if !hasEnoughCredits {
-                creditsRequiredMessage
-                    .padding(.bottom, 12)
+            VStack(spacing: 12) {
+                // Informational card - shown for both logged in and not logged in
+                if authViewModel.user == nil {
+                    // Not logged in: Show login disclaimer and Sign In button
+                    VStack(spacing: 12) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "exclamationmark.circle.fill")
+                                .font(.system(size: 14))
+                                .foregroundColor(.red)
+                            Text("Log in to generate an image")
+                                .font(.subheadline)
+                                .foregroundColor(.primary)
+                            Spacer()
+                        }
+                        
+                        Button(action: {
+                            showSignInSheet = true
+                        }) {
+                            Text("Sign In / Sign Up")
+                                .font(.system(size: 15, weight: .medium, design: .rounded))
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(
+                                    LinearGradient(
+                                        colors: [.blue, .purple],
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    )
+                                )
+                                .clipShape(RoundedRectangle(cornerRadius: 12))
+                        }
+                    }
+                    .padding()
+                    .background(
+                        LinearGradient(
+                            colors: [Color.blue.opacity(0.08), Color.purple.opacity(0.08)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .strokeBorder(
+                                LinearGradient(
+                                    colors: [Color.blue.opacity(0.3), Color.purple.opacity(0.3)],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ),
+                                lineWidth: 1.5
+                            )
+                    )
+                } else {
+                    // Logged in: Show enhanced cost card
+                    EnhancedCostCard(
+                        price: totalPrice,
+                        balance: creditsViewModel.formattedBalance(),
+                        hasEnoughCredits: hasEnoughCredits,
+                        requiredAmount: requiredCredits,
+                        primaryColor: .blue,
+                        secondaryColor: .purple,
+                        onBuyCredits: {
+                            showPurchaseCreditsView = true
+                        }
+                    )
+                }
             }
+            .padding(.bottom, 12)
 
             generateButton
                 .onAppear {
@@ -588,7 +648,7 @@ struct PhotoConfirmationView: View {
             Image(systemName: "exclamationmark.circle.fill")
                 .font(.system(size: 14))
                 .foregroundColor(.red)
-            Text("You must be logged in to generate an image")
+            Text("Log in to generate an image")
                 .font(.caption)
                 .foregroundColor(.red)
             Spacer()
@@ -639,7 +699,7 @@ struct PhotoConfirmationView: View {
         }
         .disabled(isLoading || !canGenerate)
         .opacity(canGenerate ? 1.0 : 0.6)
-        .padding(.horizontal, 24)
+        .frame(maxWidth: .infinity)
     }
 
     private var generateButtonOverlay: some View {
@@ -669,74 +729,6 @@ struct PhotoConfirmationView: View {
     }
 
 
-    private var creditsRequiredMessage: some View {
-        VStack(spacing: 12) {
-            // Informational card showing what they need
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(images.count > 1 ? "Generate Images" : "Generate Image")
-                        .font(.headline)
-                        .foregroundColor(.primary)
-                    HStack(spacing: 4) {
-                        PriceDisplayView(
-                            price: totalPrice,
-                            showUnit: true,
-                            font: .subheadline,
-                            fontWeight: .semibold,
-                            foregroundColor: .secondary
-                        )
-                        Text("required")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                    }
-                }
-                Spacer()
-                VStack(alignment: .trailing, spacing: 4) {
-                    Text("Your balance")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    Text(creditsViewModel.formattedBalance())
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.primary)
-                }
-            }
-            .padding()
-            .background(Color.gray.opacity(0.1))
-            .clipShape(RoundedRectangle(cornerRadius: 12))
-            
-            // Single full-width Buy Credits button
-            Button(action: {
-                showPurchaseCreditsView = true
-            }) {
-                HStack(spacing: 8) {
-                    Image(systemName: "crown.fill")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(
-                            LinearGradient(
-                                colors: [.yellow, .orange],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                    Text("Buy Credits")
-                        .font(.system(size: 18, weight: .bold, design: .rounded))
-                        .foregroundColor(.white)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 16)
-                .background(
-                    LinearGradient(
-                        colors: [.blue, .purple],
-                        startPoint: .leading,
-                        endPoint: .trailing
-                    )
-                )
-                .cornerRadius(12)
-                .shadow(color: Color.blue.opacity(0.3), radius: 8, x: 0, y: 4)
-            }
-        }
-    }
 
     private var costDisplaySection: some View {
         HStack {

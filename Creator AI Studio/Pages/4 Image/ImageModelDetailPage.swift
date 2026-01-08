@@ -244,129 +244,90 @@ struct ImageModelDetailPage: View {
                             .padding(.horizontal)
                         }
                         
-                        // Login disclaimer (shown when not logged in)
-                        if authViewModel.user == nil {
-                            VStack(spacing: 4) {
-                                HStack(spacing: 6) {
-                                    Spacer()
-                                    Image(
-                                        systemName:
-                                            "exclamationmark.circle.fill"
-                                    )
-                                    .font(.system(size: 14))
-                                    .foregroundColor(.red)
-                                    Text(
-                                        "You must be logged in to generate an image"
-                                    )
-                                    .font(.caption)
-                                    .foregroundColor(.red)
-                                    Spacer()
-                                }
-
-                                // Sign In / Sign Up text link (shown when not logged in)
-                                HStack {
-                                    Spacer()
+                        VStack(spacing: 12) {
+                            // Informational card - shown for both logged in and not logged in
+                            if authViewModel.user == nil {
+                                // Not logged in: Show login disclaimer and Sign In button
+                                VStack(spacing: 12) {
+                                    HStack(spacing: 6) {
+                                        Image(systemName: "exclamationmark.circle.fill")
+                                            .font(.system(size: 14))
+                                            .foregroundColor(.red)
+                                        Text("Log in to generate an image")
+                                            .font(.subheadline)
+                                            .foregroundColor(.primary)
+                                        Spacer()
+                                    }
+                                    
                                     Button(action: {
                                         showSignInSheet = true
                                     }) {
                                         Text("Sign In / Sign Up")
-                                            .font(
-                                                .system(
-                                                    size: 15, weight: .medium,
-                                                    design: .rounded)
+                                            .font(.system(size: 15, weight: .medium, design: .rounded))
+                                            .foregroundColor(.white)
+                                            .frame(maxWidth: .infinity)
+                                            .padding()
+                                            .background(
+                                                LinearGradient(
+                                                    colors: [.blue, .purple],
+                                                    startPoint: .leading,
+                                                    endPoint: .trailing
+                                                )
                                             )
-                                            .foregroundColor(.blue)
-                                    }
-                                    Spacer()
-                                }
-                            }
-                            .padding(.horizontal)
-                        } else if !hasEnoughCredits {
-                            VStack(spacing: 12) {
-                                // Informational card showing what they need
-                                HStack {
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Text("Generate Image")
-                                            .font(.headline)
-                                            .foregroundColor(.primary)
-                                        HStack(spacing: 4) {
-                                            PriceDisplayView(
-                                                price: item.resolvedCost ?? 0,
-                                                showUnit: true,
-                                                font: .subheadline,
-                                                fontWeight: .semibold,
-                                                foregroundColor: .secondary
-                                            )
-                                            Text("required")
-                                                .font(.subheadline)
-                                                .foregroundColor(.secondary)
-                                        }
-                                    }
-                                    Spacer()
-                                    VStack(alignment: .trailing, spacing: 4) {
-                                        Text("Your balance")
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-                                        Text(creditsViewModel.formattedBalance())
-                                            .font(.subheadline)
-                                            .fontWeight(.semibold)
-                                            .foregroundColor(.primary)
+                                            .clipShape(RoundedRectangle(cornerRadius: 12))
                                     }
                                 }
                                 .padding()
-                                .background(Color.gray.opacity(0.1))
-                                .clipShape(RoundedRectangle(cornerRadius: 12))
-                                
-                                // Single full-width Buy Credits button
-                                Button(action: {
-                                    showPurchaseCreditsView = true
-                                }) {
-                                    HStack(spacing: 8) {
-                                        Image(systemName: "crown.fill")
-                                            .font(.system(size: 14, weight: .semibold))
-                                            .foregroundStyle(
-                                                LinearGradient(
-                                                    colors: [.yellow, .orange],
-                                                    startPoint: .topLeading,
-                                                    endPoint: .bottomTrailing
-                                                )
-                                            )
-                                        Text("Buy Credits")
-                                            .fontWeight(.semibold)
-                                            .foregroundColor(.white)
-                                    }
-                                    .frame(maxWidth: .infinity)
-                                    .padding()
-                                    .background(
-                                        LinearGradient(
-                                            colors: [.blue, .purple],
-                                            startPoint: .leading,
-                                            endPoint: .trailing
-                                        )
+                                .background(
+                                    LinearGradient(
+                                        colors: [Color.blue.opacity(0.08), Color.purple.opacity(0.08)],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
                                     )
-                                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                                    .shadow(color: Color.blue.opacity(0.3), radius: 8, x: 0, y: 4)
-                                }
+                                )
+                                .clipShape(RoundedRectangle(cornerRadius: 12))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .strokeBorder(
+                                            LinearGradient(
+                                                colors: [Color.blue.opacity(0.3), Color.purple.opacity(0.3)],
+                                                startPoint: .topLeading,
+                                                endPoint: .bottomTrailing
+                                            ),
+                                            lineWidth: 1.5
+                                        )
+                                )
+                            } else {
+                                // Logged in: Show enhanced cost card
+                                EnhancedCostCard(
+                                    price: item.resolvedCost ?? 0,
+                                    balance: creditsViewModel.formattedBalance(),
+                                    hasEnoughCredits: hasEnoughCredits,
+                                    requiredAmount: requiredCredits,
+                                    primaryColor: .blue,
+                                    secondaryColor: .purple,
+                                    onBuyCredits: {
+                                        showPurchaseCreditsView = true
+                                    }
+                                )
                             }
-                            .padding(.horizontal)
                         }
+                        .padding(.horizontal)
 
-                        if hasEnoughCredits {
-                            LazyView(
-                                GenerateButton(
-                                    prompt: prompt,
-                                    isGenerating: $isGenerating,
-                                    keyboardHeight: $keyboardHeight,
-                                    costString: costString,
-                                    isLoggedIn: authViewModel.user != nil,
-                                    hasCredits: hasEnoughCredits,
-                                    isConnected: networkMonitor.isConnected,
-                                    onSignInTap: {
-                                        showSignInSheet = true
-                                    },
-                                    action: generate
-                                ))
-                        }
+                        LazyView(
+                            GenerateButton(
+                                prompt: prompt,
+                                isGenerating: $isGenerating,
+                                keyboardHeight: $keyboardHeight,
+                                costString: costString,
+                                isLoggedIn: authViewModel.user != nil,
+                                hasCredits: hasEnoughCredits,
+                                isConnected: networkMonitor.isConnected,
+                                onSignInTap: {
+                                    showSignInSheet = true
+                                },
+                                action: generate
+                            ))
 
                         Divider().padding(.horizontal)
 
@@ -943,7 +904,7 @@ struct GenerateButton: View {
                     Text(
                         isGenerating
                             ? "Generating..."
-                            : "Generate Image - $\(costString)"
+                            : "Generate Image"
                     ).fontWeight(.semibold)
                 }
                 .frame(maxWidth: .infinity)

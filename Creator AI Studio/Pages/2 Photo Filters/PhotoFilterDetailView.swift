@@ -23,7 +23,7 @@ struct PhotoFilterDetailView: View {
     @State private var showSignInSheet: Bool = false
     @State private var showPurchaseCreditsView: Bool = false
     @State private var showInsufficientCreditsAlert: Bool = false
-    @StateObject private var creditsViewModel = CreditsViewModel()
+    @ObservedObject private var creditsViewModel = CreditsViewModel.shared
     @ObservedObject private var networkMonitor = NetworkMonitor.shared
 
     @EnvironmentObject var authViewModel: AuthViewModel
@@ -93,398 +93,353 @@ struct PhotoFilterDetailView: View {
         return hasEnoughCredits
     }
 
+    // MARK: - View Sections
+    private var heroSection: some View {
+        VStack(spacing: 0) {
+            AnimatedTitle(text: item.display.title)
+
+            // Hero Images Section - Two overlapping diagonal images
+            DiagonalOverlappingImages(
+                leftImageName: item.display.imageNameOriginal
+                    ?? item.display.imageName,
+                rightImageName: item.display.imageName
+            )
+            .padding(.bottom, 8)
+        }
+    }
+    
+    @ViewBuilder
+    private var additionalFiltersSection: some View {
+        if let additionalFilters = additionalFilters,
+            !additionalFilters.isEmpty
+        {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(.blue)
+                    Text("Additional Selected Filters")
+                        .font(.system(size: 18, weight: .semibold, design: .rounded))
+                    Spacer()
+                }
+
+                // Grid of additional filter images (2 columns = 50% width each, square)
+                LazyVGrid(
+                    columns: Array(
+                        repeating: GridItem(.flexible(), spacing: 12),
+                        count: 2),
+                    spacing: 12
+                ) {
+                    ForEach(additionalFilters) { filter in
+                        GeometryReader { geometry in
+                            Group {
+                                if let urlString =
+                                    filter.display.imageName.hasPrefix("http")
+                                    ? filter.display.imageName : nil,
+                                    let url = URL(string: urlString)
+                                {
+                                    KFImage(url)
+                                        .placeholder {
+                                            Rectangle()
+                                                .fill(Color.gray.opacity(0.2))
+                                                .overlay(ProgressView())
+                                        }
+                                        .resizable()
+                                        .scaledToFill()
+                                        .frame(
+                                            width: geometry.size.width,
+                                            height: geometry.size.width
+                                        )
+                                        .clipped()
+                                        .cornerRadius(12)
+                                } else {
+                                    Image(filter.display.imageName)
+                                        .resizable()
+                                        .scaledToFill()
+                                        .frame(
+                                            width: geometry.size.width,
+                                            height: geometry.size.width
+                                        )
+                                        .clipped()
+                                        .cornerRadius(12)
+                                }
+                            }
+                            .overlay(
+                                VStack {
+                                    Spacer()
+                                    Text(filter.display.title)
+                                        .font(.caption2)
+                                        .fontWeight(.semibold)
+                                        .foregroundColor(.white)
+                                        .lineLimit(1)
+                                        .truncationMode(.tail)
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 4)
+                                        .background(
+                                            Capsule()
+                                                .fill(Color.black.opacity(0.6))
+                                        )
+                                        .padding(8)
+                                }
+                            )
+                            .shadow(
+                                color: Color.black.opacity(0.1),
+                                radius: 4, x: 0, y: 2)
+                        }
+                        .aspectRatio(1, contentMode: .fit)
+                    }
+                }
+            }
+        }
+    }
+    
+    private var photoUploadSection: some View {
+        VStack(alignment: .leading) {
+            multiSelectIndicator
+            networkConnectivityDisclaimer
+            userInfoCard
+            photoUploadButton
+            multiSelectDisclaimer
+            costSection
+            exampleImagesSection
+            moreStylesSection
+        }
+    }
+    
+    @ViewBuilder
+    private var multiSelectIndicator: some View {
+        if let additionalFilters = additionalFilters,
+            !additionalFilters.isEmpty
+        {
+            HStack {
+                Image(systemName: "photo.on.rectangle")
+                    .foregroundColor(.blue)
+                Text("\(additionalFilters.count + 1) filter\(additionalFilters.count + 1 == 1 ? "" : "s") selected")
+                    .font(.system(size: 16, weight: .medium, design: .rounded))
+                    .foregroundColor(.secondary)
+                Spacer()
+            }
+            .padding(.horizontal)
+        }
+    }
+    
+    @ViewBuilder
+    private var networkConnectivityDisclaimer: some View {
+        if !networkMonitor.isConnected {
+            VStack(spacing: 4) {
+                HStack(spacing: 6) {
+                    Image(systemName: "exclamationmark.circle.fill")
+                        .font(.system(size: 14))
+                        .foregroundColor(.red)
+                    Text("No internet connection. Please connect to the internet.")
+                        .font(.caption)
+                        .foregroundColor(.red)
+                }
+            }
+            .padding(.horizontal)
+            .padding(.bottom, 8)
+        }
+    }
+    
+    @ViewBuilder
+    private var userInfoCard: some View {
+        VStack(spacing: 12) {
+            if authViewModel.user == nil {
+                notLoggedInCard
+            } else {
+                loggedInCard
+            }
+        }
+        .padding(.horizontal)
+        .padding(.bottom, 8)
+    }
+    
+    private var notLoggedInCard: some View {
+        VStack(spacing: 12) {
+            HStack(spacing: 6) {
+                Image(systemName: "exclamationmark.circle.fill")
+                    .font(.system(size: 14))
+                    .foregroundColor(.red)
+                Text("Log in to upload your photo")
+                    .font(.subheadline)
+                    .foregroundColor(.primary)
+                Spacer()
+            }
+            
+            Button(action: {
+                showSignInSheet = true
+            }) {
+                Text("Sign In / Sign Up")
+                    .font(.system(size: 15, weight: .medium, design: .rounded))
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(
+                        LinearGradient(
+                            colors: [.blue, .purple],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+            }
+        }
+        .padding()
+        .background(
+            LinearGradient(
+                colors: [Color.blue.opacity(0.08), Color.purple.opacity(0.08)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .strokeBorder(
+                    LinearGradient(
+                        colors: [Color.blue.opacity(0.3), Color.purple.opacity(0.3)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 1.5
+                )
+        )
+    }
+    
+    private var loggedInCard: some View {
+        EnhancedCostCard(
+            price: totalPrice,
+            balance: creditsViewModel.formattedBalance(),
+            hasEnoughCredits: hasEnoughCredits,
+            requiredAmount: requiredCredits,
+            primaryColor: .blue,
+            secondaryColor: .purple,
+            onBuyCredits: {
+                showPurchaseCreditsView = true
+            }
+        )
+    }
+    
+    private var photoUploadButton: some View {
+        HStack(alignment: .center, spacing: 16) {
+            SpinningPlusButton(
+                showActionSheet: $showActionSheet,
+                isLoggedIn: authViewModel.user != nil,
+                hasCredits: hasEnoughCredits,
+                isConnected: networkMonitor.isConnected
+            )
+        }
+        .padding(.horizontal, 16)
+        .cornerRadius(16)
+        .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 2)
+    }
+    
+    @ViewBuilder
+    private var multiSelectDisclaimer: some View {
+        if let additionalFilters = additionalFilters,
+            !additionalFilters.isEmpty
+        {
+            HStack(spacing: 8) {
+                Image(systemName: "info.circle")
+                    .font(.caption)
+                    .foregroundColor(.blue)
+                Text("You will not be charged yet. Upload a photo and go to the next page to confirm.")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer()
+            }
+            .padding(.horizontal, 16)
+            .padding(.top, 8)
+        }
+    }
+    
+    private var costSection: some View {
+        HStack {
+            Spacer()
+            Text("Cost")
+                .font(.system(size: 14, weight: .medium, design: .rounded))
+                .foregroundColor(.secondary)
+
+            HStack(spacing: 6) {
+                if PricingManager.displayMode == .credits {
+                    Image(systemName: "crown.fill")
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [.yellow, .orange],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing)
+                        )
+                        .font(.system(size: 12))
+                }
+
+                PriceDisplayView(
+                    price: totalPrice,
+                    showUnit: true,
+                    font: .system(size: 16, weight: .semibold, design: .rounded),
+                    foregroundColor: .primary
+                )
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(Color.secondary.opacity(0.1))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 20)
+                    .strokeBorder(
+                        LinearGradient(
+                            colors: [.blue, .purple],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing)
+                    )
+            )
+        }
+        .padding(.trailing, 6)
+    }
+    
+    @ViewBuilder
+    private var exampleImagesSection: some View {
+        if let exampleImages = item.resolvedExampleImages,
+            !exampleImages.isEmpty
+        {
+            ExampleImagesSection(images: exampleImages)
+        }
+    }
+    
+    @ViewBuilder
+    private var moreStylesSection: some View {
+        if let moreStyles = item.resolvedMoreStyles,
+            !moreStyles.isEmpty
+        {
+            VStack {
+                HStack {
+                    Image(systemName: "paintbrush")
+                        .foregroundColor(.blue)
+                    Text("More Styles")
+                        .font(.system(size: 22, weight: .bold, design: .rounded))
+                    Spacer()
+                }
+
+                HStack {
+                    Text("See what's possible with this image style")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Spacer()
+                }
+            }
+
+            MoreStylesImageSection(items: allMoreStyles(for: item))
+        }
+    }
+
+    // MARK: - Body
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
-
-                AnimatedTitle(text: item.display.title)
-
-                // Hero Images Section - Two overlapping diagonal images
-                DiagonalOverlappingImages(
-                    leftImageName: item.display.imageNameOriginal
-                        ?? item.display.imageName,
-                    rightImageName: item.display.imageName
-                )
-                .padding(.bottom, 8)  // Add explicit bottom padding for consistent spacing
-
-                // Additional selected filters (if multi-select with 2+ filters)
-                if let additionalFilters = additionalFilters,
-                    !additionalFilters.isEmpty
-                {
-                    VStack(alignment: .leading, spacing: 12) {
-                        HStack {
-                            Image(systemName: "checkmark.circle.fill")
-                                .foregroundColor(.blue)
-                            Text("Additional Selected Filters")
-                                .font(
-                                    .system(
-                                        size: 18, weight: .semibold,
-                                        design: .rounded))
-                            Spacer()
-                        }
-
-                        // Grid of additional filter images (2 columns = 50% width each, square)
-                        LazyVGrid(
-                            columns: Array(
-                                repeating: GridItem(.flexible(), spacing: 12),
-                                count: 2),
-                            spacing: 12
-                        ) {
-                            ForEach(additionalFilters) { filter in
-                                GeometryReader { geometry in
-                                    Group {
-                                        if let urlString =
-                                            filter.display.imageName.hasPrefix(
-                                                "http")
-                                            ? filter.display.imageName : nil,
-                                            let url = URL(string: urlString)
-                                        {
-                                            KFImage(url)
-                                                .placeholder {
-                                                    Rectangle()
-                                                        .fill(
-                                                            Color.gray.opacity(
-                                                                0.2)
-                                                        )
-                                                        .overlay(ProgressView())
-                                                }
-                                                .resizable()
-                                                .scaledToFill()
-                                                .frame(
-                                                    width: geometry.size.width,
-                                                    height: geometry.size.width
-                                                )
-                                                .clipped()
-                                                .cornerRadius(12)
-                                        } else {
-                                            Image(filter.display.imageName)
-                                                .resizable()
-                                                .scaledToFill()
-                                                .frame(
-                                                    width: geometry.size.width,
-                                                    height: geometry.size.width
-                                                )
-                                                .clipped()
-                                                .cornerRadius(12)
-                                        }
-                                    }
-                                    .overlay(
-                                        VStack {
-                                            Spacer()
-                                            Text(filter.display.title)
-                                                .font(.caption2)
-                                                .fontWeight(.semibold)
-                                                .foregroundColor(.white)
-                                                .lineLimit(1)
-                                                .truncationMode(.tail)
-                                                .padding(.horizontal, 8)
-                                                .padding(.vertical, 4)
-                                                .background(
-                                                    Capsule()
-                                                        .fill(
-                                                            Color.black.opacity(
-                                                                0.6))
-                                                )
-                                                .padding(8)
-                                        }
-                                    )
-                                    .shadow(
-                                        color: Color.black.opacity(0.1),
-                                        radius: 4, x: 0, y: 2)
-                                }
-                                .aspectRatio(1, contentMode: .fit)
-                            }
-                        }
-                    }
-                }
-
-                // Card 1: Photo Upload Section
-                VStack(alignment: .leading) {
-
-                    // Multi-select indicator
-                    if let additionalFilters = additionalFilters,
-                        !additionalFilters.isEmpty
-                    {
-                        HStack {
-                            Image(systemName: "photo.on.rectangle")
-                                .foregroundColor(.blue)
-                            Text(
-                                "\(additionalFilters.count + 1) filter\(additionalFilters.count + 1 == 1 ? "" : "s") selected"
-                            )
-                            .font(
-                                .system(
-                                    size: 16, weight: .medium, design: .rounded)
-                            )
-                            .foregroundColor(.secondary)
-                            Spacer()
-                        }
-                        .padding(.horizontal)
-                    }
-
-                    //                    HStack {
-                    //                        Image(systemName: "photo.badge.plus")
-                    //                            .foregroundColor(.blue)
-                    //                        Text("Step 1: Add Your Photo")
-                    //                            .font(.headline)
-                    //                            .foregroundColor(.primary)
-                    //                        Spacer()
-                    //                    }
-                    //
-                    //                    Text("Upload or take a photo to transform")
-                    //                        .font(.caption)
-                    //                        .foregroundColor(.secondary)
-
-                    // Horizontal layout: Add photo box on the left, Create button on the right
-                    // Compute inner width based on page padding (24 + 24)
-                    let pageInnerWidth = UIScreen.main.bounds.width - 48
-                    let addPhotoWidth = pageInnerWidth * 0.48
-                    let createButtonWidth = pageInnerWidth - addPhotoWidth - 16  // account for spacing
-                    let controlHeight: CGFloat = 250
-
-                    // Network connectivity disclaimer (shown when no internet)
-                    if !networkMonitor.isConnected {
-                        VStack(spacing: 4) {
-                            HStack(spacing: 6) {
-                                Image(systemName: "exclamationmark.circle.fill")
-                                    .font(.system(size: 14))
-                                    .foregroundColor(.red)
-                                Text(
-                                    "No internet connection. Please connect to the internet."
-                                )
-                                .font(.caption)
-                                .foregroundColor(.red)
-                            }
-                        }
-                        .padding(.horizontal)
-                        .padding(.bottom, 8)
-                    }
-                    
-                    // Login disclaimer (shown when not logged in)
-                    if authViewModel.user == nil {
-                        VStack(spacing: 4) {
-                            HStack(spacing: 6) {
-                                Image(systemName: "exclamationmark.circle.fill")
-                                    .font(.system(size: 14))
-                                    .foregroundColor(.red)
-                                Text(
-                                    "You need to be logged in to upload your photo"
-                                )
-                                .font(.caption)
-                                .foregroundColor(.red)
-                            }
-
-                            // Sign In / Sign Up text link (shown when not logged in)
-                            HStack {
-                                Spacer()
-                                Button(action: {
-                                    showSignInSheet = true
-                                }) {
-                                    Text("Sign In / Sign Up")
-                                        .font(
-                                            .system(
-                                                size: 15, weight: .medium,
-                                                design: .rounded)
-                                        )
-                                        .foregroundColor(.blue)
-                                }
-                                Spacer()
-                            }
-                        }
-                        .padding(.horizontal)
-                        .padding(.bottom, 8)
-                    } else if !hasEnoughCredits {
-                        VStack(spacing: 12) {
-                            // Informational card showing what they need
-                            HStack {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text("Upload Photo")
-                                        .font(.headline)
-                                        .foregroundColor(.primary)
-                                    HStack(spacing: 4) {
-                                        PriceDisplayView(
-                                            price: totalPrice,
-                                            showUnit: true,
-                                            font: .subheadline,
-                                            fontWeight: .semibold,
-                                            foregroundColor: .secondary
-                                        )
-                                        Text("required")
-                                            .font(.subheadline)
-                                            .foregroundColor(.secondary)
-                                    }
-                                }
-                                Spacer()
-                                VStack(alignment: .trailing, spacing: 4) {
-                                    Text("Your balance")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                    Text(creditsViewModel.formattedBalance())
-                                        .font(.subheadline)
-                                        .fontWeight(.semibold)
-                                        .foregroundColor(.primary)
-                                }
-                            }
-                            .padding()
-                            .background(Color.gray.opacity(0.1))
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
-                            
-                            // Single full-width Buy Credits button
-                            Button(action: {
-                                showPurchaseCreditsView = true
-                            }) {
-                                HStack(spacing: 8) {
-                                    Image(systemName: "crown.fill")
-                                        .font(.system(size: 14, weight: .semibold))
-                                        .foregroundStyle(
-                                            LinearGradient(
-                                                colors: [.yellow, .orange],
-                                                startPoint: .topLeading,
-                                                endPoint: .bottomTrailing
-                                            )
-                                        )
-                                    Text("Buy Credits")
-                                        .font(.system(size: 20, weight: .bold, design: .rounded))
-                                        .foregroundColor(.white)
-                                }
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(
-                                    LinearGradient(
-                                        colors: [.blue, .purple],
-                                        startPoint: .leading,
-                                        endPoint: .trailing
-                                    )
-                                )
-                                .cornerRadius(16)
-                                .shadow(color: Color.blue.opacity(0.3), radius: 8, x: 0, y: 2)
-                            }
-                        }
-                        .padding(.horizontal)
-                        .padding(.bottom, 8)
-                    }
-
-                    if hasEnoughCredits {
-                        HStack(alignment: .center, spacing: 16) {
-                            SpinningPlusButton(
-                                showActionSheet: $showActionSheet,
-                                isLoggedIn: authViewModel.user != nil,
-                                hasCredits: hasEnoughCredits,
-                                isConnected: networkMonitor.isConnected
-                            )
-                        }
-                        .padding(.horizontal, 16)
-                        .cornerRadius(16)
-                        .shadow(
-                            color: Color.black.opacity(0.05), radius: 8, x: 0, y: 2)
-                    }
-
-                    // Disclaimer text for multi-select
-                    if let additionalFilters = additionalFilters,
-                        !additionalFilters.isEmpty
-                    {
-                        HStack(spacing: 8) {
-                            Image(systemName: "info.circle")
-                                .font(.caption)
-                                .foregroundColor(.blue)
-                            Text(
-                                "You will not be charged yet. Upload a photo and go to the next page to confirm."
-                            )
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .fixedSize(horizontal: false, vertical: true)
-                            Spacer()
-                        }
-                        .padding(.horizontal, 16)
-                        .padding(.top, 8)
-                    }
-
-                    // MARK: - Cost Section
-                    HStack {
-                        Spacer()
-                        Text("Cost")
-                            .font(
-                                .system(
-                                    size: 14, weight: .medium, design: .rounded)
-                            )
-                            .foregroundColor(.secondary)
-
-                        HStack(spacing: 6) {
-                            if PricingManager.displayMode == .credits {
-                                Image(systemName: "crown.fill")
-                                    .foregroundStyle(
-                                        LinearGradient(
-                                            colors: [.yellow, .orange],
-                                            startPoint: .topLeading,
-                                            endPoint: .bottomTrailing)
-                                    )
-                                    .font(.system(size: 12))
-                            }
-
-                            PriceDisplayView(
-                                price: totalPrice,
-                                showUnit: true,
-                                font: .system(
-                                    size: 16, weight: .semibold,
-                                    design: .rounded),
-                                foregroundColor: .primary
-                            )
-                        }
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .background(
-                            RoundedRectangle(cornerRadius: 20)
-                                .fill(Color.secondary.opacity(0.1))
-                        )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 20)
-                                .strokeBorder(
-                                    LinearGradient(
-                                        colors: [.blue, .purple],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing)
-                                )
-                        )
-                    }
-                    .padding(.trailing, 6)
-
-                    // Example Images Section
-                    if let exampleImages = item.resolvedExampleImages,
-                        !exampleImages.isEmpty
-                    {
-                        ExampleImagesSection(images: exampleImages)
-                    }
-
-                    // MARK: - More Styles
-                    if let moreStyles = item.resolvedMoreStyles,
-                        !moreStyles.isEmpty
-                    {
-                        VStack {
-                            HStack {
-                                Image(systemName: "paintbrush")
-                                    .foregroundColor(.blue)
-                                Text("More Styles")
-                                    .font(
-                                        .system(
-                                            size: 22, weight: .bold,
-                                            design: .rounded))
-                                Spacer()
-                            }
-
-                            HStack {
-                                Text(
-                                    "See what's possible with this image style"
-                                )
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                                Spacer()
-                            }
-                        }
-
-                        MoreStylesImageSection(items: allMoreStyles(for: item))
-
-                    }
-
-                }
+                heroSection
+                additionalFiltersSection
+                photoUploadSection
             }
             .padding(.horizontal)
             .padding(.bottom, 150)
@@ -498,7 +453,6 @@ struct PhotoFilterDetailView: View {
             } label: {
                 EmptyView()
             }
-
         }
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
@@ -541,6 +495,17 @@ struct PhotoFilterDetailView: View {
                 }
             }
         }
+        .onChange(of: authViewModel.user) { newUser in
+            // Refresh credits when user signs in or changes
+            if let userId = newUser?.id {
+                Task {
+                    await creditsViewModel.fetchBalance(userId: userId)
+                }
+            } else {
+                // Reset balance when user signs out
+                creditsViewModel.balance = 0.00
+            }
+        }
         .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("CreditsBalanceUpdated"))) { notification in
             // Refresh credits when balance is updated (e.g., after purchase)
             if let userId = authViewModel.user?.id {
@@ -557,7 +522,14 @@ struct PhotoFilterDetailView: View {
         } message: {
             Text("You need \(String(format: "$%.2f", requiredCredits)) to generate this. Your current balance is \(creditsViewModel.formattedBalance()).")
         }
-        .sheet(isPresented: $showSignInSheet) {
+        .sheet(isPresented: $showSignInSheet, onDismiss: {
+            // Fetch credits when sign-in sheet is dismissed (user may have signed in)
+            if let userId = authViewModel.user?.id {
+                Task {
+                    await creditsViewModel.fetchBalance(userId: userId)
+                }
+            }
+        }) {
             SignInView()
                 .environmentObject(authViewModel)
                 .presentationDragIndicator(.visible)
@@ -1174,5 +1146,149 @@ struct ImageSourceSelectionSheetForSingleImage: View {
             }
         }
         .presentationDetents([.height(250)])
+    }
+}
+
+// MARK: - Enhanced Cost Card
+
+struct EnhancedCostCard: View {
+    let price: Decimal
+    let balance: String
+    let hasEnoughCredits: Bool
+    let requiredAmount: Double
+    let primaryColor: Color
+    let secondaryColor: Color
+    let onBuyCredits: () -> Void
+    
+    private var disclaimerText: String {
+        let requiredAmountText = String(format: "$%.2f", requiredAmount)
+        return "Insufficient credits. You need \(requiredAmountText) but your balance is \(balance)."
+    }
+    
+    var body: some View {
+        VStack(spacing: 12) {
+            // Warning message (only when insufficient)
+            if !hasEnoughCredits {
+                HStack(spacing: 6) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.system(size: 14))
+                        .foregroundColor(.yellow)
+                    Text(disclaimerText)
+                        .font(.caption)
+                        .foregroundColor(.yellow)
+                    Spacer()
+                }
+                .padding(.bottom, 4)
+            }
+            
+            // Cost and balance
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Cost")
+                        .font(.headline)
+                        .foregroundColor(.primary)
+                    PriceDisplayView(
+                        price: price,
+                        showUnit: true,
+                        font: .subheadline,
+                        fontWeight: .semibold,
+                        foregroundColor: .white
+                    )
+                }
+                Spacer()
+                VStack(alignment: .trailing, spacing: 4) {
+                    Text("Your balance")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Text(balance)
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.primary)
+                }
+            }
+            
+            // Buy Credits button (only when insufficient)
+            if !hasEnoughCredits {
+                Button(action: onBuyCredits) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "crown.fill")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(
+                                LinearGradient(
+                                    colors: [.yellow, .orange],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                        Text("Buy Credits")
+                            .fontWeight(.semibold)
+                            .foregroundColor(.white)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(
+                        LinearGradient(
+                            colors: [primaryColor, secondaryColor],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .shadow(color: primaryColor.opacity(0.3), radius: 8, x: 0, y: 4)
+                }
+            }
+        }
+        .padding()
+        .background(
+            LinearGradient(
+                colors: !hasEnoughCredits
+                    ? [Color.yellow.opacity(0.12), Color.orange.opacity(0.08)]
+                    : [primaryColor.opacity(0.08), secondaryColor.opacity(0.08)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .strokeBorder(
+                    LinearGradient(
+                        colors: !hasEnoughCredits
+                            ? [Color.yellow.opacity(0.4), Color.orange.opacity(0.3)]
+                            : [primaryColor.opacity(0.3), secondaryColor.opacity(0.3)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 1.5
+                )
+        )
+    }
+}
+
+// MARK: - Insufficient Credits Disclaimer Helper View
+
+private struct InsufficientCreditsDisclaimer: View {
+    let requiredAmount: Double
+    let currentBalance: String
+    
+    private var disclaimerText: String {
+        let requiredAmountText = String(format: "$%.2f", requiredAmount)
+        return "Insufficient credits to generate this. You need \(requiredAmountText) but your balance is \(currentBalance)."
+    }
+    
+    var body: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 14))
+                .foregroundColor(.yellow)
+            Text(disclaimerText)
+                .font(.caption)
+                .foregroundColor(.yellow)
+            Spacer()
+        }
+        .padding(.vertical, 8)
+        .padding(.horizontal, 12)
+        .background(Color.yellow.opacity(0.15))
+        .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 }

@@ -17,6 +17,9 @@ class CreditsViewModel: ObservableObject {
     
     private let creditsManager = CreditsManager.shared
     
+    // Shared instance for accessing credits from anywhere
+    static let shared = CreditsViewModel()
+    
     /// Fetches and updates the current credit balance
     /// - Parameter userId: The user's UUID
     func fetchBalance(userId: UUID) async {

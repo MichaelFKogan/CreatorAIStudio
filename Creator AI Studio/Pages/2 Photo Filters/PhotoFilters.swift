@@ -119,7 +119,7 @@ struct PhotoFilters: View {
     @StateObject private var viewModel = PhotoFiltersViewModel()
 //    @StateObject private var presetViewModel = PresetViewModel()
     @EnvironmentObject var authViewModel: AuthViewModel
-    @StateObject private var creditsViewModel = CreditsViewModel()
+    @ObservedObject private var creditsViewModel = CreditsViewModel.shared
     @State private var selectedFilter: InfoPacket? = nil
     @State private var selectedPhotoItem: PhotosPickerItem?
     @State private var selectedImage: UIImage?
