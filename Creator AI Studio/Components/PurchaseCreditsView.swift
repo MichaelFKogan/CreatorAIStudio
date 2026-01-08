@@ -65,7 +65,7 @@ struct PriceCalculator {
 struct PurchaseCreditsView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var creditsViewModel = CreditsViewModel()
+    @ObservedObject private var creditsViewModel = CreditsViewModel.shared
     @State private var selectedPaymentMethod: PaymentMethod = .external
 
     var body: some View {

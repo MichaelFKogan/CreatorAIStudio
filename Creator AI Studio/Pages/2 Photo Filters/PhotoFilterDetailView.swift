@@ -494,7 +494,23 @@ struct PhotoFilterDetailView: View {
                 }
             }
         }
-        .onChange(of: authViewModel.user) { newUser in
+        .onChange(of: showSignInSheet) { isPresented in
+            // When sign-in sheet is dismissed, refresh credits if user signed in
+            if !isPresented, let userId = authViewModel.user?.id {
+                Task {
+                    await creditsViewModel.fetchBalance(userId: userId)
+                }
+            }
+        }
+        .onChange(of: showPurchaseCreditsView) { isPresented in
+            // When purchase credits sheet is dismissed, refresh credits
+            if !isPresented, let userId = authViewModel.user?.id {
+                Task {
+                    await creditsViewModel.fetchBalance(userId: userId)
+                }
+            }
+        }
+        .onChange(of: authViewModel.user) { oldUser, newUser in
             // Refresh credits when user signs in or changes
             if let userId = newUser?.id {
                 Task {
@@ -533,7 +549,14 @@ struct PhotoFilterDetailView: View {
                 .environmentObject(authViewModel)
                 .presentationDragIndicator(.visible)
         }
-        .sheet(isPresented: $showPurchaseCreditsView) {
+        .sheet(isPresented: $showPurchaseCreditsView, onDismiss: {
+            // Fetch credits when purchase credits sheet is dismissed (user may have purchased credits)
+            if let userId = authViewModel.user?.id {
+                Task {
+                    await creditsViewModel.fetchBalance(userId: userId)
+                }
+            }
+        }) {
             PurchaseCreditsView()
                 .environmentObject(authViewModel)
                 .presentationDragIndicator(.visible)

@@ -24,7 +24,7 @@ struct DanceFilterDetailPage: View {
     @State private var showSignInSheet: Bool = false
     @State private var showPurchaseCreditsView: Bool = false
     @State private var showInsufficientCreditsAlert: Bool = false
-    @StateObject private var creditsViewModel = CreditsViewModel()
+    @ObservedObject private var creditsViewModel = CreditsViewModel.shared
     @ObservedObject private var networkMonitor = NetworkMonitor.shared
     
     @State private var selectedAspectIndex: Int = 0
@@ -171,72 +171,20 @@ struct DanceFilterDetailPage: View {
                         }
                         
                         VStack(spacing: 12) {
-                            // Informational card - shown for both logged in and not logged in
-                            if authViewModel.user == nil {
-                                // Not logged in: Show login disclaimer and Sign In button
-                                VStack(spacing: 12) {
-                                    HStack(spacing: 6) {
-                                        Image(systemName: "exclamationmark.circle.fill")
-                                            .font(.system(size: 14))
-                                            .foregroundColor(.red)
-                                        Text("Log in to generate a video")
-                                            .font(.subheadline)
-                                            .foregroundColor(.primary)
-                                        Spacer()
-                                    }
-                                    
-                                    Button(action: {
-                                        showSignInSheet = true
-                                    }) {
-                                        Text("Sign In / Sign Up")
-                                            .font(.system(size: 15, weight: .medium, design: .rounded))
-                                            .foregroundColor(.white)
-                                            .frame(maxWidth: .infinity)
-                                            .padding()
-                                            .background(
-                                                LinearGradient(
-                                                    colors: [.purple, .pink],
-                                                    startPoint: .leading,
-                                                    endPoint: .trailing
-                                                )
-                                            )
-                                            .clipShape(RoundedRectangle(cornerRadius: 12))
-                                    }
+                            // Use the reusable AuthAwareCostCard component
+                            AuthAwareCostCard(
+                                price: currentPrice ?? item.resolvedCost ?? 0,
+                                requiredCredits: requiredCredits,
+                                primaryColor: .purple,
+                                secondaryColor: .pink,
+                                loginMessage: "Log in to generate a video",
+                                onSignIn: {
+                                    showSignInSheet = true
+                                },
+                                onBuyCredits: {
+                                    showPurchaseCreditsView = true
                                 }
-                                .padding()
-                                .background(
-                                    LinearGradient(
-                                        colors: [Color.purple.opacity(0.08), Color.pink.opacity(0.08)],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
-                                )
-                                .clipShape(RoundedRectangle(cornerRadius: 12))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .strokeBorder(
-                                            LinearGradient(
-                                                colors: [Color.purple.opacity(0.3), Color.pink.opacity(0.3)],
-                                                startPoint: .topLeading,
-                                                endPoint: .bottomTrailing
-                                            ),
-                                            lineWidth: 1.5
-                                        )
-                                )
-                            } else {
-                                // Logged in: Show enhanced cost card
-                                EnhancedCostCard(
-                                    price: currentPrice ?? item.resolvedCost ?? 0,
-                                    balance: creditsViewModel.formattedBalance(),
-                                    hasEnoughCredits: hasEnoughCredits,
-                                    requiredAmount: requiredCredits,
-                                    primaryColor: .purple,
-                                    secondaryColor: .pink,
-                                    onBuyCredits: {
-                                        showPurchaseCreditsView = true
-                                    }
-                                )
-                            }
+                            )
                         }
                         .padding(.horizontal)
 
@@ -339,9 +287,11 @@ struct DanceFilterDetailPage: View {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 setupVideoPlayer()
             }
-            
-            // Fetch credit balance when view appears
-            if let userId = authViewModel.user?.id {
+            // Note: Credit balance fetching is now handled by AuthAwareCostCard
+        }
+        .onChange(of: showSignInSheet) { isPresented in
+            // When sign-in sheet is dismissed, refresh credits if user signed in
+            if !isPresented, let userId = authViewModel.user?.id {
                 Task {
                     await creditsViewModel.fetchBalance(userId: userId)
                 }

@@ -26,7 +26,7 @@ struct PhotoConfirmationView: View {
     @State private var showSignInSheet: Bool = false
     @State private var showPurchaseCreditsView: Bool = false
     @State private var showInsufficientCreditsAlert: Bool = false
-    @StateObject private var creditsViewModel = CreditsViewModel()
+    @ObservedObject private var creditsViewModel = CreditsViewModel.shared
     @ObservedObject private var networkMonitor = NetworkMonitor.shared
 
     // Primary initializer for multiple images
@@ -149,8 +149,11 @@ struct PhotoConfirmationView: View {
                 .presentationDragIndicator(.visible)
         }
         .onAppear {
-            // Fetch credit balance when view appears
-            if let userId = authViewModel.user?.id {
+            // Note: Credit balance fetching is now handled by AuthAwareCostCard
+        }
+        .onChange(of: showSignInSheet) { isPresented in
+            // When sign-in sheet is dismissed, refresh credits if user signed in
+            if !isPresented, let userId = authViewModel.user?.id {
                 Task {
                     await creditsViewModel.fetchBalance(userId: userId)
                 }

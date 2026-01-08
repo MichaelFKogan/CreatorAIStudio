@@ -29,7 +29,7 @@ struct YetiFilterDetailPage: View {
     @State private var showSignInSheet: Bool = false
     @State private var showPurchaseCreditsView: Bool = false
     @State private var showInsufficientCreditsAlert: Bool = false
-    @StateObject private var creditsViewModel = CreditsViewModel()
+    @ObservedObject private var creditsViewModel = CreditsViewModel.shared
     @ObservedObject private var networkMonitor = NetworkMonitor.shared
     
     @State private var selectedAspectIndex: Int = 0
@@ -464,12 +464,7 @@ struct YetiFilterDetailPage: View {
             // Setup video player if video is available
             setupVideoPlayer()
             
-            // Fetch credit balance when view appears
-            if let userId = authViewModel.user?.id {
-                Task {
-                    await creditsViewModel.fetchBalance(userId: userId)
-                }
-            }
+            // Note: Credit balance fetching is now handled by AuthAwareCostCard
             
             // Validate and reset indices if they're out of bounds for model-specific options
             if selectedAspectIndex >= videoAspectOptions.count {
@@ -480,6 +475,14 @@ struct YetiFilterDetailPage: View {
             }
             if selectedResolutionIndex >= videoResolutionOptions.count {
                 selectedResolutionIndex = 0
+            }
+        }
+        .onChange(of: showSignInSheet) { isPresented in
+            // When sign-in sheet is dismissed, refresh credits if user signed in
+            if !isPresented, let userId = authViewModel.user?.id {
+                Task {
+                    await creditsViewModel.fetchBalance(userId: userId)
+                }
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("CreditsBalanceUpdated"))) { notification in

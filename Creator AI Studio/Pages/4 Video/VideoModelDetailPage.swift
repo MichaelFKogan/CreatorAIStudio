@@ -48,7 +48,7 @@ struct VideoModelDetailPage: View {
     @State private var showSignInSheet: Bool = false
     @State private var showPurchaseCreditsView: Bool = false
     @State private var showInsufficientCreditsAlert: Bool = false
-    @StateObject private var creditsViewModel = CreditsViewModel()
+    @ObservedObject private var creditsViewModel = CreditsViewModel.shared
 
     @EnvironmentObject var authViewModel: AuthViewModel
 
@@ -663,9 +663,11 @@ struct VideoModelDetailPage: View {
                     selectedDurationIndex = defaultIndex
                 }
             }
-            
-            // Fetch credit balance when view appears
-            if let userId = authViewModel.user?.id {
+            // Note: Credit balance fetching is now handled by AuthAwareCostCard
+        }
+        .onChange(of: showSignInSheet) { isPresented in
+            // When sign-in sheet is dismissed, refresh credits if user signed in
+            if !isPresented, let userId = authViewModel.user?.id {
                 Task {
                     await creditsViewModel.fetchBalance(userId: userId)
                 }

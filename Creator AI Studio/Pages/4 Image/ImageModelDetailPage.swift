@@ -40,7 +40,7 @@ struct ImageModelDetailPage: View {
     @State private var showSignInSheet: Bool = false
     @State private var showPurchaseCreditsView: Bool = false
     @State private var showInsufficientCreditsAlert: Bool = false
-    @StateObject private var creditsViewModel = CreditsViewModel()
+    @ObservedObject private var creditsViewModel = CreditsViewModel.shared
     @ObservedObject private var networkMonitor = NetworkMonitor.shared
 
     @EnvironmentObject var authViewModel: AuthViewModel
@@ -432,16 +432,11 @@ struct ImageModelDetailPage: View {
             if let capturedImage = capturedImage, referenceImages.isEmpty {
                 referenceImages = [capturedImage]
             }
-            // Fetch credit balance when view appears
-            if let userId = authViewModel.user?.id {
-                Task {
-                    await creditsViewModel.fetchBalance(userId: userId)
-                }
-            }
+            // Note: Credit balance fetching is now handled by AuthAwareCostCard
         }
-        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("CreditsBalanceUpdated"))) { notification in
-            // Refresh credits when balance is updated (e.g., after purchase)
-            if let userId = authViewModel.user?.id {
+        .onChange(of: showSignInSheet) { isPresented in
+            // When sign-in sheet is dismissed, refresh credits if user signed in
+            if !isPresented, let userId = authViewModel.user?.id {
                 Task {
                     await creditsViewModel.fetchBalance(userId: userId)
                 }
