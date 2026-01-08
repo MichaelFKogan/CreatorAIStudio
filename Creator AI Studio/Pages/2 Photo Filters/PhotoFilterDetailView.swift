@@ -249,7 +249,6 @@ struct PhotoFilterDetailView: View {
                 loggedInCard
             }
         }
-        .padding(.horizontal)
         .padding(.bottom, 8)
     }
     
@@ -296,7 +295,7 @@ struct PhotoFilterDetailView: View {
             RoundedRectangle(cornerRadius: 12)
                 .strokeBorder(
                     LinearGradient(
-                        colors: [Color.blue.opacity(0.3), Color.purple.opacity(0.3)],
+                        colors: [Color.blue, Color.purple],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     ),
@@ -317,6 +316,7 @@ struct PhotoFilterDetailView: View {
                 showPurchaseCreditsView = true
             }
         )
+        .frame(maxWidth: .infinity)
     }
     
     private var photoUploadButton: some View {
@@ -328,7 +328,6 @@ struct PhotoFilterDetailView: View {
                 isConnected: networkMonitor.isConnected
             )
         }
-        .padding(.horizontal, 16)
         .cornerRadius(16)
         .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 2)
     }
@@ -756,6 +755,7 @@ struct SpinningPlusButton: View {
             )
             .opacity(canUpload ? 1.0 : 0.6)
         }
+        .frame(maxWidth: .infinity)
         .disabled(!canUpload)
         .onAppear {
             isAnimating = true
@@ -1172,40 +1172,52 @@ struct EnhancedCostCard: View {
                 HStack(spacing: 6) {
                     Image(systemName: "exclamationmark.triangle.fill")
                         .font(.system(size: 14))
-                        .foregroundColor(.yellow)
+                        .foregroundColor(.red)
                     Text(disclaimerText)
                         .font(.caption)
-                        .foregroundColor(.yellow)
+                        .foregroundColor(.red)
                     Spacer()
                 }
+                .padding(.horizontal, 4)
                 .padding(.bottom, 4)
             }
             
             // Cost and balance
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Cost")
-                        .font(.headline)
-                        .foregroundColor(.primary)
+                    HStack(spacing: 4) {
+                        Image(systemName: "dollarsign.circle.fill")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        Text("Cost")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
                     PriceDisplayView(
                         price: price,
                         showUnit: true,
                         font: .subheadline,
                         fontWeight: .semibold,
-                        foregroundColor: .white
+                        foregroundColor: .primary
                     )
                 }
                 Spacer()
                 VStack(alignment: .trailing, spacing: 4) {
-                    Text("Your balance")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                    HStack(spacing: 4) {
+                        Image(systemName: "banknote.fill")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        Text("Your balance")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
                     Text(balance)
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.primary)
+                        .font(.caption)
+                        .fontWeight(.medium)
+                        .foregroundColor(.primary.opacity(0.8))
                 }
             }
+            .padding(.horizontal, 4)
             
             // Buy Credits button (only when insufficient)
             if !hasEnoughCredits {
@@ -1242,7 +1254,7 @@ struct EnhancedCostCard: View {
         .background(
             LinearGradient(
                 colors: !hasEnoughCredits
-                    ? [Color.yellow.opacity(0.12), Color.orange.opacity(0.08)]
+                    ? [Color.red.opacity(0.12), Color.red.opacity(0.08)]
                     : [primaryColor.opacity(0.08), secondaryColor.opacity(0.08)],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
@@ -1254,8 +1266,8 @@ struct EnhancedCostCard: View {
                 .strokeBorder(
                     LinearGradient(
                         colors: !hasEnoughCredits
-                            ? [Color.yellow.opacity(0.4), Color.orange.opacity(0.3)]
-                            : [primaryColor.opacity(0.3), secondaryColor.opacity(0.3)],
+                            ? [Color.red.opacity(0.4), Color.red.opacity(0.3)]
+                            : [primaryColor, secondaryColor],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     ),

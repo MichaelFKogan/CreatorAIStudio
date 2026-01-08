@@ -290,7 +290,7 @@ struct ImageModelDetailPage: View {
                                     RoundedRectangle(cornerRadius: 12)
                                         .strokeBorder(
                                             LinearGradient(
-                                                colors: [Color.blue.opacity(0.3), Color.purple.opacity(0.3)],
+                                                colors: [Color.blue, Color.purple],
                                                 startPoint: .topLeading,
                                                 endPoint: .bottomTrailing
                                             ),
@@ -305,7 +305,7 @@ struct ImageModelDetailPage: View {
                                     hasEnoughCredits: hasEnoughCredits,
                                     requiredAmount: requiredCredits,
                                     primaryColor: .blue,
-                                    secondaryColor: .purple,
+                                    secondaryColor: .cyan,
                                     onBuyCredits: {
                                         showPurchaseCreditsView = true
                                     }

@@ -597,7 +597,7 @@ struct PhotoConfirmationView: View {
                         RoundedRectangle(cornerRadius: 12)
                             .strokeBorder(
                                 LinearGradient(
-                                    colors: [Color.blue.opacity(0.3), Color.purple.opacity(0.3)],
+                                    colors: [Color.blue, Color.purple],
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
                                 ),

@@ -431,7 +431,7 @@ struct VideoModelDetailPage: View {
                                     RoundedRectangle(cornerRadius: 12)
                                         .strokeBorder(
                                             LinearGradient(
-                                                colors: [Color.purple.opacity(0.3), Color.pink.opacity(0.3)],
+                                                colors: [Color.purple, Color.pink],
                                                 startPoint: .topLeading,
                                                 endPoint: .bottomTrailing
                                             ),
@@ -488,6 +488,18 @@ struct VideoModelDetailPage: View {
                             )
                         }
 
+                        // Pricing Table - Only show for models with variable pricing
+                        if let modelName = item.display.modelName,
+                            PricingManager.shared.hasVariablePricing(
+                                for: modelName)
+                        {
+                            LazyView(
+                                PricingTableSectionVideo(modelName: modelName)
+                            )
+
+                            Divider().padding(.horizontal)
+                        }
+
                         LazyView(
                             AspectRatioSectionVideo(
                                 options: videoAspectOptions,
@@ -510,18 +522,6 @@ struct VideoModelDetailPage: View {
                             ))
 
                         Divider().padding(.horizontal)
-
-                        // Pricing Table - Only show for models with variable pricing
-                        if let modelName = item.display.modelName,
-                            PricingManager.shared.hasVariablePricing(
-                                for: modelName)
-                        {
-                            LazyView(
-                                PricingTableSectionVideo(modelName: modelName)
-                            )
-
-                            Divider().padding(.horizontal)
-                        }
 
                         // Example Gallery Section - Only show if model name exists
                         if let modelName = item.display.modelName,
@@ -1051,7 +1051,53 @@ private struct DurationSectionVideo: View {
 
 private struct PricingTableSectionVideo: View {
     let modelName: String
-    @State private var isExpanded: Bool = false
+    @State private var showPricingSheet: Bool = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            // Header button to open sheet
+            Button(action: {
+                showPricingSheet = true
+            }) {
+                HStack {
+                    HStack(spacing: 6) {
+                        Image(systemName: "tablecells")
+                            .foregroundColor(.purple)
+                            .font(.system(size: 14))
+                        Text("Pricing Table")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundColor(.primary)
+                    }
+
+                    Spacer()
+
+                    HStack(spacing: 4) {
+                        Text("View")
+                            .font(.caption)
+                            .foregroundColor(.purple)
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(.purple)
+                    }
+                }
+            }
+            .buttonStyle(PlainButtonStyle())
+        }
+        .padding(.horizontal)
+        .sheet(isPresented: $showPricingSheet) {
+            PricingTableSheetView(modelName: modelName)
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+        }
+    }
+}
+
+// MARK: PRICING TABLE SHEET VIEW
+
+private struct PricingTableSheetView: View {
+    let modelName: String
+    @Environment(\.dismiss) private var dismiss
 
     private var pricingConfig: VideoPricingConfiguration? {
         PricingManager.shared.pricingConfiguration(for: modelName)
@@ -1069,58 +1115,37 @@ private struct PricingTableSectionVideo: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            // Header with expand/collapse
-            Button(action: {
-                withAnimation(.easeInOut(duration: 0.25)) {
-                    isExpanded.toggle()
-                }
-            }) {
-                HStack {
-                    HStack(spacing: 6) {
-                        Image(systemName: "tablecells")
-                            .foregroundColor(.purple)
-                            .font(.system(size: 14))
-                        Text("Pricing Table")
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-                            .foregroundColor(.primary)
-                    }
-
-                    Spacer()
-
-                    HStack(spacing: 4) {
-                        Text(isExpanded ? "Hide" : "View All")
-                            .font(.caption)
-                            .foregroundColor(.purple)
-                        Image(
-                            systemName: isExpanded
-                                ? "chevron.up" : "chevron.down"
-                        )
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(.purple)
+        NavigationView {
+            ScrollView {
+                VStack(spacing: 20) {
+                    if let config = pricingConfig {
+                        if hasAudioPricing {
+                            // Show separate tables for audio/no-audio pricing
+                            PricingTableContentWithAudio(
+                                config: config,
+                                modelName: modelName
+                            )
+                        } else {
+                            // Standard pricing table (with audio label for audio-required models)
+                            PricingTableContent(
+                                config: config,
+                                showAudioLabel: isAudioRequired
+                            )
+                        }
                     }
                 }
+                .padding()
             }
-            .buttonStyle(PlainButtonStyle())
-
-            if isExpanded, let config = pricingConfig {
-                if hasAudioPricing {
-                    // Show separate tables for audio/no-audio pricing
-                    PricingTableContentWithAudio(
-                        config: config,
-                        modelName: modelName
-                    )
-                } else {
-                    // Standard pricing table (with audio label for audio-required models)
-                    PricingTableContent(
-                        config: config,
-                        showAudioLabel: isAudioRequired
-                    )
+            .navigationTitle("Pricing Table")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        dismiss()
+                    }
                 }
             }
         }
-        .padding(.horizontal)
     }
 }
 
