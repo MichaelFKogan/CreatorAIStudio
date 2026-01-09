@@ -779,6 +779,7 @@ class ProfileViewModel: ObservableObject {
                 .from("user_media")
                 .select()
                 .eq("user_id", value: userId)
+                .or("status.is.null,status.eq.success") // Only successful items
                 .order("created_at", ascending: false)
                 .limit(pageSize)
                 .range(from: currentPage * pageSize, to: (currentPage + 1) * pageSize - 1)
@@ -835,6 +836,7 @@ class ProfileViewModel: ObservableObject {
                 .from("user_media")
                 .select("id,created_at")
                 .eq("user_id", value: userId)
+                .or("status.is.null,status.eq.success") // Only successful items
                 .order("created_at", ascending: false)
                 .limit(pageSize) // Check first page only
                 .execute()
@@ -876,6 +878,7 @@ class ProfileViewModel: ObservableObject {
                     .select()
                     .eq("user_id", value: userId)
                     .eq("id", value: newItemIds[0])
+                    .or("status.is.null,status.eq.success") // Only successful items
                     .execute()
                 freshItems = response.value ?? []
             } else if newItemIds.count > 1 {
@@ -887,23 +890,29 @@ class ProfileViewModel: ObservableObject {
                     .select()
                     .eq("user_id", value: userId)
                     .or(orCondition)
+                    .or("status.is.null,status.eq.success") // Only successful items
                     .execute()
                 freshItems = response.value ?? []
             }
             print("🔄 refreshLatest: Fetched full details for \(freshItems.count) new images")
 
+            // Filter out any failed items or items with invalid URLs before adding
+            // This is a safety net in case the database query didn't filter them
+            let validItems = freshItems.filter { item in
+                let isSuccessful = item.isSuccess
+                let hasValidUrl = !item.image_url.isEmpty && URL(string: item.image_url) != nil
+                return isSuccessful && hasValidUrl
+            }
+            let filteredCount = freshItems.count - validItems.count
+            if filteredCount > 0 {
+                print("⚠️ Filtered out \(filteredCount) failed/invalid item(s) from refresh")
+            }
+
             // Add new items to the list
-            if !freshItems.isEmpty {
-                print("✅ refreshLatest: Adding \(freshItems.count) new image(s) to list")
-                for image in freshItems {
-                    let urlValid = !image.image_url.isEmpty && URL(string: image.image_url) != nil
-                    if !urlValid {
-                        print("🚨 WARNING: refreshLatest adding image with INVALID URL - id: \(image.id)")
-                    }
-                }
+            if !validItems.isEmpty {
+                print("✅ refreshLatest: Adding \(validItems.count) new image(s) to list")
                 // Sort by created_at descending (newest first) to maintain correct chronological order
-                // ISO 8601 strings can be compared lexicographically
-                let sortedFreshItems = freshItems.sorted { (a, b) -> Bool in
+                let sortedFreshItems = validItems.sorted { (a, b) -> Bool in
                     let aDate = a.created_at ?? ""
                     let bDate = b.created_at ?? ""
                     return aDate > bDate // Descending order (newest first)
@@ -948,6 +957,7 @@ class ProfileViewModel: ObservableObject {
                 .from("user_media")
                 .select()
                 .eq("user_id", value: userId)
+                .or("status.is.null,status.eq.success") // Only successful items
                 .order("created_at", ascending: false)
                 .limit(pageSize)
                 .range(from: currentPage * pageSize, to: (currentPage + 1) * pageSize - 1)
@@ -1078,6 +1088,7 @@ class ProfileViewModel: ObservableObject {
                 .select()
                 .eq("user_id", value: userId)
                 .eq("model", value: modelName)
+                .or("status.is.null,status.eq.success") // Only successful items
                 .order("created_at", ascending: false)
                 .limit(pageSize)
                 .range(from: currentPage * pageSize, to: (currentPage + 1) * pageSize - 1)
@@ -1668,6 +1679,7 @@ class ProfileViewModel: ObservableObject {
                 .select()
                 .eq("user_id", value: userId)
                 .eq("is_favorite", value: true)
+                .or("status.is.null,status.eq.success") // Only successful items
                 .order("created_at", ascending: false)
                 .limit(pageSize)
                 .range(from: favoritesCurrentPage * pageSize, to: (favoritesCurrentPage + 1) * pageSize - 1)
@@ -2243,6 +2255,7 @@ class ProfileViewModel: ObservableObject {
                 .from("user_media")
                 .select()
                 .eq("user_id", value: userId)
+                .or("status.is.null,status.eq.success") // Only successful items
                 .order("created_at", ascending: false)
                 .limit(1)
                 .execute()
