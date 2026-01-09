@@ -69,11 +69,11 @@ curl -X POST 'https://inaffymocuppuddsewyq.supabase.co/functions/v1/webhook-rece
 -H 'Content-Type: application/json' \
 -d '{"taskUUID": "test-123", "status": "completed", "imageURL": "https://example.com/image.jpg"}'
 
-curl -X POST 'https://inaffymocuppuddsewyq.supabase.co/functions/v1/webhook-receiver?provider=runware&token=f2fa291c970a1bcf0310e2aecc1189005ee601e0dec33697e3704681fb021728' \
+curl -X POST 'https://inaffymocuppuddsewyq.supabase.co/functions/v1/webhook-receiver?provider=runware&token=<Supabase service role key>' \
 -H 'Content-Type: application/json' \
 -d '{"taskUUID": "test-123", "status": "completed", "imageURL": "https://example.com/image.jpg"}'
 
-curl -X POST 'https://inaffymocuppuddsewyq.supabase.co/functions/v1/webhook-receiver?provider=runware&token=f2fa291c970a1bcf0310e2aecc1189005ee601e0dec33697e3704681fb021728' \
+curl -X POST 'https://inaffymocuppuddsewyq.supabase.co/functions/v1/webhook-receiver?provider=runware&token=<Supabase service role key>' \
 -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImluYWZmeW1vY3VwcHVkZHNld3lxIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MjIyMjY5MywiZXhwIjoyMDc3Nzk4NjkzfQ.eR5QZ_Q-5FfU_RlVfC5eOJ83N4zPX8f_j9J_0QX74w' \
 -H 'Content-Type: application/json' \
 -d '{
@@ -82,7 +82,7 @@ curl -X POST 'https://inaffymocuppuddsewyq.supabase.co/functions/v1/webhook-rece
   "imageURL": "https://example.com/image.jpg"
 }'
 
-curl -X POST 'https://inaffymocuppuddsewyq.supabase.co/functions/v1/webhook-receiver?provider=runware&token=f2fa291c970a1bcf0310e2aecc1189005ee601e0dec33697e3704681fb021728' \
+curl -X POST 'https://inaffymocuppuddsewyq.supabase.co/functions/v1/webhook-receiver?provider=runware&token=<Supabase service role key>' \
 -H 'Content-Type: application/json' \
 -d '{
   "taskUUID": "test-123",

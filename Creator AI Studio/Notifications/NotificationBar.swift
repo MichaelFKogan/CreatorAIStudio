@@ -69,27 +69,9 @@ struct NotificationCard: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // Top row with chevron down and retry button (when failed)
+            // Top row with chevron down button
             HStack {
                 Spacer()
-                // Retry button (only shown when failed)
-                if notification.state == .failed {
-                    Button(action: {
-                        retryGeneration()
-                    }) {
-                        if isRetrying {
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle(tint: .blue))
-                                .scaleEffect(0.8)
-                        } else {
-                            Text("Retry")
-                                .font(.custom("Nunito-Regular", size: 13))
-                                .foregroundColor(.blue)
-                        }
-                    }
-                    .disabled(isRetrying)
-                    .padding(.trailing, 12)
-                }
                 // Chevron down button to hide this individual notification
                 Button(action: onDismiss) {
                     Image(systemName: "chevron.down")
@@ -114,7 +96,14 @@ struct NotificationCard: View {
                             isVideo: notification.title.contains("Video") || notification.title.contains("video"),
                             pulseAnimation: $pulseAnimation
                         )
-                        NotificationTextContent(notification: notification, shimmer: $shimmer)
+                        NotificationTextContent(
+                            notification: notification,
+                            shimmer: $shimmer,
+                            isRetrying: $isRetrying,
+                            onRetry: {
+                                retryGeneration()
+                            }
+                        )
                         Spacer(minLength: 0)
                     }
                 }
@@ -302,6 +291,8 @@ struct NotificationThumbnail: View {
 struct NotificationTextContent: View {
     let notification: NotificationData
     @Binding var shimmer: Bool
+    @Binding var isRetrying: Bool
+    let onRetry: () -> Void
     @State private var dynamicMessage: String = ""
     @State private var timeoutMessage: String = ""
     @State private var showTimeoutMessage: Bool = false
@@ -309,9 +300,27 @@ struct NotificationTextContent: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(notification.title)
-                .font(.custom("Nunito-Bold", size: 14))
-                .foregroundColor(.primary)
+            HStack {
+                Text(notification.title)
+                    .font(.custom("Nunito-Bold", size: 14))
+                    .foregroundColor(.primary)
+                Spacer()
+                // Retry button (only shown when failed)
+                if notification.state == .failed {
+                    Button(action: onRetry) {
+                        if isRetrying {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: .blue))
+                                .scaleEffect(0.8)
+                        } else {
+                            Text("Retry")
+                                .font(.custom("Nunito-Regular", size: 13))
+                                .foregroundColor(.blue)
+                        }
+                    }
+                    .disabled(isRetrying)
+                }
+            }
             
             // Timeout message (shown initially)
             if showTimeoutMessage && !timeoutMessage.isEmpty {

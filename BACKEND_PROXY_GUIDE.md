@@ -5,11 +5,13 @@ This guide explains how to build a secure backend proxy using Supabase Edge Func
 ## Overview
 
 Instead of calling Runware/WaveSpeed APIs directly from your iOS app, you'll:
+
 1. Call your Supabase Edge Function
 2. Edge Function calls Runware/WaveSpeed with your API keys
 3. Edge Function returns the result to your app
 
 **Benefits:**
+
 - ✅ API keys never leave your server
 - ✅ Can add rate limiting, authentication, logging
 - ✅ Can cache responses
@@ -57,79 +59,99 @@ supabase functions new wavespeed-proxy
 Create/edit: `supabase/functions/runware-proxy/index.ts`
 
 ```typescript
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const RUNWARE_API_KEY = Deno.env.get('RUNWARE_API_KEY') || 'zNNJ1KwqNUadOYKQmm58U84JqDjr5qMV'
-const RUNWARE_API_URL = 'https://api.runware.ai/v1'
+const RUNWARE_API_KEY = Deno.env.get("RUNWARE_API_KEY");
+if (!RUNWARE_API_KEY) {
+  throw new Error("RUNWARE_API_KEY environment variable is required");
+}
+const RUNWARE_API_URL = "https://api.runware.ai/v1";
 
 serve(async (req) => {
   // Handle CORS
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-    }})
+  if (req.method === "OPTIONS") {
+    return new Response("ok", {
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers":
+          "authorization, x-client-info, apikey, content-type",
+      },
+    });
   }
 
   try {
     // Get authenticated user
-    const authHeader = req.headers.get('Authorization')
+    const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers: { 'Content-Type': 'application/json' } }
-      )
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
     // Verify user with Supabase
     const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
       { global: { headers: { Authorization: authHeader } } }
-    )
+    );
 
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
+    const {
+      data: { user },
+      error: userError,
+    } = await supabaseClient.auth.getUser();
     if (userError || !user) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers: { 'Content-Type': 'application/json' } }
-      )
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
-    // Get request body from iOS app
-    const requestBody = await req.json()
+    // Get request body from iOS app (should be an array of tasks, without authentication)
+    const tasks = await req.json();
+
+    // Ensure tasks is an array
+    if (!Array.isArray(tasks)) {
+      return new Response(
+        JSON.stringify({ error: "Request body must be an array of tasks" }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    // Inject API key server-side - prepend authentication task
+    const requestBody = [
+      { taskType: "authentication", apiKey: RUNWARE_API_KEY },
+      ...tasks,
+    ];
 
     // Forward request to Runware API
     const runwareResponse = await fetch(RUNWARE_API_URL, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify(requestBody),
-    })
+    });
 
-    const data = await runwareResponse.json()
+    const data = await runwareResponse.json();
 
     // Return response to iOS app
-    return new Response(
-      JSON.stringify(data),
-      {
-        status: runwareResponse.status,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-      }
-    )
+    return new Response(JSON.stringify(data), {
+      status: runwareResponse.status,
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
+      },
+    });
   } catch (error) {
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    )
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
   }
-})
+});
 ```
 
 ## Step 3: Implement WaveSpeed Proxy
@@ -137,79 +159,85 @@ serve(async (req) => {
 Create/edit: `supabase/functions/wavespeed-proxy/index.ts`
 
 ```typescript
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const WAVESPEED_API_KEY = Deno.env.get('WAVESPEED_API_KEY') || '5fb599c5eca75157f34d7da3efc734a3422a4b5ae0e6bbf753a09b82e6caebdf'
+const WAVESPEED_API_KEY = Deno.env.get("WAVESPEED_API_KEY");
+if (!WAVESPEED_API_KEY) {
+  throw new Error("WAVESPEED_API_KEY environment variable is required");
+}
 
 serve(async (req) => {
   // Handle CORS
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-    }})
+  if (req.method === "OPTIONS") {
+    return new Response("ok", {
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers":
+          "authorization, x-client-info, apikey, content-type",
+      },
+    });
   }
 
   try {
     // Get authenticated user
-    const authHeader = req.headers.get('Authorization')
+    const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers: { 'Content-Type': 'application/json' } }
-      )
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
     // Verify user with Supabase
     const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
       { global: { headers: { Authorization: authHeader } } }
-    )
+    );
 
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
+    const {
+      data: { user },
+      error: userError,
+    } = await supabaseClient.auth.getUser();
     if (userError || !user) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers: { 'Content-Type': 'application/json' } }
-      )
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
     // Get request details from iOS app
-    const { endpoint, body } = await req.json()
+    const { endpoint, body } = await req.json();
 
     // Forward request to WaveSpeed API
     const wavespeedResponse = await fetch(endpoint, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${WAVESPEED_API_KEY}`,
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${WAVESPEED_API_KEY}`,
       },
       body: JSON.stringify(body),
-    })
+    });
 
-    const data = await wavespeedResponse.json()
+    const data = await wavespeedResponse.json();
 
     // Return response to iOS app
-    return new Response(
-      JSON.stringify(data),
-      {
-        status: wavespeedResponse.status,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-      }
-    )
+    return new Response(JSON.stringify(data), {
+      status: wavespeedResponse.status,
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
+      },
+    });
   } catch (error) {
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    )
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
   }
-})
+});
 ```
 
 ## Step 4: Set Environment Variables
@@ -217,9 +245,11 @@ serve(async (req) => {
 Set your API keys as secrets in Supabase:
 
 ```bash
-supabase secrets set RUNWARE_API_KEY=zNNJ1KwqNUadOYKQmm58U84JqDjr5qMV
-supabase secrets set WAVESPEED_API_KEY=5fb599c5eca75157f34d7da3efc734a3422a4b5ae0e6bbf753a09b82e6caebdf
+supabase secrets set RUNWARE_API_KEY=YOUR_RUNWARE_API_KEY_HERE
+supabase secrets set WAVESPEED_API_KEY=YOUR_WAVESPEED_API_KEY_HERE
 ```
+
+**Important:** Replace `YOUR_RUNWARE_API_KEY_HERE` and `YOUR_WAVESPEED_API_KEY_HERE` with your actual API keys.
 
 ## Step 5: Deploy Edge Functions
 
@@ -256,6 +286,7 @@ Once proxies are working, remove all API keys from your iOS code.
 ## Step 7: Testing
 
 1. Test Edge Functions directly:
+
 ```bash
 curl -X POST https://inaffymocuppuddsewyq.supabase.co/functions/v1/runware-proxy \
   -H "Authorization: Bearer YOUR_SUPABASE_JWT" \
@@ -268,15 +299,19 @@ curl -X POST https://inaffymocuppuddsewyq.supabase.co/functions/v1/runware-proxy
 ## Additional Security Enhancements
 
 ### Rate Limiting
+
 Add rate limiting per user in Edge Functions to prevent abuse.
 
 ### Usage Tracking
+
 Log all API calls to track usage per user.
 
 ### Request Validation
+
 Validate and sanitize all requests before forwarding to APIs.
 
 ### Caching
+
 Cache responses for common requests to reduce API costs.
 
 ## Cost Considerations
@@ -299,4 +334,3 @@ Cache responses for common requests to reduce API costs.
 - [Supabase Edge Functions Docs](https://supabase.com/docs/guides/functions)
 - [Deno Runtime](https://deno.land/manual)
 - [Supabase TypeScript Client](https://supabase.com/docs/reference/javascript/introduction)
-

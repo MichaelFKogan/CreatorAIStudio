@@ -21,7 +21,21 @@ struct WaveSpeedResponse: Decodable {
 }
 
 // MARK: - WaveSpeed API Key
-let apiKey = "5fb599c5eca75157f34d7da3efc734a3422a4b5ae0e6bbf753a09b82e6caebdf"
+// NOTE: WaveSpeed is currently disabled. To re-enable:
+// 1. Set WAVESPEED_API_KEY in your environment variables or Info.plist
+// 2. Uncomment the guard statement below
+// 3. Remove this placeholder key
+
+// TODO: Replace with environment variable or secure config when re-implementing WaveSpeed
+let apiKey: String = {
+    // Try to get from environment variable first
+    if let envKey = ProcessInfo.processInfo.environment["WAVESPEED_API_KEY"], !envKey.isEmpty {
+        return envKey
+    }
+    // Fallback: throw error if WaveSpeed is used without configuration
+    // This prevents accidental usage with an invalid key
+    fatalError("WaveSpeed API key not configured. Set WAVESPEED_API_KEY environment variable or configure in Info.plist")
+}()
 
 // MARK: - WaveSpeed Webhook Submission Response
 
@@ -45,7 +59,7 @@ func sendImageToWaveSpeed(
     userId: String? = nil // Required for endpoints that need URL format (like nano-banana)
 
 ) async throws -> WaveSpeedResponse {
-    //    guard let apiKey = ProcessInfo.processInfo.environment["WAVESPEED_API_KEY"] else {
+    //    guard let wavespeedApiKey = ProcessInfo.processInfo.environment["WAVESPEED_API_KEY"] else {
     //        throw URLError(.userAuthenticationRequired)
     //    }
 
@@ -58,7 +72,7 @@ func sendImageToWaveSpeed(
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-    request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+    request.setValue("Bearer \(wavespeedApiKey)", forHTTPHeaderField: "Authorization")
 
     // MARK: DETERMINE ENDPOINT REQUIREMENTS
 
@@ -233,7 +247,7 @@ func fetchWaveSpeedJobStatus(id: String) async throws -> WaveSpeedResponse {
     let url = URL(string: "https://api.wavespeed.ai/api/v3/predictions/\(id)/result")!
     var request = URLRequest(url: url)
     request.httpMethod = "GET"
-    request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+    request.setValue("Bearer \(wavespeedApiKey)", forHTTPHeaderField: "Authorization")
 
     let (data, response) = try await URLSession.shared.data(for: request)
 
@@ -280,7 +294,7 @@ func submitImageToWaveSpeedWithWebhook(
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-    request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+    request.setValue("Bearer \(wavespeedApiKey)", forHTTPHeaderField: "Authorization")
     
     // Check if this endpoint requires URL format instead of base64
     let requiresURLFormat = endpoint.contains("nano-banana") || endpoint.contains("google/")

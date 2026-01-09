@@ -52,9 +52,8 @@ struct RunwareResponse: Decodable {
 }
 
 // MARK: - Runware API Key
-
-// RunSpeedAI API Key
-let runwareApiKey = "zNNJ1KwqNUadOYKQmm58U84JqDjr5qMV"
+// NOTE: API key is now stored server-side in the Supabase Edge Function
+// The runware-proxy Edge Function injects the API key automatically
 
 // MARK: - Webhook Configuration
 
@@ -129,15 +128,18 @@ func uploadImageToRunware(image: UIImage) async throws -> String {
         "image": dataURI,
     ]
 
-    let requestBody: [[String: Any]] = [
-        ["taskType": "authentication", "apiKey": runwareApiKey],
-        uploadTask,
-    ]
+    // Send only the task - proxy will inject API key server-side
+    let requestBody: [[String: Any]] = [uploadTask]
 
-    let url = URL(string: "https://api.runware.ai/v1")!
+    // Get Supabase auth token for the Authorization header
+    let session = try await SupabaseManager.shared.client.auth.session
+    let supabaseAuthToken = session.accessToken
+
+    let url = URL(string: "https://inaffymocuppuddsewyq.supabase.co/functions/v1/runware-proxy")!
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+    request.setValue("Bearer \(supabaseAuthToken)", forHTTPHeaderField: "Authorization")
     request.httpBody = try JSONSerialization.data(withJSONObject: requestBody)
 
     let (data, response) = try await URLSession.shared.data(for: request)
@@ -285,15 +287,18 @@ func uploadVideoToRunware(videoURL: URL) async throws -> String {
         "video": dataURI,
     ]
     
-    let requestBody: [[String: Any]] = [
-        ["taskType": "authentication", "apiKey": runwareApiKey],
-        uploadTask,
-    ]
+    // Send only the task - proxy will inject API key server-side
+    let requestBody: [[String: Any]] = [uploadTask]
     
-    let url = URL(string: "https://api.runware.ai/v1")!
+    // Get Supabase auth token for the Authorization header
+    let session = try await SupabaseManager.shared.client.auth.session
+    let supabaseAuthToken = session.accessToken
+    
+    let url = URL(string: "https://inaffymocuppuddsewyq.supabase.co/functions/v1/runware-proxy")!
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+    request.setValue("Bearer \(supabaseAuthToken)", forHTTPHeaderField: "Authorization")
     request.httpBody = try JSONSerialization.data(withJSONObject: requestBody)
     
     let (data, response) = try await URLSession.shared.data(for: request)
@@ -585,15 +590,18 @@ func sendImageToRunware(
 
     // MARK: - Wrap task in authentication array (required!)
 
-    let requestBody: [[String: Any]] = [
-        ["taskType": "authentication", "apiKey": runwareApiKey],
-        task,
-    ]
+    // Send only the task - proxy will inject API key server-side
+    let requestBody: [[String: Any]] = [task]
 
-    let url = URL(string: "https://api.runware.ai/v1")!
+    // Get Supabase auth token for the Authorization header
+    let session = try await SupabaseManager.shared.client.auth.session
+    let supabaseAuthToken = session.accessToken
+
+    let url = URL(string: "https://inaffymocuppuddsewyq.supabase.co/functions/v1/runware-proxy")!
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+    request.setValue("Bearer \(supabaseAuthToken)", forHTTPHeaderField: "Authorization")
     request.httpBody = try JSONSerialization.data(withJSONObject: requestBody)
 
     // MARK: - Send request
@@ -999,29 +1007,26 @@ func sendVideoToRunware(
         print("[Runware] Added Alibaba provider settings - promptExtend: true, audio: \(alibabaSettings["audio"] ?? true), shotType: \(alibabaSettings["shotType"] ?? "N/A")")
     }
 
-    // MARK: - Wrap task in authentication array (required!)
+    // MARK: - Send task to proxy (proxy will inject API key server-side)
 
-    let requestBody: [[String: Any]] = [
-        ["taskType": "authentication", "apiKey": runwareApiKey],
-        task,
-    ]
+    // Send only the task - proxy will inject API key server-side
+    let requestBody: [[String: Any]] = [task]
 
-    // Debug: print request body (without API key for security)
+    // Debug: print request body
     if let requestJSON = try? JSONSerialization.data(withJSONObject: requestBody),
        let requestString = String(data: requestJSON, encoding: .utf8) {
-        // Mask API key in log
-        let maskedRequest = requestString.replacingOccurrences(
-            of: "\"apiKey\":\"[^\"]+\"",
-            with: "\"apiKey\":\"***\"",
-            options: .regularExpression
-        )
-        print("[Runware] Video request body: \(maskedRequest)")
+        print("[Runware] Video request body: \(requestString)")
     }
 
-    let url = URL(string: "https://api.runware.ai/v1")!
+    // Get Supabase auth token for the Authorization header
+    let session = try await SupabaseManager.shared.client.auth.session
+    let supabaseAuthToken = session.accessToken
+
+    let url = URL(string: "https://inaffymocuppuddsewyq.supabase.co/functions/v1/runware-proxy")!
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+    request.setValue("Bearer \(supabaseAuthToken)", forHTTPHeaderField: "Authorization")
     request.httpBody = try JSONSerialization.data(withJSONObject: requestBody)
 
     // MARK: - Send request
@@ -1194,15 +1199,18 @@ func pollRunwareTaskStatus(taskUUID: String) async throws -> RunwareResponse {
         "taskUUID": taskUUID
     ]
     
-    let requestBody: [[String: Any]] = [
-        ["taskType": "authentication", "apiKey": runwareApiKey],
-        task,
-    ]
+    // Send only the task - proxy will inject API key server-side
+    let requestBody: [[String: Any]] = [task]
     
-    let url = URL(string: "https://api.runware.ai/v1")!
+    // Get Supabase auth token for the Authorization header
+    let session = try await SupabaseManager.shared.client.auth.session
+    let supabaseAuthToken = session.accessToken
+    
+    let url = URL(string: "https://inaffymocuppuddsewyq.supabase.co/functions/v1/runware-proxy")!
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+    request.setValue("Bearer \(supabaseAuthToken)", forHTTPHeaderField: "Authorization")
     request.httpBody = try JSONSerialization.data(withJSONObject: requestBody)
     
     let (data, response) = try await URLSession.shared.data(for: request)
@@ -1357,26 +1365,24 @@ func submitImageToRunwareWithWebhook(
     // Wan2.5-Preview Image (runware:201@10) - no provider settings needed
     // Note: This model does not support promptExtend or other Alibaba provider settings
     
-    let requestBody: [[String: Any]] = [
-        ["taskType": "authentication", "apiKey": runwareApiKey],
-        task,
-    ]
+    // Send only the task - proxy will inject API key server-side
+    let requestBody: [[String: Any]] = [task]
     
-    // Debug: print request body (without API key for security)
+    // Debug: print request body
     if let requestJSON = try? JSONSerialization.data(withJSONObject: requestBody),
        let requestString = String(data: requestJSON, encoding: .utf8) {
-        let maskedRequest = requestString.replacingOccurrences(
-            of: "\"apiKey\":\"[^\"]+\"",
-            with: "\"apiKey\":\"***\"",
-            options: .regularExpression
-        )
-        print("[Runware] Image webhook request body: \(maskedRequest)")
+        print("[Runware] Image webhook request body: \(requestString)")
     }
     
-    let url = URL(string: "https://api.runware.ai/v1")!
+    // Get Supabase auth token for the Authorization header
+    let session = try await SupabaseManager.shared.client.auth.session
+    let supabaseAuthToken = session.accessToken
+    
+    let url = URL(string: "https://inaffymocuppuddsewyq.supabase.co/functions/v1/runware-proxy")!
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+    request.setValue("Bearer \(supabaseAuthToken)", forHTTPHeaderField: "Authorization")
     request.httpBody = try JSONSerialization.data(withJSONObject: requestBody)
     
     let (data, response) = try await URLSession.shared.data(for: request)
@@ -1710,26 +1716,24 @@ func submitVideoToRunwareWithWebhook(
         print("[Runware] Added Alibaba provider settings (webhook) - promptExtend: true, audio: \(alibabaSettings["audio"] ?? true), shotType: \(alibabaSettings["shotType"] ?? "N/A")")
     }
     
-    let requestBody: [[String: Any]] = [
-        ["taskType": "authentication", "apiKey": runwareApiKey],
-        task,
-    ]
+    // Send only the task - proxy will inject API key server-side
+    let requestBody: [[String: Any]] = [task]
     
-    // Debug log (masked API key)
+    // Debug log
     if let requestJSON = try? JSONSerialization.data(withJSONObject: requestBody),
        let requestString = String(data: requestJSON, encoding: .utf8) {
-        let maskedRequest = requestString.replacingOccurrences(
-            of: "\"apiKey\":\"[^\"]+\"",
-            with: "\"apiKey\":\"***\"",
-            options: .regularExpression
-        )
-        print("[Runware] Video webhook request body: \(maskedRequest)")
+        print("[Runware] Video webhook request body: \(requestString)")
     }
     
-    let url = URL(string: "https://api.runware.ai/v1")!
+    // Get Supabase auth token for the Authorization header
+    let session = try await SupabaseManager.shared.client.auth.session
+    let supabaseAuthToken = session.accessToken
+    
+    let url = URL(string: "https://inaffymocuppuddsewyq.supabase.co/functions/v1/runware-proxy")!
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+    request.setValue("Bearer \(supabaseAuthToken)", forHTTPHeaderField: "Authorization")
     request.httpBody = try JSONSerialization.data(withJSONObject: requestBody)
     
     let (data, response) = try await URLSession.shared.data(for: request)
