@@ -187,6 +187,7 @@ struct DanceFilterDetailPage: View {
                             )
                         }
                         .padding(.horizontal)
+                        .padding(.bottom, -4)  // Compensate for parent VStack spacing: 16 to get total of 12
 
                         
                         LazyView(

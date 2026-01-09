@@ -199,7 +199,7 @@ struct PhotoFilterDetailView: View {
             userInfoCard
             photoUploadButton
             multiSelectDisclaimer
-            costSection
+            // costSection
             exampleImagesSection
             moreStylesSection
         }
@@ -243,80 +243,22 @@ struct PhotoFilterDetailView: View {
     @ViewBuilder
     private var userInfoCard: some View {
         VStack(spacing: 12) {
-            if authViewModel.user == nil {
-                notLoggedInCard
-            } else {
-                loggedInCard
-            }
-        }
-        .padding(.bottom, 8)
-    }
-    
-    private var notLoggedInCard: some View {
-        VStack(spacing: 12) {
-            HStack(spacing: 6) {
-                Image(systemName: "exclamationmark.circle.fill")
-                    .font(.system(size: 14))
-                    .foregroundColor(.red)
-                Text("Log in to upload your photo")
-                    .font(.subheadline)
-                    .foregroundColor(.primary)
-                Spacer()
-            }
-            
-            Button(action: {
-                showSignInSheet = true
-            }) {
-                Text("Sign In / Sign Up")
-                    .font(.system(size: 15, weight: .medium, design: .rounded))
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(
-                        LinearGradient(
-                            colors: [.blue, .purple],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-            }
-        }
-        .padding()
-        .background(
-            LinearGradient(
-                colors: [Color.blue.opacity(0.08), Color.purple.opacity(0.08)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
+            // Use the reusable AuthAwareCostCard component
+            AuthAwareCostCard(
+                price: totalPrice,
+                requiredCredits: requiredCredits,
+                primaryColor: .blue,
+                secondaryColor: .purple,
+                loginMessage: "Log in to upload your photo",
+                onSignIn: {
+                    showSignInSheet = true
+                },
+                onBuyCredits: {
+                    showPurchaseCreditsView = true
+                }
             )
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .strokeBorder(
-                    LinearGradient(
-                        colors: [Color.blue, Color.purple],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ),
-                    lineWidth: 1.5
-                )
-        )
-    }
-    
-    private var loggedInCard: some View {
-        EnhancedCostCard(
-            price: totalPrice,
-            balance: creditsViewModel.formattedBalance(),
-            hasEnoughCredits: hasEnoughCredits,
-            requiredAmount: requiredCredits,
-            primaryColor: .blue,
-            secondaryColor: .purple,
-            onBuyCredits: {
-                showPurchaseCreditsView = true
-            }
-        )
-        .frame(maxWidth: .infinity)
+        }
+        .padding(.bottom, 4)  // Compensate for parent VStack default spacing: 8 to get total of 12
     }
     
     private var photoUploadButton: some View {

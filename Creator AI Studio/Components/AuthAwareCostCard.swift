@@ -30,10 +30,34 @@ struct AuthAwareCostCard: View {
     }
     
     var body: some View {
-        VStack(spacing: 12) {
+        Group {
             if authViewModel.user == nil {
                 // Not logged in: Show login disclaimer and Sign In button
-                notLoggedInCard
+                VStack(spacing: 0) {
+                    notLoggedInCard
+                    
+                    // Cost display below the card, aligned to the right
+                    // Add padding to position it closer to the Generate button
+                    HStack {
+                        Spacer()
+                        HStack(spacing: 4) {
+                            Image(systemName: "dollarsign.circle.fill")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            Text("Cost:")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            PriceDisplayView(
+                                price: price,
+                                showUnit: true,
+                                font: .caption,
+                                fontWeight: .semibold,
+                                foregroundColor: .primary
+                            )
+                        }
+                    }
+                    .padding(.top, 20)
+                }
             } else {
                 // Logged in: Show enhanced cost card
                 EnhancedCostCard(
@@ -84,7 +108,7 @@ struct AuthAwareCostCard: View {
                     .foregroundColor(.red)
                 Text(loginMessage)
                     .font(.subheadline)
-                    .foregroundColor(.primary)
+                    .foregroundColor(.red)
                 Spacer()
             }
             

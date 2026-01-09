@@ -130,7 +130,7 @@ struct PhotoConfirmationView: View {
                 multiSelectIndicators
                 sizeSelectorSection
                 generateButtonSection
-                costDisplaySection
+                // costDisplaySection
                 infoSection
             }
             .frame(maxWidth: .infinity)
@@ -555,74 +555,22 @@ struct PhotoConfirmationView: View {
             }
             
             VStack(spacing: 12) {
-                // Informational card - shown for both logged in and not logged in
-                if authViewModel.user == nil {
-                    // Not logged in: Show login disclaimer and Sign In button
-                    VStack(spacing: 12) {
-                        HStack(spacing: 6) {
-                            Image(systemName: "exclamationmark.circle.fill")
-                                .font(.system(size: 14))
-                                .foregroundColor(.red)
-                            Text("Log in to generate an image")
-                                .font(.subheadline)
-                                .foregroundColor(.primary)
-                            Spacer()
-                        }
-                        
-                        Button(action: {
-                            showSignInSheet = true
-                        }) {
-                            Text("Sign In / Sign Up")
-                                .font(.system(size: 15, weight: .medium, design: .rounded))
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(
-                                    LinearGradient(
-                                        colors: [.blue, .purple],
-                                        startPoint: .leading,
-                                        endPoint: .trailing
-                                    )
-                                )
-                                .clipShape(RoundedRectangle(cornerRadius: 12))
-                        }
+                // Use the reusable AuthAwareCostCard component
+                AuthAwareCostCard(
+                    price: totalPrice,
+                    requiredCredits: requiredCredits,
+                    primaryColor: .blue,
+                    secondaryColor: .purple,
+                    loginMessage: "Log in to generate an image",
+                    onSignIn: {
+                        showSignInSheet = true
+                    },
+                    onBuyCredits: {
+                        showPurchaseCreditsView = true
                     }
-                    .padding()
-                    .background(
-                        LinearGradient(
-                            colors: [Color.blue.opacity(0.08), Color.purple.opacity(0.08)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .strokeBorder(
-                                LinearGradient(
-                                    colors: [Color.blue, Color.purple],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                ),
-                                lineWidth: 1.5
-                            )
-                    )
-                } else {
-                    // Logged in: Show enhanced cost card
-                    EnhancedCostCard(
-                        price: totalPrice,
-                        balance: creditsViewModel.formattedBalance(),
-                        hasEnoughCredits: hasEnoughCredits,
-                        requiredAmount: requiredCredits,
-                        primaryColor: .blue,
-                        secondaryColor: .purple,
-                        onBuyCredits: {
-                            showPurchaseCreditsView = true
-                        }
-                    )
-                }
+                )
             }
-            .padding(.bottom, 12)
+            .padding(.bottom, 8)  // Compensate for parent VStack spacing: 4 to get total of 12
 
             generateButton
                 .onAppear {

@@ -386,74 +386,23 @@ struct VideoModelDetailPage: View {
                         }
 
                         VStack(spacing: 12) {
-                            // Informational card - shown for both logged in and not logged in
-                            if authViewModel.user == nil {
-                                // Not logged in: Show login disclaimer and Sign In button
-                                VStack(spacing: 12) {
-                                    HStack(spacing: 6) {
-                                        Image(systemName: "exclamationmark.circle.fill")
-                                            .font(.system(size: 14))
-                                            .foregroundColor(.red)
-                                        Text("Log in to generate a video")
-                                            .font(.subheadline)
-                                            .foregroundColor(.primary)
-                                        Spacer()
-                                    }
-                                    
-                                    Button(action: {
-                                        showSignInSheet = true
-                                    }) {
-                                        Text("Sign In / Sign Up")
-                                            .font(.system(size: 15, weight: .medium, design: .rounded))
-                                            .foregroundColor(.white)
-                                            .frame(maxWidth: .infinity)
-                                            .padding()
-                                            .background(
-                                                LinearGradient(
-                                                    colors: [.purple, .pink],
-                                                    startPoint: .leading,
-                                                    endPoint: .trailing
-                                                )
-                                            )
-                                            .clipShape(RoundedRectangle(cornerRadius: 12))
-                                    }
+                            // Use the reusable AuthAwareCostCard component
+                            AuthAwareCostCard(
+                                price: currentPrice ?? item.resolvedCost ?? 0,
+                                requiredCredits: requiredCredits,
+                                primaryColor: .purple,
+                                secondaryColor: .pink,
+                                loginMessage: "Log in to generate a video",
+                                onSignIn: {
+                                    showSignInSheet = true
+                                },
+                                onBuyCredits: {
+                                    showPurchaseCreditsView = true
                                 }
-                                .padding()
-                                .background(
-                                    LinearGradient(
-                                        colors: [Color.purple.opacity(0.08), Color.pink.opacity(0.08)],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
-                                )
-                                .clipShape(RoundedRectangle(cornerRadius: 12))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .strokeBorder(
-                                            LinearGradient(
-                                                colors: [Color.purple, Color.pink],
-                                                startPoint: .topLeading,
-                                                endPoint: .bottomTrailing
-                                            ),
-                                            lineWidth: 1.5
-                                        )
-                                )
-                            } else {
-                                // Logged in: Show enhanced cost card
-                                EnhancedCostCard(
-                                    price: currentPrice ?? item.resolvedCost ?? 0,
-                                    balance: creditsViewModel.formattedBalance(),
-                                    hasEnoughCredits: hasEnoughCredits,
-                                    requiredAmount: requiredCredits,
-                                    primaryColor: .purple,
-                                    secondaryColor: .pink,
-                                    onBuyCredits: {
-                                        showPurchaseCreditsView = true
-                                    }
-                                )
-                            }
+                            )
                         }
                         .padding(.horizontal)
+                        .padding(.bottom, -12)  // Compensate for parent VStack spacing: 24 to get total of 12
 
                         LazyView(
                             GenerateButtonVideo(
@@ -579,8 +528,7 @@ struct VideoModelDetailPage: View {
             }
             ToolbarItem(placement: .navigationBarTrailing) {
                 CreditsBadge(
-                    diamondColor: .purple,
-                    borderColor: .pink
+                    borderColor: .purple
                 )
             }
         }
@@ -1086,7 +1034,7 @@ private struct PricingTableSectionVideo: View {
             }
             .buttonStyle(PlainButtonStyle())
         }
-        .padding(.horizontal)
+        .padding(.horizontal, 32)
         .sheet(isPresented: $showPricingSheet) {
             PricingTableSheetView(modelName: modelName)
                 .presentationDetents([.large])
