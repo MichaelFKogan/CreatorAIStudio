@@ -52,11 +52,21 @@ serve(async (req: Request) => {
 
   try {
     // Initialize Supabase client with service role (bypasses RLS)
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const webhookSecret =
-      Deno.env.get("WEBHOOK_SECRET") ||
-      "f2fa291c970a1bcf0310e2aecc1189005ee601e0dec33697e3704681fb021728";
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const webhookSecret = Deno.env.get("WEBHOOK_SECRET");
+
+    if (!supabaseUrl) {
+      throw new Error("SUPABASE_URL environment variable is required");
+    }
+    if (!supabaseServiceKey) {
+      throw new Error(
+        "SUPABASE_SERVICE_ROLE_KEY environment variable is required"
+      );
+    }
+    if (!webhookSecret) {
+      throw new Error("WEBHOOK_SECRET environment variable is required");
+    }
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 

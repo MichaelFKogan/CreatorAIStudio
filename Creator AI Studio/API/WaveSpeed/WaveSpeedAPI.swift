@@ -27,7 +27,7 @@ struct WaveSpeedResponse: Decodable {
 // 3. Remove this placeholder key
 
 // TODO: Replace with environment variable or secure config when re-implementing WaveSpeed
-let apiKey: String = {
+let wavespeedApiKey: String = {
     // Try to get from environment variable first
     if let envKey = ProcessInfo.processInfo.environment["WAVESPEED_API_KEY"], !envKey.isEmpty {
         return envKey

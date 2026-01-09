@@ -11,11 +11,20 @@
 			<string>GoogleSignIn</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>com.googleusercontent.apps.903889039644-sj0evd1k8vp9t67nb0kdncf2pn0ls121</string>
+				<string>com.googleusercontent.apps.YOUR_GOOGLE_CLIENT_ID</string>
 			</array>
 		</dict>
 	</array>
 	<key>GOOGLE_CLIENT_ID</key>
-	<string>903889039644-sj0evd1k8vp9t67nb0kdncf2pn0ls121.apps.googleusercontent.com</string>
+	<string>YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com</string>
+	<!-- Supabase Configuration -->
+	<key>SUPABASE_URL</key>
+	<string>https://YOUR_PROJECT_ID.supabase.co</string>
+	<key>SUPABASE_ANON_KEY</key>
+	<string>YOUR_SUPABASE_ANON_KEY</string>
+	<key>SUPABASE_PROJECT_ID</key>
+	<string>YOUR_PROJECT_ID</string>
+	<key>WEBHOOK_SECRET</key>
+	<string>YOUR_WEBHOOK_SECRET</string>
 </dict>
 </plist>

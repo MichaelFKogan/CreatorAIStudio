@@ -4,3 +4,4 @@ xcuserdata/
 
 # API Keys Configuration (contains sensitive keys)
 Config.xcconfig
+Creator-AI-Studio-Info.plist

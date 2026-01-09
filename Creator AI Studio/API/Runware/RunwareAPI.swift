@@ -60,12 +60,15 @@ struct RunwareResponse: Decodable {
 /// Configuration for webhook callbacks
 struct WebhookConfig {
     /// Base URL for the Supabase Edge Function webhook receiver
-    static let supabaseProjectId = "inaffymocuppuddsewyq"
+    static let supabaseProjectId = SupabaseConfig.supabaseProjectId
     static let baseWebhookURL = "https://\(supabaseProjectId).supabase.co/functions/v1/webhook-receiver"
     
+    /// Base URL for the Runware proxy Edge Function
+    static let runwareProxyURL = "https://\(supabaseProjectId).supabase.co/functions/v1/runware-proxy"
+    
     /// Secret token for webhook verification (should match Supabase Edge Function secret)
-    /// IMPORTANT: Replace with your actual webhook secret from Supabase
-    static let webhookSecret = "f2fa291c970a1bcf0310e2aecc1189005ee601e0dec33697e3704681fb021728"
+    /// Loaded from Info.plist via SupabaseConfig
+    static let webhookSecret = SupabaseConfig.webhookSecret
     
     /// Whether to use webhooks instead of polling (feature flag)
     static var useWebhooks = true
@@ -135,7 +138,7 @@ func uploadImageToRunware(image: UIImage) async throws -> String {
     let session = try await SupabaseManager.shared.client.auth.session
     let supabaseAuthToken = session.accessToken
 
-    let url = URL(string: "https://inaffymocuppuddsewyq.supabase.co/functions/v1/runware-proxy")!
+    let url = URL(string: WebhookConfig.runwareProxyURL)!
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -294,7 +297,7 @@ func uploadVideoToRunware(videoURL: URL) async throws -> String {
     let session = try await SupabaseManager.shared.client.auth.session
     let supabaseAuthToken = session.accessToken
     
-    let url = URL(string: "https://inaffymocuppuddsewyq.supabase.co/functions/v1/runware-proxy")!
+    let url = URL(string: WebhookConfig.runwareProxyURL)!
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -597,7 +600,7 @@ func sendImageToRunware(
     let session = try await SupabaseManager.shared.client.auth.session
     let supabaseAuthToken = session.accessToken
 
-    let url = URL(string: "https://inaffymocuppuddsewyq.supabase.co/functions/v1/runware-proxy")!
+    let url = URL(string: WebhookConfig.runwareProxyURL)!
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -1022,7 +1025,7 @@ func sendVideoToRunware(
     let session = try await SupabaseManager.shared.client.auth.session
     let supabaseAuthToken = session.accessToken
 
-    let url = URL(string: "https://inaffymocuppuddsewyq.supabase.co/functions/v1/runware-proxy")!
+    let url = URL(string: WebhookConfig.runwareProxyURL)!
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -1206,7 +1209,7 @@ func pollRunwareTaskStatus(taskUUID: String) async throws -> RunwareResponse {
     let session = try await SupabaseManager.shared.client.auth.session
     let supabaseAuthToken = session.accessToken
     
-    let url = URL(string: "https://inaffymocuppuddsewyq.supabase.co/functions/v1/runware-proxy")!
+    let url = URL(string: WebhookConfig.runwareProxyURL)!
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -1378,7 +1381,7 @@ func submitImageToRunwareWithWebhook(
     let session = try await SupabaseManager.shared.client.auth.session
     let supabaseAuthToken = session.accessToken
     
-    let url = URL(string: "https://inaffymocuppuddsewyq.supabase.co/functions/v1/runware-proxy")!
+    let url = URL(string: WebhookConfig.runwareProxyURL)!
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -1729,7 +1732,7 @@ func submitVideoToRunwareWithWebhook(
     let session = try await SupabaseManager.shared.client.auth.session
     let supabaseAuthToken = session.accessToken
     
-    let url = URL(string: "https://inaffymocuppuddsewyq.supabase.co/functions/v1/runware-proxy")!
+    let url = URL(string: WebhookConfig.runwareProxyURL)!
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
     request.setValue("application/json", forHTTPHeaderField: "Content-Type")

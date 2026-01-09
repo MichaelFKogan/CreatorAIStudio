@@ -15,7 +15,7 @@ class SupabaseManager {
 
     // MARK: CLIENT SETUP
 
-    // Replace with your actual Supabase URL and anon key
+    // Supabase client configured via SupabaseConfig (loads from Info.plist)
     let client: SupabaseClient
 
     // Storage buckets (create these in Supabase dashboard)
@@ -23,9 +23,12 @@ class SupabaseManager {
     private let videoStorageBucket = "user-generated-videos"
 
     private init() {
+        let supabaseURL = URL(string: SupabaseConfig.supabaseURL)!
+        let supabaseKey = SupabaseConfig.supabaseAnonKey
+        
         client = SupabaseClient(
-            supabaseURL: URL(string: "https://inaffymocuppuddsewyq.supabase.co")!,
-            supabaseKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImluYWZmeW1vY3VwcHVkZHNld3lxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTQwMDgsImV4cCI6MjA3NjE5MDAwOH0.rsklD7VpItxb2UTCzH1RPYD8HWKpFifekJaUi8JYkNY"
+            supabaseURL: supabaseURL,
+            supabaseKey: supabaseKey
         )
     }
 
