@@ -688,8 +688,8 @@ class ProfileViewModel: ObservableObject {
         print("🧹 Cache cleared for user: \(userId) (including stats cache)")
         
         // Recompute stats from user_media table (the authoritative source of truth)
-        // This ensures counts match the actual data, not the potentially stale user_stats table
-        await initializeUserStats()
+        // NOTE: With database triggers, this uses the database function for efficiency
+        await recomputeUserStatsViaDatabase()
         
         // Also refresh images to ensure UI is up to date
         await fetchUserImages(forceRefresh: true)
@@ -1145,6 +1145,29 @@ class ProfileViewModel: ObservableObject {
                     return
                 }
                 
+                // Check if stats are significantly out of sync with loaded images
+                // NOTE: With database triggers, this should rarely happen, but we keep it as a safety net
+                // This can happen if triggers weren't set up yet, or after migrations before triggers run
+                let actualImageCount = userImages.filter { $0.isImage && $0.isSuccess }.count
+                let actualVideoCount = userImages.filter { $0.isVideo && $0.isSuccess }.count
+                
+                // If we have loaded images and the discrepancy is large (>50% difference or >10 items), resync
+                let imageDiscrepancy = abs(actualImageCount - stats.image_count)
+                let videoDiscrepancy = abs(actualVideoCount - stats.video_count)
+                let hasLargeDiscrepancy = (imageDiscrepancy > 10 && actualImageCount > stats.image_count * 2) ||
+                                         (videoDiscrepancy > 10 && actualVideoCount > stats.video_count * 2)
+                
+                if hasLargeDiscrepancy && (actualImageCount > 0 || actualVideoCount > 0) {
+                    print("⚠️ Stats out of sync detected! (This should be rare with database triggers)")
+                    print("📊 DB stats: images=\(stats.image_count), videos=\(stats.video_count)")
+                    print("📊 Actual loaded: images=\(actualImageCount), videos=\(actualVideoCount)")
+                    print("📊 Discrepancy: images=\(imageDiscrepancy), videos=\(videoDiscrepancy)")
+                    print("🔄 Triggering stats resync via database function...")
+                    // Use database function to recompute stats (more efficient than Swift-side computation)
+                    await recomputeUserStatsViaDatabase()
+                    return
+                }
+                
                 // Update published properties from stats
                 print("📊 Current counts before update: favorites=\(favoriteCount), images=\(imageCount), videos=\(videoCount)")
                 print("📊 Fetched stats from DB: favorites=\(stats.favorite_count), images=\(stats.image_count), videos=\(stats.video_count)")
@@ -1166,7 +1189,8 @@ class ProfileViewModel: ObservableObject {
             } else {
                 // Stats don't exist yet, initialize them
                 print("⚠️ User stats not found, initializing...")
-                await initializeUserStats()
+                // Use database function for more efficient initialization
+                await recomputeUserStatsViaDatabase()
             }
         } catch {
             print("❌ Failed to fetch user stats: \(error)")
@@ -1185,9 +1209,10 @@ class ProfileViewModel: ObservableObject {
     }
     
     /// Re-syncs user stats by recomputing from database (useful if stats are out of sync)
+    /// NOTE: With database triggers, this should rarely be needed, but useful for manual resyncs
     func resyncUserStats() async {
         print("🔄 Re-syncing user stats from database...")
-        await initializeUserStats()
+        await recomputeUserStatsViaDatabase()
     }
     
     /// Diagnostic function to compare actual video model counts vs stored counts
@@ -1578,80 +1603,39 @@ class ProfileViewModel: ObservableObject {
     
     // MARK: - Update User Stats
     
-    /// Updates user stats in the database (incremental updates)
-    private func updateUserStats() async {
+    /// Refreshes user stats from the database
+    /// NOTE: With database triggers, stats are automatically updated when user_media changes.
+    /// This function just reads the current stats from the database.
+    private func refreshUserStats() async {
+        // Small delay to ensure triggers have completed
+        try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+        await fetchUserStats()
+    }
+    
+    /// Calls the database function to recompute user stats
+    /// This is more efficient than Swift-side computation and uses the same logic as triggers
+    private func recomputeUserStatsViaDatabase() async {
         guard let userId = userId else { return }
         
         do {
-            // Create a UserStats object for updating
-            let statsUpdate = UserStats(
-                id: nil,
-                user_id: userId,
-                favorite_count: favoriteCount,
-                image_count: imageCount,
-                video_count: videoCount,
-                model_counts: modelCounts,
-                video_model_counts: videoModelCounts,
-                created_at: nil,
-                updated_at: nil
-            )
-            
+            // Call the database function recompute_user_stats
+            // This uses RPC (Remote Procedure Call) to execute the function
+            // The function returns void, so we just execute without expecting a return value
             try await client.database
-                .from("user_stats")
-                .update(statsUpdate)
-                .eq("user_id", value: userId)
+                .rpc("recompute_user_stats", params: ["target_user_id": userId])
                 .execute()
             
-            // Update cache with new stats
-            saveCachedStats(for: userId, stats: statsUpdate)
+            print("✅ Called recompute_user_stats database function")
             
-            print("✅ Updated user stats in database and cache")
+            // Refresh stats after recomputation (small delay to ensure trigger completed)
+            await refreshUserStats()
         } catch {
-            print("❌ Failed to update user stats: \(error)")
+            print("❌ Failed to call recompute_user_stats: \(error)")
+            print("❌ Error details: \(error.localizedDescription)")
+            // Fallback to Swift-side computation if RPC fails
+            print("⚠️ Falling back to Swift-side stats computation...")
+            await initializeUserStats()
         }
-    }
-    
-    /// Increments favorite count when an image is favorited
-    private func incrementFavoriteCount() async {
-        favoriteCount += 1
-        await updateUserStats()
-    }
-    
-    /// Decrements favorite count when an image is unfavorited
-    private func decrementFavoriteCount() async {
-        favoriteCount = max(0, favoriteCount - 1)
-        await updateUserStats()
-    }
-    
-    /// Updates model counts when an image is added
-    private func updateModelCountsForImage(_ image: UserImage, increment: Bool) async {
-        // Don't update model counts for null/empty model names
-        // These are still counted in total image_count/video_count, but not assigned to a model
-        guard let model = image.model, !model.isEmpty, model != "(null)" else { return }
-        
-        if image.isImage {
-            if increment {
-                modelCounts[model, default: 0] += 1
-            } else {
-                modelCounts[model, default: 0] = max(0, (modelCounts[model] ?? 0) - 1)
-                // Remove model from counts if count reaches 0
-                if modelCounts[model] == 0 {
-                    modelCounts.removeValue(forKey: model)
-                }
-            }
-        } else if image.isVideo {
-            if increment {
-                videoModelCounts[model, default: 0] += 1
-            } else {
-                videoModelCounts[model, default: 0] = max(0, (videoModelCounts[model] ?? 0) - 1)
-                // Remove model from counts if count reaches 0
-                if videoModelCounts[model] == 0 {
-                    videoModelCounts.removeValue(forKey: model)
-                }
-            }
-        }
-        
-        await updateUserStats()
     }
     
     // MARK: - Fetch Favorites with Pagination
@@ -1773,6 +1757,7 @@ class ProfileViewModel: ObservableObject {
         saveCachedImages(for: userId)
 
         // Update database
+        // NOTE: Database triggers will automatically update user_stats
         do {
             try await client.database
                 .from("user_media")
@@ -1781,12 +1766,8 @@ class ProfileViewModel: ObservableObject {
                 .eq("user_id", value: userId)
                 .execute()
             
-            // Update stats
-            if newFavorite {
-                await incrementFavoriteCount()
-            } else {
-                await decrementFavoriteCount()
-            }
+            // Refresh stats from database (triggers handle the count updates)
+            await refreshUserStats()
         } catch {
             print("❌ Failed to update favorite status: \(error)")
             // Revert local change on error
@@ -2006,23 +1987,8 @@ class ProfileViewModel: ObservableObject {
                         print("❌ Could not extract storage path from URL: \(imageUrl)")
                     }
                     
-                    // Update stats before removing from local array
-                    await updateModelCountsForImage(image, increment: false)
-                    if image.is_favorite == true {
-                        await decrementFavoriteCount()
-                    }
-                    
-                    // Decrement image/video count
-                    await MainActor.run {
-                        if image.isImage {
-                            imageCount = max(0, imageCount - 1)
-                        } else if image.isVideo {
-                            videoCount = max(0, videoCount - 1)
-                        }
-                    }
-                    
-                    // Update stats in database after decrementing counts
-                    await updateUserStats()
+                    // NOTE: Database triggers will automatically update user_stats when media is deleted
+                    // No manual count updates needed
                     
                     // Success - remove from local array
                     await MainActor.run {
@@ -2107,17 +2073,10 @@ class ProfileViewModel: ObservableObject {
         // Update cache
         saveCachedImages(for: userId)
         
-        // Update stats (increment model count, image/video count, and favorite count if favorited)
-        await updateModelCountsForImage(image, increment: true)
-        if image.isImage {
-            imageCount += 1
-        } else if image.isVideo {
-            videoCount += 1
-        }
-        if image.is_favorite == true {
-            await incrementFavoriteCount()
-        }
-        await updateUserStats()
+        // NOTE: If the image was already in the database, triggers will handle stats updates.
+        // If this is a new image being added locally (before DB insert), we'll refresh stats
+        // after the database operation completes. For now, just refresh to get current counts.
+        await refreshUserStats()
     }
     
     /// Fetches a single image by ID and adds it to the list
