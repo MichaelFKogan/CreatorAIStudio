@@ -164,6 +164,13 @@ struct TestCreditsView: View {
                     isUpdating = false
                     showSuccessAlert = true
                     
+                    // Post notification to refresh credit balance in UI
+                    NotificationCenter.default.post(
+                        name: NSNotification.Name("CreditsBalanceUpdated"),
+                        object: nil,
+                        userInfo: ["userId": userId]
+                    )
+                    
                     // Haptic feedback
                     let generator = UINotificationFeedbackGenerator()
                     generator.notificationOccurred(.success)

@@ -247,8 +247,8 @@ struct PhotoFilterDetailView: View {
             AuthAwareCostCard(
                 price: totalPrice,
                 requiredCredits: requiredCredits,
-                primaryColor: .blue,
-                secondaryColor: .purple,
+                primaryColor: .green,
+                secondaryColor: .mint,
                 loginMessage: "Log in to upload your photo",
                 onSignIn: {
                     showSignInSheet = true
@@ -369,6 +369,7 @@ struct PhotoFilterDetailView: View {
                     Spacer()
                 }
             }
+            .padding(.top, 12)
 
             MoreStylesImageSection(items: allMoreStyles(for: item))
         }
