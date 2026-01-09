@@ -72,7 +72,9 @@ serve(async (req: Request) => {
 
     // Parse URL to get provider from query params
     const url = new URL(req.url);
-    const provider = url.searchParams.get("provider") || "unknown";
+    let provider = url.searchParams.get("provider") || "unknown";
+    // Normalize provider: trim whitespace and convert to lowercase for comparison
+    provider = provider.trim().toLowerCase();
     const token = url.searchParams.get("token");
 
     console.log(`[Webhook] ========================================`);
@@ -131,10 +133,16 @@ serve(async (req: Request) => {
       }
     }
 
+    // Normalize detectedProvider
+    detectedProvider = detectedProvider.trim().toLowerCase();
+
     // Use detected provider if we auto-detected one
-    const finalProvider =
+    let finalProvider =
       detectedProvider !== "unknown" ? detectedProvider : provider;
-    console.log(`[Webhook] Using provider: ${finalProvider}`);
+
+    console.log(`[Webhook] Provider from query: "${provider}"`);
+    console.log(`[Webhook] Detected provider: "${detectedProvider}"`);
+    console.log(`[Webhook] Final provider: "${finalProvider}"`);
 
     // ========================================
     // VERIFY WEBHOOK AUTHENTICITY
@@ -148,9 +156,7 @@ serve(async (req: Request) => {
 
       if (webhookId && webhookTimestamp && webhookSignature) {
         // Get the WaveSpeed webhook secret from environment
-        const wavespeedSecret = Deno.env.get(
-          "5fb599c5eca75157f34d7da3efc734a3422a4b5ae0e6bbf753a09b82e6caebdf"
-        );
+        const wavespeedSecret = Deno.env.get("WAVESPEED_WEBHOOK_SECRET");
 
         if (wavespeedSecret) {
           // Construct signature payload
@@ -310,13 +316,25 @@ serve(async (req: Request) => {
           resultUrl = payload.payload.video.url;
           errorMessage = null;
           console.log(`[Webhook] Fal.ai - Video URL found: ${resultUrl}`);
-        } else {
-          // Check if payload structure is different
+        }
+        // For images, the payload structure is: { images: [{ url: "...", ... }] }
+        else if (
+          payload.payload?.images &&
+          Array.isArray(payload.payload.images) &&
+          payload.payload.images.length > 0
+        ) {
+          status = "completed";
+          resultUrl = payload.payload.images[0].url;
+          errorMessage = null;
+          console.log(`[Webhook] Fal.ai - Image URL found: ${resultUrl}`);
+        }
+        // Check if payload structure is different
+        else {
           console.log(
             `[Webhook] Fal.ai - Payload structure:`,
             JSON.stringify(payload.payload, null, 2)
           );
-          // Try alternative structure - maybe video is at top level?
+          // Try alternative structure - maybe video/image is at top level?
           if (payload.video?.url) {
             status = "completed";
             resultUrl = payload.video.url;
@@ -324,12 +342,23 @@ serve(async (req: Request) => {
             console.log(
               `[Webhook] Fal.ai - Video URL found at top level: ${resultUrl}`
             );
+          } else if (
+            payload.images &&
+            Array.isArray(payload.images) &&
+            payload.images.length > 0
+          ) {
+            status = "completed";
+            resultUrl = payload.images[0].url;
+            errorMessage = null;
+            console.log(
+              `[Webhook] Fal.ai - Image URL found at top level: ${resultUrl}`
+            );
           } else {
             status = "processing";
             resultUrl = null;
             errorMessage = null;
             console.log(
-              `[Webhook] Fal.ai - Status OK but no video URL found, marking as processing`
+              `[Webhook] Fal.ai - Status OK but no video/image URL found, marking as processing`
             );
           }
         }
@@ -364,11 +393,20 @@ serve(async (req: Request) => {
         )}...`
       );
     } else {
-      console.error(`[Webhook] Unknown provider: ${provider}`);
-      return new Response(JSON.stringify({ error: "Unknown provider" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      console.error(
+        `[Webhook] Unknown provider: "${finalProvider}" (original: "${provider}")`
+      );
+      console.error(`[Webhook] Available providers: runware, wavespeed, falai`);
+      console.error(
+        `[Webhook] Payload keys: ${Object.keys(payload).join(", ")}`
+      );
+      return new Response(
+        JSON.stringify({ error: "Unknown provider", provider: finalProvider }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
     }
 
     if (!taskId) {
@@ -400,12 +438,124 @@ serve(async (req: Request) => {
 
     console.log(`[Webhook] Updating pending_jobs for task_id: ${taskId}`);
 
-    const { data: updatedJob, error: dbError } = await supabase
+    let { data: updatedJob, error: dbError } = await supabase
       .from("pending_jobs")
       .update(updateData)
       .eq("task_id", taskId)
       .select()
       .single();
+
+    // For Fal.ai, if job not found by task_id, try searching by metadata.fal_request_id
+    if (dbError && dbError.code === "PGRST116" && finalProvider === "falai") {
+      console.log(
+        `[Webhook] Fal.ai - Job not found by task_id (${taskId}), searching by metadata.fal_request_id`
+      );
+
+      // Try to find job by Fal.ai request_id in metadata
+      // First, let's try querying all Fal.ai pending jobs and filtering in code
+      // This is more reliable than JSONB queries which can be tricky
+      const { data: allFalaiJobs, error: fetchError } = await supabase
+        .from("pending_jobs")
+        .select()
+        .eq("provider", "falai")
+        .in("status", ["pending", "processing"])
+        .limit(50); // Get recent pending/processing jobs
+
+      console.log(
+        `[Webhook] Fal.ai - Fetched ${
+          allFalaiJobs?.length || 0
+        } Fal.ai jobs to search`
+      );
+
+      if (fetchError) {
+        console.error(`[Webhook] Fal.ai - Error fetching jobs:`, fetchError);
+      }
+
+      // Filter in JavaScript to find job with matching fal_request_id
+      const foundJob = allFalaiJobs?.find((job: any) => {
+        try {
+          // Handle both string and object metadata
+          let metadata = job.metadata;
+          if (typeof metadata === "string") {
+            metadata = JSON.parse(metadata);
+          }
+
+          const falRequestId = metadata?.fal_request_id;
+          const matches = falRequestId === taskId;
+
+          if (matches) {
+            console.log(
+              `[Webhook] Fal.ai - Found matching job! task_id: ${job.task_id}, fal_request_id: ${falRequestId}`
+            );
+          }
+
+          return matches;
+        } catch (e) {
+          console.error(
+            `[Webhook] Fal.ai - Error parsing metadata for job ${job.task_id}:`,
+            e
+          );
+          return false;
+        }
+      });
+
+      if (!foundJob) {
+        console.log(
+          `[Webhook] Fal.ai - Job not found by metadata (searched ${
+            allFalaiJobs?.length || 0
+          } jobs). Fal.ai request_id: ${taskId}`
+        );
+        console.log(
+          `[Webhook] Fal.ai - Sample metadata from jobs:`,
+          allFalaiJobs?.slice(0, 3).map((j: any) => ({
+            task_id: j.task_id,
+            metadata: j.metadata,
+          }))
+        );
+        return new Response(
+          JSON.stringify({ status: "ok", message: "Job not found" }),
+          {
+            status: 200,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+
+      // Found job by metadata, update it using its actual task_id
+      console.log(
+        `[Webhook] Fal.ai - Found job by metadata, updating task_id: ${foundJob.task_id}`
+      );
+
+      const { data: updatedJobByMetadata, error: updateError } = await supabase
+        .from("pending_jobs")
+        .update(updateData)
+        .eq("task_id", foundJob.task_id)
+        .select()
+        .single();
+
+      if (updateError) {
+        console.error(
+          `[Webhook] Database error updating by metadata:`,
+          updateError
+        );
+        return new Response(
+          JSON.stringify({
+            error: "Database error",
+            details: updateError.message,
+          }),
+          {
+            status: 500,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+
+      updatedJob = updatedJobByMetadata;
+      dbError = null;
+      console.log(
+        `[Webhook] Fal.ai - Successfully updated job ${foundJob.task_id} via metadata lookup`
+      );
+    }
 
     if (dbError) {
       console.error(`[Webhook] Database error:`, dbError);

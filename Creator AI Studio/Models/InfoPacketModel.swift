@@ -46,7 +46,8 @@ struct InfoPacket: Codable, Identifiable, Hashable {
                 runwareModel: nil,
                 aspectRatio: nil,
                 wavespeedConfig: nil,
-                runwareConfig: nil
+                runwareConfig: nil,
+                falConfig: nil
             )
         }
         
@@ -73,6 +74,9 @@ struct InfoPacket: Codable, Identifiable, Hashable {
             }
             if let storedRunwareConfig = storedConfig.runwareConfig {
                 mergedConfig.runwareConfig = storedRunwareConfig
+            }
+            if let storedFalConfig = storedConfig.falConfig {
+                mergedConfig.falConfig = storedFalConfig
             }
             return mergedConfig
         }
@@ -137,6 +141,7 @@ struct APIConfiguration: Codable, Hashable {
 
     var wavespeedConfig: WaveSpeedConfig?
     var runwareConfig: RunwareConfig?
+    var falConfig: FalConfig?
 }
 
 struct WaveSpeedConfig: Codable, Hashable {
@@ -164,7 +169,31 @@ struct RunwareConfig: Codable, Hashable {
     var outputQuality: Int?
 }
 
+struct FalConfig: Codable, Hashable {
+    // Fal.ai model identifier (e.g., "fal-ai/z-image/turbo")
+    var modelId: String?
+    // Number of inference steps (default: 8 for z-image/turbo)
+    var numInferenceSteps: Int?
+    // Seed for reproducible generation
+    var seed: Int?
+    // Number of images to generate (default: 1)
+    var numImages: Int?
+    // Enable safety checker (default: true)
+    var enableSafetyChecker: Bool?
+    // Enable prompt expansion (default: false, increases cost)
+    var enablePromptExpansion: Bool?
+    // Output format: "jpeg", "png", "webp" (default: "png")
+    var outputFormat: String?
+    // Acceleration level: "none", "regular", "high" (default: "none")
+    var acceleration: String?
+    // Whether this model requires width/height
+    var requiresDimensions: Bool?
+    // Default compression quality for image conversion
+    var imageCompressionQuality: Double?
+}
+
 enum APIProvider: String, Codable, Hashable {
     case wavespeed
     case runware
+    case fal
 }

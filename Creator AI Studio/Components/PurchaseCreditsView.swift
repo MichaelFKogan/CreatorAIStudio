@@ -506,6 +506,16 @@ struct CreditPackageCard: View {
                                 .italic()
                             }
                             .padding(.leading, 16)
+
+                            HStack{
+                                Text(
+                                    "*Approximate usage depends on model used"
+                                )
+                                .font(.system(size: 11, design: .rounded))
+                                .foregroundColor(.secondary)
+                                .italic()
+                            }
+                            .padding(.leading, 16)
                         }
 
                         Spacer()

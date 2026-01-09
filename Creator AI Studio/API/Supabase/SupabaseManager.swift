@@ -406,6 +406,46 @@ class SupabaseManager {
         print("[PendingJobs] Updated job \(taskId) provider to: \(provider)")
     }
     
+    /// Updates the metadata for a pending job
+    /// - Parameters:
+    ///   - taskId: The task ID to update
+    ///   - metadata: The new metadata
+    func updatePendingJobMetadata(taskId: String, metadata: PendingJobMetadata) async throws {
+        // Use Supabase's PostgrestFilterBuilder with proper JSON encoding
+        struct MetadataUpdate: Encodable {
+            let metadata: PendingJobMetadata
+            let updated_at: String
+        }
+        
+        let update = MetadataUpdate(
+            metadata: metadata,
+            updated_at: ISO8601DateFormatter().string(from: Date())
+        )
+        
+        // Debug: Log what we're updating
+        if let falRequestId = metadata.falRequestId {
+            print("[PendingJobs] Updating job \(taskId) metadata with Fal.ai request_id: \(falRequestId)")
+        }
+        
+        try await client.database
+            .from("pending_jobs")
+            .update(update)
+            .eq("task_id", value: taskId)
+            .execute()
+        
+        // Verify the update worked by fetching the job
+        if let updatedJob = try? await fetchPendingJob(taskId: taskId) {
+            if let updatedMetadata = updatedJob.metadata,
+               let falRequestId = updatedMetadata.falRequestId {
+                print("[PendingJobs] ✅ Verified: Job \(taskId) now has fal_request_id: \(falRequestId)")
+            } else {
+                print("[PendingJobs] ⚠️ Warning: Job \(taskId) metadata update may have failed - fal_request_id not found")
+            }
+        }
+        
+        print("[PendingJobs] Updated job \(taskId) metadata with Fal.ai request_id")
+    }
+    
     /// Deletes a pending job
     /// - Parameter taskId: The task ID to delete
     func deletePendingJob(taskId: String) async throws {

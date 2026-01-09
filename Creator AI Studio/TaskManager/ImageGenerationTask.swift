@@ -172,6 +172,63 @@ class ImageGenerationTask: MediaGenerationTask {
                     )
                 }
                 urlString = outputURL
+                
+//            MARK: SEND TO FAL.AI
+                
+            case .fal:
+                // Get Fal.ai config
+                let falConfig = apiConfig.falConfig
+                let modelId = falConfig?.modelId ?? "fal-ai/z-image/turbo"
+                
+                // Calculate dimensions from aspect ratio if needed
+                var width: Int? = nil
+                var height: Int? = nil
+                
+                // For custom sizes, try to parse aspect ratio
+                if let aspectRatio = apiConfig.aspectRatio {
+                    let components = aspectRatio.split(separator: ":")
+                    if components.count == 2,
+                       let w = Double(components[0]),
+                       let h = Double(components[1]) {
+                        // Use a base size and scale proportionally
+                        let baseSize = 1024.0
+                        let ratio = w / h
+                        if w > h {
+                            width = Int(baseSize)
+                            height = Int(baseSize / ratio)
+                        } else {
+                            width = Int(baseSize * ratio)
+                            height = Int(baseSize)
+                        }
+                    }
+                }
+                
+                // Wrap API request in a 360-second timeout to protect against infinite waits.
+                let response = try await withTimeout(seconds: 360) {
+                    try await sendImageToFalAI(
+                        prompt: self.item.prompt ?? "",
+                        modelId: modelId,
+                        aspectRatio: apiConfig.aspectRatio,
+                        width: width,
+                        height: height,
+                        numInferenceSteps: falConfig?.numInferenceSteps ?? 8,
+                        seed: falConfig?.seed,
+                        numImages: falConfig?.numImages ?? 1,
+                        enableSafetyChecker: falConfig?.enableSafetyChecker ?? true,
+                        enablePromptExpansion: falConfig?.enablePromptExpansion ?? false,
+                        outputFormat: falConfig?.outputFormat ?? "png",
+                        acceleration: falConfig?.acceleration ?? "none"
+                    )
+                }
+
+                guard let outputURL = response.images.first?.url else {
+                    throw NSError(
+                        domain: "APIError",
+                        code: -1,
+                        userInfo: [NSLocalizedDescriptionKey: "No output URL returned from Fal.ai API"]
+                    )
+                }
+                urlString = outputURL
             }
 
             await onProgress(TaskProgress(progress: 0.5, message: "Processing transformation..."))
@@ -189,7 +246,8 @@ class ImageGenerationTask: MediaGenerationTask {
             }
 
             await onProgress(TaskProgress(progress: 0.6, message: "Downloading result..."))
-            print("[\(apiConfig.provider == .runware ? "Runware" : "WaveSpeed")] Fetching generated image…")
+            let providerName = apiConfig.provider == .runware ? "Runware" : (apiConfig.provider == .fal ? "Fal.ai" : "WaveSpeed")
+            print("[\(providerName)] Fetching generated image…")
 
             // Download final image with a 30-second timeout window.
             let (imageData, _) = try await withTimeout(seconds: 30) {
@@ -205,7 +263,7 @@ class ImageGenerationTask: MediaGenerationTask {
                 )
             }
 
-            print("[\(apiConfig.provider == .runware ? "Runware" : "WaveSpeed")] Generated image loaded successfully.")
+            print("[\(providerName)] Generated image loaded successfully.")
 
             // MARK: STEP 3 — UPLOAD RESULT TO STORAGE (SUPABASE)
 
@@ -354,7 +412,8 @@ class ImageGenerationTask: MediaGenerationTask {
 
         } catch {
             // Catches everything else — JSON errors, decode errors, unexpected exceptions.
-            print("❌ \(apiConfig.provider == .runware ? "Runware" : "WaveSpeed") error: \(error)")
+            let providerName = apiConfig.provider == .runware ? "Runware" : (apiConfig.provider == .fal ? "Fal.ai" : "WaveSpeed")
+            print("❌ \(providerName) error: \(error)")
             
             let errorMessage = error.localizedDescription.isEmpty ? "Generation failed" : error.localizedDescription
             
@@ -404,10 +463,21 @@ class ImageGenerationTask: MediaGenerationTask {
                 endpoint: apiConfig.endpoint
             )
             
+            // Map APIProvider to JobProvider
+            let jobProvider: JobProvider
+            switch apiConfig.provider {
+            case .runware:
+                jobProvider = .runware
+            case .fal:
+                jobProvider = .falai
+            case .wavespeed:
+                jobProvider = .wavespeed
+            }
+            
             let pendingJob = PendingJob(
                 userId: userId,
                 taskId: taskId,
-                provider: apiConfig.provider == .runware ? .runware : .wavespeed,
+                provider: jobProvider,
                 jobType: .image,
                 metadata: jobMetadata,
                 deviceToken: nil // TODO: Add device token for push notifications
@@ -451,6 +521,78 @@ class ImageGenerationTask: MediaGenerationTask {
                     runwareConfig: apiConfig.runwareConfig
                 )
                 print("✅ Runware webhook request submitted")
+                
+            case .fal:
+                // Get Fal.ai config
+                let falConfig = apiConfig.falConfig
+                let modelId = falConfig?.modelId ?? "fal-ai/z-image/turbo"
+                
+                // Calculate dimensions from aspect ratio if needed
+                var width: Int? = nil
+                var height: Int? = nil
+                
+                // For custom sizes, try to parse aspect ratio
+                if let aspectRatio = apiConfig.aspectRatio {
+                    let components = aspectRatio.split(separator: ":")
+                    if components.count == 2,
+                       let w = Double(components[0]),
+                       let h = Double(components[1]) {
+                        // Use a base size and scale proportionally
+                        let baseSize = 1024.0
+                        let ratio = w / h
+                        if w > h {
+                            width = Int(baseSize)
+                            height = Int(baseSize / ratio)
+                        } else {
+                            width = Int(baseSize * ratio)
+                            height = Int(baseSize)
+                        }
+                    }
+                }
+                
+                let falResponse = try await submitImageToFalAIWithWebhook(
+                    requestId: taskId,
+                    prompt: item.prompt ?? "",
+                    modelId: modelId,
+                    aspectRatio: apiConfig.aspectRatio,
+                    width: width,
+                    height: height,
+                    numInferenceSteps: falConfig?.numInferenceSteps ?? 8,
+                    seed: falConfig?.seed,
+                    numImages: falConfig?.numImages ?? 1,
+                    enableSafetyChecker: falConfig?.enableSafetyChecker ?? true,
+                    enablePromptExpansion: falConfig?.enablePromptExpansion ?? false,
+                    outputFormat: falConfig?.outputFormat ?? "png",
+                    acceleration: falConfig?.acceleration ?? "none",
+                    userId: userId
+                )
+                
+                // Update the pending job metadata with Fal.ai's request_id
+                // This is needed because Fal.ai uses a different request_id than our taskId
+                if falResponse.requestId != taskId {
+                    print("[Fal.ai] Updating pending job metadata with Fal.ai request_id: \(falResponse.requestId)")
+                    var updatedMetadata = jobMetadata
+                    // Create a new metadata with the Fal.ai request_id
+                    let updatedMetadataWithFalId = PendingJobMetadata(
+                        prompt: updatedMetadata.prompt,
+                        model: updatedMetadata.model,
+                        title: updatedMetadata.title,
+                        aspectRatio: updatedMetadata.aspectRatio,
+                        resolution: updatedMetadata.resolution,
+                        duration: updatedMetadata.duration,
+                        cost: updatedMetadata.cost,
+                        type: updatedMetadata.type,
+                        endpoint: updatedMetadata.endpoint,
+                        falRequestId: falResponse.requestId
+                    )
+                    // Update the pending job with the new metadata
+                    try await SupabaseManager.shared.updatePendingJobMetadata(
+                        taskId: taskId,
+                        metadata: updatedMetadataWithFalId
+                    )
+                }
+                
+                print("✅ Fal.ai webhook request submitted")
             }
             
             // Mark API request as submitted AFTER successful submission - this will hide the Cancel button

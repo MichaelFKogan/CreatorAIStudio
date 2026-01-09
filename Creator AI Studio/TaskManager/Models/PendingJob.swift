@@ -141,6 +141,7 @@ struct PendingJobMetadata: Codable {
     let cost: Double?
     let type: String?  // "Photo Filter", "Video Model", etc.
     let endpoint: String?
+    let falRequestId: String?  // Fal.ai request_id (different from our task_id)
     
     enum CodingKeys: String, CodingKey {
         case prompt
@@ -152,6 +153,7 @@ struct PendingJobMetadata: Codable {
         case cost
         case type
         case endpoint
+        case falRequestId = "fal_request_id"
     }
     
     init(
@@ -163,7 +165,8 @@ struct PendingJobMetadata: Codable {
         duration: Double? = nil,
         cost: Double? = nil,
         type: String? = nil,
-        endpoint: String? = nil
+        endpoint: String? = nil,
+        falRequestId: String? = nil
     ) {
         self.prompt = prompt
         self.model = model
@@ -174,6 +177,7 @@ struct PendingJobMetadata: Codable {
         self.cost = cost
         self.type = type
         self.endpoint = endpoint
+        self.falRequestId = falRequestId
     }
 }
 

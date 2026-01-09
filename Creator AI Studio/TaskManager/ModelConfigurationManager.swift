@@ -173,21 +173,41 @@ class ModelConfigurationManager {
                     outputQuality: nil
                 )
             ),
+            // "Z-Image-Turbo": APIConfiguration(
+            //     provider: .runware,
+            //     endpoint: "https://api.runware.ai/v1",
+            //     runwareModel: "runware:z-image@turbo",
+            //     aspectRatio: nil,
+            //     wavespeedConfig: nil,
+            //     runwareConfig: RunwareConfig(
+            //         imageToImageMethod: "referenceImages",
+            //         strength: 0.7,
+            //         additionalTaskParams: nil,
+            //         requiresDimensions: true,
+            //         imageCompressionQuality: 0.85,
+            //         outputFormat: nil,
+            //         outputType: nil,
+            //         outputQuality: nil
+            //     )
+            // ),
             "Z-Image-Turbo": APIConfiguration(
-                provider: .runware,
-                endpoint: "https://api.runware.ai/v1",
-                runwareModel: "runware:z-image@turbo",
+                provider: .fal,
+                endpoint: "https://queue.fal.run/fal-ai/z-image/turbo",
+                runwareModel: nil,
                 aspectRatio: nil,
                 wavespeedConfig: nil,
-                runwareConfig: RunwareConfig(
-                    imageToImageMethod: "referenceImages",
-                    strength: 0.7,
-                    additionalTaskParams: nil,
+                runwareConfig: nil,
+                falConfig: FalConfig(
+                    modelId: "fal-ai/z-image/turbo",
+                    numInferenceSteps: 8,
+                    seed: nil,
+                    numImages: 1,
+                    enableSafetyChecker: true,
+                    enablePromptExpansion: false,
+                    outputFormat: "png",
+                    acceleration: "none",
                     requiresDimensions: true,
-                    imageCompressionQuality: 0.85,
-                    outputFormat: nil,
-                    outputType: nil,
-                    outputQuality: nil
+                    imageCompressionQuality: 0.85
                 )
             ),
             "Wavespeed Ghibli": APIConfiguration(

@@ -31,6 +31,46 @@ struct FalAIVideoFile: Decodable {
     }
 }
 
+// MARK: - Fal.ai Image Response Structures
+
+struct FalAIImageResponse: Decodable {
+    let images: [FalAIImageFile]
+    let timings: FalAITimings?
+    let seed: Int?
+    let hasNsfwConcepts: [Bool]?
+    let prompt: String?
+    
+    enum CodingKeys: String, CodingKey {
+        case images
+        case timings
+        case seed
+        case hasNsfwConcepts = "has_nsfw_concepts"
+        case prompt
+    }
+}
+
+struct FalAIImageFile: Decodable {
+    let url: String
+    let width: Int?
+    let height: Int?
+    let contentType: String?
+    let fileName: String?
+    let fileSize: Int?
+    
+    enum CodingKeys: String, CodingKey {
+        case url
+        case width
+        case height
+        case contentType = "content_type"
+        case fileName = "file_name"
+        case fileSize = "file_size"
+    }
+}
+
+struct FalAITimings: Decodable {
+    let inference: Double?
+}
+
 struct FalAIQueueResponse: Decodable {
     let requestId: String
     
@@ -116,7 +156,13 @@ func submitVideoToFalAIWithWebhook(
     // fal.ai requires webhook URL as query parameter: ?fal_webhook=URL
     let webhookURL = WebhookConfig.webhookURL(for: "falai")
     print("[Fal.ai] Webhook URL: \(webhookURL)")
-    let encodedWebhookURL = webhookURL.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? webhookURL
+    
+    // Properly encode the webhook URL for use as a query parameter value
+    // We need to encode the entire URL, including ? and & characters
+    var allowedCharacters = CharacterSet.urlQueryAllowed
+    allowedCharacters.remove(charactersIn: "?&") // Remove ? and & from allowed set so they get encoded
+    let encodedWebhookURL = webhookURL.addingPercentEncoding(withAllowedCharacters: allowedCharacters) ?? webhookURL
+    
     let endpoint = "https://queue.fal.run/fal-ai/kling-video/v2.6/standard/motion-control?fal_webhook=\(encodedWebhookURL)"
     print("[Fal.ai] Full endpoint URL: \(endpoint)")
     let url = URL(string: endpoint)!
@@ -193,3 +239,253 @@ func submitVideoToFalAIWithWebhook(
     return FalAIWebhookSubmissionResponse(requestId: extractedRequestId, submitted: true)
 }
 
+// MARK: - Helper: Convert Aspect Ratio to Fal.ai Image Size
+
+/// Converts an aspect ratio string to Fal.ai image_size format
+/// Returns either an enum string (e.g., "landscape_4_3") or a custom size object
+func convertAspectRatioToFalImageSize(aspectRatio: String?, width: Int? = nil, height: Int? = nil) -> Any {
+    // If custom width/height are provided, use them
+    if let w = width, let h = height {
+        return ["width": w, "height": h]
+    }
+    
+    // Map common aspect ratios to Fal.ai enum values
+    guard let ratio = aspectRatio?.trimmingCharacters(in: .whitespacesAndNewlines) else {
+        return "landscape_4_3" // Default
+    }
+    
+    let ratioLower = ratio.lowercased()
+    
+    // Map to Fal.ai enum values
+    switch ratioLower {
+    case "1:1", "square":
+        return "square"
+    case "3:4", "4:3":
+        // Determine portrait vs landscape based on ratio format
+        if ratio.contains("3:4") {
+            return "portrait_4_3"
+        } else {
+            return "landscape_4_3"
+        }
+    case "9:16", "16:9":
+        if ratio.contains("9:16") {
+            return "portrait_16_9"
+        } else {
+            return "landscape_16_9"
+        }
+    case "2:3", "3:2":
+        if ratio.contains("2:3") {
+            return "portrait_4_3" // Closest match
+        } else {
+            return "landscape_4_3"
+        }
+    default:
+        // For custom ratios, try to parse and return custom size
+        // If we can't parse, return default
+        return "landscape_4_3"
+    }
+}
+
+// MARK: - Send Image to Fal.ai (Polling Mode)
+
+/// Generates an image using Fal.ai with polling (waits for result)
+func sendImageToFalAI(
+    prompt: String,
+    modelId: String = "fal-ai/z-image/turbo",
+    aspectRatio: String? = nil,
+    width: Int? = nil,
+    height: Int? = nil,
+    numInferenceSteps: Int = 8,
+    seed: Int? = nil,
+    numImages: Int = 1,
+    enableSafetyChecker: Bool = true,
+    enablePromptExpansion: Bool = false,
+    outputFormat: String = "png",
+    acceleration: String = "none"
+) async throws -> FalAIImageResponse {
+    print("[Fal.ai] Preparing image generation request…")
+    print("[Fal.ai] Model: \(modelId)")
+    print("[Fal.ai] Prompt: \(prompt)")
+    
+    // Convert aspect ratio to Fal.ai format
+    let imageSize = convertAspectRatioToFalImageSize(aspectRatio: aspectRatio, width: width, height: height)
+    
+    // Build request body
+    var requestBody: [String: Any] = [
+        "prompt": prompt,
+        "image_size": imageSize,
+        "num_inference_steps": numInferenceSteps,
+        "num_images": numImages,
+        "enable_safety_checker": enableSafetyChecker,
+        "enable_prompt_expansion": enablePromptExpansion,
+        "output_format": outputFormat,
+        "acceleration": acceleration
+    ]
+    
+    // Add optional seed if provided
+    if let seed = seed {
+        requestBody["seed"] = seed
+    }
+    
+    // Use subscribe endpoint for synchronous/polling mode
+    let endpoint = "https://fal.run/\(modelId)"
+    print("[Fal.ai] Endpoint: \(endpoint)")
+    
+    let url = URL(string: endpoint)!
+    var request = URLRequest(url: url)
+    request.httpMethod = "POST"
+    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+    request.setValue("Key \(falAIApiKey)", forHTTPHeaderField: "Authorization")
+    request.httpBody = try JSONSerialization.data(withJSONObject: requestBody)
+    
+    // Debug log
+    if let requestJSON = try? JSONSerialization.data(withJSONObject: requestBody),
+       let requestString = String(data: requestJSON, encoding: .utf8) {
+        print("[Fal.ai] Request body: \(requestString)")
+    }
+    
+    let (data, response) = try await URLSession.shared.data(for: request)
+    
+    let statusCode = (response as? HTTPURLResponse)?.statusCode ?? -1
+    print("[Fal.ai] Response status code: \(statusCode)")
+    
+    guard let http = response as? HTTPURLResponse,
+          (200 ... 299).contains(http.statusCode) else {
+        if let errorString = String(data: data, encoding: .utf8) {
+            print("[Fal.ai] Error response body: \(errorString)")
+        }
+        throw NSError(
+            domain: "FalAIAPI",
+            code: statusCode,
+            userInfo: [
+                NSLocalizedDescriptionKey: "Fal.ai returned HTTP \(statusCode)"
+            ]
+        )
+    }
+    
+    // Parse response
+    let decoder = JSONDecoder()
+    decoder.keyDecodingStrategy = .convertFromSnakeCase
+    let imageResponse = try decoder.decode(FalAIImageResponse.self, from: data)
+    
+    print("[Fal.ai] Image generation completed, \(imageResponse.images.count) image(s) generated")
+    return imageResponse
+}
+
+// MARK: - Submit Image to Fal.ai with Webhook
+
+/// Submits an image generation request to Fal.ai with a webhook URL
+/// The result will be delivered via the webhook callback
+func submitImageToFalAIWithWebhook(
+    requestId: String,
+    prompt: String,
+    modelId: String = "fal-ai/z-image/turbo",
+    aspectRatio: String? = nil,
+    width: Int? = nil,
+    height: Int? = nil,
+    numInferenceSteps: Int = 8,
+    seed: Int? = nil,
+    numImages: Int = 1,
+    enableSafetyChecker: Bool = true,
+    enablePromptExpansion: Bool = false,
+    outputFormat: String = "png",
+    acceleration: String = "none",
+    userId: String
+) async throws -> FalAIWebhookSubmissionResponse {
+    print("[Fal.ai] Preparing image generation webhook request…")
+    print("[Fal.ai] Request ID: \(requestId)")
+    print("[Fal.ai] Model: \(modelId)")
+    print("[Fal.ai] Prompt: \(prompt)")
+    
+    // Convert aspect ratio to Fal.ai format
+    let imageSize = convertAspectRatioToFalImageSize(aspectRatio: aspectRatio, width: width, height: height)
+    
+    // Build request body
+    var requestBody: [String: Any] = [
+        "prompt": prompt,
+        "image_size": imageSize,
+        "num_inference_steps": numInferenceSteps,
+        "num_images": numImages,
+        "enable_safety_checker": enableSafetyChecker,
+        "enable_prompt_expansion": enablePromptExpansion,
+        "output_format": outputFormat,
+        "acceleration": acceleration
+    ]
+    
+    // Add optional seed if provided
+    if let seed = seed {
+        requestBody["seed"] = seed
+    }
+    
+    // Submit to fal.ai queue API with webhook as query parameter
+    let webhookURL = WebhookConfig.webhookURL(for: "falai")
+    print("[Fal.ai] Webhook URL: \(webhookURL)")
+    
+    // Properly encode the webhook URL for use as a query parameter value
+    // We need to encode the entire URL, including ? and & characters
+    var allowedCharacters = CharacterSet.urlQueryAllowed
+    allowedCharacters.remove(charactersIn: "?&") // Remove ? and & from allowed set so they get encoded
+    let encodedWebhookURL = webhookURL.addingPercentEncoding(withAllowedCharacters: allowedCharacters) ?? webhookURL
+    
+    let endpoint = "https://queue.fal.run/\(modelId)?fal_webhook=\(encodedWebhookURL)"
+    print("[Fal.ai] Full endpoint URL: \(endpoint)")
+    
+    let url = URL(string: endpoint)!
+    var request = URLRequest(url: url)
+    request.httpMethod = "POST"
+    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+    request.setValue("Key \(falAIApiKey)", forHTTPHeaderField: "Authorization")
+    request.httpBody = try JSONSerialization.data(withJSONObject: requestBody)
+    
+    // Debug log
+    if let requestJSON = try? JSONSerialization.data(withJSONObject: requestBody),
+       let requestString = String(data: requestJSON, encoding: .utf8) {
+        print("[Fal.ai] Request body: \(requestString)")
+    }
+    
+    let (data, response) = try await URLSession.shared.data(for: request)
+    
+    let statusCode = (response as? HTTPURLResponse)?.statusCode ?? -1
+    print("[Fal.ai] Response status code: \(statusCode)")
+    
+    guard let http = response as? HTTPURLResponse,
+          (200 ... 299).contains(http.statusCode) else {
+        if let errorString = String(data: data, encoding: .utf8) {
+            print("[Fal.ai] Error response body: \(errorString)")
+        }
+        throw NSError(
+            domain: "FalAIAPI",
+            code: statusCode,
+            userInfo: [
+                NSLocalizedDescriptionKey: "Fal.ai returned HTTP \(statusCode)"
+            ]
+        )
+    }
+    
+    // Log the actual response for debugging
+    if let responseString = String(data: data, encoding: .utf8) {
+        print("[Fal.ai] Response body: \(responseString)")
+    }
+    
+    // Parse response to get requestId
+    var extractedRequestId: String = requestId
+    
+    if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+        if let id = json["request_id"] as? String {
+            extractedRequestId = id
+            print("[Fal.ai] Using request_id from response: \(id)")
+        } else if let id = json["gateway_request_id"] as? String {
+            extractedRequestId = id
+            print("[Fal.ai] Using gateway_request_id from response: \(id)")
+        } else {
+            print("[Fal.ai] Warning: Could not find request_id in response, using provided requestId: \(requestId)")
+            extractedRequestId = requestId
+        }
+    } else {
+        print("[Fal.ai] Warning: Could not parse response as JSON, using provided requestId: \(requestId)")
+        extractedRequestId = requestId
+    }
+    
+    print("[Fal.ai] Image generation request submitted successfully, requestId: \(extractedRequestId)")
+    return FalAIWebhookSubmissionResponse(requestId: extractedRequestId, submitted: true)
+}

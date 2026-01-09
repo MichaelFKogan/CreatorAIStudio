@@ -70,7 +70,7 @@ class PricingManager {
             "FLUX.2 [dev]": 0.0122,
             "FLUX.1 Kontext [pro]": 0.04,
             "FLUX.1 Kontext [max]": 0.08,
-            "Z-Image-Turbo": 0.003,
+            "Z-Image-Turbo": 0.005,
             "Wavespeed Ghibli": 0.005,
         ]
 
