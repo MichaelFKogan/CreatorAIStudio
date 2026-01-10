@@ -66,6 +66,9 @@ struct WebhookConfig {
     /// Base URL for the Runware proxy Edge Function
     static let runwareProxyURL = "https://\(supabaseProjectId).supabase.co/functions/v1/runware-proxy"
     
+    /// Base URL for the Fal.ai proxy Edge Function
+    static let falaiProxyURL = "https://\(supabaseProjectId).supabase.co/functions/v1/falai-proxy"
+    
     /// Secret token for webhook verification (should match Supabase Edge Function secret)
     /// Loaded from Info.plist via SupabaseConfig
     static let webhookSecret = SupabaseConfig.webhookSecret

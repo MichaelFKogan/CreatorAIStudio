@@ -95,16 +95,24 @@ struct PurchaseCreditsView: View {
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                     }
-                    
+
                     // Current Balance Display
                     if let userId = authViewModel.user?.id {
                         VStack(spacing: 8) {
                             Text("Current Balance")
-                                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                                .font(
+                                    .system(
+                                        size: 14, weight: .semibold,
+                                        design: .rounded)
+                                )
                                 .foregroundColor(.secondary)
-                            
+
                             Text(creditsViewModel.formattedBalance())
-                                .font(.system(size: 32, weight: .bold, design: .rounded))
+                                .font(
+                                    .system(
+                                        size: 32, weight: .bold,
+                                        design: .rounded)
+                                )
                                 .foregroundColor(.primary)
                         }
                         .padding()
@@ -131,6 +139,32 @@ struct PurchaseCreditsView: View {
                             selectedMethod: $selectedPaymentMethod
                         )
                         .padding(.horizontal)
+
+                        HStack {
+                            HStack(spacing: 4) {
+                                Image(systemName: "creditcard.fill")
+                                    .font(.system(size: 10))
+                                Text("3% + $0.30 fee")
+                                    .font(.system(size: 11, design: .rounded))
+                            }
+                            .foregroundColor(.secondary)
+
+                            Spacer()
+
+                            // Fee information - show both
+                            HStack(spacing: 16) {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "applelogo")
+                                        .font(.system(size: 10))
+                                    Text("30% fee")
+                                        .font(
+                                            .system(size: 11, design: .rounded))
+                                }
+                                .foregroundColor(.secondary)
+                            }
+                        }
+                        .padding(.horizontal)
+                        .padding(.top, 4)
                     }
 
                     // Credit Packages
@@ -168,7 +202,8 @@ struct PurchaseCreditsView: View {
                             title: "Ultra Pack",
                             baseCreditsValue: 50.00,
                             paymentMethod: selectedPaymentMethod,
-                            description: "Ideal for power users and bulk projects"
+                            description:
+                                "Ideal for power users and bulk projects"
                         )
                     }
                     .padding(.horizontal)
@@ -192,7 +227,10 @@ struct PurchaseCreditsView: View {
                     }
                 }
             }
-            .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("CreditsBalanceUpdated"))) { notification in
+            .onReceive(
+                NotificationCenter.default.publisher(
+                    for: NSNotification.Name("CreditsBalanceUpdated"))
+            ) { notification in
                 // Refresh credits when balance is updated (e.g., after image/video generation)
                 if let userId = authViewModel.user?.id {
                     Task {
@@ -257,7 +295,7 @@ struct CreditPackageCard: View {
     var badge: String? = nil
     var description: String? = nil
 
-    @State private var isExpanded: Bool = false
+    @State private var isDetailsExpanded: Bool = false
 
     // Calculate app fee (fixed amounts based on pack size)
     private var profitFee: Double {
@@ -329,6 +367,78 @@ struct CreditPackageCard: View {
             "~\(imageGenerations) images • \(videoGenerationsRange.min)–\(videoGenerationsRange.max) videos"
     }
 
+    // Get example image models with generation counts
+    private var exampleImageModels:
+        [(name: String, imageName: String, count: Int)]
+    {
+        let imageModelPrices: [String: Double] = [
+            "Z-Image-Turbo": 0.005,
+            // "Wavespeed Ghibli": 0.005,
+            "FLUX.2 [dev]": 0.0122,
+            "Wan2.5-Preview Image": 0.027,
+            "Seedream 4.0": 0.03,
+            "GPT Image 1.5": 0.034,
+            "Google Gemini Flash 2.5 (Nano Banana)": 0.039,
+            "Seedream 4.5": 0.04,
+            "FLUX.1 Kontext [pro]": 0.04,
+            "FLUX.1 Kontext [max]": 0.08,
+        ]
+
+        let modelImageNames: [String: String] = [
+            "Z-Image-Turbo": "zimageturbo",
+            // "Wavespeed Ghibli": "wavespeedghibli",
+            "FLUX.2 [dev]": "flux2dev",
+            "Wan2.5-Preview Image": "wan25previewimage",
+            "Seedream 4.0": "seedream40",
+            "GPT Image 1.5": "gptimage15",
+            "Google Gemini Flash 2.5 (Nano Banana)": "geminiflashimage25",
+            "Seedream 4.5": "seedream45",
+            "FLUX.1 Kontext [pro]": "fluxkontextpro",
+            "FLUX.1 Kontext [max]": "fluxkontextmax",
+        ]
+
+        return imageModelPrices.compactMap { (modelName, price) in
+            guard price > 0 else { return nil }
+            guard baseCreditsValue >= price else { return nil }  // Only show if pack can afford at least one
+            let count = Int(baseCreditsValue / price)
+            guard count > 0 else { return nil }
+            let imageName = modelImageNames[modelName] ?? ""
+            return (name: modelName, imageName: imageName, count: count)
+        }.sorted { $0.count > $1.count }  // Sort by count descending
+    }
+
+    // Get example video models with generation counts (for larger packs)
+    private var exampleVideoModels:
+        [(name: String, imageName: String, count: Int)]
+    {
+        // Use default/cheapest pricing for each model
+        let videoModelPrices: [String: Double] = [
+            "Seedance 1.0 Pro Fast": 0.0304,  // 5s at 480p (cheapest option)
+            "Google Veo 3.1 Fast": 1.20,  // 8s at 1080p (only option)
+            "Sora 2": 0.4,  // 4s at 720p (cheapest option)
+            "KlingAI 2.5 Turbo Pro": 0.35,  // 5s at 1080p
+            "Kling VIDEO 2.6 Pro": 0.70,  // 5s at 1080p
+            "Wan2.6": 0.5,  // 5s at 720p (cheapest option)
+        ]
+
+        let videoModelImageNames: [String: String] = [
+            "Seedance 1.0 Pro Fast": "seedance10profast",
+            "Google Veo 3.1 Fast": "veo31fast",
+            "Sora 2": "sora2",
+            "KlingAI 2.5 Turbo Pro": "klingai25turbopro",
+            "Kling VIDEO 2.6 Pro": "klingvideo26pro",
+            "Wan2.6": "wan26",
+        ]
+
+        return videoModelPrices.compactMap { (modelName, price) in
+            guard price > 0 else { return nil }
+            let count = Int(baseCreditsValue / price)
+            guard count > 0 else { return nil }
+            let imageName = videoModelImageNames[modelName] ?? ""
+            return (name: modelName, imageName: imageName, count: count)
+        }.sorted { $0.count > $1.count }  // Sort by count descending
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // Main card content - tappable for purchase
@@ -338,7 +448,7 @@ struct CreditPackageCard: View {
                     "Purchase \(title) via \(paymentMethod.rawValue) for \(PriceCalculator.formatPrice(adjustedPrice))"
                 )
             }) {
-                VStack(alignment: .leading, spacing: 12) {
+                VStack(alignment: .leading, spacing: 6) {
                     // Header: Title, Credits, and Price
                     HStack(alignment: .top) {
                         VStack(alignment: .leading, spacing: 6) {
@@ -387,13 +497,6 @@ struct CreditPackageCard: View {
                                     .font(.system(size: 13, design: .rounded))
                                     .foregroundColor(.secondary)
                             }
-                            
-                            if let description = description {
-                                Text(description)
-                                    .font(.system(size: 12, design: .rounded))
-                                    .foregroundColor(.secondary)
-                                    .padding(.top, 2)
-                            }
                         }
 
                         Spacer()
@@ -411,141 +514,215 @@ struct CreditPackageCard: View {
                                 .foregroundColor(.secondary)
                         }
                     }
-
-                    // Concise benefit summary with icons and Details button (full width)
+                    
+                    // Description and Total Fees row
                     HStack {
-                        // What You Get Section
-                        VStack(alignment: .leading, spacing: 6) {
-                            HStack(spacing: 6) {
-                                Image(systemName: "checkmark.circle.fill")
-                                    .font(.system(size: 12))
-                                    .foregroundColor(.green)
-                                Text("What You Get")
-                                    .font(
-                                        .system(
-                                            size: 12, weight: .semibold,
-                                            design: .rounded)
-                                    )
-                                    .foregroundColor(.secondary)
+                        if let description = description {
+                            Text(description)
+                                .font(.system(size: 12, design: .rounded))
+                                .foregroundColor(.secondary)
+                        }
+                        
+                        Spacer()
+                        
+                        HStack(spacing: 4) {
+                            Text("Total Fees")
+                                .font(.system(size: 11, design: .rounded))
+                                .foregroundColor(.secondary)
+                            Text(
+                                PriceCalculator.formatPrice(
+                                    paymentProcessorFee + profitFee)
+                            )
+                            .font(.system(size: 11, design: .rounded))
+                            .foregroundColor(.secondary)
+                        }
+                    }
+                    
+                    // Details button row
+                    HStack {
+                        Spacer()
+                        Button(action: {
+                            withAnimation(
+                                .spring(response: 0.3, dampingFraction: 0.8)
+                            ) {
+                                isDetailsExpanded.toggle()
                             }
+                        }) {
+                            Text(isDetailsExpanded ? "Hide ▴" : "Details ▾")
+                                .font(
+                                    .system(
+                                        size: 13, weight: .medium,
+                                        design: .rounded)
+                                )
+                                .foregroundColor(.blue)
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                    }
 
-                            HStack(spacing: 8) {
+                    // Expanded details section - What You Get and Fees
+                    if isDetailsExpanded {
+                        VStack(alignment: .leading, spacing: 12) {
+                            // Divider
+                            Divider()
+                                .padding(.vertical, 4)
 
-                                VStack(spacing: 6) {
-                                    HStack(spacing: 8) {
-                                        Image(
-                                            systemName:
-                                                "photo.on.rectangle.angled"
-                                        )
+                            // What You Get Section
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack(spacing: 6) {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .font(.system(size: 12))
+                                        .foregroundColor(.green)
+                                    Text("What You Get")
                                         .font(
                                             .system(
-                                                size: 14, weight: .medium)
-                                        )
-                                        .imageScale(.medium)
-                                        .foregroundColor(.blue)
-                                        .frame(width: 20, height: 20)
-
-                                        Text(
-                                            "Approx. \(imageGenerations) images"
-                                        )
-                                        .font(
-                                            .system(
-                                                size: 12, design: .rounded)
+                                                size: 12, weight: .semibold,
+                                                design: .rounded)
                                         )
                                         .foregroundColor(.secondary)
-                                    }
-                                    .padding(.leading, -3)
+                                }
 
-                                    HStack(spacing: 8) {
-                                        Image(systemName: "video.fill")
+                                VStack(alignment: .leading, spacing: 8) {
+                                    VStack(alignment: .leading, spacing: 6) {
+                                        HStack(spacing: 8) {
+                                            Image(
+                                                systemName:
+                                                    "photo.on.rectangle.angled"
+                                            )
                                             .font(
                                                 .system(
-                                                    size: 14,
-                                                    weight: .medium)
+                                                    size: 14, weight: .medium)
                                             )
                                             .imageScale(.medium)
-                                            .foregroundColor(.purple)
+                                            .foregroundColor(.blue)
                                             .frame(width: 20, height: 20)
 
-                                        Text(
-                                            "Approx. \(videoGenerationsRange.min)–\(videoGenerationsRange.max) videos"
-                                        )
-                                        .font(
-                                            .system(
-                                                size: 12, design: .rounded)
-                                        )
-                                        .foregroundColor(.secondary)
-                                    }
-                                }
-                                .environment(\.font, Font.system(size: 14))
+                                            Text(
+                                                "*Approx. \(imageGenerations) images"
+                                            )
+                                            .font(
+                                                .system(
+                                                    size: 12, design: .rounded)
+                                            )
+                                            .foregroundColor(.secondary)
+                                        }
 
-                                VStack(spacing: 6) {
-                                    Spacer()
-                                    HStack(spacing: 8) {
+                                        // Image model pills
+                                        if !exampleImageModels.isEmpty {
+                                            ScrollView(
+                                                .horizontal,
+                                                showsIndicators: false
+                                            ) {
+                                                HStack(spacing: 8) {
+                                                    ForEach(
+                                                        exampleImageModels,
+                                                        id: \.name
+                                                    ) { model in
+                                                        ModelPill(
+                                                            modelName: model
+                                                                .name,
+                                                            imageName: model
+                                                                .imageName,
+                                                            count: model.count
+                                                        )
+                                                    }
+                                                }
+                                                .padding(.horizontal, 20)
+                                            }
+                                        }
+                                    }
+
+                                    // OR divider
+                                    HStack {
                                         Text("OR")
                                             .font(
                                                 .system(
                                                     size: 12,
+                                                    weight: .semibold,
                                                     design: .rounded)
+                                            )
+                                            .foregroundColor(.primary)
+                                            .padding(.leading, 20)
+                                    }
+
+                                    VStack(alignment: .leading, spacing: 6) {
+                                        HStack(spacing: 8) {
+                                            Image(systemName: "video.fill")
+                                                .font(
+                                                    .system(
+                                                        size: 14,
+                                                        weight: .medium)
+                                                )
+                                                .imageScale(.medium)
+                                                .foregroundColor(.purple)
+                                                .frame(width: 20, height: 20)
+
+                                            Text(
+                                                "*Approx. \(videoGenerationsRange.min)–\(videoGenerationsRange.max) videos"
+                                            )
+                                            .font(
+                                                .system(
+                                                    size: 12, design: .rounded)
+                                            )
+                                            .foregroundColor(.secondary)
+                                        }
+
+                                        // Video model pills
+                                        if !exampleVideoModels.isEmpty {
+                                            ScrollView(
+                                                .horizontal,
+                                                showsIndicators: false
+                                            ) {
+                                                HStack(spacing: 8) {
+                                                    ForEach(
+                                                        exampleVideoModels,
+                                                        id: \.name
+                                                    ) { model in
+                                                        VideoModelPill(
+                                                            modelName: model
+                                                                .name,
+                                                            imageName: model
+                                                                .imageName,
+                                                            count: model.count
+                                                        )
+                                                    }
+                                                }
+                                                .padding(.horizontal, 20)
+                                            }
+
+                                            Text(
+                                                "Video examples shown for shortest length videos"
+                                            )
+                                            .font(
+                                                .system(
+                                                    size: 10, design: .rounded)
                                             )
                                             .foregroundColor(.secondary)
                                             .italic()
+                                            .padding(.leading, 20)
+                                            .padding(.top, 2)
+                                        }
                                     }
-                                    Spacer()
-                                }
 
-                            }
-                            .padding(.leading, 20)
-
-                            HStack{
-                                Text(
-                                    "Use credits for both images and videos"
-                                )
-                                .font(.system(size: 11, design: .rounded))
-                                .foregroundColor(.secondary)
-                                .italic()
-                            }
-                            .padding(.leading, 16)
-
-                            HStack{
-                                Text(
-                                    "*Approximate usage depends on model used"
-                                )
-                                .font(.system(size: 11, design: .rounded))
-                                .foregroundColor(.secondary)
-                                .italic()
-                            }
-                            .padding(.leading, 16)
-                        }
-
-                        Spacer()
-
-                        VStack(spacing: 6) {
-                            Spacer()
-                            // Details toggle button
-                            Button(action: {
-                                withAnimation(
-                                    .spring(response: 0.3, dampingFraction: 0.8)
-                                ) {
-                                    isExpanded.toggle()
-                                }
-                            }) {
-                                Text(isExpanded ? "Hide Fees ▴" : "Fees ▾")
-                                    .font(
-                                        .system(
-                                            size: 13, weight: .medium,
-                                            design: .rounded)
+                                    Text(
+                                        "Credits can be used for both images and videos"
                                     )
-                                    .foregroundColor(.blue)
-                            }
-                            .buttonStyle(PlainButtonStyle())
-                        }
-                    }
-                    .frame(maxWidth: .infinity)
+                                    .font(.system(size: 11, design: .rounded))
+                                    .foregroundColor(.secondary)
+                                    .italic()
+                                    .padding(.leading, 20)
+                                    .padding(.top, 2)
 
-                    // Expanded details section
-                    if isExpanded {
-                        VStack(alignment: .leading, spacing: 12) {
+                                    Text(
+                                        "*Approximate usage depends on models used"
+                                    )
+                                    .font(.system(size: 11, design: .rounded))
+                                    .foregroundColor(.secondary)
+                                    .italic()
+                                    .padding(.leading, 20)
+                                }
+                                .padding(.leading, 18)
+                            }
+
                             // Divider
                             Divider()
                                 .padding(.vertical, 4)
@@ -563,71 +740,89 @@ struct CreditPackageCard: View {
                                                 design: .rounded)
                                         )
                                         .foregroundColor(.secondary)
-                                }
 
-                                if paymentMethod == .apple {
-                                    HStack {
-                                        Text("Apple Fee")
-                                            .font(
-                                                .system(
-                                                    size: 11, design: .rounded)
-                                            )
-                                            .foregroundColor(.secondary)
-                                        Spacer()
-                                        Text(
-                                            "(30%) = \(PriceCalculator.formatPrice(feeAmount))"
-                                        )
-                                        .font(
-                                            .system(size: 11, design: .rounded)
-                                        )
-                                        .foregroundColor(.secondary)
-                                    }
-                                } else {
-                                    HStack {
-                                        Text("Credit Card Fee")
-                                            .font(
-                                                .system(
-                                                    size: 11, design: .rounded)
-                                            )
-                                            .foregroundColor(.secondary)
-                                        Spacer()
-                                        Text(
-                                            "(3% + $0.30) = \(PriceCalculator.formatPrice(feeAmount))"
-                                        )
-                                        .font(
-                                            .system(size: 11, design: .rounded)
-                                        )
-                                        .foregroundColor(.secondary)
-                                    }
-                                }
-
-                                HStack {
-                                    Text("App Fee")
-                                        .font(
-                                            .system(size: 11, design: .rounded)
-                                        )
-                                        .foregroundColor(.secondary)
                                     Spacer()
-                                    Text(
-                                        "= \(PriceCalculator.formatPrice(profitFee))"
-                                    )
-                                    .font(.system(size: 11, design: .rounded))
-                                    .foregroundColor(.secondary)
                                 }
 
-                                HStack {
-                                    Text("Total Fees")
+                                VStack {
+                                    if paymentMethod == .apple {
+                                        HStack {
+                                            Text("Apple Fee")
+                                                .font(
+                                                    .system(
+                                                        size: 11,
+                                                        design: .rounded)
+                                                )
+                                                .foregroundColor(.secondary)
+                                            Spacer()
+                                            Text(
+                                                "(30%) = \(PriceCalculator.formatPrice(feeAmount))"
+                                            )
+                                            .font(
+                                                .system(
+                                                    size: 11, design: .rounded)
+                                            )
+                                            .foregroundColor(.secondary)
+                                        }
+                                    } else {
+                                        HStack {
+                                            Text("Credit Card Fee")
+                                                .font(
+                                                    .system(
+                                                        size: 11,
+                                                        design: .rounded)
+                                                )
+                                                .foregroundColor(.secondary)
+                                            Spacer()
+                                            Text(
+                                                "(3% + $0.30) = \(PriceCalculator.formatPrice(feeAmount))"
+                                            )
+                                            .font(
+                                                .system(
+                                                    size: 11, design: .rounded)
+                                            )
+                                            .foregroundColor(.secondary)
+                                        }
+                                    }
+
+                                    HStack {
+                                        Text("App Fee")
+                                            .font(
+                                                .system(
+                                                    size: 11, design: .rounded)
+                                            )
+                                            .foregroundColor(.secondary)
+                                        Spacer()
+                                        Text(
+                                            "= \(PriceCalculator.formatPrice(profitFee))"
+                                        )
                                         .font(
-                                            .system(size: 11, weight: .semibold, design: .rounded)
+                                            .system(size: 11, design: .rounded)
+                                        )
+                                        .foregroundColor(.secondary)
+                                    }
+
+                                    HStack {
+                                        Text("Total Fees")
+                                            .font(
+                                                .system(
+                                                    size: 11, weight: .semibold,
+                                                    design: .rounded)
+                                            )
+                                            .foregroundColor(.primary)
+                                        Spacer()
+                                        Text(
+                                            "= \(PriceCalculator.formatPrice(paymentProcessorFee + profitFee))"
+                                        )
+                                        .font(
+                                            .system(
+                                                size: 11, weight: .semibold,
+                                                design: .rounded)
                                         )
                                         .foregroundColor(.primary)
-                                    Spacer()
-                                    Text(
-                                        "= \(PriceCalculator.formatPrice(paymentProcessorFee + profitFee))"
-                                    )
-                                    .font(.system(size: 11, weight: .semibold, design: .rounded))
-                                    .foregroundColor(.primary)
+                                    }
                                 }
+                                .padding(.leading, 18)
                             }
                         }
                         .transition(.opacity.combined(with: .move(edge: .top)))
@@ -646,6 +841,80 @@ struct CreditPackageCard: View {
         .overlay(
             RoundedRectangle(cornerRadius: 16)
                 .stroke(Color.blue.opacity(0.3), lineWidth: 1)
+        )
+    }
+}
+
+// Model Pill Component
+struct ModelPill: View {
+    let modelName: String
+    let imageName: String
+    let count: Int
+
+    var body: some View {
+        HStack(spacing: 6) {
+            if !imageName.isEmpty {
+                Image(imageName)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 16, height: 16)
+            }
+
+            Text(modelName)
+                .font(.system(size: 10, weight: .semibold, design: .rounded))
+                .foregroundColor(.primary)
+
+            HStack(spacing: 2) {
+                Text("\(count)")
+                    .font(.system(size: 11, weight: .bold, design: .rounded))
+                    .foregroundColor(.blue)
+                Text("images")
+                    .font(.system(size: 9, design: .rounded))
+                    .foregroundColor(.secondary)
+            }
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(
+            RoundedRectangle(cornerRadius: 10)
+                .fill(Color(.secondarySystemBackground))
+        )
+    }
+}
+
+// Video Model Pill Component
+struct VideoModelPill: View {
+    let modelName: String
+    let imageName: String
+    let count: Int
+
+    var body: some View {
+        HStack(spacing: 6) {
+            if !imageName.isEmpty {
+                Image(imageName)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 16, height: 16)
+            }
+
+            Text(modelName)
+                .font(.system(size: 10, weight: .semibold, design: .rounded))
+                .foregroundColor(.primary)
+
+            HStack(spacing: 2) {
+                Text("\(count)")
+                    .font(.system(size: 11, weight: .bold, design: .rounded))
+                    .foregroundColor(.purple)
+                Text("videos")
+                    .font(.system(size: 9, design: .rounded))
+                    .foregroundColor(.secondary)
+            }
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(
+            RoundedRectangle(cornerRadius: 10)
+                .fill(Color(.secondarySystemBackground))
         )
     }
 }

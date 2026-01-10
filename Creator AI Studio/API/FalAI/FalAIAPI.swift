@@ -1,10 +1,6 @@
 import Foundation
 import UIKit
 
-// MARK: - Fal.ai API Key
-
-let falAIApiKey = "d119566f-f726-4fc8-981e-e2122c0cb1a3:5042f27c968ca32e642d156b677de5ff" // TODO: Replace with your actual fal.ai API key
-
 // MARK: - Fal.ai Response Structures
 
 struct FalAIResponse: Decodable {
@@ -165,22 +161,29 @@ func submitVideoToFalAIWithWebhook(
     
     let endpoint = "https://queue.fal.run/fal-ai/kling-video/v2.6/standard/motion-control?fal_webhook=\(encodedWebhookURL)"
     print("[Fal.ai] Full endpoint URL: \(endpoint)")
-    let url = URL(string: endpoint)!
+    
+    // Use falai-proxy Edge Function instead of direct API call
+    // Get Supabase auth token for the Authorization header
+    let session = try await SupabaseManager.shared.client.auth.session
+    let supabaseAuthToken = session.accessToken
+    
+    // Prepare request body for proxy (proxy will inject API key server-side)
+    let proxyRequestBody: [String: Any] = [
+        "endpoint": endpoint,
+        "body": requestBody
+    ]
+    
+    let url = URL(string: WebhookConfig.falaiProxyURL)!
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-    request.setValue("Key \(falAIApiKey)", forHTTPHeaderField: "Authorization")
-    request.httpBody = try JSONSerialization.data(withJSONObject: requestBody)
+    request.setValue("Bearer \(supabaseAuthToken)", forHTTPHeaderField: "Authorization")
+    request.httpBody = try JSONSerialization.data(withJSONObject: proxyRequestBody)
     
-    // Debug log (masked API key)
-    if let requestJSON = try? JSONSerialization.data(withJSONObject: requestBody),
+    // Debug log
+    if let requestJSON = try? JSONSerialization.data(withJSONObject: proxyRequestBody),
        let requestString = String(data: requestJSON, encoding: .utf8) {
-        let maskedRequest = requestString.replacingOccurrences(
-            of: "\"Key [^\"]+\"",
-            with: "\"Key ***\"",
-            options: .regularExpression
-        )
-        print("[Fal.ai] Request body: \(maskedRequest)")
+        print("[Fal.ai] Request body: \(requestString)")
     }
     
     let (data, response) = try await URLSession.shared.data(for: request)
@@ -331,12 +334,23 @@ func sendImageToFalAI(
     let endpoint = "https://fal.run/\(modelId)"
     print("[Fal.ai] Endpoint: \(endpoint)")
     
-    let url = URL(string: endpoint)!
+    // Use falai-proxy Edge Function instead of direct API call
+    // Get Supabase auth token for the Authorization header
+    let session = try await SupabaseManager.shared.client.auth.session
+    let supabaseAuthToken = session.accessToken
+    
+    // Prepare request body for proxy (proxy will inject API key server-side)
+    let proxyRequestBody: [String: Any] = [
+        "endpoint": endpoint,
+        "body": requestBody
+    ]
+    
+    let url = URL(string: WebhookConfig.falaiProxyURL)!
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-    request.setValue("Key \(falAIApiKey)", forHTTPHeaderField: "Authorization")
-    request.httpBody = try JSONSerialization.data(withJSONObject: requestBody)
+    request.setValue("Bearer \(supabaseAuthToken)", forHTTPHeaderField: "Authorization")
+    request.httpBody = try JSONSerialization.data(withJSONObject: proxyRequestBody)
     
     // Debug log
     if let requestJSON = try? JSONSerialization.data(withJSONObject: requestBody),
@@ -430,12 +444,23 @@ func submitImageToFalAIWithWebhook(
     let endpoint = "https://queue.fal.run/\(modelId)?fal_webhook=\(encodedWebhookURL)"
     print("[Fal.ai] Full endpoint URL: \(endpoint)")
     
-    let url = URL(string: endpoint)!
+    // Use falai-proxy Edge Function instead of direct API call
+    // Get Supabase auth token for the Authorization header
+    let session = try await SupabaseManager.shared.client.auth.session
+    let supabaseAuthToken = session.accessToken
+    
+    // Prepare request body for proxy (proxy will inject API key server-side)
+    let proxyRequestBody: [String: Any] = [
+        "endpoint": endpoint,
+        "body": requestBody
+    ]
+    
+    let url = URL(string: WebhookConfig.falaiProxyURL)!
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-    request.setValue("Key \(falAIApiKey)", forHTTPHeaderField: "Authorization")
-    request.httpBody = try JSONSerialization.data(withJSONObject: requestBody)
+    request.setValue("Bearer \(supabaseAuthToken)", forHTTPHeaderField: "Authorization")
+    request.httpBody = try JSONSerialization.data(withJSONObject: proxyRequestBody)
     
     // Debug log
     if let requestJSON = try? JSONSerialization.data(withJSONObject: requestBody),
