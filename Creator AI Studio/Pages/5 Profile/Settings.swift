@@ -82,9 +82,15 @@ struct Settings: View {
                 }
             }
             
+<<<<<<< HEAD
             // Purchase Credits section
             Section("Credits") {
                 // Current Balance
+=======
+            // Subscription section
+            Section("Balance") {
+                               // Current Balance
+>>>>>>> eb4c2e7 (Add Google logo to sign-in buttons)
                 HStack {
                     Image(systemName: "dollarsign.circle.fill")
                         .foregroundColor(.green)
@@ -107,6 +113,11 @@ struct Settings: View {
                             .scaleEffect(0.8)
                     }
                 }
+            }
+            
+            // Purchase Credits section
+            Section("Buy Credits") {
+
                 
                 HStack {
                     Image(systemName: "crown.fill")
@@ -170,54 +181,54 @@ struct Settings: View {
                 }
             }
             
-            // Gallery section
-            Section("Gallery") {
-                Button(action: {
-                    resyncStats()
-                }) {
-                    HStack {
-                        Image(systemName: "arrow.clockwise")
-                            .foregroundColor(.blue)
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Resync Stats")
-                                .font(.body)
-                                .foregroundColor(.primary)
-                            Text("Recalculate favorites, images, and videos counts")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                        Spacer()
-                        if isResyncing {
-                            ProgressView()
-                                .scaleEffect(0.8)
-                        }
-                    }
-                }
-                .disabled(isResyncing)
+            // // Gallery section
+            // Section("Gallery") {
+            //     Button(action: {
+            //         resyncStats()
+            //     }) {
+            //         HStack {
+            //             Image(systemName: "arrow.clockwise")
+            //                 .foregroundColor(.blue)
+            //             VStack(alignment: .leading, spacing: 4) {
+            //                 Text("Resync Stats")
+            //                     .font(.body)
+            //                     .foregroundColor(.primary)
+            //                 Text("Recalculate favorites, images, and videos counts")
+            //                     .font(.caption)
+            //                     .foregroundColor(.secondary)
+            //             }
+            //             Spacer()
+            //             if isResyncing {
+            //                 ProgressView()
+            //                     .scaleEffect(0.8)
+            //             }
+            //         }
+            //     }
+            //     .disabled(isResyncing)
                 
-                Button(action: {
-                    diagnoseStats()
-                }) {
-                    HStack {
-                        Image(systemName: "stethoscope")
-                            .foregroundColor(.orange)
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Diagnose Video Counts")
-                                .font(.body)
-                                .foregroundColor(.primary)
-                            Text("Compare actual vs stored video model counts")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                        Spacer()
-                        if isResyncing {
-                            ProgressView()
-                                .scaleEffect(0.8)
-                        }
-                    }
-                }
-                .disabled(isResyncing)
-            }
+            //     Button(action: {
+            //         diagnoseStats()
+            //     }) {
+            //         HStack {
+            //             Image(systemName: "stethoscope")
+            //                 .foregroundColor(.orange)
+            //             VStack(alignment: .leading, spacing: 4) {
+            //                 Text("Diagnose Video Counts")
+            //                     .font(.body)
+            //                     .foregroundColor(.primary)
+            //                 Text("Compare actual vs stored video model counts")
+            //                     .font(.caption)
+            //                     .foregroundColor(.secondary)
+            //             }
+            //             Spacer()
+            //             if isResyncing {
+            //                 ProgressView()
+            //                     .scaleEffect(0.8)
+            //             }
+            //         }
+            //     }
+            //     .disabled(isResyncing)
+            // }
 
             // // App preferences
             // Section("Preferences") {

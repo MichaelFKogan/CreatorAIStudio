@@ -597,7 +597,7 @@ struct CreditPackageCard: View {
                                             .frame(width: 20, height: 20)
 
                                             Text(
-                                                "*Approx. \(imageGenerations) images"
+                                                "*Approx. \(imageGenerations) images (depending on model)"
                                             )
                                             .font(
                                                 .system(
