@@ -85,8 +85,7 @@ struct SignInView: View {
                                 }) {
                                     HStack {
                                         Spacer()
-                                        Image(systemName: "globe")
-                                            .font(.system(size: 18, weight: .semibold))
+                                        GoogleLogoView(size: 18)
                                         Text("Continue with Google")
                                             .font(.system(size: 16, weight: .semibold))
                                         Spacer()
@@ -598,8 +597,7 @@ struct SignUpView: View {
                                 }) {
                                     HStack {
                                         Spacer()
-                                        Image(systemName: "globe")
-                                            .font(.system(size: 18, weight: .semibold))
+                                        GoogleLogoView(size: 18)
                                         Text("Continue with Google")
                                             .font(.system(size: 16, weight: .semibold))
                                         Spacer()

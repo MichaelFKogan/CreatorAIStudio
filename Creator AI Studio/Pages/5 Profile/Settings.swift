@@ -86,67 +86,8 @@ struct Settings: View {
             }
             
             // Subscription section
-            Section("Subscription") {
-                HStack {
-                    Image(systemName: "crown.fill")
-                        .foregroundStyle(
-                            LinearGradient(
-                                colors: [.yellow, .orange],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Runspeed AI Pro")
-                            .font(.body)
-                        if revenueCatManager.isProUser {
-                            Text("Active")
-                                .font(.caption)
-                                .foregroundColor(.green)
-                        } else {
-                            Text("Upgrade to unlock all features")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                    Spacer()
-                    if revenueCatManager.isProUser {
-                        Image(systemName: "checkmark.circle.fill")
-                            .foregroundColor(.green)
-                    } else {
-                        Image(systemName: "chevron.right")
-                            .foregroundColor(.gray)
-                    }
-                }
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    if revenueCatManager.isProUser {
-                        showCustomerCenterView = true
-                    } else {
-                        showPaywallView = true
-                    }
-                }
-                
-                if revenueCatManager.isProUser {
-                    HStack {
-                        Image(systemName: "person.circle")
-                            .foregroundColor(.blue)
-                        Text("Manage Subscription")
-                            .font(.body)
-                        Spacer()
-                        Image(systemName: "chevron.right")
-                            .foregroundColor(.gray)
-                    }
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        showCustomerCenterView = true
-                    }
-                }
-            }
-            
-            // Purchase Credits section
-            Section("Credits") {
-                // Current Balance
+            Section("Balance") {
+                               // Current Balance
                 HStack {
                     Image(systemName: "dollarsign.circle.fill")
                         .foregroundColor(.green)
@@ -169,6 +110,11 @@ struct Settings: View {
                             .scaleEffect(0.8)
                     }
                 }
+            }
+            
+            // Purchase Credits section
+            Section("Buy Credits") {
+
                 
                 HStack {
                     Image(systemName: "crown.fill")
@@ -232,54 +178,54 @@ struct Settings: View {
                 }
             }
             
-            // Gallery section
-            Section("Gallery") {
-                Button(action: {
-                    resyncStats()
-                }) {
-                    HStack {
-                        Image(systemName: "arrow.clockwise")
-                            .foregroundColor(.blue)
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Resync Stats")
-                                .font(.body)
-                                .foregroundColor(.primary)
-                            Text("Recalculate favorites, images, and videos counts")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                        Spacer()
-                        if isResyncing {
-                            ProgressView()
-                                .scaleEffect(0.8)
-                        }
-                    }
-                }
-                .disabled(isResyncing)
+            // // Gallery section
+            // Section("Gallery") {
+            //     Button(action: {
+            //         resyncStats()
+            //     }) {
+            //         HStack {
+            //             Image(systemName: "arrow.clockwise")
+            //                 .foregroundColor(.blue)
+            //             VStack(alignment: .leading, spacing: 4) {
+            //                 Text("Resync Stats")
+            //                     .font(.body)
+            //                     .foregroundColor(.primary)
+            //                 Text("Recalculate favorites, images, and videos counts")
+            //                     .font(.caption)
+            //                     .foregroundColor(.secondary)
+            //             }
+            //             Spacer()
+            //             if isResyncing {
+            //                 ProgressView()
+            //                     .scaleEffect(0.8)
+            //             }
+            //         }
+            //     }
+            //     .disabled(isResyncing)
                 
-                Button(action: {
-                    diagnoseStats()
-                }) {
-                    HStack {
-                        Image(systemName: "stethoscope")
-                            .foregroundColor(.orange)
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Diagnose Video Counts")
-                                .font(.body)
-                                .foregroundColor(.primary)
-                            Text("Compare actual vs stored video model counts")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                        Spacer()
-                        if isResyncing {
-                            ProgressView()
-                                .scaleEffect(0.8)
-                        }
-                    }
-                }
-                .disabled(isResyncing)
-            }
+            //     Button(action: {
+            //         diagnoseStats()
+            //     }) {
+            //         HStack {
+            //             Image(systemName: "stethoscope")
+            //                 .foregroundColor(.orange)
+            //             VStack(alignment: .leading, spacing: 4) {
+            //                 Text("Diagnose Video Counts")
+            //                     .font(.body)
+            //                     .foregroundColor(.primary)
+            //                 Text("Compare actual vs stored video model counts")
+            //                     .font(.caption)
+            //                     .foregroundColor(.secondary)
+            //             }
+            //             Spacer()
+            //             if isResyncing {
+            //                 ProgressView()
+            //                     .scaleEffect(0.8)
+            //             }
+            //         }
+            //     }
+            //     .disabled(isResyncing)
+            // }
 
             // // App preferences
             // Section("Preferences") {
