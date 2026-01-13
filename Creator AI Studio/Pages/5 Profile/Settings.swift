@@ -13,7 +13,10 @@ struct Settings: View {
     @State private var showSignInSheet = false
     @State private var showPurchaseCreditsView = false
     @State private var showTestCreditsView = false
+    @State private var showPaywallView = false
+    @State private var showCustomerCenterView = false
     @StateObject private var creditsViewModel = CreditsViewModel()
+    @StateObject private var revenueCatManager = RevenueCatManager.shared
     
     // ProfileViewModel for cache clearing
     var profileViewModel: ProfileViewModel?
@@ -79,6 +82,65 @@ struct Settings: View {
                     Spacer()
                     Image(systemName: "chevron.right")
                         .foregroundColor(.gray)
+                }
+            }
+            
+            // Subscription section
+            Section("Subscription") {
+                HStack {
+                    Image(systemName: "crown.fill")
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [.yellow, .orange],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Runspeed AI Pro")
+                            .font(.body)
+                        if revenueCatManager.isProUser {
+                            Text("Active")
+                                .font(.caption)
+                                .foregroundColor(.green)
+                        } else {
+                            Text("Upgrade to unlock all features")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    Spacer()
+                    if revenueCatManager.isProUser {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.green)
+                    } else {
+                        Image(systemName: "chevron.right")
+                            .foregroundColor(.gray)
+                    }
+                }
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    if revenueCatManager.isProUser {
+                        showCustomerCenterView = true
+                    } else {
+                        showPaywallView = true
+                    }
+                }
+                
+                if revenueCatManager.isProUser {
+                    HStack {
+                        Image(systemName: "person.circle")
+                            .foregroundColor(.blue)
+                        Text("Manage Subscription")
+                            .font(.body)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .foregroundColor(.gray)
+                    }
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        showCustomerCenterView = true
+                    }
                 }
             }
             
@@ -413,11 +475,20 @@ struct Settings: View {
                 .environmentObject(authViewModel)
                 .presentationDragIndicator(.visible)
         }
+        .sheet(isPresented: $showPaywallView) {
+            PaywallView()
+                .presentationDragIndicator(.visible)
+        }
+        .sheet(isPresented: $showCustomerCenterView) {
+            CustomerCenterView()
+                .presentationDragIndicator(.visible)
+        }
         .onAppear {
             // Fetch balance when view appears
             if let userId = authViewModel.user?.id {
                 Task {
                     await creditsViewModel.fetchBalance(userId: userId)
+                    await revenueCatManager.fetchCustomerInfo()
                 }
             }
         }

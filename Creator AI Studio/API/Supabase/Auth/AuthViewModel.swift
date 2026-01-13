@@ -8,6 +8,7 @@
 import Supabase
 import Foundation
 import AuthenticationServices
+import RevenueCat
 
 @MainActor
 class AuthViewModel: ObservableObject {
@@ -30,6 +31,14 @@ class AuthViewModel: ObservableObject {
         do {
             let session = try await client.auth.session
 //            print("✅ Session found: \(session.user.id)")
+            
+            // Identify user with RevenueCat
+            do {
+                try await RevenueCatManager.shared.identifyUser(userId: session.user.id.uuidString)
+            } catch {
+                print("⚠️ [AuthViewModel] RevenueCat identification failed: \(error)")
+            }
+            
             self.user = session.user
             self.isSignedIn = true
             
@@ -58,6 +67,14 @@ class AuthViewModel: ObservableObject {
             // Check if email confirmation is required
             if let session = result.session {
                 print("✅ Session created immediately")
+                
+                // Identify user with RevenueCat
+                do {
+                    try await RevenueCatManager.shared.identifyUser(userId: session.user.id.uuidString)
+                } catch {
+                    print("⚠️ [AuthViewModel] RevenueCat identification failed: \(error)")
+                }
+                
                 self.user = session.user
                 self.isSignedIn = true
                 
@@ -91,6 +108,14 @@ class AuthViewModel: ObservableObject {
             )
             print("✅ Sign in successful: \(session.user.id)")
             print("📦 Access token: \(session.accessToken.prefix(20))...")
+            
+            // Identify user with RevenueCat
+            do {
+                try await RevenueCatManager.shared.identifyUser(userId: session.user.id.uuidString)
+            } catch {
+                print("⚠️ [AuthViewModel] RevenueCat identification failed: \(error)")
+            }
+            
             self.user = session.user
             self.isSignedIn = true
             
@@ -116,6 +141,14 @@ class AuthViewModel: ObservableObject {
             let session = try await client.auth.signInWithIdToken(
                 credentials: .init(provider: .apple, idToken: idToken, accessToken: nil)
             )
+            
+            // Identify user with RevenueCat
+            do {
+                try await RevenueCatManager.shared.identifyUser(userId: session.user.id.uuidString)
+            } catch {
+                print("⚠️ [AuthViewModel] RevenueCat identification failed: \(error)")
+            }
+            
             self.user = session.user
             self.isSignedIn = true
             

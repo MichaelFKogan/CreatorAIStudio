@@ -8,6 +8,7 @@
 import SwiftUI
 import GoogleSignIn
 import AVFoundation
+import RevenueCat
 
 @main
 struct Creator_AI_StudioApp: App {
@@ -16,6 +17,10 @@ struct Creator_AI_StudioApp: App {
     @State private var showSplash = false
     
     init() {
+        // Configure RevenueCat SDK
+        Purchases.configure(withAPIKey: "test_ZaPHoZaXcpJZWrBZVcWoEpcFkeO")
+        Purchases.logLevel = .debug // Use .info or .warn in production
+        
         // Enable webhook mode for image and video generation
         WebhookConfig.useWebhooks = true
         

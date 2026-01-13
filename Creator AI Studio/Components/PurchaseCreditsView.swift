@@ -66,7 +66,9 @@ struct PurchaseCreditsView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
     @Environment(\.dismiss) private var dismiss
     @ObservedObject private var creditsViewModel = CreditsViewModel.shared
+    @StateObject private var revenueCatManager = RevenueCatManager.shared
     @State private var selectedPaymentMethod: PaymentMethod = .external
+    @State private var showPaywallView = false
 
     var body: some View {
         NavigationStack {
@@ -224,8 +226,13 @@ struct PurchaseCreditsView: View {
                 if let userId = authViewModel.user?.id {
                     Task {
                         await creditsViewModel.fetchBalance(userId: userId)
+                        await revenueCatManager.fetchCustomerInfo()
                     }
                 }
+            }
+            .sheet(isPresented: $showPaywallView) {
+                PaywallView()
+                    .presentationDragIndicator(.visible)
             }
             .onReceive(
                 NotificationCenter.default.publisher(
@@ -657,7 +664,7 @@ struct CreditPackageCard: View {
                                                 .frame(width: 20, height: 20)
 
                                             Text(
-                                                "*Approx. \(videoGenerationsRange.min)–\(videoGenerationsRange.max) videos"
+                                                "*Approx. \(videoGenerationsRange.min)–\(videoGenerationsRange.max) videos (at lowest settings)"
                                             )
                                             .font(
                                                 .system(

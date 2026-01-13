@@ -13,6 +13,7 @@
 		277F96BF2ED2A9CD002B7782 /* PostgREST in Frameworks */ = {isa = PBXBuildFile; productRef = 277F96BE2ED2A9CD002B7782 /* PostgREST */; };
 		277F96C12ED2A9CD002B7782 /* Storage in Frameworks */ = {isa = PBXBuildFile; productRef = 277F96C02ED2A9CD002B7782 /* Storage */; };
 		277F96C42ED2AA6C002B7782 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 277F96C32ED2AA6C002B7782 /* Supabase */; };
+		27BEA3682F16BF8D00AB4F13 /* RevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = 27BEA3672F16BF8D00AB4F13 /* RevenueCat */; };
 		27E2E0772ED51473004B79DA /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = 27E2E0762ED51473004B79DA /* Kingfisher */; };
 /* End PBXBuildFile section */
 
@@ -67,6 +68,7 @@
 				271631B02EFF81FF00BC0309 /* GoogleSignInSwift in Frameworks */,
 				277F96BF2ED2A9CD002B7782 /* PostgREST in Frameworks */,
 				277F96BD2ED2A9CD002B7782 /* Auth in Frameworks */,
+				27BEA3682F16BF8D00AB4F13 /* RevenueCat in Frameworks */,
 				27E2E0772ED51473004B79DA /* Kingfisher in Frameworks */,
 				271631AE2EFF81FF00BC0309 /* GoogleSignIn in Frameworks */,
 			);
@@ -144,6 +146,7 @@
 				27E2E0762ED51473004B79DA /* Kingfisher */,
 				271631AD2EFF81FF00BC0309 /* GoogleSignIn */,
 				271631AF2EFF81FF00BC0309 /* GoogleSignInSwift */,
+				27BEA3672F16BF8D00AB4F13 /* RevenueCat */,
 			);
 			productName = "Creator AI Studio";
 			productReference = 277F96772ED2A6C7002B7782 /* Creator AI Studio.app */;
@@ -231,6 +234,7 @@
 				277F96BB2ED2A9CD002B7782 /* XCRemoteSwiftPackageReference "supabase-swift" */,
 				27E2E0752ED51473004B79DA /* XCRemoteSwiftPackageReference "Kingfisher" */,
 				271631AC2EFF81FF00BC0309 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
+				27BEA3642F16BF8D00AB4F13 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 277F96782ED2A6C7002B7782 /* Products */;
@@ -625,6 +629,14 @@
 				minimumVersion = 2.5.1;
 			};
 		};
+		27BEA3642F16BF8D00AB4F13 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/RevenueCat/purchases-ios-spm.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.54.0;
+			};
+		};
 		27E2E0752ED51473004B79DA /* XCRemoteSwiftPackageReference "Kingfisher" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/onevcat/Kingfisher.git";
@@ -665,6 +677,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 277F96BB2ED2A9CD002B7782 /* XCRemoteSwiftPackageReference "supabase-swift" */;
 			productName = Supabase;
+		};
+		27BEA3672F16BF8D00AB4F13 /* RevenueCat */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 27BEA3642F16BF8D00AB4F13 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */;
+			productName = RevenueCat;
 		};
 		27E2E0762ED51473004B79DA /* Kingfisher */ = {
 			isa = XCSwiftPackageProductDependency;
