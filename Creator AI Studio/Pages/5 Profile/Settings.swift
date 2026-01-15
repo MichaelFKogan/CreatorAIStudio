@@ -82,15 +82,11 @@ struct Settings: View {
                 }
             }
             
-<<<<<<< HEAD
-            // Purchase Credits section
-            Section("Credits") {
-                // Current Balance
-=======
+
             // Subscription section
             Section("Balance") {
                                // Current Balance
->>>>>>> eb4c2e7 (Add Google logo to sign-in buttons)
+
                 HStack {
                     Image(systemName: "dollarsign.circle.fill")
                         .foregroundColor(.green)
