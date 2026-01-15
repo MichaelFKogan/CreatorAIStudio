@@ -85,9 +85,11 @@ struct Settings: View {
                 }
             }
             
+
             // Subscription section
             Section("Balance") {
                                // Current Balance
+
                 HStack {
                     Image(systemName: "dollarsign.circle.fill")
                         .foregroundColor(.green)

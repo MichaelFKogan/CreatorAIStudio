@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		271631AE2EFF81FF00BC0309 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 271631AD2EFF81FF00BC0309 /* GoogleSignIn */; };
 		271631B02EFF81FF00BC0309 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 271631AF2EFF81FF00BC0309 /* GoogleSignInSwift */; };
+		276D2AF02F198BEB005D0306 /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 276D2AEF2F198BEB005D0306 /* StoreKit.framework */; };
 		277F96BD2ED2A9CD002B7782 /* Auth in Frameworks */ = {isa = PBXBuildFile; productRef = 277F96BC2ED2A9CD002B7782 /* Auth */; };
 		277F96BF2ED2A9CD002B7782 /* PostgREST in Frameworks */ = {isa = PBXBuildFile; productRef = 277F96BE2ED2A9CD002B7782 /* PostgREST */; };
 		277F96C12ED2A9CD002B7782 /* Storage in Frameworks */ = {isa = PBXBuildFile; productRef = 277F96C02ED2A9CD002B7782 /* Storage */; };
@@ -35,7 +36,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		277F96772ED2A6C7002B7782 /* Creator AI Studio.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Creator AI Studio.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		276D2AEE2F198AA1005D0306 /* Runspeed AI.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Runspeed AI.entitlements"; sourceTree = "<group>"; };
+		276D2AEF2F198BEB005D0306 /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
+		277F96772ED2A6C7002B7782 /* Runspeed AI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Runspeed AI.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		277F96872ED2A6CA002B7782 /* Creator AI StudioTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Creator AI StudioTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		277F96912ED2A6CA002B7782 /* Creator AI StudioUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Creator AI StudioUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -66,6 +69,7 @@
 				277F96C42ED2AA6C002B7782 /* Supabase in Frameworks */,
 				277F96C12ED2A9CD002B7782 /* Storage in Frameworks */,
 				271631B02EFF81FF00BC0309 /* GoogleSignInSwift in Frameworks */,
+				276D2AF02F198BEB005D0306 /* StoreKit.framework in Frameworks */,
 				277F96BF2ED2A9CD002B7782 /* PostgREST in Frameworks */,
 				277F96BD2ED2A9CD002B7782 /* Auth in Frameworks */,
 				27BEA3682F16BF8D00AB4F13 /* RevenueCat in Frameworks */,
@@ -94,6 +98,7 @@
 		277F966E2ED2A6C7002B7782 = {
 			isa = PBXGroup;
 			children = (
+				276D2AEE2F198AA1005D0306 /* Runspeed AI.entitlements */,
 				277F96792ED2A6C7002B7782 /* Creator AI Studio */,
 				277F968A2ED2A6CA002B7782 /* Creator AI StudioTests */,
 				277F96942ED2A6CA002B7782 /* Creator AI StudioUITests */,
@@ -105,7 +110,7 @@
 		277F96782ED2A6C7002B7782 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				277F96772ED2A6C7002B7782 /* Creator AI Studio.app */,
+				277F96772ED2A6C7002B7782 /* Runspeed AI.app */,
 				277F96872ED2A6CA002B7782 /* Creator AI StudioTests.xctest */,
 				277F96912ED2A6CA002B7782 /* Creator AI StudioUITests.xctest */,
 			);
@@ -115,6 +120,7 @@
 		277F96C22ED2AA6C002B7782 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				276D2AEF2F198BEB005D0306 /* StoreKit.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -122,9 +128,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		277F96762ED2A6C7002B7782 /* Creator AI Studio */ = {
+		277F96762ED2A6C7002B7782 /* Runspeed AI */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 277F969B2ED2A6CA002B7782 /* Build configuration list for PBXNativeTarget "Creator AI Studio" */;
+			buildConfigurationList = 277F969B2ED2A6CA002B7782 /* Build configuration list for PBXNativeTarget "Runspeed AI" */;
 			buildPhases = (
 				277F96732ED2A6C7002B7782 /* Sources */,
 				277F96742ED2A6C7002B7782 /* Frameworks */,
@@ -137,7 +143,7 @@
 			fileSystemSynchronizedGroups = (
 				277F96792ED2A6C7002B7782 /* Creator AI Studio */,
 			);
-			name = "Creator AI Studio";
+			name = "Runspeed AI";
 			packageProductDependencies = (
 				277F96BC2ED2A9CD002B7782 /* Auth */,
 				277F96BE2ED2A9CD002B7782 /* PostgREST */,
@@ -149,7 +155,7 @@
 				27BEA3672F16BF8D00AB4F13 /* RevenueCat */,
 			);
 			productName = "Creator AI Studio";
-			productReference = 277F96772ED2A6C7002B7782 /* Creator AI Studio.app */;
+			productReference = 277F96772ED2A6C7002B7782 /* Runspeed AI.app */;
 			productType = "com.apple.product-type.application";
 		};
 		277F96862ED2A6CA002B7782 /* Creator AI StudioTests */ = {
@@ -241,7 +247,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				277F96762ED2A6C7002B7782 /* Creator AI Studio */,
+				277F96762ED2A6C7002B7782 /* Runspeed AI */,
 				277F96862ED2A6CA002B7782 /* Creator AI StudioTests */,
 				277F96902ED2A6CA002B7782 /* Creator AI StudioUITests */,
 			);
@@ -299,12 +305,12 @@
 /* Begin PBXTargetDependency section */
 		277F96892ED2A6CA002B7782 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 277F96762ED2A6C7002B7782 /* Creator AI Studio */;
+			target = 277F96762ED2A6C7002B7782 /* Runspeed AI */;
 			targetProxy = 277F96882ED2A6CA002B7782 /* PBXContainerItemProxy */;
 		};
 		277F96932ED2A6CA002B7782 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 277F96762ED2A6C7002B7782 /* Creator AI Studio */;
+			target = 277F96762ED2A6C7002B7782 /* Runspeed AI */;
 			targetProxy = 277F96922ED2A6CA002B7782 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -434,10 +440,11 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "Runspeed AI.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Creator AI Studio/Preview Content\"";
-				DEVELOPMENT_TEAM = A2UK5VZ977;
+				DEVELOPMENT_TEAM = 3226HD5BV7;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Creator-AI-Studio-Info.plist";
@@ -449,18 +456,21 @@
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.michaelkogan.Creator-AI-Studio";
+				PRODUCT_BUNDLE_IDENTIFIER = com.michaelkogan.runspeedaiv1;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
@@ -469,10 +479,11 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "Runspeed AI.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Creator AI Studio/Preview Content\"";
-				DEVELOPMENT_TEAM = A2UK5VZ977;
+				DEVELOPMENT_TEAM = 3226HD5BV7;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Creator-AI-Studio-Info.plist";
@@ -484,18 +495,21 @@
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.michaelkogan.Creator-AI-Studio";
+				PRODUCT_BUNDLE_IDENTIFIER = com.michaelkogan.runspeedaiv1;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};
@@ -505,9 +519,9 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = A2UK5VZ977;
+				DEVELOPMENT_TEAM = 3226HD5BV7;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.michaelkogan.Creator-AI-StudioTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -524,9 +538,9 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = A2UK5VZ977;
+				DEVELOPMENT_TEAM = 3226HD5BV7;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.michaelkogan.Creator-AI-StudioTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -583,7 +597,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		277F969B2ED2A6CA002B7782 /* Build configuration list for PBXNativeTarget "Creator AI Studio" */ = {
+		277F969B2ED2A6CA002B7782 /* Build configuration list for PBXNativeTarget "Runspeed AI" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				277F969C2ED2A6CA002B7782 /* Debug */,
