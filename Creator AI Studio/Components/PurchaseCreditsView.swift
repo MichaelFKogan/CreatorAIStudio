@@ -2,7 +2,7 @@
 //  PurchaseCreditsView.swift
 //  Creator AI Studio
 //
-//  Created for purchase credits UI
+//  Created for purchase balance UI
 //
 
 import SwiftUI
@@ -86,14 +86,14 @@ struct PurchaseCreditsView: View {
                                 )
                             )
 
-                        Text("Buy Credits")
+                        Text("Add Balance")
                             .font(
                                 .system(
                                     size: 26, weight: .bold, design: .rounded)
                             )
                             .foregroundColor(.primary)
 
-                        Text("Choose a credit package")
+                        Text("Choose an amount to add to your wallet")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                     }
@@ -169,7 +169,7 @@ struct PurchaseCreditsView: View {
                         .padding(.top, 4)
                     }
 
-                    // Credit Packages
+                    // Balance Packages
                     VStack(spacing: 12) {
                         CreditPackageCard(
                             title: "Test Pack",
@@ -231,14 +231,14 @@ struct PurchaseCreditsView: View {
                 }
             }
             .sheet(isPresented: $showPaywallView) {
-                PaywallView()
+                CreditPackPaywallView()
                     .presentationDragIndicator(.visible)
             }
             .onReceive(
                 NotificationCenter.default.publisher(
                     for: NSNotification.Name("CreditsBalanceUpdated"))
             ) { notification in
-                // Refresh credits when balance is updated (e.g., after image/video generation)
+                // Refresh balance when updated (e.g., after image/video generation)
                 if let userId = authViewModel.user?.id {
                     Task {
                         await creditsViewModel.fetchBalance(userId: userId)
@@ -294,10 +294,10 @@ struct PaymentMethodSelector: View {
     }
 }
 
-// Placeholder credit package card
+// Placeholder balance package card
 struct CreditPackageCard: View {
     let title: String
-    let baseCreditsValue: Double  // This is both the credits amount and the base price
+    let baseCreditsValue: Double  // This is both the balance amount and the base price
     let paymentMethod: PaymentMethod
     var badge: String? = nil
     var description: String? = nil
@@ -363,7 +363,7 @@ struct CreditPackageCard: View {
         let minCostPerVideo = 1.10
         let minVideos = Int(baseCreditsValue / minCostPerVideo)
         // Use proportional multiplier based on $5.00 = 4-20 example
-        // Max videos = credits * 4 (since $5.00 * 4 = 20)
+        // Max videos = balance * 4 (since $5.00 * 4 = 20)
         let maxVideos = Int(baseCreditsValue * 4)
         return (min: minVideos, max: maxVideos)
     }
@@ -456,7 +456,7 @@ struct CreditPackageCard: View {
                 )
             }) {
                 VStack(alignment: .leading, spacing: 6) {
-                    // Header: Title, Credits, and Price
+                    // Header: Title, Balance, and Price
                     HStack(alignment: .top) {
                         VStack(alignment: .leading, spacing: 6) {
                             HStack(spacing: 8) {
@@ -500,9 +500,6 @@ struct CreditPackageCard: View {
                                         design: .rounded)
                                 )
                                 .foregroundColor(.primary)
-                                Text("credits")
-                                    .font(.system(size: 13, design: .rounded))
-                                    .foregroundColor(.secondary)
                             }
                         }
 
@@ -711,7 +708,7 @@ struct CreditPackageCard: View {
                                     }
 
                                     Text(
-                                        "Credits can be used for both images and videos"
+                                        "Balance can be used for both images and videos"
                                     )
                                     .font(.system(size: 11, design: .rounded))
                                     .foregroundColor(.secondary)
