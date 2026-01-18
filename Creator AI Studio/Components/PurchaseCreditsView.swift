@@ -65,10 +65,28 @@ struct PriceCalculator {
 struct PurchaseCreditsView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.openURL) private var openURL
     @ObservedObject private var creditsViewModel = CreditsViewModel.shared
     @StateObject private var revenueCatManager = RevenueCatManager.shared
-    @State private var selectedPaymentMethod: PaymentMethod = .external
     @State private var showPaywallView = false
+    @State private var showWebPurchaseLinkAlert = false
+
+    private let paymentMethod: PaymentMethod = .apple
+
+    private var webCreditsPurchaseURL: URL? {
+        guard
+            let urlString = Bundle.main.object(forInfoDictionaryKey: "WEB_CREDITS_PURCHASE_URL") as? String
+        else {
+            return nil
+        }
+
+        let trimmed = urlString.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, let url = URL(string: trimmed) else {
+            return nil
+        }
+
+        return url
+    }
 
     var body: some View {
         NavigationStack {
@@ -96,106 +114,124 @@ struct PurchaseCreditsView: View {
                         Text("Choose an amount to add to your wallet")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
-                    }
 
-                    // Current Balance Display
-                    if let userId = authViewModel.user?.id {
-                        VStack(spacing: 8) {
-                            Text("Current Balance")
-                                .font(
-                                    .system(
-                                        size: 14, weight: .semibold,
-                                        design: .rounded)
-                                )
-                                .foregroundColor(.secondary)
-
-                            Text(creditsViewModel.formattedBalance())
-                                .font(
-                                    .system(
-                                        size: 32, weight: .bold,
-                                        design: .rounded)
-                                )
-                                .foregroundColor(.primary)
-                        }
-                        .padding()
-                        .frame(maxWidth: .infinity)
-                        .background(
-                            RoundedRectangle(cornerRadius: 16)
-                                .fill(Color(.secondarySystemBackground))
-                        )
-                        .padding(.horizontal)
-                    }
-
-                    // Payment Method Selector
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Payment Method")
-                            .font(
-                                .system(
-                                    size: 14, weight: .semibold,
-                                    design: .rounded)
-                            )
-                            .foregroundColor(.secondary)
-                            .padding(.horizontal)
-
-                        PaymentMethodSelector(
-                            selectedMethod: $selectedPaymentMethod
-                        )
-                        .padding(.horizontal)
-
-                        HStack {
-                            HStack(spacing: 4) {
-                                Image(systemName: "creditcard.fill")
-                                    .font(.system(size: 10))
-                                Text("3% + $0.30 fee")
-                                    .font(.system(size: 11, design: .rounded))
+                        // Current balance display
+                        if authViewModel.user?.id != nil {
+                            HStack(spacing: 8) {
+                                Image(systemName: "circle.fill")
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .foregroundColor(.green)
+                                Text("Current Balance:")
+                                    .font(.system(size: 16, weight: .medium, design: .rounded))
+                                    .foregroundColor(.primary)
+                                Text(creditsViewModel.formattedBalance())
+                                    .font(.system(size: 18, weight: .bold, design: .rounded))
+                                    .foregroundColor(.primary)
                             }
-                            .foregroundColor(.secondary)
+                            .padding(.top, 4)
+                        }
+                    }
 
-                            Spacer()
-
-                            // Fee information - show both
-                            HStack(spacing: 16) {
-                                HStack(spacing: 4) {
-                                    Image(systemName: "applelogo")
-                                        .font(.system(size: 10))
-                                    Text("30% fee")
-                                        .font(
-                                            .system(size: 11, design: .rounded))
+                    // Apple-only + web checkout option
+                    VStack(spacing: 10) {
+                        Button {
+                            guard let url = webCreditsPurchaseURL else {
+                                showWebPurchaseLinkAlert = true
+                                return
+                            }
+                            openURL(url)
+                        } label: {
+                            HStack(spacing: 12) {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Save 30%")
+                                        .font(.system(size: 18, weight: .bold, design: .rounded))
+                                        .foregroundColor(.white)
                                 }
-                                .foregroundColor(.secondary)
-                            }
+
+                                Spacer()
+
+                                Image(systemName: "arrow.up.right")
+                                    .font(.system(size: 14, weight: .bold))
+                                    .foregroundColor(.white.opacity(0.95))
                         }
-                        .padding(.horizontal)
-                        .padding(.top, 4)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 24)
+                            .frame(maxWidth: .infinity)
+                            .background(
+                                LinearGradient(
+                                    colors: [.pink, .purple],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .clipShape(RoundedRectangle(cornerRadius: 16))
+                            .shadow(color: Color.purple.opacity(0.28), radius: 12, x: 0, y: 8)
+                        }
+                        .buttonStyle(.plain)
+
+                        HStack(spacing: 12) {
+                            Rectangle()
+                                .fill(Color.secondary.opacity(0.35))
+                                .frame(height: 1)
+                            Text("Other options")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            Rectangle()
+                                .fill(Color.secondary.opacity(0.35))
+                                .frame(height: 1)
+                        }
+                        .padding(.top, 6)
                     }
+                    .padding(.horizontal)
 
                     // Balance Packages
                     VStack(spacing: 12) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "applelogo")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundColor(.secondary)
+                            Text("Apple In‑App Purchase")
+                                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                                .foregroundColor(.secondary)
+                            Spacer()
+                        }
                         CreditPackageCard(
                             title: "Test Pack",
                             baseCreditsValue: 1.00,
-                            paymentMethod: selectedPaymentMethod,
+                            paymentMethod: paymentMethod,
+                            onPurchase: {
+                                showPaywallView = true
+                            },
                             description: "Good for testing photos"
                         )
 
                         CreditPackageCard(
                             title: "Starter Pack",
                             baseCreditsValue: 5.00,
-                            paymentMethod: selectedPaymentMethod,
+                            paymentMethod: paymentMethod,
+                            onPurchase: {
+                                showPaywallView = true
+                            },
                             description: "Perfect for trying out features"
                         )
 
                         CreditPackageCard(
                             title: "Pro Pack",
                             baseCreditsValue: 10.00,
-                            paymentMethod: selectedPaymentMethod,
+                            paymentMethod: paymentMethod,
+                            onPurchase: {
+                                showPaywallView = true
+                            },
                             description: "Good for testing videos"
                         )
 
                         CreditPackageCard(
                             title: "Mega Pack",
                             baseCreditsValue: 20.00,
-                            paymentMethod: selectedPaymentMethod,
+                            paymentMethod: paymentMethod,
+                            onPurchase: {
+                                showPaywallView = true
+                            },
                             badge: "Best Value",
                             description: "Great for regular content creation"
                         )
@@ -203,7 +239,10 @@ struct PurchaseCreditsView: View {
                         CreditPackageCard(
                             title: "Ultra Pack",
                             baseCreditsValue: 50.00,
-                            paymentMethod: selectedPaymentMethod,
+                            paymentMethod: paymentMethod,
+                            onPurchase: {
+                                showPaywallView = true
+                            },
                             description:
                                 "Ideal for power users and bulk projects"
                         )
@@ -234,6 +273,11 @@ struct PurchaseCreditsView: View {
                 CreditPackPaywallView()
                     .presentationDragIndicator(.visible)
             }
+            .alert("Web checkout link not configured", isPresented: $showWebPurchaseLinkAlert) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                Text("Set WEB_CREDITS_PURCHASE_URL in your Info.plist to enable web checkout.")
+            }
             .onReceive(
                 NotificationCenter.default.publisher(
                     for: NSNotification.Name("CreditsBalanceUpdated"))
@@ -249,56 +293,12 @@ struct PurchaseCreditsView: View {
     }
 }
 
-// Payment Method Selector
-struct PaymentMethodSelector: View {
-    @Binding var selectedMethod: PaymentMethod
-
-    var body: some View {
-        HStack(spacing: 0) {
-            ForEach(PaymentMethod.allCases, id: \.self) { method in
-                Button(action: {
-                    withAnimation(.spring(response: 0.3)) {
-                        selectedMethod = method
-                    }
-                }) {
-                    HStack(spacing: 6) {
-                        Image(systemName: method.icon)
-                            .font(.system(size: 14))
-                        Text(method.displayName)
-                            .font(
-                                .system(
-                                    size: 13, weight: .semibold,
-                                    design: .rounded))
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 10)
-                    .background(
-                        selectedMethod == method
-                            ? Color.blue
-                            : Color(.secondarySystemBackground)
-                    )
-                    .foregroundColor(
-                        selectedMethod == method
-                            ? .white
-                            : .primary
-                    )
-                }
-            }
-        }
-        .background(Color(.secondarySystemBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 10))
-        .overlay(
-            RoundedRectangle(cornerRadius: 10)
-                .stroke(Color.blue.opacity(0.3), lineWidth: 1)
-        )
-    }
-}
-
 // Placeholder balance package card
 struct CreditPackageCard: View {
     let title: String
     let baseCreditsValue: Double  // This is both the balance amount and the base price
     let paymentMethod: PaymentMethod
+    let onPurchase: () -> Void
     var badge: String? = nil
     var description: String? = nil
 
@@ -316,7 +316,7 @@ struct CreditPackageCard: View {
         case 20.00:
             return 4.00
         case 50.00:
-            return 5.00
+            return 6.00
         default:
             return baseCreditsValue * 0.10  // Fallback to 10% for any other values
         }
@@ -325,8 +325,9 @@ struct CreditPackageCard: View {
     private var paymentProcessorFee: Double {
         switch paymentMethod {
         case .apple:
-            return PriceCalculator.calculateApplePrice(
-                basePrice: baseCreditsValue) - baseCreditsValue
+            // Apple fee is 30% of (base + app fee)
+            let subtotal = baseCreditsValue + profitFee
+            return subtotal * 0.30
         case .external:
             return PriceCalculator.calculateExternalFee(
                 basePrice: baseCreditsValue)
@@ -334,17 +335,17 @@ struct CreditPackageCard: View {
     }
 
     private var adjustedPrice: Double {
-        // Total price = base price + payment processor fee + app fee
-        let baseWithProcessorFee: Double
+        // For Apple: Total = (Base + App Fee) * 1.30
+        // For External: Total = Base + External Fee + App Fee
         switch paymentMethod {
         case .apple:
-            baseWithProcessorFee = PriceCalculator.calculateApplePrice(
-                basePrice: baseCreditsValue)
+            let subtotal = baseCreditsValue + profitFee
+            return subtotal * 1.30
         case .external:
-            baseWithProcessorFee = PriceCalculator.calculateExternalPrice(
+            let baseWithProcessorFee = PriceCalculator.calculateExternalPrice(
                 basePrice: baseCreditsValue)
+            return baseWithProcessorFee + profitFee
         }
-        return baseWithProcessorFee + profitFee
     }
 
     private var feeAmount: Double {
@@ -446,396 +447,300 @@ struct CreditPackageCard: View {
         }.sorted { $0.count > $1.count }  // Sort by count descending
     }
 
+    // Header section with title, balance, and price
+    private var headerSection: some View {
+        HStack(alignment: .top) {
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(spacing: 8) {
+                    Image(systemName: "crown.fill")
+                        .font(.system(size: 14))
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [.yellow, .orange],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                    Text(title)
+                        .font(
+                            .system(
+                                size: 18, weight: .bold,
+                                design: .rounded)
+                        )
+                        .foregroundColor(.primary)
+
+                    if let badge = badge {
+                        Text(badge)
+                            .font(.caption2)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 3)
+                            .background(Color.blue)
+                            .clipShape(Capsule())
+                    }
+                }
+
+                HStack(spacing: 6) {
+                    Image(systemName: "dollarsign.circle.fill")
+                        .font(.system(size: 12))
+                        .foregroundColor(.gray)
+                    Text(
+                        PricingManager.formatPrice(
+                            Decimal(baseCreditsValue)) + " credits"
+                    )
+                    .font(
+                        .system(
+                            size: 16, weight: .semibold,
+                            design: .rounded)
+                    )
+                    .foregroundColor(.primary)
+                }
+            }
+
+            Spacer()
+
+            VStack(alignment: .trailing, spacing: 2) {
+                Text(PriceCalculator.formatPrice(adjustedPrice))
+                    .font(
+                        .system(
+                            size: 22, weight: .bold,
+                            design: .rounded)
+                    )
+                    .foregroundColor(.primary)
+                Text("Total Price")
+                    .font(.system(size: 11, design: .rounded))
+                    .foregroundColor(.secondary)
+            }
+        }
+    }
+    
+    // Description row
+    private var descriptionRow: some View {
+        HStack {
+            if let description = description {
+                Text(description)
+                    .font(.system(size: 12, design: .rounded))
+                    .foregroundColor(.secondary)
+            }
+            
+            Spacer()
+        }
+    }
+    
+    // Details toggle button
+    private var detailsButton: some View {
+        HStack {
+            Spacer()
+            Button(action: {
+                withAnimation(
+                    .spring(response: 0.3, dampingFraction: 0.8)
+                ) {
+                    isDetailsExpanded.toggle()
+                }
+            }) {
+                Text(isDetailsExpanded ? "Hide ▴" : "Details ▾")
+                    .font(
+                        .system(
+                            size: 13, weight: .medium,
+                            design: .rounded)
+                    )
+                    .foregroundColor(.blue)
+            }
+            .buttonStyle(PlainButtonStyle())
+        }
+    }
+    
+    // Expanded details section
+    @ViewBuilder
+    private var expandedDetailsSection: some View {
+        if isDetailsExpanded {
+            VStack(alignment: .leading, spacing: 12) {
+                // Divider
+                Divider()
+                    .padding(.vertical, 4)
+
+                // What You Get Section
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 12))
+                            .foregroundColor(.green)
+                        Text("What You Get")
+                            .font(
+                                .system(
+                                    size: 12, weight: .semibold,
+                                    design: .rounded)
+                            )
+                            .foregroundColor(.secondary)
+                    }
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        VStack(alignment: .leading, spacing: 6) {
+                            HStack(spacing: 8) {
+                                Image(
+                                    systemName:
+                                        "photo.on.rectangle.angled"
+                                )
+                                .font(
+                                    .system(
+                                        size: 14, weight: .medium)
+                                )
+                                .imageScale(.medium)
+                                .foregroundColor(.blue)
+                                .frame(width: 20, height: 20)
+
+                                Text(
+                                    "*Approx. \(imageGenerations) images (depending on model)"
+                                )
+                                .font(
+                                    .system(
+                                        size: 12, design: .rounded)
+                                )
+                                .foregroundColor(.secondary)
+                            }
+
+                            // Image model pills
+                            if !exampleImageModels.isEmpty {
+                                ScrollView(
+                                    .horizontal,
+                                    showsIndicators: false
+                                ) {
+                                    HStack(spacing: 8) {
+                                        ForEach(
+                                            exampleImageModels,
+                                            id: \.name
+                                        ) { model in
+                                            ModelPill(
+                                                modelName: model
+                                                    .name,
+                                                imageName: model
+                                                    .imageName,
+                                                count: model.count
+                                            )
+                                        }
+                                    }
+                                    .padding(.horizontal, 20)
+                                }
+                            }
+                        }
+
+                        // OR divider
+                        HStack {
+                            Text("OR")
+                                .font(
+                                    .system(
+                                        size: 12,
+                                        weight: .semibold,
+                                        design: .rounded)
+                                )
+                                .foregroundColor(.primary)
+                                .padding(.leading, 20)
+                        }
+
+                        VStack(alignment: .leading, spacing: 6) {
+                            HStack(spacing: 8) {
+                                Image(systemName: "video.fill")
+                                    .font(
+                                        .system(
+                                            size: 14,
+                                            weight: .medium)
+                                    )
+                                    .imageScale(.medium)
+                                    .foregroundColor(.purple)
+                                    .frame(width: 20, height: 20)
+
+                                Text(
+                                    "*Approx. \(videoGenerationsRange.min)–\(videoGenerationsRange.max) videos (at lowest settings)"
+                                )
+                                .font(
+                                    .system(
+                                        size: 12, design: .rounded)
+                                )
+                                .foregroundColor(.secondary)
+                            }
+
+                            // Video model pills
+                            if !exampleVideoModels.isEmpty {
+                                ScrollView(
+                                    .horizontal,
+                                    showsIndicators: false
+                                ) {
+                                    HStack(spacing: 8) {
+                                        ForEach(
+                                            exampleVideoModels,
+                                            id: \.name
+                                        ) { model in
+                                            VideoModelPill(
+                                                modelName: model
+                                                    .name,
+                                                imageName: model
+                                                    .imageName,
+                                                count: model.count
+                                            )
+                                        }
+                                    }
+                                    .padding(.horizontal, 20)
+                                }
+
+                                Text(
+                                    "Video examples shown for shortest length videos"
+                                )
+                                .font(
+                                    .system(
+                                        size: 10, design: .rounded)
+                                )
+                                .foregroundColor(.secondary)
+                                .italic()
+                                .padding(.leading, 20)
+                                .padding(.top, 2)
+                            }
+                        }
+
+                        Text(
+                            "Balance can be used for both images and videos"
+                        )
+                        .font(.system(size: 11, design: .rounded))
+                        .foregroundColor(.secondary)
+                        .italic()
+                        .padding(.leading, 20)
+                        .padding(.top, 2)
+
+                        Text(
+                            "*Approximate usage depends on models used"
+                        )
+                        .font(.system(size: 11, design: .rounded))
+                        .foregroundColor(.secondary)
+                        .italic()
+                        .padding(.leading, 20)
+                    }
+                    .padding(.leading, 18)
+                }
+            }
+            .transition(.opacity.combined(with: .move(edge: .top)))
+        }
+    }
+    
+    // Main button content
+    private var buttonContent: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            headerSection
+            descriptionRow
+            detailsButton
+            expandedDetailsSection
+        }
+        .padding()
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // Main card content - tappable for purchase
             Button(action: {
-                // TODO: Handle purchase logic with selected payment method
-                print(
-                    "Purchase \(title) via \(paymentMethod.rawValue) for \(PriceCalculator.formatPrice(adjustedPrice))"
-                )
+                onPurchase()
             }) {
-                VStack(alignment: .leading, spacing: 6) {
-                    // Header: Title, Balance, and Price
-                    HStack(alignment: .top) {
-                        VStack(alignment: .leading, spacing: 6) {
-                            HStack(spacing: 8) {
-                                Text(title)
-                                    .font(
-                                        .system(
-                                            size: 18, weight: .bold,
-                                            design: .rounded)
-                                    )
-                                    .foregroundColor(.primary)
-
-                                if let badge = badge {
-                                    Text(badge)
-                                        .font(.caption2)
-                                        .fontWeight(.semibold)
-                                        .foregroundColor(.white)
-                                        .padding(.horizontal, 6)
-                                        .padding(.vertical, 3)
-                                        .background(Color.blue)
-                                        .clipShape(Capsule())
-                                }
-                            }
-
-                            HStack(spacing: 6) {
-                                Image(systemName: "crown.fill")
-                                    .font(.system(size: 12))
-                                    .foregroundStyle(
-                                        LinearGradient(
-                                            colors: [.yellow, .orange],
-                                            startPoint: .topLeading,
-                                            endPoint: .bottomTrailing
-                                        )
-                                    )
-                                Text(
-                                    PriceCalculator.formatPrice(
-                                        baseCreditsValue)
-                                )
-                                .font(
-                                    .system(
-                                        size: 16, weight: .semibold,
-                                        design: .rounded)
-                                )
-                                .foregroundColor(.primary)
-                            }
-                        }
-
-                        Spacer()
-
-                        VStack(alignment: .trailing, spacing: 2) {
-                            Text(PriceCalculator.formatPrice(adjustedPrice))
-                                .font(
-                                    .system(
-                                        size: 22, weight: .bold,
-                                        design: .rounded)
-                                )
-                                .foregroundColor(.primary)
-                            Text("Total Price")
-                                .font(.system(size: 11, design: .rounded))
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                    
-                    // Description and Total Fees row
-                    HStack {
-                        if let description = description {
-                            Text(description)
-                                .font(.system(size: 12, design: .rounded))
-                                .foregroundColor(.secondary)
-                        }
-                        
-                        Spacer()
-                        
-                        HStack(spacing: 4) {
-                            Text("Total Fees")
-                                .font(.system(size: 11, design: .rounded))
-                                .foregroundColor(.secondary)
-                            Text(
-                                PriceCalculator.formatPrice(
-                                    paymentProcessorFee + profitFee)
-                            )
-                            .font(.system(size: 11, design: .rounded))
-                            .foregroundColor(.secondary)
-                        }
-                    }
-                    
-                    // Details button row
-                    HStack {
-                        Spacer()
-                        Button(action: {
-                            withAnimation(
-                                .spring(response: 0.3, dampingFraction: 0.8)
-                            ) {
-                                isDetailsExpanded.toggle()
-                            }
-                        }) {
-                            Text(isDetailsExpanded ? "Hide ▴" : "Details ▾")
-                                .font(
-                                    .system(
-                                        size: 13, weight: .medium,
-                                        design: .rounded)
-                                )
-                                .foregroundColor(.blue)
-                        }
-                        .buttonStyle(PlainButtonStyle())
-                    }
-
-                    // Expanded details section - What You Get and Fees
-                    if isDetailsExpanded {
-                        VStack(alignment: .leading, spacing: 12) {
-                            // Divider
-                            Divider()
-                                .padding(.vertical, 4)
-
-                            // What You Get Section
-                            VStack(alignment: .leading, spacing: 8) {
-                                HStack(spacing: 6) {
-                                    Image(systemName: "checkmark.circle.fill")
-                                        .font(.system(size: 12))
-                                        .foregroundColor(.green)
-                                    Text("What You Get")
-                                        .font(
-                                            .system(
-                                                size: 12, weight: .semibold,
-                                                design: .rounded)
-                                        )
-                                        .foregroundColor(.secondary)
-                                }
-
-                                VStack(alignment: .leading, spacing: 8) {
-                                    VStack(alignment: .leading, spacing: 6) {
-                                        HStack(spacing: 8) {
-                                            Image(
-                                                systemName:
-                                                    "photo.on.rectangle.angled"
-                                            )
-                                            .font(
-                                                .system(
-                                                    size: 14, weight: .medium)
-                                            )
-                                            .imageScale(.medium)
-                                            .foregroundColor(.blue)
-                                            .frame(width: 20, height: 20)
-
-                                            Text(
-                                                "*Approx. \(imageGenerations) images (depending on model)"
-                                            )
-                                            .font(
-                                                .system(
-                                                    size: 12, design: .rounded)
-                                            )
-                                            .foregroundColor(.secondary)
-                                        }
-
-                                        // Image model pills
-                                        if !exampleImageModels.isEmpty {
-                                            ScrollView(
-                                                .horizontal,
-                                                showsIndicators: false
-                                            ) {
-                                                HStack(spacing: 8) {
-                                                    ForEach(
-                                                        exampleImageModels,
-                                                        id: \.name
-                                                    ) { model in
-                                                        ModelPill(
-                                                            modelName: model
-                                                                .name,
-                                                            imageName: model
-                                                                .imageName,
-                                                            count: model.count
-                                                        )
-                                                    }
-                                                }
-                                                .padding(.horizontal, 20)
-                                            }
-                                        }
-                                    }
-
-                                    // OR divider
-                                    HStack {
-                                        Text("OR")
-                                            .font(
-                                                .system(
-                                                    size: 12,
-                                                    weight: .semibold,
-                                                    design: .rounded)
-                                            )
-                                            .foregroundColor(.primary)
-                                            .padding(.leading, 20)
-                                    }
-
-                                    VStack(alignment: .leading, spacing: 6) {
-                                        HStack(spacing: 8) {
-                                            Image(systemName: "video.fill")
-                                                .font(
-                                                    .system(
-                                                        size: 14,
-                                                        weight: .medium)
-                                                )
-                                                .imageScale(.medium)
-                                                .foregroundColor(.purple)
-                                                .frame(width: 20, height: 20)
-
-                                            Text(
-                                                "*Approx. \(videoGenerationsRange.min)–\(videoGenerationsRange.max) videos (at lowest settings)"
-                                            )
-                                            .font(
-                                                .system(
-                                                    size: 12, design: .rounded)
-                                            )
-                                            .foregroundColor(.secondary)
-                                        }
-
-                                        // Video model pills
-                                        if !exampleVideoModels.isEmpty {
-                                            ScrollView(
-                                                .horizontal,
-                                                showsIndicators: false
-                                            ) {
-                                                HStack(spacing: 8) {
-                                                    ForEach(
-                                                        exampleVideoModels,
-                                                        id: \.name
-                                                    ) { model in
-                                                        VideoModelPill(
-                                                            modelName: model
-                                                                .name,
-                                                            imageName: model
-                                                                .imageName,
-                                                            count: model.count
-                                                        )
-                                                    }
-                                                }
-                                                .padding(.horizontal, 20)
-                                            }
-
-                                            Text(
-                                                "Video examples shown for shortest length videos"
-                                            )
-                                            .font(
-                                                .system(
-                                                    size: 10, design: .rounded)
-                                            )
-                                            .foregroundColor(.secondary)
-                                            .italic()
-                                            .padding(.leading, 20)
-                                            .padding(.top, 2)
-                                        }
-                                    }
-
-                                    Text(
-                                        "Balance can be used for both images and videos"
-                                    )
-                                    .font(.system(size: 11, design: .rounded))
-                                    .foregroundColor(.secondary)
-                                    .italic()
-                                    .padding(.leading, 20)
-                                    .padding(.top, 2)
-
-                                    Text(
-                                        "*Approximate usage depends on models used"
-                                    )
-                                    .font(.system(size: 11, design: .rounded))
-                                    .foregroundColor(.secondary)
-                                    .italic()
-                                    .padding(.leading, 20)
-                                }
-                                .padding(.leading, 18)
-                            }
-
-                            // Divider
-                            Divider()
-                                .padding(.vertical, 4)
-
-                            // Fees Section
-                            VStack(alignment: .leading, spacing: 4) {
-                                HStack(spacing: 6) {
-                                    Image(systemName: "dollarsign.circle.fill")
-                                        .font(.system(size: 12))
-                                        .foregroundColor(.gray)
-                                    Text("Fee Breakdown")
-                                        .font(
-                                            .system(
-                                                size: 12, weight: .semibold,
-                                                design: .rounded)
-                                        )
-                                        .foregroundColor(.secondary)
-
-                                    Spacer()
-                                }
-
-                                VStack {
-                                    if paymentMethod == .apple {
-                                        HStack {
-                                            Text("Apple Fee")
-                                                .font(
-                                                    .system(
-                                                        size: 11,
-                                                        design: .rounded)
-                                                )
-                                                .foregroundColor(.secondary)
-                                            Spacer()
-                                            Text(
-                                                "(30%) = \(PriceCalculator.formatPrice(feeAmount))"
-                                            )
-                                            .font(
-                                                .system(
-                                                    size: 11, design: .rounded)
-                                            )
-                                            .foregroundColor(.secondary)
-                                        }
-                                    } else {
-                                        HStack {
-                                            Text("Credit Card Fee")
-                                                .font(
-                                                    .system(
-                                                        size: 11,
-                                                        design: .rounded)
-                                                )
-                                                .foregroundColor(.secondary)
-                                            Spacer()
-                                            Text(
-                                                "(3% + $0.30) = \(PriceCalculator.formatPrice(feeAmount))"
-                                            )
-                                            .font(
-                                                .system(
-                                                    size: 11, design: .rounded)
-                                            )
-                                            .foregroundColor(.secondary)
-                                        }
-                                    }
-
-                                    HStack {
-                                        Text("App Fee")
-                                            .font(
-                                                .system(
-                                                    size: 11, design: .rounded)
-                                            )
-                                            .foregroundColor(.secondary)
-                                        Spacer()
-                                        Text(
-                                            "= \(PriceCalculator.formatPrice(profitFee))"
-                                        )
-                                        .font(
-                                            .system(size: 11, design: .rounded)
-                                        )
-                                        .foregroundColor(.secondary)
-                                    }
-
-                                    HStack {
-                                        Text("Total Fees")
-                                            .font(
-                                                .system(
-                                                    size: 11, weight: .semibold,
-                                                    design: .rounded)
-                                            )
-                                            .foregroundColor(.primary)
-                                        Spacer()
-                                        Text(
-                                            "= \(PriceCalculator.formatPrice(paymentProcessorFee + profitFee))"
-                                        )
-                                        .font(
-                                            .system(
-                                                size: 11, weight: .semibold,
-                                                design: .rounded)
-                                        )
-                                        .foregroundColor(.primary)
-                                    }
-                                }
-                                .padding(.leading, 18)
-                            }
-                        }
-                        .transition(.opacity.combined(with: .move(edge: .top)))
-                    }
-                }
-                .padding()
+                buttonContent
             }
             .buttonStyle(PlainButtonStyle())
-
         }
         .background(
             RoundedRectangle(cornerRadius: 16)

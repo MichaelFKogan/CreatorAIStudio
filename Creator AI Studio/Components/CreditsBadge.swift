@@ -50,20 +50,14 @@ struct CreditsBadge: View {
                     showPurchaseCreditsSheet = true
                 }) {
                     HStack(spacing: 6) {
-                        Image(systemName: "crown.fill")
-                            .foregroundStyle(
-                                LinearGradient(
-                                    colors: [.yellow, .orange],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
-                            .font(.system(size: 12))
+                        Image(systemName: "dollarsign.circle.fill")
+                            .foregroundColor(.gray)
+                            .font(.system(size: 10))
                         
-                        Text(creditsViewModel.formattedBalance())
+                        Text(PricingManager.formatPrice(Decimal(creditsViewModel.balance)))
                             .font(
                                 .system(
-                                    size: 14, weight: .semibold,
+                                    size: 16, weight: .semibold,
                                     design: .rounded)
                             )
                             .foregroundColor(.primary)
@@ -78,16 +72,16 @@ struct CreditsBadge: View {
                                 x: 0, y: 2
                             )
                     )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 20)
-                            .strokeBorder(
-                                LinearGradient(
-                                    colors: [borderColor, borderColor],
-                                    startPoint: .leading,
-                                    endPoint: .trailing),
-                                lineWidth: 1.5
-                            )
-                    )
+                    // .overlay(
+                    //     RoundedRectangle(cornerRadius: 20)
+                    //         .strokeBorder(
+                    //             LinearGradient(
+                    //                 colors: [borderColor, borderColor],
+                    //                 startPoint: .leading,
+                    //                 endPoint: .trailing),
+                    //             lineWidth: 1.5
+                    //         )
+                    // )
                 }
                 .buttonStyle(PlainButtonStyle())
             }

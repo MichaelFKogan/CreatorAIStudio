@@ -460,8 +460,8 @@ extension PricingManager {
                let mode = PriceDisplayMode(rawValue: rawValue) {
                 return mode
             }
-            // return .credits // Default to credits
-            return .dollars // Default to credits
+            return .credits // Default to credits
+            // return .dollars // Default to credits
         }
         set {
             // Save to UserDefaults for persistence
