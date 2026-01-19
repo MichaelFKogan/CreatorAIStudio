@@ -202,7 +202,8 @@ struct PurchaseCreditsView: View {
                             onPurchase: {
                                 showPaywallView = true
                             },
-                            description: "Good for testing photos"
+                            description: "Good for testing photos",
+                            manualPrice: 2.99  // Set your manual price here
                         )
 
                         CreditPackageCard(
@@ -212,7 +213,8 @@ struct PurchaseCreditsView: View {
                             onPurchase: {
                                 showPaywallView = true
                             },
-                            description: "Perfect for trying out features"
+                            description: "Perfect for trying out features",
+                            manualPrice: 7.99  // Set your manual price here
                         )
 
                         CreditPackageCard(
@@ -222,7 +224,8 @@ struct PurchaseCreditsView: View {
                             onPurchase: {
                                 showPaywallView = true
                             },
-                            description: "Good for testing videos"
+                            description: "Good for testing videos",
+                            manualPrice: 14.99  // Set your manual price here
                         )
 
                         CreditPackageCard(
@@ -233,7 +236,8 @@ struct PurchaseCreditsView: View {
                                 showPaywallView = true
                             },
                             badge: "Best Value",
-                            description: "Great for regular content creation"
+                            description: "Great for regular content creation",
+                            manualPrice: 29.99  // Set your manual price here
                         )
 
                         CreditPackageCard(
@@ -244,7 +248,8 @@ struct PurchaseCreditsView: View {
                                 showPaywallView = true
                             },
                             description:
-                                "Ideal for power users and bulk projects"
+                                "Ideal for power users and bulk projects",
+                            manualPrice: 69.99  // Set your manual price here
                         )
                     }
                     .padding(.horizontal)
@@ -301,6 +306,7 @@ struct CreditPackageCard: View {
     let onPurchase: () -> Void
     var badge: String? = nil
     var description: String? = nil
+    var manualPrice: Double? = nil  // Manual total price override
 
     @State private var isDetailsExpanded: Bool = false
 
@@ -335,6 +341,10 @@ struct CreditPackageCard: View {
     }
 
     private var adjustedPrice: Double {
+        // Use manual price if provided, otherwise calculate using adjusted pricing
+        if let manualPrice = manualPrice {
+            return manualPrice
+        }
         // For Apple: Total = (Base + App Fee) * 1.30
         // For External: Total = Base + External Fee + App Fee
         switch paymentMethod {
