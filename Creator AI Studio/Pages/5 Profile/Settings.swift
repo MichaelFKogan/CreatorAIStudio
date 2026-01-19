@@ -13,6 +13,7 @@ struct Settings: View {
     @State private var showSignInSheet = false
     @State private var showPurchaseCreditsView = false
     @State private var showTestCreditsView = false
+    @State private var isRestoringPurchases = false
     @StateObject private var creditsViewModel = CreditsViewModel()
     
     // ProfileViewModel for cache clearing
@@ -158,6 +159,36 @@ struct Settings: View {
                 .onTapGesture {
                     showTestCreditsView = true
                 }
+                
+                HStack {
+                    Image(systemName: "arrow.clockwise.circle.fill")
+                        .foregroundColor(.blue)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Restore Purchases")
+                            .font(.body)
+                        Text("Restore your previous in-app purchases")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    Spacer()
+                    if isRestoringPurchases {
+                        ProgressView()
+                            .scaleEffect(0.8)
+                    } else {
+                        Image(systemName: "chevron.right")
+                            .foregroundColor(.gray)
+                    }
+                }
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    // TODO: Implement restore purchases functionality
+                    isRestoringPurchases = true
+                    // Placeholder for future implementation
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                        isRestoringPurchases = false
+                    }
+                }
+                .disabled(isRestoringPurchases)
             }
             
             // Usage section

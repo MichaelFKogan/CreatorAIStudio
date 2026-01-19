@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import StoreKit
 
 // Price formatting helper
 struct PriceCalculator {
@@ -15,10 +16,25 @@ struct PriceCalculator {
     }
 }
 
+// MARK: - StoreKit Product IDs
+enum CreditProductID: String, CaseIterable {
+    case testPack = "com.runspeedai.credits.test"
+    case starterPack = "com.runspeedai.credits.starter"
+    case proPack = "com.runspeedai.credits.pro"
+    case megaPack = "com.runspeedai.credits.mega"
+    case ultraPack = "com.runspeedai.credits.ultra"
+}
+
 struct PurchaseCreditsView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
     @Environment(\.dismiss) private var dismiss
     @ObservedObject private var creditsViewModel = CreditsViewModel.shared
+
+    @State private var isPurchasing = false
+    @State private var purchaseError: String?
+    @State private var showingError = false
+    @State private var showingRestoreAlert = false
+    @State private var restoreMessage = ""
 
     var body: some View {
         NavigationStack {
@@ -53,24 +69,36 @@ struct PurchaseCreditsView: View {
 
                     // Current Balance Display
                     if let userId = authViewModel.user?.id {
-                        HStack {
-                            Spacer()
-                            Text("Current Balance")
-                                .font(
-                                    .system(
-                                        size: 14, weight: .semibold,
-                                        design: .rounded)
-                                )
-                                .foregroundColor(.secondary)
+                        VStack(spacing: 8) {
+                            HStack {
+                                Spacer()
+                                Text("Current Balance")
+                                    .font(
+                                        .system(
+                                            size: 14, weight: .semibold,
+                                            design: .rounded)
+                                    )
+                                    .foregroundColor(.secondary)
 
-                            Text(creditsViewModel.formattedBalance())
-                                .font(
-                                    .system(
-                                        size: 16, weight: .bold,
-                                        design: .rounded)
-                                )
-                                .foregroundColor(.primary)
-                            Spacer()
+                                Text(creditsViewModel.formattedBalance())
+                                    .font(
+                                        .system(
+                                            size: 16, weight: .bold,
+                                            design: .rounded)
+                                    )
+                                    .foregroundColor(.primary)
+                                Spacer()
+                            }
+
+                            // Credits never expire disclosure
+                            HStack(spacing: 4) {
+                                Image(systemName: "checkmark.seal.fill")
+                                    .font(.system(size: 12))
+                                    .foregroundColor(.green)
+                                Text("Credits never expire")
+                                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                                    .foregroundColor(.secondary)
+                            }
                         }
                         .padding()
                         .frame(maxWidth: .infinity)
@@ -87,44 +115,97 @@ struct PurchaseCreditsView: View {
                             title: "Test Pack",
                             baseCreditsValue: 1.00,
                             totalPrice: 2.99,
-                            description: "Good for testing photos"
+                            productId: .testPack,
+                            description: "Good for testing photos",
+                            isPurchasing: $isPurchasing,
+                            onPurchase: handlePurchase
                         )
 
                         CreditPackageCard(
                             title: "Starter Pack",
                             baseCreditsValue: 5.00,
                             totalPrice: 7.99,
-                            description: "Perfect for trying out features"
+                            productId: .starterPack,
+                            description: "Perfect for trying out features",
+                            isPurchasing: $isPurchasing,
+                            onPurchase: handlePurchase
                         )
 
                         CreditPackageCard(
                             title: "Pro Pack",
                             baseCreditsValue: 10.00,
                             totalPrice: 15.99,
-                            description: "Good for testing videos"
+                            productId: .proPack,
+                            description: "Good for testing videos",
+                            isPurchasing: $isPurchasing,
+                            onPurchase: handlePurchase
                         )
 
                         CreditPackageCard(
                             title: "Mega Pack",
                             baseCreditsValue: 20.00,
                             totalPrice: 29.99,
+                            productId: .megaPack,
                             badge: "Best Value",
-                            description: "Great for regular content creation"
+                            description: "Great for regular content creation",
+                            isPurchasing: $isPurchasing,
+                            onPurchase: handlePurchase
                         )
 
                         CreditPackageCard(
                             title: "Ultra Pack",
                             baseCreditsValue: 50.00,
                             totalPrice: 72.99,
-                            description:
-                                "Ideal for power users and bulk projects"
+                            productId: .ultraPack,
+                            description: "Ideal for power users and bulk projects",
+                            isPurchasing: $isPurchasing,
+                            onPurchase: handlePurchase
                         )
                     }
                     .padding(.horizontal)
 
+                    // Legal disclosures
+                    VStack(spacing: 8) {
+                        Text("Payment will be charged to your Apple ID account at confirmation of purchase. Credits are consumable and non-refundable. Credits never expire.")
+                            .font(.system(size: 11, design: .rounded))
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+
+                        HStack(spacing: 16) {
+                            Button(action: handleRestorePurchases) {
+                                HStack(spacing: 6) {
+                                    Image(systemName: "arrow.clockwise")
+                                        .font(.system(size: 11))
+                                    Text("Restore Purchases")
+                                        .font(.system(size: 11, weight: .medium, design: .rounded))
+                                }
+                            }
+                            .foregroundColor(.blue)
+
+                            Button("Terms of Use") {
+                                // TODO: Open Terms of Use URL
+                                if let url = URL(string: "https://runspeed.ai/terms") {
+                                    UIApplication.shared.open(url)
+                                }
+                            }
+                            .font(.system(size: 11, weight: .medium, design: .rounded))
+
+                            Button("Privacy Policy") {
+                                // TODO: Open Privacy Policy URL
+                                if let url = URL(string: "https://runspeed.ai/privacy") {
+                                    UIApplication.shared.open(url)
+                                }
+                            }
+                            .font(.system(size: 11, weight: .medium, design: .rounded))
+                        }
+                    }
+                    .padding(.horizontal, 24)
+                    .padding(.top, 8)
+
                     Spacer(minLength: 100)
                 }
             }
+            .disabled(isPurchasing)
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -152,7 +233,68 @@ struct PurchaseCreditsView: View {
                     }
                 }
             }
+            .alert("Purchase Error", isPresented: $showingError) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                Text(purchaseError ?? "An unknown error occurred")
+            }
+            .alert("Restore Purchases", isPresented: $showingRestoreAlert) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                Text(restoreMessage)
+            }
+            .overlay {
+                if isPurchasing {
+                    ZStack {
+                        Color.black.opacity(0.3)
+                            .ignoresSafeArea()
+                        VStack(spacing: 16) {
+                            ProgressView()
+                                .scaleEffect(1.5)
+                            Text("Processing...")
+                                .font(.system(size: 14, weight: .medium, design: .rounded))
+                                .foregroundColor(.white)
+                        }
+                        .padding(24)
+                        .background(
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(Color(.systemBackground).opacity(0.95))
+                        )
+                    }
+                }
+            }
         }
+    }
+
+    // MARK: - Purchase Handlers
+
+    private func handlePurchase(productId: CreditProductID, credits: Double) {
+        // TODO: Implement StoreKit purchase
+        // 1. Fetch product from App Store using productId.rawValue
+        // 2. Call product.purchase()
+        // 3. Handle transaction result
+        // 4. On success, add credits to user's balance via CreditsManager
+        // 5. Finish transaction
+
+        print("Purchase requested for \(productId.rawValue) with \(credits) credits")
+
+        // Placeholder for StoreKit integration
+        isPurchasing = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+            isPurchasing = false
+            // Remove this placeholder when implementing real StoreKit
+            purchaseError = "StoreKit not yet configured. Please set up products in App Store Connect."
+            showingError = true
+        }
+    }
+
+    private func handleRestorePurchases() {
+        // TODO: Implement restore purchases
+        // Note: Consumables cannot be restored, but Apple requires this button
+        // Show appropriate message to user
+
+        restoreMessage = "Credits are consumable purchases and cannot be restored. If you believe there was an issue with a recent purchase, please contact support."
+        showingRestoreAlert = true
     }
 }
 
@@ -160,9 +302,12 @@ struct PurchaseCreditsView: View {
 struct CreditPackageCard: View {
     let title: String
     let baseCreditsValue: Double  // This is the credits amount
-    let totalPrice: Double  // Manually set total price
+    let totalPrice: Double  // Manually set total price (placeholder until StoreKit provides real price)
+    let productId: CreditProductID
     var badge: String? = nil
     var description: String? = nil
+    @Binding var isPurchasing: Bool
+    var onPurchase: (CreditProductID, Double) -> Void
 
     @State private var isDetailsExpanded: Bool = false
 
@@ -278,10 +423,8 @@ struct CreditPackageCard: View {
         VStack(alignment: .leading, spacing: 0) {
             // Main card content - tappable for purchase
             Button(action: {
-                // TODO: Handle purchase logic
-                print(
-                    "Purchase \(title) for \(PriceCalculator.formatPrice(totalPrice))"
-                )
+                guard !isPurchasing else { return }
+                onPurchase(productId, baseCreditsValue)
             }) {
                 VStack(alignment: .leading, spacing: 6) {
                     // Header: Title, Credits, and Price
@@ -351,22 +494,22 @@ struct CreditPackageCard: View {
                                 .foregroundColor(.secondary)
                         }
                         Spacer()
-                        Button(action: {
-                            withAnimation(
-                                .spring(response: 0.3, dampingFraction: 0.8)
-                            ) {
-                                isDetailsExpanded.toggle()
-                            }
-                        }) {
-                            Text(isDetailsExpanded ? "Hide ▴" : "Details ▾")
-                                .font(
-                                    .system(
-                                        size: 13, weight: .medium,
-                                        design: .rounded)
-                                )
-                                .foregroundColor(.blue)
-                        }
-                        .buttonStyle(PlainButtonStyle())
+                        // Button(action: {
+                        //     withAnimation(
+                        //         .spring(response: 0.3, dampingFraction: 0.8)
+                        //     ) {
+                        //         isDetailsExpanded.toggle()
+                        //     }
+                        // }) {
+                        //     Text(isDetailsExpanded ? "Hide ▴" : "Details ▾")
+                        //         .font(
+                        //             .system(
+                        //                 size: 13, weight: .medium,
+                        //                 design: .rounded)
+                        //         )
+                        //         .foregroundColor(.blue)
+                        // }
+                        // .buttonStyle(PlainButtonStyle())
                     }
 
                     // Expanded details section - What You Get
