@@ -56,7 +56,7 @@ struct UsageView: View {
                 
                 StatisticsRow(
                     title: "Total Cost",
-                    value: String(format: "$%.2f", viewModel.totalCost),
+                    value: PricingManager.formatPriceWithUnit(Decimal(viewModel.totalCost)),
                     icon: "dollarsign.circle.fill",
                     color: .purple
                 )
@@ -203,7 +203,7 @@ struct GenerationRow: View {
                         
                         // Cost (if available and generation succeeded)
                         if let cost = generation.cost, cost > 0, !generation.isFailed {
-                            Text(String(format: "$%.2f", cost))
+                            Text(PricingManager.formatPrice(Decimal(cost)))
                                 .font(.caption2)
                                 .fontWeight(.medium)
                                 .foregroundColor(.white)

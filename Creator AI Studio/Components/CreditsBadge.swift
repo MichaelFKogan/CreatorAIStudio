@@ -50,17 +50,11 @@ struct CreditsBadge: View {
                     showPurchaseCreditsSheet = true
                 }) {
                     HStack(spacing: 6) {
-                        Image(systemName: "crown.fill")
-                            .foregroundStyle(
-                                LinearGradient(
-                                    colors: [.yellow, .orange],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
+                        Image(systemName: "dollarsign.circle.fill")
                             .font(.system(size: 12))
+                            .foregroundColor(.gray)
                         
-                        Text(creditsViewModel.formattedBalance())
+                        Text("\(PricingManager.dollarsToCredits(Decimal(creditsViewModel.balance)))")
                             .font(
                                 .system(
                                     size: 14, weight: .semibold,
@@ -71,21 +65,11 @@ struct CreditsBadge: View {
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
                     .background(
-                        RoundedRectangle(cornerRadius: 20)
-                            .fill(Color.secondary.opacity(0.1))
+                        RoundedRectangle(cornerRadius: 6)
+                            .fill(Color.secondary.opacity(0.3))
                             .shadow(
                                 color: Color.black.opacity(0.2), radius: 4,
                                 x: 0, y: 2
-                            )
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 20)
-                            .strokeBorder(
-                                LinearGradient(
-                                    colors: [borderColor, borderColor],
-                                    startPoint: .leading,
-                                    endPoint: .trailing),
-                                lineWidth: 1.5
                             )
                     )
                 }

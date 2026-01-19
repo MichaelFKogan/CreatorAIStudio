@@ -46,10 +46,11 @@ class CreditsViewModel: ObservableObject {
         await fetchBalance(userId: userId)
     }
     
-    /// Formats the balance as a currency string
-    /// - Returns: Formatted string like "$10.00"
+    /// Formats the balance as credits
+    /// - Returns: Formatted string like "1000 credits" or "1000" depending on display mode
     func formattedBalance() -> String {
-        return String(format: "$%.2f", balance)
+        let balanceDecimal = Decimal(balance)
+        return PricingManager.formatPriceWithUnit(balanceDecimal)
     }
     
     /// Checks if user has enough credits for a transaction
