@@ -67,6 +67,59 @@ struct PurchaseCreditsView: View {
                             .foregroundColor(.secondary)
                     }
 
+                    // Web Purchase Button with Badge
+                    VStack(spacing: 12) {
+                        Button(action: {
+                            if let url = URL(string: "https://runspeed.ai/purchase") {
+                                UIApplication.shared.open(url)
+                            }
+                        }) {
+                            HStack(spacing: 12) {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    HStack(spacing: 8) {
+                                        Image(systemName: "safari.fill")
+                                            .font(.system(size: 16))
+                                            .foregroundColor(.primary)
+                                        Text("Purchase on Website")
+                                            .font(.system(size: 17, weight: .semibold, design: .rounded))
+                                            .foregroundColor(.primary)
+                                    }
+                                    
+                                    Text("Save 30% on all credit packs")
+                                        .font(.system(size: 13, design: .rounded))
+                                        .foregroundColor(.secondary)
+                                }
+                                
+                                Spacer()
+                                
+                                Text("Save 30%")
+                                    .font(.caption)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.black)
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 6)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 8)
+                                            .fill(Color.green.opacity(0.2))
+                                    )
+                            }
+                            .padding(.vertical, 18)
+                            .padding(.horizontal, 16)
+                            .frame(maxWidth: .infinity)
+                            .background(
+                                RoundedRectangle(cornerRadius: 16)
+                                    .fill(Color(.systemBackground))
+                                    .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 4)
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 16)
+                                    .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                            )
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                    }
+                    .padding(.horizontal)
+
                     // Current Balance Display
                     if let userId = authViewModel.user?.id {
                         VStack(spacing: 8) {
@@ -431,6 +484,15 @@ struct CreditPackageCard: View {
                     HStack(alignment: .top) {
                         VStack(alignment: .leading, spacing: 6) {
                             HStack(spacing: 8) {
+                                Image(systemName: "crown.fill")
+                                    .font(.system(size: 16))
+                                    .foregroundStyle(
+                                        LinearGradient(
+                                            colors: [.yellow, .orange],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
                                 Text(title)
                                     .font(
                                         .system(
@@ -494,22 +556,22 @@ struct CreditPackageCard: View {
                                 .foregroundColor(.secondary)
                         }
                         Spacer()
-                        // Button(action: {
-                        //     withAnimation(
-                        //         .spring(response: 0.3, dampingFraction: 0.8)
-                        //     ) {
-                        //         isDetailsExpanded.toggle()
-                        //     }
-                        // }) {
-                        //     Text(isDetailsExpanded ? "Hide ▴" : "Details ▾")
-                        //         .font(
-                        //             .system(
-                        //                 size: 13, weight: .medium,
-                        //                 design: .rounded)
-                        //         )
-                        //         .foregroundColor(.blue)
-                        // }
-                        // .buttonStyle(PlainButtonStyle())
+                        Button(action: {
+                            withAnimation(
+                                .spring(response: 0.3, dampingFraction: 0.8)
+                            ) {
+                                isDetailsExpanded.toggle()
+                            }
+                        }) {
+                            Text(isDetailsExpanded ? "Hide ▴" : "Details ▾")
+                                .font(
+                                    .system(
+                                        size: 13, weight: .medium,
+                                        design: .rounded)
+                                )
+                                .foregroundColor(.blue)
+                        }
+                        .buttonStyle(PlainButtonStyle())
                     }
 
                     // Expanded details section - What You Get

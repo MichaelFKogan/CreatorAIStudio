@@ -6,3 +6,7 @@ xcuserdata/
 Config.xcconfig
 Creator-AI-Studio-Info.plist
 Documentation/*
+
+# macOS
+.DS_Store
+**/.DS_Stores

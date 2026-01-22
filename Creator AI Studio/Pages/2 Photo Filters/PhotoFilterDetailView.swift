@@ -399,6 +399,19 @@ struct PhotoFilterDetailView: View {
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Text("Photo Filters")
+                        .font(
+                            .system(size: 28, weight: .bold, design: .rounded)
+                        )
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [.green, .teal],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                }
             ToolbarItem(placement: .navigationBarTrailing) {
                 CreditsBadge(
                     diamondColor: .teal,
