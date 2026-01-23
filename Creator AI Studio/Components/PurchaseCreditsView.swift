@@ -67,56 +67,39 @@ struct PurchaseCreditsView: View {
                             .foregroundColor(.secondary)
                     }
 
-                    // Web Purchase Button with Badge
+                    // Web Purchase Banner
                     VStack(spacing: 12) {
-                        Button(action: {
-                            if let url = URL(string: "https://runspeed.ai/purchase") {
-                                UIApplication.shared.open(url)
-                            }
-                        }) {
-                            HStack(spacing: 12) {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    HStack(spacing: 8) {
-                                        Image(systemName: "safari.fill")
-                                            .font(.system(size: 16))
-                                            .foregroundColor(.primary)
-                                        Text("Purchase on Website")
-                                            .font(.system(size: 17, weight: .semibold, design: .rounded))
-                                            .foregroundColor(.primary)
-                                    }
-                                    
-                                    Text("Save 30% on all credit packs")
-                                        .font(.system(size: 13, design: .rounded))
-                                        .foregroundColor(.secondary)
+                        VStack(spacing: 8) {
+                            Text("Save up to 30% on all credit packs by purchasing directly through our website.")
+                                .font(.system(size: 13, weight: .medium, design: .rounded))
+                                .foregroundColor(.primary)
+                                .multilineTextAlignment(.center)
+                            
+                            Button(action: {
+                                if let url = URL(string: "https://runspeed.ai/purchase") {
+                                    UIApplication.shared.open(url)
                                 }
-                                
-                                Spacer()
-                                
-                                Text("Save 30%")
-                                    .font(.caption)
-                                    .fontWeight(.semibold)
-                                    .foregroundColor(.black)
-                                    .padding(.horizontal, 10)
-                                    .padding(.vertical, 6)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 8)
-                                            .fill(Color.green.opacity(0.2))
-                                    )
+                            }) {
+                                HStack(spacing: 6) {
+                                    Image(systemName: "safari.fill")
+                                        .font(.system(size: 14))
+                                    Text("Shop Web Prices (Save 30%)")
+                                        .font(.system(size: 15, weight: .semibold, design: .rounded))
+                                }
+                                .foregroundColor(.black)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 16)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .fill(Color.white)
+                                )
                             }
-                            .padding(.vertical, 18)
-                            .padding(.horizontal, 16)
-                            .frame(maxWidth: .infinity)
-                            .background(
-                                RoundedRectangle(cornerRadius: 16)
-                                    .fill(Color(.systemBackground))
-                                    .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 4)
-                            )
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 16)
-                                    .stroke(Color.gray.opacity(0.3), lineWidth: 1)
-                            )
                         }
-                        .buttonStyle(PlainButtonStyle())
+                        .padding()
+                        .background(
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(Color(.secondarySystemBackground))
+                        )
                     }
                     .padding(.horizontal)
 
@@ -164,6 +147,59 @@ struct PurchaseCreditsView: View {
 
                     // Credit Packages
                     VStack(spacing: 12) {
+                        // Web Purchase Button with Badge
+                        Button(action: {
+                            if let url = URL(string: "https://runspeed.ai/purchase") {
+                                UIApplication.shared.open(url)
+                            }
+                        }) {
+                            HStack(spacing: 12) {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    HStack(spacing: 8) {
+                                        Image(systemName: "safari.fill")
+                                            .font(.system(size: 16))
+                                            .foregroundColor(.primary)
+                                        Text("Purchase on Website")
+                                            .font(.system(size: 17, weight: .semibold, design: .rounded))
+                                            .foregroundColor(.primary)
+                                    }
+                                    
+                                    Text("Save 30% on all credit packs")
+                                        .font(.system(size: 13, design: .rounded))
+                                        .foregroundColor(.secondary)
+                                }
+                                
+                                Spacer()
+                                
+                                Text("Save 30%")
+                                    .font(.caption)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.black)
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 6)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 8)
+                                            .fill(Color.green.opacity(1))
+                                    )
+                            }
+                            .padding(.vertical, 18)
+                            .padding(.horizontal, 16)
+                            .frame(maxWidth: .infinity)
+                            .background(
+                                RoundedRectangle(cornerRadius: 16)
+                                    .fill(Color(.systemBackground))
+                                    .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 4)
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 16)
+                                    .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                            )
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                        
+                        Divider()
+                            .padding(.vertical, 8)
+                        
                         CreditPackageCard(
                             title: "Test Pack",
                             baseCreditsValue: 1.00,
