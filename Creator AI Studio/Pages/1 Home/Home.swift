@@ -148,20 +148,20 @@ struct Home: View {
                     ToolbarItem(placement: .navigationBarTrailing) {
                         HStack(spacing: 16) {
                             Group {
-                                if authViewModel.user == nil {
-                                    // Show "Sign in" button when logged out
-                                    Button(action: {
-                                        showSignInSheet = true
-                                    }) {
-                                        Text("Sign in")
-                                            .font(
-                                                .system(
-                                                    size: 16, weight: .semibold,
-                                                    design: .rounded)
-                                            )
-                                            .foregroundColor(.primary)
-                                    }
-                                } else {
+//                                if authViewModel.user == nil {
+//                                    // Show "Sign in" button when logged out
+//                                    Button(action: {
+//                                        showSignInSheet = true
+//                                    }) {
+//                                        Text("Sign in")
+//                                            .font(
+//                                                .system(
+//                                                    size: 16, weight: .semibold,
+//                                                    design: .rounded)
+//                                            )
+//                                            .foregroundColor(.primary)
+//                                    }
+//                                } else {
                                     // Show credits badge when logged in
                                     Button(action: {
                                         showPurchaseCreditsView = true
@@ -180,7 +180,7 @@ struct Home: View {
                                                 )
                                             )
                                     }
-                                }
+//                                }
                             }
                             
                             // Settings button
