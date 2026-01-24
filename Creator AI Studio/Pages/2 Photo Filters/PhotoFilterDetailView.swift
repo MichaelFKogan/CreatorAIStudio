@@ -247,7 +247,7 @@ struct PhotoFilterDetailView: View {
             AuthAwareCostCard(
                 price: totalPrice,
                 requiredCredits: requiredCredits,
-                primaryColor: .green,
+                primaryColor: .blue,
                 secondaryColor: .mint,
                 loginMessage: "Log in to upload your photo",
                 onSignIn: {
