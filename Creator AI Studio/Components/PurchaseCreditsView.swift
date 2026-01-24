@@ -138,7 +138,7 @@ struct PurchaseCreditsView: View {
                                     .padding(.vertical, 6)
                                     .background(
                                         RoundedRectangle(cornerRadius: 8)
-                                            .fill(Color.green)
+                                            .fill(Color.purple)
                                     )
 
                                 Spacer()
