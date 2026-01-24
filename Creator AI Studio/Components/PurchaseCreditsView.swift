@@ -121,15 +121,16 @@ struct PurchaseCreditsView: View {
 
                     // Credit Packages
                     VStack(spacing: 12) {
+                        SectionHeader(title: "Save with Web Purchase", subtitle: "30% off on all packs")
+
                         // Combined Web Purchase Card
                         VStack(spacing: 12) {
-                            // Title with badge
                             HStack(spacing: 12) {
                                 Text("Save 30%")
                                     .font(.system(size: 20, weight: .bold, design: .rounded))
                                     .foregroundColor(.primary)
-                                
-                                Text("Save 30%")
+
+                                Text("Best Deal")
                                     .font(.caption)
                                     .fontWeight(.semibold)
                                     .foregroundColor(.white)
@@ -139,15 +140,15 @@ struct PurchaseCreditsView: View {
                                         RoundedRectangle(cornerRadius: 8)
                                             .fill(Color.green)
                                     )
-                                
+
                                 Spacer()
                             }
-                            
+
                             Text("Purchase directly through our website to save on all credit packs.")
                                 .font(.system(size: 14, weight: .medium, design: .rounded))
                                 .foregroundColor(.secondary)
                                 .multilineTextAlignment(.leading)
-                            
+
                             Button(action: {
                                 if let url = URL(string: "https://runspeed.ai/purchase") {
                                     UIApplication.shared.open(url)
@@ -182,10 +183,9 @@ struct PurchaseCreditsView: View {
                             RoundedRectangle(cornerRadius: 16)
                                 .stroke(Color.gray.opacity(0.3), lineWidth: 1)
                         )
-                        
-                        Divider()
-                            .padding(.vertical, 8)
-                        
+
+                        SectionHeader(title: "In-App Credit Packs", subtitle: "Instant access in the app")
+
                         CreditPackageCard(
                             title: "Test Pack",
                             baseCreditsValue: 1.00,
@@ -280,7 +280,7 @@ struct PurchaseCreditsView: View {
                     Spacer(minLength: 100)
                 }
             }
-            .background(Color.black)
+                    .background(Color(.systemGroupedBackground))
             .disabled(isPurchasing)
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
@@ -374,6 +374,24 @@ struct PurchaseCreditsView: View {
     }
 }
 
+struct SectionHeader: View {
+    let title: String
+    let subtitle: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title)
+                .font(.system(size: 15, weight: .semibold, design: .rounded))
+                .foregroundColor(.primary)
+            Text(subtitle)
+                .font(.system(size: 12, design: .rounded))
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.top, 4)
+    }
+}
+
 // Credit package card
 struct CreditPackageCard: View {
     let title: String
@@ -386,6 +404,7 @@ struct CreditPackageCard: View {
     var onPurchase: (CreditProductID, Double) -> Void
 
     @State private var isDetailsExpanded: Bool = false
+    private let maxExampleModels = 3
 
     // Image model prices from PricingManager
     private let imageModelPrices: [String: Double] = [
@@ -493,6 +512,22 @@ struct CreditPackageCard: View {
             return (name: modelName, imageName: imageName, count: count)
         }
         .sorted { $0.count > $1.count }  // Sort by count descending
+    }
+
+    private var limitedImageModels: [(name: String, imageName: String, count: Int)] {
+        Array(exampleImageModels.prefix(maxExampleModels))
+    }
+
+    private var limitedVideoModels: [(name: String, imageName: String, count: Int)] {
+        Array(exampleVideoModels.prefix(maxExampleModels))
+    }
+
+    private var remainingImageModelsCount: Int {
+        max(0, exampleImageModels.count - limitedImageModels.count)
+    }
+
+    private var remainingVideoModelsCount: Int {
+        max(0, exampleVideoModels.count - limitedVideoModels.count)
     }
 
     var body: some View {
@@ -690,13 +725,13 @@ struct CreditPackageCard: View {
                                         }
                                         
                                         // Example image models - aligned to left edge
-                                        if !exampleImageModels.isEmpty {
+                                        if !limitedImageModels.isEmpty {
                                             VStack(
                                                 alignment: .leading,
                                                 spacing: 4
                                             ) {
                                                 ForEach(
-                                                    exampleImageModels,
+                                                    limitedImageModels,
                                                     id: \.name
                                                 ) { model in
                                                     HStack(
@@ -742,7 +777,7 @@ struct CreditPackageCard: View {
                                                                 )
                                                             )
                                                             .foregroundColor(
-                                                                .white)
+                                                                .primary)
                                                             Text(
                                                                 "For \(PriceCalculator.formatPrice(baseCreditsValue)) you can run this model approximately \(model.count) times"
                                                             )
@@ -761,6 +796,11 @@ struct CreditPackageCard: View {
                                                         }
                                                         Spacer()
                                                     }
+                                                }
+                                                if remainingImageModelsCount > 0 {
+                                                    Text("And \(remainingImageModelsCount) more image model\(remainingImageModelsCount == 1 ? "" : "s")…")
+                                                        .font(.system(size: 11, design: .rounded))
+                                                        .foregroundColor(.secondary)
                                                 }
                                             }
                                         }
@@ -807,13 +847,13 @@ struct CreditPackageCard: View {
                                             }
                                             
                                             // Example video models - aligned to left edge
-                                            if !exampleVideoModels.isEmpty {
+                                            if !limitedVideoModels.isEmpty {
                                                 VStack(
                                                     alignment: .leading,
                                                     spacing: 4
                                                 ) {
                                                     ForEach(
-                                                        exampleVideoModels,
+                                                        limitedVideoModels,
                                                         id: \.name
                                                     ) { model in
                                                         HStack(
@@ -860,7 +900,7 @@ struct CreditPackageCard: View {
                                                                     )
                                                                 )
                                                                 .foregroundColor(
-                                                                    .white
+                                                                    .primary
                                                                 )
                                                                 Text(
                                                                     "For \(PriceCalculator.formatPrice(baseCreditsValue)) you can run this model approximately \(model.count) times (lowest settings)"
@@ -879,6 +919,11 @@ struct CreditPackageCard: View {
                                                                 .italic()
                                                             }
                                                         }
+                                                    }
+                                                    if remainingVideoModelsCount > 0 {
+                                                        Text("And \(remainingVideoModelsCount) more video model\(remainingVideoModelsCount == 1 ? "" : "s")…")
+                                                            .font(.system(size: 11, design: .rounded))
+                                                            .foregroundColor(.secondary)
                                                     }
                                                 }
                                             }
