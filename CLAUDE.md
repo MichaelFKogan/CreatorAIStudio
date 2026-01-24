@@ -11,6 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Build & Run
 
 This is an Xcode project (no SPM at root level). Open in Xcode:
+
 ```bash
 open "Creator AI Studio.xcodeproj"
 ```
@@ -27,6 +28,7 @@ Build and run via Xcode (⌘+R) targeting iOS Simulator or device.
 ## Testing
 
 Tests use Swift Testing framework (not XCTest). Run via Xcode Test Navigator or:
+
 ```bash
 xcodebuild test -scheme "Creator AI Studio" -destination "platform=iOS Simulator,name=iPhone 16"
 ```
@@ -118,6 +120,7 @@ Creator AI Studio/
 ## Currently Supported Models
 
 ### Image Models (9)
+
 - Google Gemini Flash 2.5
 - GPT Image 1.5
 - Wan2.5-Preview
@@ -127,6 +130,7 @@ Creator AI Studio/
 - FLUX.2 [dev]
 
 ### Video Models (6)
+
 - Sora 2
 - Google Veo 3.1 Fast
 - Seedance 1.0 Pro Fast
@@ -135,6 +139,7 @@ Creator AI Studio/
 - Wan2.6
 
 ### Photo Filter Categories (18+)
+
 Anime, Art, BackInTime, Celebrity, Character, Chibi, Fashion, Fitness, Instagram, JustForFun, LinkedIn Headshots, Luxury, Mens, Photobooth, Photography, and more
 
 Each category has JSON data in `Pages/2 Photo Filters/Data/`, asset images, and configurations in `CategoryConfigurationManager`.
@@ -142,13 +147,16 @@ Each category has JSON data in `Pages/2 Photo Filters/Data/`, asset images, and 
 ## Adding New Models
 
 ### Image Model
+
 1. Add to `Pages/4 Image/Data/ImageModelData.json`
 2. Add pricing to `PricingManager.swift` → `prices` dictionary
 3. Add API config to `ModelConfigurationManager.swift`
 4. Add image asset to `Assets.xcassets/Image Models/`
 
 ### Video Model
+
 See `Documentation/VIDEO_MODEL_ADDITION_GUIDE.md`. Update 4-5 files:
+
 1. `ModelConfigurationManager.swift` - 7 sections: apiConfigurations, capabilitiesMap, modelDescriptions, modelImageNames, allowedDurationsMap, allowedAspectRatiosMap, allowedResolutionsMap
 2. `PricingManager.swift` - defaultVideoConfigs + variableVideoPricing
 3. `VideoModelData.json`
@@ -158,6 +166,7 @@ See `Documentation/VIDEO_MODEL_ADDITION_GUIDE.md`. Update 4-5 files:
 **Critical**: Model name strings must match exactly across all files.
 
 ### Photo Filter Category
+
 1. Add category JSON data to `Pages/2 Photo Filters/Data/`
 2. Add to `CategoryConfigurationManager.swift`
 3. Add category image assets to `Assets.xcassets/Photo Filters/`
@@ -179,10 +188,11 @@ Migrations in `API/Supabase/Database/` - run via Supabase SQL Editor. All tables
 ## Recent Changes & Current State
 
 ### Major Updates (Last Month)
+
 1. **Project Renamed**: "Creator AI Studio" → "Runspeed AI" (bundle ID, entitlements, signing)
 2. **StoreKit Integration**: Added `PurchaseCreditsView.swift` (46KB) with StoreKit 2
    - Product IDs: `com.runspeedai.credits.{test, starter, pro, mega, ultra}`
-   - Web purchase promotion: "Save 30%" banner → https://runspeed.ai/purchase
+   - Web purchase promotion: "Save 30%" banner → https://www.runspeedai.store
    - Restore purchases functionality
 3. **Fal.ai Integration**: Added motion control video generation via `FalAIAPI.swift`
    - Uses edge function proxy for API key security
@@ -191,6 +201,7 @@ Migrations in `API/Supabase/Database/` - run via Supabase SQL Editor. All tables
 5. **Security Improvements**: Moved Supabase keys to Info.plist, Runware keys to Supabase storage
 
 ### Production-Ready Features ✅
+
 - Webhook-based async generation (enabled by default)
 - Supabase Realtime for job status updates
 - Credit system fully functional
@@ -198,11 +209,13 @@ Migrations in `API/Supabase/Database/` - run via Supabase SQL Editor. All tables
 - 18+ photo filter categories
 
 ### Incomplete Features ⚠️
+
 1. **Authentication**: Currently bypassed in `Creator_AI_StudioApp.swift` line 45 (development mode)
 2. **Push Notifications**: `PushNotificationManager` is stub, APNs not configured
 3. **StoreKit Products**: Product IDs defined but need App Store Connect configuration
 
 ### Security Notes 🔒
+
 - Webhook secret required in Info.plist
 - RLS (Row Level Security) enabled on all database tables
 - API keys moved from hardcoded to secure storage
@@ -211,6 +224,7 @@ Migrations in `API/Supabase/Database/` - run via Supabase SQL Editor. All tables
 ## Documentation
 
 Comprehensive guides in `/Documentation`:
+
 - **APP_STRUCTURE.md** (22KB) - Complete architecture reference
 - **VIDEO_MODEL_ADDITION_GUIDE.md** (14KB) - Step-by-step model addition guide
 - **PRESETS_IMPLEMENTATION.md** (5KB) - User presets feature guide

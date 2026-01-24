@@ -3,10 +3,12 @@
 ## Overview
 
 This document outlines a minimal web application that provides:
+
 1. **User Authentication** (Sign In / Create Account)
 2. **Credit Purchases** via Stripe
 
 The web app shares the same Supabase database as the iOS app, so users can:
+
 - Create an account on web, log in on iOS (and vice versa)
 - Purchase credits on web, use them on iOS (and vice versa)
 
@@ -15,6 +17,7 @@ The web app shares the same Supabase database as the iOS app, so users can:
 ## Scope
 
 ### In Scope
+
 - Email/Password authentication (sign up, sign in, password reset)
 - Google OAuth sign-in
 - Apple OAuth sign-in (optional for web)
@@ -23,6 +26,7 @@ The web app shares the same Supabase database as the iOS app, so users can:
 - Transaction history display
 
 ### Out of Scope (Future Phases)
+
 - Image/video generation
 - Gallery/media viewing
 - Photo filters
@@ -33,7 +37,9 @@ The web app shares the same Supabase database as the iOS app, so users can:
 ## Shared Infrastructure
 
 ### Supabase Project
+
 Uses the **existing** Supabase project from the iOS app:
+
 - **Auth**: Same user accounts
 - **Database**: Same tables (`user_credits`, `credit_transactions`)
 - **RLS Policies**: Already configured
@@ -41,6 +47,7 @@ Uses the **existing** Supabase project from the iOS app:
 ### Database Tables (Already Exist)
 
 #### `user_credits`
+
 ```sql
 - id: UUID (Primary Key)
 - user_id: UUID (Foreign Key → auth.users, Unique)
@@ -50,6 +57,7 @@ Uses the **existing** Supabase project from the iOS app:
 ```
 
 #### `credit_transactions`
+
 ```sql
 - id: UUID (Primary Key)
 - user_id: UUID (Foreign Key → auth.users)
@@ -87,7 +95,7 @@ The iOS app already has Supabase Auth configured. For web:
 
 1. **Enable Web OAuth Redirect URLs** in Supabase Dashboard:
    - `http://localhost:3000/auth/callback` (development)
-   - `https://runspeed.ai/auth/callback` (production)
+   - `https://www.runspeedai.store/auth/callback` (production)
 
 2. **Google OAuth**:
    - Add web client ID to existing Google Cloud project
@@ -101,24 +109,26 @@ The iOS app already has Supabase Auth configured. For web:
 ## Credit Packages & Pricing
 
 ### iOS Pricing (via StoreKit)
-| Package | Credits | iOS Price |
-|---------|---------|-----------|
-| Test Pack | $1.00 | $2.99 |
-| Starter Pack | $5.00 | $7.99 |
-| Pro Pack | $10.00 | $15.99 |
-| Mega Pack | $20.00 | $29.99 |
-| Ultra Pack | $50.00 | $72.99 |
+
+| Package      | Credits | iOS Price |
+| ------------ | ------- | --------- |
+| Test Pack    | $1.00   | $2.99     |
+| Starter Pack | $5.00   | $7.99     |
+| Pro Pack     | $10.00  | $15.99    |
+| Mega Pack    | $20.00  | $29.99    |
+| Ultra Pack   | $50.00  | $72.99    |
 
 ### Web Pricing (30% Discount)
-| Package | Credits | Web Price | Stripe Price ID |
-|---------|---------|-----------|-----------------|
-| Test Pack | $1.00 | $1.99 | `price_test_xxx` |
-| Starter Pack | $5.00 | $4.99 | `price_starter_xxx` |
-| Pro Pack | $10.00 | $9.99 | `price_pro_xxx` |
-| Mega Pack | $20.00 | $19.99 | `price_mega_xxx` |
-| Ultra Pack | $50.00 | $49.99 | `price_ultra_xxx` |
 
-*Note: Actual Stripe Price IDs will be created during setup.*
+| Package      | Credits | Web Price | Stripe Price ID     |
+| ------------ | ------- | --------- | ------------------- |
+| Test Pack    | $1.00   | $1.99     | `price_test_xxx`    |
+| Starter Pack | $5.00   | $4.99     | `price_starter_xxx` |
+| Pro Pack     | $10.00  | $9.99     | `price_pro_xxx`     |
+| Mega Pack    | $20.00  | $19.99    | `price_mega_xxx`    |
+| Ultra Pack   | $50.00  | $49.99    | `price_ultra_xxx`   |
+
+_Note: Actual Stripe Price IDs will be created during setup._
 
 ---
 
@@ -131,7 +141,7 @@ The iOS app already has Supabase Auth configured. For web:
    - One product per credit package
    - One-time payment prices (not subscription)
 3. **Configure Webhook Endpoint**:
-   - `https://runspeed.ai/api/webhooks/stripe`
+   - `https://www.runspeedai.store/api/webhooks/stripe`
    - Events to listen for:
      - `checkout.session.completed`
      - `payment_intent.succeeded`
@@ -163,6 +173,7 @@ Frontend fetches updated balance
 ### Stripe Checkout Session Creation
 
 When creating a checkout session, include metadata:
+
 ```typescript
 {
   mode: 'payment',
@@ -176,8 +187,8 @@ When creating a checkout session, include metadata:
     credit_amount: '5.00',    // Credits to add
     package_name: 'Starter Pack'
   },
-  success_url: 'https://runspeed.ai/purchase/success?session_id={CHECKOUT_SESSION_ID}',
-  cancel_url: 'https://runspeed.ai/purchase/cancel',
+  success_url: 'https://www.runspeedai.store/success?session_id={CHECKOUT_SESSION_ID}',
+  cancel_url: 'https://www.runspeedai.store/cancel',
 }
 ```
 
@@ -186,31 +197,31 @@ When creating a checkout session, include metadata:
 ```typescript
 // /api/webhooks/stripe/route.ts
 export async function POST(req: Request) {
-  const body = await req.text()
-  const signature = req.headers.get('stripe-signature')
+  const body = await req.text();
+  const signature = req.headers.get("stripe-signature");
 
   // Verify webhook signature
   const event = stripe.webhooks.constructEvent(
     body,
     signature,
-    process.env.STRIPE_WEBHOOK_SECRET
-  )
+    process.env.STRIPE_WEBHOOK_SECRET,
+  );
 
-  if (event.type === 'checkout.session.completed') {
-    const session = event.data.object
-    const { user_id, credit_amount, package_name } = session.metadata
+  if (event.type === "checkout.session.completed") {
+    const session = event.data.object;
+    const { user_id, credit_amount, package_name } = session.metadata;
 
     // Add credits to user's balance
     await addCredits(
       user_id,
       parseFloat(credit_amount),
-      'stripe',
+      "stripe",
       session.payment_intent,
-      `Credit purchase - ${package_name}`
-    )
+      `Credit purchase - ${package_name}`,
+    );
   }
 
-  return new Response('OK', { status: 200 })
+  return new Response("OK", { status: 200 });
 }
 ```
 
@@ -219,6 +230,7 @@ export async function POST(req: Request) {
 ## Tech Stack
 
 ### Recommended
+
 - **Framework**: Next.js 14+ (App Router)
 - **Auth**: Supabase Auth (@supabase/ssr)
 - **Payments**: Stripe Checkout + Webhooks
@@ -226,6 +238,7 @@ export async function POST(req: Request) {
 - **Deployment**: Vercel
 
 ### Environment Variables
+
 ```bash
 # Supabase (same as iOS app)
 NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
@@ -294,6 +307,7 @@ web-app/
 ## Implementation Steps
 
 ### Phase 1: Project Setup
+
 1. Create Next.js project with TypeScript
 2. Install dependencies:
    ```bash
@@ -305,6 +319,7 @@ web-app/
 4. Set up Tailwind CSS
 
 ### Phase 2: Authentication
+
 1. Set up Supabase client (browser + server)
 2. Create auth middleware for protected routes
 3. Build sign-in page with email/password
@@ -315,6 +330,7 @@ web-app/
 8. Test auth flow end-to-end
 
 ### Phase 3: Credit Display
+
 1. Create credit balance component
 2. Fetch balance from `user_credits` table
 3. Create dashboard page showing balance
@@ -322,6 +338,7 @@ web-app/
 5. Test balance updates after iOS purchases
 
 ### Phase 4: Stripe Integration
+
 1. Create Stripe account and products
 2. Build credit packages page (matching iOS UI)
 3. Create checkout API route
@@ -330,6 +347,7 @@ web-app/
 6. Verify credits appear in iOS app
 
 ### Phase 5: Polish
+
 1. Add loading states
 2. Add error handling
 3. Responsive design
@@ -341,26 +359,28 @@ web-app/
 ## Key Code Snippets
 
 ### Supabase Browser Client
+
 ```typescript
 // lib/supabase/client.ts
-import { createBrowserClient } from '@supabase/ssr'
+import { createBrowserClient } from "@supabase/ssr";
 
 export function createClient() {
   return createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  );
 }
 ```
 
 ### Supabase Server Client
+
 ```typescript
 // lib/supabase/server.ts
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 
 export async function createClient() {
-  const cookieStore = await cookies()
+  const cookieStore = await cookies();
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -368,81 +388,79 @@ export async function createClient() {
     {
       cookies: {
         getAll() {
-          return cookieStore.getAll()
+          return cookieStore.getAll();
         },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value, options }) => {
-            cookieStore.set(name, value, options)
-          })
+            cookieStore.set(name, value, options);
+          });
         },
       },
-    }
-  )
+    },
+  );
 }
 ```
 
 ### Add Credits Function
+
 ```typescript
 // lib/credits.ts
-import { createClient } from '@supabase/supabase-js'
+import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY! // Use service role for webhook
-)
+  process.env.SUPABASE_SERVICE_ROLE_KEY!, // Use service role for webhook
+);
 
 export async function addCredits(
   userId: string,
   amount: number,
   paymentMethod: string,
   paymentTransactionId: string,
-  description: string
+  description: string,
 ): Promise<number> {
   // Get current balance
   const { data: credits } = await supabase
-    .from('user_credits')
-    .select('balance')
-    .eq('user_id', userId)
-    .single()
+    .from("user_credits")
+    .select("balance")
+    .eq("user_id", userId)
+    .single();
 
-  const currentBalance = credits?.balance ?? 0
-  const newBalance = currentBalance + amount
+  const currentBalance = credits?.balance ?? 0;
+  const newBalance = currentBalance + amount;
 
   // Update balance
-  await supabase
-    .from('user_credits')
-    .upsert({
-      user_id: userId,
-      balance: newBalance,
-      updated_at: new Date().toISOString()
-    })
+  await supabase.from("user_credits").upsert({
+    user_id: userId,
+    balance: newBalance,
+    updated_at: new Date().toISOString(),
+  });
 
   // Create transaction record
-  await supabase
-    .from('credit_transactions')
-    .insert({
-      user_id: userId,
-      amount: amount,
-      transaction_type: 'purchase',
-      description: description,
-      payment_method: paymentMethod,
-      payment_transaction_id: paymentTransactionId,
-    })
+  await supabase.from("credit_transactions").insert({
+    user_id: userId,
+    amount: amount,
+    transaction_type: "purchase",
+    description: description,
+    payment_method: paymentMethod,
+    payment_transaction_id: paymentTransactionId,
+  });
 
-  return newBalance
+  return newBalance;
 }
 ```
 
 ### Credit Package Card Component
+
 ```tsx
 // components/credits/credit-package-card.tsx
 interface CreditPackageCardProps {
-  title: string
-  credits: number
-  price: number
-  description: string
-  badge?: string
-  stripePriceId: string
+  title: string;
+  credits: number;
+  price: number;
+  description: string;
+  badge?: string;
+  stripePriceId: string;
 }
 
 export function CreditPackageCard({
@@ -451,22 +469,22 @@ export function CreditPackageCard({
   price,
   description,
   badge,
-  stripePriceId
+  stripePriceId,
 }: CreditPackageCardProps) {
   const handlePurchase = async () => {
-    const response = await fetch('/api/checkout', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    const response = await fetch("/api/checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         priceId: stripePriceId,
         credits: credits,
-        packageName: title
-      })
-    })
+        packageName: title,
+      }),
+    });
 
-    const { url } = await response.json()
-    window.location.href = url
-  }
+    const { url } = await response.json();
+    window.location.href = url;
+  };
 
   return (
     <div className="border rounded-xl p-6 hover:border-blue-500 transition-colors">
@@ -492,7 +510,7 @@ export function CreditPackageCard({
         Purchase
       </button>
     </div>
-  )
+  );
 }
 ```
 
@@ -501,6 +519,7 @@ export function CreditPackageCard({
 ## Testing Checklist
 
 ### Authentication
+
 - [ ] Sign up with email creates user in Supabase
 - [ ] Sign in with email works
 - [ ] Password reset sends email
@@ -511,11 +530,13 @@ export function CreditPackageCard({
 - [ ] Web user can sign in on iOS
 
 ### Credits
+
 - [ ] Balance displays correctly
 - [ ] Balance matches iOS app
 - [ ] Transaction history loads
 
 ### Stripe Payments
+
 - [ ] Checkout session creates successfully
 - [ ] Stripe Checkout loads
 - [ ] Test payment completes
@@ -530,17 +551,20 @@ export function CreditPackageCard({
 ## Deployment
 
 ### Vercel Configuration
+
 1. Connect GitHub repository
 2. Set environment variables in Vercel dashboard
-3. Configure custom domain (runspeed.ai)
+3. Configure custom domain (https://www.runspeedai.store)
 4. Set up Stripe webhook with production URL
 
 ### Domain Setup
-- `runspeed.ai` - Main website
-- `runspeed.ai/purchase` - Credit purchase page (linked from iOS app)
+
+- `https://www.runspeedai.store` - Main website
+- `https://www.runspeedai.store` - Credit purchase page (linked from iOS app)
 
 ### Post-Deployment
-1. Update iOS app to link to `https://runspeed.ai/purchase`
+
+1. Update iOS app to link to `https://www.runspeedai.store`
 2. Test full flow: iOS → Web purchase → Credits appear in iOS
 3. Monitor Stripe dashboard for successful payments
 
@@ -549,6 +573,7 @@ export function CreditPackageCard({
 ## Future Enhancements
 
 After MVP launch, consider:
+
 1. Add PayPal as payment option
 2. Add Apple Pay / Google Pay via Stripe
 3. Promo codes / discounts

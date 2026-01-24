@@ -150,7 +150,7 @@ struct PurchaseCreditsView: View {
                                 .multilineTextAlignment(.leading)
 
                             Button(action: {
-                                if let url = URL(string: "https://runspeed.ai/purchase") {
+                                if let url = URL(string: "https://www.runspeedai.store") {
                                     UIApplication.shared.open(url)
                                 }
                             }) {
@@ -259,7 +259,7 @@ struct PurchaseCreditsView: View {
 
                             Button("Terms of Use") {
                                 // TODO: Open Terms of Use URL
-                                if let url = URL(string: "https://runspeed.ai/terms") {
+                                if let url = URL(string: "https://www.runspeedai.store/terms") {
                                     UIApplication.shared.open(url)
                                 }
                             }
@@ -267,7 +267,7 @@ struct PurchaseCreditsView: View {
 
                             Button("Privacy Policy") {
                                 // TODO: Open Privacy Policy URL
-                                if let url = URL(string: "https://runspeed.ai/privacy") {
+                                if let url = URL(string: "https://www.runspeedai.store/privacy") {
                                     UIApplication.shared.open(url)
                                 }
                             }
