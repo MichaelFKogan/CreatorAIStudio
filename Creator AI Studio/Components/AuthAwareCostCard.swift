@@ -101,52 +101,21 @@ struct AuthAwareCostCard: View {
     }
     
     private var notLoggedInCard: some View {
-        VStack(spacing: 12) {
-            HStack(spacing: 6) {
-                Image(systemName: "exclamationmark.circle.fill")
-                    .font(.system(size: 14))
-                    .foregroundColor(.red)
-                Text(loginMessage)
-                    .font(.subheadline)
-                    .foregroundColor(.red)
-                Spacer()
-            }
-            
+        HStack(spacing: 6) {
+            Image(systemName: "exclamationmark.circle.fill")
+                .font(.system(size: 14))
+                .foregroundColor(.red)
+            Text(loginMessage)
+                .font(.caption)
+                .foregroundColor(.red)
+            Spacer(minLength: 8)
             Button(action: onSignIn) {
                 Text("Sign In / Sign Up")
-                    .font(.system(size: 15, weight: .medium, design: .rounded))
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(
-                        LinearGradient(
-                            colors: [primaryColor, secondaryColor],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .font(.caption.weight(.semibold))
+                    .foregroundColor(primaryColor)
             }
+            .buttonStyle(.plain)
         }
-        .padding()
-        .background(
-            LinearGradient(
-                colors: [primaryColor.opacity(0.08), secondaryColor.opacity(0.08)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .strokeBorder(
-                    LinearGradient(
-                        colors: [primaryColor, secondaryColor],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ),
-                    lineWidth: 1.5
-                )
-        )
+        .padding(.vertical, 4)
     }
 }
