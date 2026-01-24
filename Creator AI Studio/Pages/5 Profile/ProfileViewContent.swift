@@ -354,10 +354,12 @@ struct ProfileViewContent: View {
     
     private var normalModeToolbar: some View {
         HStack(spacing: 16) {
-            Button(action: { isSelectionMode = true }) {
-                Text("Select")
-                    .font(.body)
-                    .foregroundColor(.gray)
+            if isSignedIn {
+                Button(action: { isSelectionMode = true }) {
+                    Text("Select")
+                        .font(.body)
+                        .foregroundColor(.gray)
+                }
             }
             
             NavigationLink(
