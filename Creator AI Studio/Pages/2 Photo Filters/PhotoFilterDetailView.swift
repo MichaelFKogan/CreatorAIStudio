@@ -1173,7 +1173,6 @@ struct EnhancedCostCard: View {
                     Spacer()
                 }
             }
-            .padding(.top, -8)
 
             // Cost and balance
             HStack(spacing: 4) {
@@ -1196,7 +1195,6 @@ struct EnhancedCostCard: View {
             }
 
         }
-        .padding(.top, -4)
     }
 }
 
