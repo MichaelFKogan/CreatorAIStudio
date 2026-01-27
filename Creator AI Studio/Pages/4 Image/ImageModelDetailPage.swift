@@ -173,6 +173,29 @@ struct ImageModelDetailPage: View {
             ZStack(alignment: .bottom) {
                 ScrollView {
                     VStack(spacing: 24) {
+                        // Network connectivity disclaimer (shown when no internet)
+                        if !networkMonitor.isConnected {
+                            VStack(spacing: 4) {
+                                HStack(spacing: 6) {
+                                    Spacer()
+                                    Image(
+                                        systemName:
+                                            "exclamationmark.circle.fill"
+                                    )
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.red)
+                                    Text(
+                                        "No internet connection. Please connect to the internet."
+                                    )
+                                    .font(.caption)
+                                    .foregroundColor(.red)
+                                    Spacer()
+                                }
+                            }
+                            .padding(.horizontal)
+                            .padding(.top, 8)
+                        }
+
                         LazyView(
                             BannerSection(item: item, costString: costString))
 
@@ -222,28 +245,6 @@ struct ImageModelDetailPage: View {
                             .padding(.bottom, -16)
                         }
 
-                        // Network connectivity disclaimer (shown when no internet)
-                        if !networkMonitor.isConnected {
-                            VStack(spacing: 4) {
-                                HStack(spacing: 6) {
-                                    Spacer()
-                                    Image(
-                                        systemName:
-                                            "exclamationmark.circle.fill"
-                                    )
-                                    .font(.system(size: 14))
-                                    .foregroundColor(.red)
-                                    Text(
-                                        "No internet connection. Please connect to the internet."
-                                    )
-                                    .font(.caption)
-                                    .foregroundColor(.red)
-                                    Spacer()
-                                }
-                            }
-                            .padding(.horizontal)
-                        }
-                        
                         LazyView(
                             GenerateButton(
                                 prompt: prompt,

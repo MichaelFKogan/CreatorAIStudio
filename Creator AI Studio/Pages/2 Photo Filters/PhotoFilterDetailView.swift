@@ -195,7 +195,6 @@ struct PhotoFilterDetailView: View {
     private var photoUploadSection: some View {
         VStack(alignment: .leading) {
             multiSelectIndicator
-            networkConnectivityDisclaimer
             photoUploadButton
             userInfoCard
             multiSelectDisclaimer
@@ -242,7 +241,7 @@ struct PhotoFilterDetailView: View {
     
     @ViewBuilder
     private var userInfoCard: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 0) {
             // Use the reusable AuthAwareCostCard component
             AuthAwareCostCard(
                 price: totalPrice,
@@ -379,6 +378,21 @@ struct PhotoFilterDetailView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
+                // Network connectivity disclaimer at the top
+                if !networkMonitor.isConnected {
+                    VStack(spacing: 4) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "exclamationmark.circle.fill")
+                                .font(.system(size: 14))
+                                .foregroundColor(.red)
+                            Text("No internet connection. Please connect to the internet.")
+                                .font(.caption)
+                                .foregroundColor(.red)
+                        }
+                    }
+                    .padding(.top, 8)
+                }
+
                 heroSection
                 additionalFiltersSection
                 photoUploadSection
@@ -1141,11 +1155,12 @@ struct EnhancedCostCard: View {
     
     private var disclaimerText: String {
         let requiredAmountText = String(format: "$%.2f", requiredAmount)
-        return "Insufficient credits. You need \(requiredAmountText) but your balance is \(balance)."
+        return "Insufficient credits. Your balance is \(balance)."
     }
     
     var body: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 6) {
+
             // Warning message (only when insufficient)
             if !hasEnoughCredits {
                 HStack(spacing: 6) {
@@ -1157,102 +1172,31 @@ struct EnhancedCostCard: View {
                         .foregroundColor(.red)
                     Spacer()
                 }
-                .padding(.horizontal, 4)
-                .padding(.bottom, 4)
             }
-            
+            .padding(.top, -8)
+
             // Cost and balance
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "dollarsign.circle.fill")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                        Text("Cost")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                    PriceDisplayView(
-                        price: price,
-                        showUnit: true,
-                        font: .subheadline,
-                        fontWeight: .semibold,
-                        foregroundColor: .primary
-                    )
-                }
+            HStack(spacing: 4) {
                 Spacer()
-                VStack(alignment: .trailing, spacing: 4) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "banknote.fill")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                        Text("Your balance")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                    Text(balance)
+                HStack(spacing: 4) {
+                    Image(systemName: "dollarsign.circle.fill")
                         .font(.caption)
-                        .fontWeight(.medium)
-                        .foregroundColor(.primary.opacity(0.8))
+                        .foregroundColor(.secondary)
+                    Text("Cost")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
                 }
-            }
-            .padding(.horizontal, 4)
-            
-            // Buy Credits button (only when insufficient)
-            if !hasEnoughCredits {
-                Button(action: onBuyCredits) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "crown.fill")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundStyle(
-                                LinearGradient(
-                                    colors: [.yellow, .orange],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
-                        Text("Buy Credits")
-                            .fontWeight(.semibold)
-                            .foregroundColor(.white)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(
-                        LinearGradient(
-                            colors: [primaryColor, secondaryColor],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                    .shadow(color: primaryColor.opacity(0.3), radius: 8, x: 0, y: 4)
-                }
-            }
-        }
-        .padding()
-        .background(
-            LinearGradient(
-                colors: !hasEnoughCredits
-                    ? [Color.red.opacity(0.12), Color.red.opacity(0.08)]
-                    : [primaryColor.opacity(0.08), secondaryColor.opacity(0.08)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .strokeBorder(
-                    LinearGradient(
-                        colors: !hasEnoughCredits
-                            ? [Color.red.opacity(0.4), Color.red.opacity(0.3)]
-                            : [primaryColor, secondaryColor],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ),
-                    lineWidth: 1.5
+                PriceDisplayView(
+                    price: price,
+                    showUnit: true,
+                    font: .caption,
+                    fontWeight: .semibold,
+                    foregroundColor: .primary
                 )
-        )
+            }
+
+        }
+        .padding(.top, -4)
     }
 }
 

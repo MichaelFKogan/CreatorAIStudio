@@ -56,7 +56,7 @@ struct AuthAwareCostCard: View {
                             )
                         }
                     }
-                    .padding(.top, 20)
+                    .padding(.top, 6)
                 }
             } else {
                 // Logged in: Show enhanced cost card

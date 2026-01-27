@@ -106,9 +106,27 @@ struct DanceFilterDetailPage: View {
             ZStack(alignment: .bottom) {
                 ScrollView {
                     VStack(spacing: 16) {
+                        // Network connectivity disclaimer
+                        if !networkMonitor.isConnected {
+                            VStack(spacing: 4) {
+                                HStack(spacing: 6) {
+                                    Spacer()
+                                    Image(systemName: "exclamationmark.circle.fill")
+                                        .font(.system(size: 14))
+                                        .foregroundColor(.red)
+                                    Text("No internet connection. Please connect to the internet.")
+                                        .font(.caption)
+                                        .foregroundColor(.red)
+                                    Spacer()
+                                }
+                            }
+                            .padding(.horizontal)
+                            .padding(.top, 8)
+                        }
+
                         // Page Title - Animated
                         AnimatedTitle(text: item.display.title)
-                            .padding(.top, 16)
+                            .padding(.top, networkMonitor.isConnected ? 16 : 8)
                         
                         LazyView(
                             BannerSectionFilter(
@@ -152,24 +170,6 @@ struct DanceFilterDetailPage: View {
                         }
                         .padding(.horizontal)
 
-
-                        // Network connectivity disclaimer
-                        if !networkMonitor.isConnected {
-                            VStack(spacing: 4) {
-                                HStack(spacing: 6) {
-                                    Spacer()
-                                    Image(systemName: "exclamationmark.circle.fill")
-                                        .font(.system(size: 14))
-                                        .foregroundColor(.red)
-                                    Text("No internet connection. Please connect to the internet.")
-                                        .font(.caption)
-                                        .foregroundColor(.red)
-                                    Spacer()
-                                }
-                            }
-                            .padding(.horizontal)
-                        }
-                        
                         LazyView(
                             GenerateButtonFilter(
                                 isGenerating: $isGenerating,

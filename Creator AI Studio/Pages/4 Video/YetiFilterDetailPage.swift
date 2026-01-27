@@ -212,24 +212,6 @@ struct YetiFilterDetailPage: View {
             ZStack(alignment: .bottom) {
                 ScrollView {
                     VStack(spacing: 16) {
-                        // Page Title - Animated
-                        AnimatedTitle(text: "Yeti Vlog")
-                            .padding(.top, 16)
-                        
-                        LazyView(
-                            BannerSectionYeti(
-                                item: item, price: currentPrice, videoPlayer: $videoPlayer, isVideoMuted: $isVideoMuted))
-                        
-                        Divider().padding(.horizontal)
-                        
-                        LazyView(
-                            PromptSectionYeti(
-                                prompt: $prompt,
-                                isFocused: $isPromptFocused,
-                                isExamplePromptsPresented: $isExamplePromptsPresented,
-                                examplePrompts: examplePrompts
-                            ))
-                        
                         // Network connectivity disclaimer
                         if !networkMonitor.isConnected {
                             VStack(spacing: 4) {
@@ -245,8 +227,27 @@ struct YetiFilterDetailPage: View {
                                 }
                             }
                             .padding(.horizontal)
+                            .padding(.top, 8)
                         }
+
+                        // Page Title - Animated
+                        AnimatedTitle(text: "Yeti Vlog")
+                            .padding(.top, networkMonitor.isConnected ? 16 : 8)
                         
+                        LazyView(
+                            BannerSectionYeti(
+                                item: item, price: currentPrice, videoPlayer: $videoPlayer, isVideoMuted: $isVideoMuted))
+                        
+                        Divider().padding(.horizontal)
+                        
+                        LazyView(
+                            PromptSectionYeti(
+                                prompt: $prompt,
+                                isFocused: $isPromptFocused,
+                                isExamplePromptsPresented: $isExamplePromptsPresented,
+                                examplePrompts: examplePrompts
+                            ))
+
                         LazyView(
                             GenerateButtonYeti(
                                 prompt: prompt,
