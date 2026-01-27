@@ -29,12 +29,15 @@ struct PurchaseCreditsView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
     @Environment(\.dismiss) private var dismiss
     @ObservedObject private var creditsViewModel = CreditsViewModel.shared
+    @StateObject private var purchaseManager = StoreKitPurchaseManager.shared
 
     @State private var isPurchasing = false
     @State private var purchaseError: String?
     @State private var showingError = false
     @State private var showingRestoreAlert = false
     @State private var restoreMessage = ""
+    @State private var showingSuccessAlert = false
+    @State private var successMessage = ""
 
     var body: some View {
         NavigationStack {
@@ -297,6 +300,11 @@ struct PurchaseCreditsView: View {
                         await creditsViewModel.fetchBalance(userId: userId)
                     }
                 }
+                
+                // Load products from StoreKit
+                Task {
+                    await purchaseManager.loadProducts()
+                }
             }
             .onReceive(
                 NotificationCenter.default.publisher(
@@ -318,6 +326,18 @@ struct PurchaseCreditsView: View {
                 Button("OK", role: .cancel) { }
             } message: {
                 Text(restoreMessage)
+            }
+            .alert("Purchase Successful", isPresented: $showingSuccessAlert) {
+                Button("OK", role: .cancel) {
+                    // Refresh balance after successful purchase
+                    if let userId = authViewModel.user?.id {
+                        Task {
+                            await creditsViewModel.fetchBalance(userId: userId)
+                        }
+                    }
+                }
+            } message: {
+                Text(successMessage)
             }
             .overlay {
                 if isPurchasing {
@@ -345,32 +365,94 @@ struct PurchaseCreditsView: View {
     // MARK: - Purchase Handlers
 
     private func handlePurchase(productId: CreditProductID, credits: Double) {
-        // TODO: Implement StoreKit purchase
-        // 1. Fetch product from App Store using productId.rawValue
-        // 2. Call product.purchase()
-        // 3. Handle transaction result
-        // 4. On success, add credits to user's balance via CreditsManager
-        // 5. Finish transaction
-
-        print("Purchase requested for \(productId.rawValue) with \(credits) credits")
-
-        // Placeholder for StoreKit integration
-        isPurchasing = true
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-            isPurchasing = false
-            // Remove this placeholder when implementing real StoreKit
-            purchaseError = "StoreKit not yet configured. Please set up products in App Store Connect."
+        guard let userId = authViewModel.user?.id else {
+            purchaseError = "Please sign in to purchase credits"
             showingError = true
+            return
+        }
+        
+        guard let product = purchaseManager.getProduct(for: productId.rawValue) else {
+            purchaseError = "Product not available. Please try again later."
+            showingError = true
+            return
+        }
+        
+        isPurchasing = true
+        
+        Task {
+            do {
+                let success = try await purchaseManager.purchase(product, userId: userId)
+                
+                if success {
+                    await MainActor.run {
+                        isPurchasing = false
+                        let creditAmount = purchaseManager.getCreditAmount(for: productId.rawValue)
+                        successMessage = "Successfully purchased \(PricingManager.dollarsToCredits(Decimal(creditAmount))) credits!"
+                        showingSuccessAlert = true
+                        
+                        // Refresh balance
+                        Task {
+                            await creditsViewModel.fetchBalance(userId: userId)
+                        }
+                    }
+                }
+            } catch {
+                await MainActor.run {
+                    isPurchasing = false
+                    
+                    // Don't show error for user cancellation
+                    if (error as NSError).code != -2 {
+                        purchaseError = error.localizedDescription
+                        showingError = true
+                    }
+                }
+            }
         }
     }
 
     private func handleRestorePurchases() {
-        // TODO: Implement restore purchases
-        // Note: Consumables cannot be restored, but Apple requires this button
-        // Show appropriate message to user
-
-        restoreMessage = "Credits are consumable purchases and cannot be restored. If you believe there was an issue with a recent purchase, please contact support."
-        showingRestoreAlert = true
+        guard let userId = authViewModel.user?.id else {
+            restoreMessage = "Please sign in to restore purchases"
+            showingRestoreAlert = true
+            return
+        }
+        
+        Task {
+            do {
+                try await purchaseManager.restorePurchases(userId: userId)
+                await MainActor.run {
+                    restoreMessage = "Purchases restored successfully"
+                    showingRestoreAlert = true
+                }
+            } catch {
+                await MainActor.run {
+                    restoreMessage = error.localizedDescription
+                    showingRestoreAlert = true
+                }
+            }
+        }
+    }
+    
+    // MARK: - Helper Methods
+    
+    private func getProductTitle(for productId: CreditProductID) -> String {
+        switch productId {
+        case .testPack: return "Test Pack"
+        case .starterPack: return "Starter Pack"
+        case .proPack: return "Pro Pack"
+        case .megaPack: return "Mega Pack"
+        case .ultraPack: return "Ultra Pack"
+        }
+    }
+    
+    private func getProductDescription(for productId: CreditProductID) -> String {
+        switch productId {
+        case .testPack: return "Good for testing photos"
+        case .starterPack: return "Perfect for trying out features"
+        case .proPack: return "Good for testing videos"
+        case .megaPack: return "Great for regular content creation"
+        case .ultraPack: return "Ideal for power users and bulk projects"
+        }
     }
 }
 
@@ -396,12 +478,13 @@ struct SectionHeader: View {
 struct CreditPackageCard: View {
     let title: String
     let baseCreditsValue: Double  // This is the credits amount
-    let totalPrice: Double  // Manually set total price (placeholder until StoreKit provides real price)
+    let totalPrice: Decimal  // StoreKit Product.price (Decimal)
     let productId: CreditProductID
     var badge: String? = nil
     var description: String? = nil
     @Binding var isPurchasing: Bool
     var onPurchase: (CreditProductID, Double) -> Void
+    var storeKitProduct: Product? = nil
 
     @State private var isDetailsExpanded: Bool = false
     private let maxExampleModels = 3
@@ -593,13 +676,24 @@ struct CreditPackageCard: View {
                         Spacer()
 
                         VStack(alignment: .trailing, spacing: 2) {
-                            Text(PriceCalculator.formatPrice(totalPrice))
-                                .font(
-                                    .system(
-                                        size: 22, weight: .bold,
-                                        design: .rounded)
-                                )
-                                .foregroundColor(.primary)
+                            if let product = storeKitProduct {
+                                Text(product.displayPrice)
+                                    .font(
+                                        .system(
+                                            size: 22, weight: .bold,
+                                            design: .rounded)
+                                    )
+                                    .foregroundColor(.primary)
+                            } else {
+                                // Fallback to formatted decimal
+                                Text(formatPrice(totalPrice))
+                                    .font(
+                                        .system(
+                                            size: 22, weight: .bold,
+                                            design: .rounded)
+                                    )
+                                    .foregroundColor(.primary)
+                            }
                             Text("Total Price")
                                 .font(.system(size: 11, design: .rounded))
                                 .foregroundColor(.secondary)
@@ -949,5 +1043,13 @@ struct CreditPackageCard: View {
             RoundedRectangle(cornerRadius: 16)
                 .stroke(Color.blue.opacity(0.3), lineWidth: 1)
         )
+    }
+    
+    // Helper to format Decimal price
+    private func formatPrice(_ price: Decimal) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.locale = Locale.current
+        return formatter.string(from: price as NSDecimalNumber) ?? "$0.00"
     }
 }

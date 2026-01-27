@@ -10,3 +10,6 @@ Documentation/*
 # macOS
 .DS_Store
 **/.DS_Stores
+
+# VS Code settings (personal preferences)
+.vscode/settings.json
