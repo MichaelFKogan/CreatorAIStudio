@@ -170,6 +170,20 @@ struct DanceFilterDetailPage: View {
                             .padding(.horizontal)
                         }
                         
+                        LazyView(
+                            GenerateButtonFilter(
+                                isGenerating: $isGenerating,
+                                price: currentPrice,
+                                isLoggedIn: authViewModel.user != nil,
+                                hasCredits: hasEnoughCredits,
+                                isConnected: networkMonitor.isConnected,
+                                hasImage: referenceImage != nil,
+                                onSignInTap: {
+                                    showSignInSheet = true
+                                },
+                                action: generate
+                            ))
+
                         VStack(spacing: 12) {
                             // Use the reusable AuthAwareCostCard component
                             AuthAwareCostCard(
@@ -187,22 +201,7 @@ struct DanceFilterDetailPage: View {
                             )
                         }
                         .padding(.horizontal)
-                        .padding(.bottom, -4)  // Compensate for parent VStack spacing: 16 to get total of 12
-
-                        
-                        LazyView(
-                            GenerateButtonFilter(
-                                isGenerating: $isGenerating,
-                                price: currentPrice,
-                                isLoggedIn: authViewModel.user != nil,
-                                hasCredits: hasEnoughCredits,
-                                isConnected: networkMonitor.isConnected,
-                                hasImage: referenceImage != nil,
-                                onSignInTap: {
-                                    showSignInSheet = true
-                                },
-                                action: generate
-                            ))
+                        .padding(.top, -8)  // Bring closer to the button above
                         
                         // Informative text about aspect ratio matching
                         LazyView(

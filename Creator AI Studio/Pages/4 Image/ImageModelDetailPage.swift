@@ -244,6 +244,21 @@ struct ImageModelDetailPage: View {
                             .padding(.horizontal)
                         }
                         
+                        LazyView(
+                            GenerateButton(
+                                prompt: prompt,
+                                isGenerating: $isGenerating,
+                                keyboardHeight: $keyboardHeight,
+                                costString: costString,
+                                isLoggedIn: authViewModel.user != nil,
+                                hasCredits: hasEnoughCredits,
+                                isConnected: networkMonitor.isConnected,
+                                onSignInTap: {
+                                    showSignInSheet = true
+                                },
+                                action: generate
+                            ))
+
                         VStack(spacing: 12) {
                             // Use the reusable AuthAwareCostCard component
                             AuthAwareCostCard(
@@ -261,22 +276,7 @@ struct ImageModelDetailPage: View {
                             )
                         }
                         .padding(.horizontal)
-                        .padding(.bottom, -12)  // Compensate for parent VStack spacing: 24 to get total of 12
-
-                        LazyView(
-                            GenerateButton(
-                                prompt: prompt,
-                                isGenerating: $isGenerating,
-                                keyboardHeight: $keyboardHeight,
-                                costString: costString,
-                                isLoggedIn: authViewModel.user != nil,
-                                hasCredits: hasEnoughCredits,
-                                isConnected: networkMonitor.isConnected,
-                                onSignInTap: {
-                                    showSignInSheet = true
-                                },
-                                action: generate
-                            ))
+                        .padding(.top, -16)  // Bring closer to the button above
 
                         Divider().padding(.horizontal)
 

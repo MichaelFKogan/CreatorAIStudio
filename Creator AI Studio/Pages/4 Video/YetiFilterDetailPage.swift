@@ -247,25 +247,6 @@ struct YetiFilterDetailPage: View {
                             .padding(.horizontal)
                         }
                         
-                        VStack(spacing: 12) {
-                            // Use the reusable AuthAwareCostCard component
-                            AuthAwareCostCard(
-                                price: currentPrice ?? item.resolvedCost ?? 0,
-                                requiredCredits: requiredCredits,
-                                primaryColor: .purple,
-                                secondaryColor: .pink,
-                                loginMessage: "Log in to generate a video",
-                                onSignIn: {
-                                    showSignInSheet = true
-                                },
-                                onBuyCredits: {
-                                    showPurchaseCreditsView = true
-                                }
-                            )
-                        }
-                        .padding(.horizontal)
-                        .padding(.bottom, -4)  // Compensate for parent VStack spacing: 16 to get total of 12
-                        
                         LazyView(
                             GenerateButtonYeti(
                                 prompt: prompt,
@@ -284,6 +265,25 @@ struct YetiFilterDetailPage: View {
                                 },
                                 action: generate
                             ))
+
+                        VStack(spacing: 12) {
+                            // Use the reusable AuthAwareCostCard component
+                            AuthAwareCostCard(
+                                price: currentPrice ?? item.resolvedCost ?? 0,
+                                requiredCredits: requiredCredits,
+                                primaryColor: .purple,
+                                secondaryColor: .pink,
+                                loginMessage: "Log in to generate a video",
+                                onSignIn: {
+                                    showSignInSheet = true
+                                },
+                                onBuyCredits: {
+                                    showPurchaseCreditsView = true
+                                }
+                            )
+                        }
+                        .padding(.horizontal)
+                        .padding(.top, -8)  // Bring closer to the button above
                         
                         Divider().padding(.horizontal)
                         

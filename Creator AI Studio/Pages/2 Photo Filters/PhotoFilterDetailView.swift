@@ -196,8 +196,8 @@ struct PhotoFilterDetailView: View {
         VStack(alignment: .leading) {
             multiSelectIndicator
             networkConnectivityDisclaimer
-            userInfoCard
             photoUploadButton
+            userInfoCard
             multiSelectDisclaimer
             // costSection
             exampleImagesSection
@@ -258,7 +258,7 @@ struct PhotoFilterDetailView: View {
                 }
             )
         }
-        .padding(.bottom, 4)  // Compensate for parent VStack default spacing: 8 to get total of 12
+        .padding(.top, -4)  // Bring closer to the button above
     }
     
     private var photoUploadButton: some View {
