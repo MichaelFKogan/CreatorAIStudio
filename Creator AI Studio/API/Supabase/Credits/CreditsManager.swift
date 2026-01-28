@@ -14,8 +14,23 @@ class CreditsManager {
     static let shared = CreditsManager()
     
     private let client = SupabaseManager.shared.client
+    private let balanceScale: Int = 4
     
     private init() {}
+    
+    // MARK: - Helpers
+    
+    private func roundBalance(_ value: Decimal) -> Decimal {
+        var source = value
+        var rounded = Decimal()
+        NSDecimalRound(&rounded, &source, balanceScale, .bankers)
+        return rounded
+    }
+    
+    private func roundBalance(_ value: Double) -> Double {
+        let rounded = roundBalance(Decimal(value))
+        return NSDecimalNumber(decimal: rounded).doubleValue
+    }
     
     // MARK: - Fetch Credit Balance
     
@@ -34,7 +49,7 @@ class CreditsManager {
                 .value
             
             if let credits = response.first {
-                return credits.balance
+                return roundBalance(credits.balance)
             } else {
                 // No record exists, create one with 0 balance
                 try await initializeUserCredits(userId: userId)
@@ -84,7 +99,8 @@ class CreditsManager {
         paymentTransactionId: String?,
         description: String? = nil
     ) async throws -> Double {
-        guard amount > 0 else {
+        let amountDecimal = roundBalance(Decimal(amount))
+        guard amountDecimal > 0 else {
             throw NSError(
                 domain: "CreditsError",
                 code: -1,
@@ -94,14 +110,14 @@ class CreditsManager {
         
         do {
             // First, ensure user_credits record exists
-            let currentBalance = try await fetchCreditBalance(userId: userId)
+            let currentBalance = roundBalance(Decimal(try await fetchCreditBalance(userId: userId)))
             
             // Calculate new balance
-            let newBalance = currentBalance + amount
+            let newBalance = roundBalance(currentBalance + amountDecimal)
             
             // Update user_credits table using a Codable struct
             struct BalanceUpdate: Codable {
-                let balance: Double
+                let balance: Decimal
                 let updated_at: String
             }
             
@@ -120,9 +136,9 @@ class CreditsManager {
             let transaction = CreditTransaction(
                 id: UUID(),
                 user_id: userId,
-                amount: amount,
+                amount: NSDecimalNumber(decimal: amountDecimal).doubleValue,
                 transaction_type: "purchase",
-                description: description ?? "Credit purchase - $\(String(format: "%.2f", amount))",
+                description: description ?? "Credit purchase - $\(String(format: "%.2f", NSDecimalNumber(decimal: amountDecimal).doubleValue))",
                 related_media_id: nil,
                 payment_method: paymentMethod,
                 payment_transaction_id: paymentTransactionId,
@@ -134,8 +150,9 @@ class CreditsManager {
                 .insert(transaction)
                 .execute()
             
-            print("✅ [CreditsManager] Added \(amount) credits to user \(userId). New balance: \(newBalance)")
-            return newBalance
+            let newBalanceDouble = NSDecimalNumber(decimal: newBalance).doubleValue
+            print("✅ [CreditsManager] Added \(amount) credits to user \(userId). New balance: \(newBalanceDouble)")
+            return newBalanceDouble
         } catch {
             print("❌ [CreditsManager] Error adding credits: \(error)")
             throw error
@@ -158,7 +175,8 @@ class CreditsManager {
         description: String,
         relatedMediaId: UUID? = nil
     ) async throws -> Double {
-        guard amount > 0 else {
+        let amountDecimal = roundBalance(Decimal(amount))
+        guard amountDecimal > 0 else {
             throw NSError(
                 domain: "CreditsError",
                 code: -1,
@@ -168,23 +186,23 @@ class CreditsManager {
         
         do {
             // Get current balance
-            let currentBalance = try await fetchCreditBalance(userId: userId)
+            let currentBalance = roundBalance(Decimal(try await fetchCreditBalance(userId: userId)))
             
             // Check if user has enough credits
-            guard currentBalance >= amount else {
+            guard currentBalance >= amountDecimal else {
                 throw NSError(
                     domain: "CreditsError",
                     code: -2,
-                    userInfo: [NSLocalizedDescriptionKey: "Insufficient credits. Current balance: $\(String(format: "%.2f", currentBalance)), Required: $\(String(format: "%.2f", amount))"]
+                    userInfo: [NSLocalizedDescriptionKey: "Insufficient credits. Current balance: $\(String(format: "%.4f", NSDecimalNumber(decimal: currentBalance).doubleValue)), Required: $\(String(format: "%.4f", NSDecimalNumber(decimal: amountDecimal).doubleValue))"]
                 )
             }
             
             // Calculate new balance
-            let newBalance = currentBalance - amount
+            let newBalance = roundBalance(currentBalance - amountDecimal)
             
             // Update user_credits table using a Codable struct
             struct BalanceUpdate: Codable {
-                let balance: Double
+                let balance: Decimal
                 let updated_at: String
             }
             
@@ -203,7 +221,7 @@ class CreditsManager {
             let transaction = CreditTransaction(
                 id: UUID(),
                 user_id: userId,
-                amount: -amount,
+                amount: -NSDecimalNumber(decimal: amountDecimal).doubleValue,
                 transaction_type: "deduction",
                 description: description,
                 related_media_id: relatedMediaId,
@@ -217,8 +235,9 @@ class CreditsManager {
                 .insert(transaction)
                 .execute()
             
-            print("✅ [CreditsManager] Deducted \(amount) credits from user \(userId). New balance: \(newBalance)")
-            return newBalance
+            let newBalanceDouble = NSDecimalNumber(decimal: newBalance).doubleValue
+            print("✅ [CreditsManager] Deducted \(amount) credits from user \(userId). New balance: \(newBalanceDouble)")
+            return newBalanceDouble
         } catch {
             print("❌ [CreditsManager] Error deducting credits: \(error)")
             throw error
@@ -236,15 +255,16 @@ class CreditsManager {
         do {
             // Ensure user_credits record exists
             _ = try await fetchCreditBalance(userId: userId)
+            let amountDecimal = roundBalance(Decimal(amount))
             
             // Update user_credits table using a Codable struct
             struct BalanceUpdate: Codable {
-                let balance: Double
+                let balance: Decimal
                 let updated_at: String
             }
             
             let update = BalanceUpdate(
-                balance: amount,
+                balance: amountDecimal,
                 updated_at: ISO8601DateFormatter().string(from: Date())
             )
             
@@ -258,9 +278,9 @@ class CreditsManager {
             let transaction = CreditTransaction(
                 id: UUID(),
                 user_id: userId,
-                amount: amount,
+                amount: NSDecimalNumber(decimal: amountDecimal).doubleValue,
                 transaction_type: "purchase",
-                description: "Test credits - Set to $\(String(format: "%.2f", amount))",
+                description: "Test credits - Set to $\(String(format: "%.4f", NSDecimalNumber(decimal: amountDecimal).doubleValue))",
                 related_media_id: nil,
                 payment_method: "test",
                 payment_transaction_id: nil,
@@ -272,8 +292,9 @@ class CreditsManager {
                 .insert(transaction)
                 .execute()
             
-            print("✅ [CreditsManager] Set credits to \(amount) for user \(userId)")
-            return amount
+            let amountDouble = NSDecimalNumber(decimal: amountDecimal).doubleValue
+            print("✅ [CreditsManager] Set credits to \(amountDouble) for user \(userId)")
+            return amountDouble
         } catch {
             print("❌ [CreditsManager] Error setting credits: \(error)")
             throw error
@@ -329,4 +350,3 @@ struct CreditTransaction: Codable {
     let payment_transaction_id: String?
     let created_at: Date
 }
-

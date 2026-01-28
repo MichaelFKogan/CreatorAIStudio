@@ -507,7 +507,7 @@ extension PricingManager {
         let credits = dollarsToCredits(price)
         let formatter = NumberFormatter()
         formatter.numberStyle = .decimal
-        formatter.maximumFractionDigits = 2
+        formatter.maximumFractionDigits = 4
         formatter.minimumFractionDigits = 0
         return formatter.string(from: NSDecimalNumber(decimal: credits))
             ?? NSDecimalNumber(decimal: credits).stringValue
