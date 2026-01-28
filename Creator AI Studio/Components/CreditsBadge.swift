@@ -54,7 +54,11 @@ struct CreditsBadge: View {
                             .font(.system(size: 12))
                             .foregroundColor(.gray)
                         
-                        Text("\(PricingManager.dollarsToCredits(Decimal(creditsViewModel.balance)))")
+                        Text(
+                            PricingManager.formatCredits(
+                                Decimal(creditsViewModel.balance)
+                            )
+                        )
                             .font(
                                 .system(
                                     size: 14, weight: .semibold,
@@ -115,4 +119,3 @@ struct CreditsBadge: View {
         }
     }
 }
-

@@ -472,9 +472,8 @@ extension PricingManager {
     /// Converts a dollar amount to credits
     /// - Parameter dollars: The dollar amount as Decimal
     /// - Returns: The equivalent number of credits
-    static func dollarsToCredits(_ dollars: Decimal) -> Int {
-        let credits = dollars * PriceDisplayMode.creditsPerDollar
-        return NSDecimalNumber(decimal: credits).intValue
+    static func dollarsToCredits(_ dollars: Decimal) -> Decimal {
+        dollars * PriceDisplayMode.creditsPerDollar
     }
     
     /// Formats a price according to the current display mode
@@ -503,10 +502,15 @@ extension PricingManager {
     
     /// Formats a price as credits (without "credits" label)
     /// - Parameter price: The price as Decimal (in dollars)
-    /// - Returns: Formatted credits string (e.g., "50")
+    /// - Returns: Formatted credits string (e.g., "50", "1.22")
     static func formatCredits(_ price: Decimal) -> String {
         let credits = dollarsToCredits(price)
-        return "\(credits)"
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.maximumFractionDigits = 2
+        formatter.minimumFractionDigits = 0
+        return formatter.string(from: NSDecimalNumber(decimal: credits))
+            ?? NSDecimalNumber(decimal: credits).stringValue
     }
     
     /// Formats a price with unit label (e.g., "50 credits" or "$0.50")
@@ -517,8 +521,7 @@ extension PricingManager {
         case .dollars:
             return formatDollars(price)
         case .credits:
-            let credits = dollarsToCredits(price)
-            return "\(credits) credits"
+            return "\(formatCredits(price)) credits"
         }
     }
     
