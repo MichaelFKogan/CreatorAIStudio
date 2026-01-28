@@ -732,6 +732,9 @@ struct ProfileViewContent: View {
                 selectedImageIds: $selectedImageIds,
                 isFavoritesTab: selectedTab == .favorites
             )
+            // Force SwiftUI to re-render when images or placeholders change
+            // This ensures newly generated images appear immediately in the gallery
+            .id("grid-\(filteredImages.count)-\(filteredPlaceholders.count)-\(filteredImages.first?.id ?? "")")
             Color.clear.frame(height: 160)
         }
     }

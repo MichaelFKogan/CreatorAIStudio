@@ -926,13 +926,18 @@ class JobStatusManager: ObservableObject {
                 
                 // Post notification that image was saved (for Profile page refresh)
                 await MainActor.run {
+                    var userInfo: [String: Any] = [
+                        "userId": userId,
+                        "imageUrl": supabaseImageURL
+                    ]
+                    // Include imageId for reliable fetching (avoids race conditions with concurrent saves)
+                    if let imageId = insertedImage?.id {
+                        userInfo["imageId"] = imageId
+                    }
                     NotificationCenter.default.post(
                         name: NSNotification.Name("ImageSavedToDatabase"),
                         object: nil,
-                        userInfo: [
-                            "userId": userId,
-                            "imageUrl": supabaseImageURL
-                        ]
+                        userInfo: userInfo
                     )
                 }
                 
@@ -1121,13 +1126,18 @@ class JobStatusManager: ObservableObject {
                 
                 // Post notification that video was saved (for Profile page refresh)
                 await MainActor.run {
+                    var userInfo: [String: Any] = [
+                        "userId": userId,
+                        "videoUrl": supabaseVideoURL
+                    ]
+                    // Include imageId for reliable fetching (avoids race conditions with concurrent saves)
+                    if let videoId = insertedVideo?.id {
+                        userInfo["imageId"] = videoId  // Use same key as images for compatibility
+                    }
                     NotificationCenter.default.post(
                         name: NSNotification.Name("VideoSavedToDatabase"),
                         object: nil,
-                        userInfo: [
-                            "userId": userId,
-                            "videoUrl": supabaseVideoURL
-                        ]
+                        userInfo: userInfo
                     )
                 }
             }
