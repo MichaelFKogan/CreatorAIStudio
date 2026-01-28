@@ -583,13 +583,21 @@ class ProfileViewModel: ObservableObject {
     
     // MARK: - Realtime Subscription for Deletions
     
-    /// Starts listening for DELETE events on user_media table
-    /// This ensures deletions sync instantly across all devices without database queries
+    /// Starts listening for INSERT + DELETE events on user_media table
+    /// This ensures new media + deletions sync instantly across all devices without database queries
     private func startRealtimeSubscription(userId: String) async {
         // Stop any existing subscription first
         await stopRealtimeSubscription()
         
         let channel = client.realtimeV2.channel("user-media-\(userId)")
+        
+        // Listen for INSERT events
+        let inserts = channel.postgresChange(
+            InsertAction.self,
+            schema: "public",
+            table: "user_media",
+            filter: "user_id=eq.\(userId)"
+        )
         
         // Listen for DELETE events
         let deletions = channel.postgresChange(
@@ -598,6 +606,13 @@ class ProfileViewModel: ObservableObject {
             table: "user_media",
             filter: "user_id=eq.\(userId)"
         )
+        
+        // Handle inserts
+        Task {
+            for await insert in inserts {
+                await handleMediaInsert(insert)
+            }
+        }
         
         // Handle deletions
         Task {
@@ -610,7 +625,7 @@ class ProfileViewModel: ObservableObject {
         await channel.subscribe()
         realtimeChannel = channel
         
-        print("✅ [ProfileViewModel] Realtime subscription active for user_media deletions")
+        print("✅ [ProfileViewModel] Realtime subscription active for user_media inserts/deletions")
     }
     
     /// Stops the Realtime subscription
@@ -627,7 +642,7 @@ class ProfileViewModel: ObservableObject {
         // Extract the deleted record's ID from oldRecord
         let oldRecord = action.oldRecord
         if let idValue = oldRecord["id"],
-           case .string(let deletedId) = idValue {
+           let deletedId = stringValue(from: idValue) {
             
             await MainActor.run {
                 // Remove from local array
@@ -649,6 +664,51 @@ class ProfileViewModel: ObservableObject {
                     }
                 }
             }
+        }
+    }
+
+    /// Handles INSERT events from Realtime
+    private func handleMediaInsert(_ action: InsertAction) async {
+        do {
+            let insertedMedia = try action.decodeRecord(as: UserImage.self)
+
+            guard insertedMedia.isSuccess else {
+                print("⚠️ [ProfileViewModel] Ignoring failed media insert: \(insertedMedia.id)")
+                return
+            }
+
+            let hasValidImageUrl = !insertedMedia.image_url.isEmpty && URL(string: insertedMedia.image_url) != nil
+            let hasValidThumbnailUrl = insertedMedia.thumbnail_url.map { !$0.isEmpty && URL(string: $0) != nil } ?? false
+
+            guard hasValidImageUrl || hasValidThumbnailUrl else {
+                print("⚠️ [ProfileViewModel] Ignoring insert with invalid URLs (id: \(insertedMedia.id))")
+                return
+            }
+
+            let alreadyExists = userImages.contains { $0.id == insertedMedia.id }
+            guard !alreadyExists else {
+                print("✅ [ProfileViewModel] Insert already present, skipping: \(insertedMedia.id)")
+                return
+            }
+
+            await addImage(insertedMedia)
+            print("✅ [ProfileViewModel] Realtime insert added: \(insertedMedia.id)")
+        } catch {
+            print("❌ [ProfileViewModel] Error decoding inserted media: \(error)")
+        }
+    }
+
+    private func stringValue(from value: AnyJSON) -> String? {
+        switch value {
+        case .string(let stringValue):
+            return stringValue
+        case .number(let numberValue):
+            if numberValue.truncatingRemainder(dividingBy: 1) == 0 {
+                return String(Int(numberValue))
+            }
+            return String(numberValue)
+        default:
+            return nil
         }
     }
     

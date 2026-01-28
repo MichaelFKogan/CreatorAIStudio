@@ -594,7 +594,7 @@ class JobStatusManager: ObservableObject {
         // Extract task_id from old record if available
         let oldRecord = action.oldRecord
         if let taskIdValue = oldRecord["task_id"],
-           case .string(let taskId) = taskIdValue {
+           let taskId = stringValue(from: taskIdValue) {
             
             // Check if there's a notification for this task
             if let notificationId = taskNotificationMap[taskId] {
@@ -615,6 +615,20 @@ class JobStatusManager: ObservableObject {
             }
             
             print("[JobStatusManager] 🗑️ Job deleted: \(taskId)")
+        }
+    }
+
+    private func stringValue(from value: AnyJSON) -> String? {
+        switch value {
+        case .string(let stringValue):
+            return stringValue
+        case .number(let numberValue):
+            if numberValue.truncatingRemainder(dividingBy: 1) == 0 {
+                return String(Int(numberValue))
+            }
+            return String(numberValue)
+        default:
+            return nil
         }
     }
     
