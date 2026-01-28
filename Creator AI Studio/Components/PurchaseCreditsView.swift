@@ -481,27 +481,17 @@ struct CreditPackageCard: View {
     var storeKitProduct: Product? = nil
 
     @State private var isDetailsExpanded: Bool = false
-    // Image model prices from PricingManager
+    // Featured image models (matching website display)
     private let imageModelRates: [(name: String, imageName: String, price: Double)] = [
         (name: "Z-Image-Turbo", imageName: "zimageturbo", price: 0.005),
-        (name: "FLUX.2 [dev]", imageName: "flux2dev", price: 0.0122),
-        (name: "Wan2.5-Preview Image", imageName: "wan25previewimage", price: 0.027),
-        (name: "Seedream 4.0", imageName: "seedream40", price: 0.03),
-        (name: "GPT Image 1.5", imageName: "gptimage15", price: 0.034),
-        (name: "Google Gemini Flash 2.5 (Nano Banana)", imageName: "geminiflashimage25", price: 0.039),
+        (name: "Gemini Flash 2.5", imageName: "geminiflashimage25", price: 0.039),
         (name: "Seedream 4.5", imageName: "seedream45", price: 0.04),
-        (name: "FLUX.1 Kontext [pro]", imageName: "fluxkontextpro", price: 0.04),
-        (name: "FLUX.1 Kontext [max]", imageName: "fluxkontextmax", price: 0.08),
     ]
 
-    // Video model prices (using cheapest options)
-    private let videoModelRates: [(name: String, imageName: String, price: Double)] = [
-        (name: "Seedance 1.0 Pro Fast", imageName: "seedance10profast", price: 0.0304),  // 5s at 480p (cheapest)
-        (name: "Sora 2", imageName: "sora2", price: 0.4),  // 4s at 720p (cheapest)
-        (name: "KlingAI 2.5 Turbo Pro", imageName: "klingai25turbopro", price: 0.35),  // 5s at 1080p
-        (name: "Wan2.6", imageName: "wan26", price: 0.5),  // 5s at 720p (cheapest)
-        (name: "Kling VIDEO 2.6 Pro", imageName: "klingvideo26pro", price: 0.70),  // 5s at 1080p
-        (name: "Google Veo 3.1 Fast", imageName: "veo31fast", price: 1.20),  // 8s at 1080p (only option)
+    // Featured video models (matching website display)
+    private let videoModelRates: [(name: String, imageName: String, price: Double, duration: String)] = [
+        (name: "Kling Video 2.6 Pro", imageName: "klingvideo26pro", price: 0.70, duration: "5s"),
+        (name: "Veo 3.1 Fast", imageName: "veo31fast", price: 1.20, duration: "8s"),
     ]
 
     var body: some View {
@@ -628,18 +618,13 @@ struct CreditPackageCard: View {
 
                             // Estimated Generations Section
                             VStack(alignment: .leading, spacing: 12) {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text("Estimated Generations")
-                                        .font(
-                                            .system(
-                                                size: 14, weight: .semibold,
-                                                design: .rounded)
-                                        )
-                                        .foregroundColor(.primary)
-                                    Text("Credits per generation")
-                                        .font(.system(size: 11, design: .rounded))
-                                        .foregroundColor(.secondary)
-                                }
+                                Text("Estimated Generations")
+                                    .font(
+                                        .system(
+                                            size: 14, weight: .semibold,
+                                            design: .rounded)
+                                    )
+                                    .foregroundColor(.primary)
 
                                 if !imageModelRates.isEmpty {
                                     VStack(alignment: .leading, spacing: 8) {
@@ -648,21 +633,47 @@ struct CreditPackageCard: View {
                                             .foregroundColor(.secondary)
 
                                         ForEach(imageModelRates, id: \.name) { model in
-                                            HStack(alignment: .center, spacing: 10) {
+                                            HStack(alignment: .center, spacing: 12) {
+                                                // Circular thumbnail with background card
                                                 if !model.imageName.isEmpty {
                                                     Image(model.imageName)
                                                         .resizable()
-                                                        .aspectRatio(contentMode: .fit)
-                                                        .frame(width: 28, height: 28)
+                                                        .aspectRatio(contentMode: .fill)
+                                                        .frame(width: 36, height: 36)
+                                                        .clipShape(Circle())
+                                                        .overlay(
+                                                            Circle()
+                                                                .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                                                        )
+                                                        .background(
+                                                            Circle()
+                                                                .fill(Color(.secondarySystemBackground))
+                                                                .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
+                                                        )
                                                 }
-                                                Text(model.name)
-                                                    .font(.system(size: 12, weight: .semibold, design: .rounded))
-                                                    .foregroundColor(.primary)
+
+                                                VStack(alignment: .leading, spacing: 2) {
+                                                    Text(model.name)
+                                                        .font(.system(size: 12, weight: .semibold, design: .rounded))
+                                                        .foregroundColor(.primary)
+                                                    Text("\(PricingManager.formatCredits(Decimal(model.price))) credits per generation")
+                                                        .font(.system(size: 10, design: .rounded))
+                                                        .foregroundColor(.secondary)
+                                                }
+
                                                 Spacer()
-                                                Text("\(PricingManager.formatCredits(Decimal(model.price))) credits / gen")
-                                                    .font(.system(size: 11, weight: .medium, design: .rounded))
-                                                    .foregroundColor(.secondary)
+
+                                                // Generation count multiplier
+                                                Text("\(calculateGenerations(credits: baseCreditsValue, price: model.price))x")
+                                                    .font(.system(size: 14, weight: .bold, design: .rounded))
+                                                    .foregroundColor(.blue)
                                             }
+                                            .padding(.vertical, 6)
+                                            .padding(.horizontal, 10)
+                                            .background(
+                                                RoundedRectangle(cornerRadius: 10)
+                                                    .fill(Color(.tertiarySystemBackground))
+                                            )
                                         }
                                     }
                                 }
@@ -674,21 +685,47 @@ struct CreditPackageCard: View {
                                             .foregroundColor(.secondary)
 
                                         ForEach(videoModelRates, id: \.name) { model in
-                                            HStack(alignment: .center, spacing: 10) {
+                                            HStack(alignment: .center, spacing: 12) {
+                                                // Circular thumbnail with background card
                                                 if !model.imageName.isEmpty {
                                                     Image(model.imageName)
                                                         .resizable()
-                                                        .aspectRatio(contentMode: .fit)
-                                                        .frame(width: 28, height: 28)
+                                                        .aspectRatio(contentMode: .fill)
+                                                        .frame(width: 36, height: 36)
+                                                        .clipShape(Circle())
+                                                        .overlay(
+                                                            Circle()
+                                                                .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                                                        )
+                                                        .background(
+                                                            Circle()
+                                                                .fill(Color(.secondarySystemBackground))
+                                                                .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
+                                                        )
                                                 }
-                                                Text(model.name)
-                                                    .font(.system(size: 12, weight: .semibold, design: .rounded))
-                                                    .foregroundColor(.primary)
+
+                                                VStack(alignment: .leading, spacing: 2) {
+                                                    Text(model.name)
+                                                        .font(.system(size: 12, weight: .semibold, design: .rounded))
+                                                        .foregroundColor(.primary)
+                                                    Text("\(PricingManager.formatCredits(Decimal(model.price))) credits per generation • \(model.duration)")
+                                                        .font(.system(size: 10, design: .rounded))
+                                                        .foregroundColor(.secondary)
+                                                }
+
                                                 Spacer()
-                                                Text("\(PricingManager.formatCredits(Decimal(model.price))) credits / gen")
-                                                    .font(.system(size: 11, weight: .medium, design: .rounded))
-                                                    .foregroundColor(.secondary)
+
+                                                // Generation count multiplier
+                                                Text("\(calculateGenerations(credits: baseCreditsValue, price: model.price))x")
+                                                    .font(.system(size: 14, weight: .bold, design: .rounded))
+                                                    .foregroundColor(.blue)
                                             }
+                                            .padding(.vertical, 6)
+                                            .padding(.horizontal, 10)
+                                            .background(
+                                                RoundedRectangle(cornerRadius: 10)
+                                                    .fill(Color(.tertiarySystemBackground))
+                                            )
                                         }
                                     }
                                 }
@@ -719,5 +756,11 @@ struct CreditPackageCard: View {
         formatter.numberStyle = .currency
         formatter.locale = Locale.current
         return formatter.string(from: price as NSDecimalNumber) ?? "$0.00"
+    }
+
+    // Helper to calculate number of generations possible
+    private func calculateGenerations(credits: Double, price: Double) -> Int {
+        guard price > 0 else { return 0 }
+        return Int(credits / price)
     }
 }
