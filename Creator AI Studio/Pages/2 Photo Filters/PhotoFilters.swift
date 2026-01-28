@@ -130,6 +130,8 @@ struct PhotoFilters: View {
     @State private var selectedCategoryTab: String? = nil
     @State private var isMultiSelectMode: Bool = false
     @State private var selectedFilterIds: Set<UUID> = []
+    @State private var showPurchaseCreditsView: Bool = false
+    @State private var showSignInSheet: Bool = false
     
     // // Convert presets to InfoPacket format
     // private var presetInfoPackets: [InfoPacket] {
@@ -413,10 +415,48 @@ struct PhotoFilters: View {
                 }
 
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    CreditsBadge(
-                        diamondColor: .teal,
-                        borderColor: .mint
-                    )
+                    Group {
+                        if authViewModel.user == nil {
+                            // Show "Sign in" button and crown icon when not signed in
+                            HStack(spacing: 16) {
+                                Button(action: {
+                                    showSignInSheet = true
+                                }) {
+                                    Text("Sign in")
+                                        .font(
+                                            .system(
+                                                size: 16, weight: .semibold,
+                                                design: .rounded)
+                                        )
+                                        .foregroundColor(.primary)
+                                }
+                                
+                                Button(action: {
+                                    showPurchaseCreditsView = true
+                                }) {
+                                    Image(systemName: "crown.fill")
+                                        .font(
+                                            .system(
+                                                size: 14, weight: .semibold,
+                                                design: .rounded)
+                                        )
+                                        .foregroundStyle(
+                                            LinearGradient(
+                                                colors: [.yellow, .orange],
+                                                startPoint: .topLeading,
+                                                endPoint: .bottomTrailing
+                                            )
+                                        )
+                                }
+                            }
+                        } else {
+                            // Show credits badge when signed in
+                            CreditsBadge(
+                                diamondColor: .teal,
+                                borderColor: .mint
+                            )
+                        }
+                    }
                 }
             }
 
@@ -427,6 +467,16 @@ struct PhotoFilters: View {
             )
             .navigationDestination(for: InfoPacket.self) { filter in
                 PhotoFilterDetailView(item: filter)
+            }
+            .sheet(isPresented: $showSignInSheet) {
+                SignInView()
+                    .environmentObject(authViewModel)
+                    .presentationDragIndicator(.visible)
+            }
+            .sheet(isPresented: $showPurchaseCreditsView) {
+                PurchaseCreditsView()
+                    .environmentObject(authViewModel)
+                    .presentationDragIndicator(.visible)
             }
         }
         .onChange(of: selectedPhotoItem, perform: loadPhoto)

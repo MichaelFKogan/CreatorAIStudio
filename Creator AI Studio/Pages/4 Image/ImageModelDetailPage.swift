@@ -415,18 +415,18 @@ struct ImageModelDetailPage: View {
         .toolbarBackground(.visible, for: .navigationBar)
         .toolbar {
             // Leading title
-            // ToolbarItem(placement: .navigationBarLeading) {
-            //     Text(item.display.title)
-            //         .font(.system(size: 28, weight: .bold, design: .rounded))
-            //         .foregroundColor(.white)
-            //         // .foregroundStyle(
-            //         //     LinearGradient(
-            //         //         colors: [.blue, .cyan],
-            //         //         startPoint: .leading,
-            //         //         endPoint: .trailing
-            //         //     )
-            //         // )
-            // }
+            ToolbarItem(placement: .navigationBarLeading) {
+                Text(item.display.title)
+                    .font(.system(size: 28, weight: .bold, design: .rounded))
+                    // .foregroundColor(.white)
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [.blue, .cyan],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+            }
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()
                 Button("Done") { isPromptFocused = false }

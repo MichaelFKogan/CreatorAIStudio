@@ -187,6 +187,8 @@ struct PurchaseCreditsView: View {
                                 .stroke(Color.gray.opacity(0.3), lineWidth: 1)
                         )
 
+                        Divider()
+
                         SectionHeader(title: "In-App Credit Packs", subtitle: "Instant access in the app")
 
                         CreditPackageCard(

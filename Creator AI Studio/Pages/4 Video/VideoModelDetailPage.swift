@@ -49,6 +49,7 @@ struct VideoModelDetailPage: View {
     @State private var showPurchaseCreditsView: Bool = false
     @State private var showInsufficientCreditsAlert: Bool = false
     @ObservedObject private var creditsViewModel = CreditsViewModel.shared
+    @ObservedObject private var networkMonitor = NetworkMonitor.shared
 
     @EnvironmentObject var authViewModel: AuthViewModel
 
@@ -402,6 +403,7 @@ struct VideoModelDetailPage: View {
                                     "\(Int(videoDurationOptions[selectedDurationIndex].duration))s",
                                 isLoggedIn: authViewModel.user != nil,
                                 hasCredits: hasEnoughCredits,
+                                isConnected: networkMonitor.isConnected,
                                 onSignInTap: {
                                     showSignInSheet = true
                                 },
@@ -510,18 +512,18 @@ struct VideoModelDetailPage: View {
         .toolbarBackground(.visible, for: .navigationBar)
         .toolbar {
             // Leading title
-            // ToolbarItem(placement: .navigationBarLeading) {
-            //     Text(item.display.title)
-            //         .font(.system(size: 28, weight: .bold, design: .rounded))
-            //         .foregroundColor(.white)
-            //         // .foregroundStyle(
-            //         //     LinearGradient(
-            //         //         colors: [.purple, .pink],
-            //         //         startPoint: .leading,
-            //         //         endPoint: .trailing
-            //         //     )
-            //         // )
-            // }
+            ToolbarItem(placement: .navigationBarLeading) {
+                Text(item.display.title)
+                    .font(.system(size: 28, weight: .bold, design: .rounded))
+                    .foregroundColor(.white)
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [.purple, .pink],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+            }
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()
                 Button("Done") { isPromptFocused = false }
@@ -1480,11 +1482,12 @@ private struct GenerateButtonVideo: View {
     let selectedDuration: String
     let isLoggedIn: Bool
     let hasCredits: Bool
+    let isConnected: Bool
     let onSignInTap: () -> Void
     let action: () -> Void
 
     private var canGenerate: Bool {
-        isLoggedIn && hasCredits
+        isLoggedIn && hasCredits && isConnected
     }
 
     var body: some View {

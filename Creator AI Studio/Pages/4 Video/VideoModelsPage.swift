@@ -7,6 +7,9 @@ import SwiftUI
 struct VideoModelsPage: View {
     @StateObject private var viewModel = VideoModelsViewModel()
     @AppStorage("videoModelsIsGridView") private var isGridView = true
+    @EnvironmentObject var authViewModel: AuthViewModel
+    @State private var showPurchaseCreditsView: Bool = false
+    @State private var showSignInSheet: Bool = false
 
     var body: some View {
         NavigationView {
@@ -30,13 +33,61 @@ struct VideoModelsPage: View {
                         )
                 }
 
-                // Trailing credits
+                // Trailing credits or crown
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    CreditsBadge(
-                        diamondColor: .purple,
-                        borderColor: .purple
-                    )
+                    Group {
+                        if authViewModel.user == nil {
+                            // Show "Sign in" button and crown icon when not signed in
+                            HStack(spacing: 16) {
+                                Button(action: {
+                                    showSignInSheet = true
+                                }) {
+                                    Text("Sign in")
+                                        .font(
+                                            .system(
+                                                size: 16, weight: .semibold,
+                                                design: .rounded)
+                                        )
+                                        .foregroundColor(.primary)
+                                }
+                                
+                                Button(action: {
+                                    showPurchaseCreditsView = true
+                                }) {
+                                    Image(systemName: "crown.fill")
+                                        .font(
+                                            .system(
+                                                size: 14, weight: .semibold,
+                                                design: .rounded)
+                                        )
+                                        .foregroundStyle(
+                                            LinearGradient(
+                                                colors: [.yellow, .orange],
+                                                startPoint: .topLeading,
+                                                endPoint: .bottomTrailing
+                                            )
+                                        )
+                                }
+                            }
+                        } else {
+                            // Show credits badge when signed in
+                            CreditsBadge(
+                                diamondColor: .purple,
+                                borderColor: .purple
+                            )
+                        }
+                    }
                 }
+            }
+            .sheet(isPresented: $showSignInSheet) {
+                SignInView()
+                    .environmentObject(authViewModel)
+                    .presentationDragIndicator(.visible)
+            }
+            .sheet(isPresented: $showPurchaseCreditsView) {
+                PurchaseCreditsView()
+                    .environmentObject(authViewModel)
+                    .presentationDragIndicator(.visible)
             }
         }
     }
@@ -46,6 +97,9 @@ struct VideoModelsPage: View {
 struct VideoModelsPageContent: View {
     @StateObject private var viewModel = VideoModelsViewModel()
     @AppStorage("videoModelsIsGridView") private var isGridView = true
+    @EnvironmentObject var authViewModel: AuthViewModel
+    @State private var showPurchaseCreditsView: Bool = false
+    @State private var showSignInSheet: Bool = false
 
     var body: some View {
         NavigationView {
@@ -69,13 +123,61 @@ struct VideoModelsPageContent: View {
                         )
                 }
 
-                // Trailing credits
+                // Trailing credits or crown
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    CreditsBadge(
-                        diamondColor: .purple,
-                        borderColor: .purple
-                    )
+                    Group {
+                        if authViewModel.user == nil {
+                            // Show "Sign in" button and crown icon when not signed in
+                            HStack(spacing: 16) {
+                                Button(action: {
+                                    showSignInSheet = true
+                                }) {
+                                    Text("Sign in")
+                                        .font(
+                                            .system(
+                                                size: 16, weight: .semibold,
+                                                design: .rounded)
+                                        )
+                                        .foregroundColor(.primary)
+                                }
+                                
+                                Button(action: {
+                                    showPurchaseCreditsView = true
+                                }) {
+                                    Image(systemName: "crown.fill")
+                                        .font(
+                                            .system(
+                                                size: 14, weight: .semibold,
+                                                design: .rounded)
+                                        )
+                                        .foregroundStyle(
+                                            LinearGradient(
+                                                colors: [.yellow, .orange],
+                                                startPoint: .topLeading,
+                                                endPoint: .bottomTrailing
+                                            )
+                                        )
+                                }
+                            }
+                        } else {
+                            // Show credits badge when signed in
+                            CreditsBadge(
+                                diamondColor: .purple,
+                                borderColor: .purple
+                            )
+                        }
+                    }
                 }
+            }
+            .sheet(isPresented: $showSignInSheet) {
+                SignInView()
+                    .environmentObject(authViewModel)
+                    .presentationDragIndicator(.visible)
+            }
+            .sheet(isPresented: $showPurchaseCreditsView) {
+                PurchaseCreditsView()
+                    .environmentObject(authViewModel)
+                    .presentationDragIndicator(.visible)
             }
         }
     }
