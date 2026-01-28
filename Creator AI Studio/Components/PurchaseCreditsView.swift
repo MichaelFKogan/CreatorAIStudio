@@ -474,6 +474,93 @@ struct SectionHeader: View {
     }
 }
 
+struct EstimatedGenerationsCard: View {
+    let imageText: String
+    let videoText: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 6) {
+                Image(systemName: "sparkles")
+                    .font(.system(size: 12))
+                    .foregroundColor(.purple)
+                Text("Estimated Generations")
+                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .foregroundColor(.primary)
+            }
+
+            HStack(spacing: 12) {
+                GenerationMetricView(
+                    icon: "photo.on.rectangle.angled",
+                    iconColor: .blue,
+                    title: "Images",
+                    value: imageText
+                )
+
+                GenerationMetricView(
+                    icon: "video.fill",
+                    iconColor: .purple,
+                    title: "Videos",
+                    value: videoText
+                )
+            }
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            Color.purple.opacity(0.08),
+                            Color.blue.opacity(0.08),
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color.purple.opacity(0.2), lineWidth: 1)
+        )
+    }
+}
+
+struct GenerationMetricView: View {
+    let icon: String
+    let iconColor: Color
+    let title: String
+    let value: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 6) {
+                Image(systemName: icon)
+                    .font(.system(size: 12))
+                    .foregroundColor(iconColor)
+                Text(title)
+                    .font(.system(size: 11, weight: .semibold, design: .rounded))
+                    .foregroundColor(.secondary)
+            }
+
+            Text(value)
+                .font(.system(size: 14, weight: .bold, design: .rounded))
+                .foregroundColor(.primary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(10)
+        .background(
+            RoundedRectangle(cornerRadius: 10)
+                .fill(Color(.systemBackground))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 10)
+                .stroke(Color.primary.opacity(0.05), lineWidth: 1)
+        )
+    }
+}
+
 // Credit package card
 struct CreditPackageCard: View {
     let title: String
@@ -613,6 +700,26 @@ struct CreditPackageCard: View {
         max(0, exampleVideoModels.count - limitedVideoModels.count)
     }
 
+    private var imageGenerationText: String {
+        if imageGenerationsRange.max == 0 {
+            return "—"
+        }
+        if imageGenerationsRange.min == imageGenerationsRange.max {
+            return "\(imageGenerationsRange.max)"
+        }
+        return "\(imageGenerationsRange.min)–\(imageGenerationsRange.max)"
+    }
+
+    private var videoGenerationText: String {
+        if videoGenerationsRange.max == 0 {
+            return "—"
+        }
+        if videoGenerationsRange.min == videoGenerationsRange.max {
+            return "\(videoGenerationsRange.max)"
+        }
+        return "\(videoGenerationsRange.min)–\(videoGenerationsRange.max)"
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // Main card content - tappable for purchase
@@ -695,18 +802,23 @@ struct CreditPackageCard: View {
                                     .foregroundColor(.primary)
                             }
                             Text("Total Price")
-                                .font(.system(size: 11, design: .rounded))
-                                .foregroundColor(.secondary)
+                                    .font(.system(size: 11, design: .rounded))
+                                    .foregroundColor(.secondary)
                         }
                     }
 
-                    // Description and Details button row
+                    if let description = description {
+                        Text(description)
+                            .font(.system(size: 12, design: .rounded))
+                            .foregroundColor(.secondary)
+                    }
+
+                    EstimatedGenerationsCard(
+                        imageText: "\(imageGenerationText) images",
+                        videoText: "\(videoGenerationText) videos"
+                    )
+
                     HStack {
-                        if let description = description {
-                            Text(description)
-                                .font(.system(size: 12, design: .rounded))
-                                .foregroundColor(.secondary)
-                        }
                         Spacer()
                         Button(action: {
                             withAnimation(
