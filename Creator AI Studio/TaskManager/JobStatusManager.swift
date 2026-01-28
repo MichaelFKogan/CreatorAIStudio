@@ -619,17 +619,29 @@ class JobStatusManager: ObservableObject {
     }
 
     private func stringValue(from value: AnyJSON) -> String? {
-        switch value {
-        case .string(let stringValue):
-            return stringValue
-        case .number(let numberValue):
-            if numberValue.truncatingRemainder(dividingBy: 1) == 0 {
-                return String(Int(numberValue))
-            }
-            return String(numberValue)
-        default:
-            return nil
+        // Try to extract as string first
+        if case .string(let string) = value {
+            return string
         }
+        
+        // Try to extract as number (integer or double)
+        if let intValue = value.intValue {
+            return String(intValue)
+        }
+        if let doubleValue = value.doubleValue {
+            if doubleValue.rounded() == doubleValue {
+                return String(Int(doubleValue))
+            }
+            return String(doubleValue)
+        }
+        
+        // Try to extract as boolean
+        if let boolValue = value.boolValue {
+            return boolValue ? "true" : "false"
+        }
+        
+        // Fallback: try to get string representation
+        return String(describing: value)
     }
     
     /// Handle a failed job
@@ -831,14 +843,33 @@ class JobStatusManager: ObservableObject {
                     provider: job.provider
                 )
                 
-                let insertedResponse: PostgrestResponse<[UserImage]> = try await SupabaseManager.shared.client.database
+                // Check if image with this URL already exists (prevents duplicates when multiple devices process same job)
+                let existingImageResponse: PostgrestResponse<[UserImage]> = try await SupabaseManager.shared.client.database
                     .from("user_media")
-                    .insert(imageMetadata)
                     .select()
+                    .eq("image_url", value: supabaseImageURL)
+                    .eq("user_id", value: userId)
+                    .limit(1)
                     .execute()
                 
-                let insertedImage = insertedResponse.value.first
-                print("[JobStatusManager] 💾 Image metadata saved to database")
+                let existingImage = existingImageResponse.value.first
+                let insertedImage: UserImage?
+                
+                if let existing = existingImage {
+                    // Image already exists - another device already processed this job
+                    insertedImage = existing
+                    print("[JobStatusManager] ⚠️ Image already exists in database (likely processed by another device), skipping insert: \(supabaseImageURL)")
+                } else {
+                    // Image doesn't exist - safe to insert
+                    let insertedResponse: PostgrestResponse<[UserImage]> = try await SupabaseManager.shared.client.database
+                        .from("user_media")
+                        .insert(imageMetadata)
+                        .select()
+                        .execute()
+                    
+                    insertedImage = insertedResponse.value.first
+                    print("[JobStatusManager] 💾 Image metadata saved to database")
+                }
                 
                 // MARK: Deduct Credits
                 if let cost = imageMetadata.cost, cost > 0, let userIdUUID = UUID(uuidString: userId) {
@@ -847,21 +878,42 @@ class JobStatusManager: ObservableObject {
                             guard let idString = insertedImage?.id else { return nil }
                             return UUID(uuidString: idString)
                         }()
-                        let _ = try await CreditsManager.shared.deductCredits(
-                            userId: userIdUUID,
-                            amount: cost,
-                            description: "Image generation - \(imageMetadata.title ?? imageMetadata.model ?? "Unknown model")",
-                            relatedMediaId: mediaId
-                        )
-                        print("[JobStatusManager] ✅ Deducted $\(String(format: "%.4f", cost)) credits for image generation")
                         
-                        // Post notification to refresh credit balance in UI
-                        await MainActor.run {
-                            NotificationCenter.default.post(
-                                name: NSNotification.Name("CreditsBalanceUpdated"),
-                                object: nil,
-                                userInfo: ["userId": userId]
+                        // Check if credits were already deducted for this media item (prevents duplicate deductions)
+                        var shouldDeductCredits = true
+                        if let mediaId = mediaId {
+                            let existingTransactionResponse: PostgrestResponse<[CreditTransaction]> = try await SupabaseManager.shared.client.database
+                                .from("credit_transactions")
+                                .select()
+                                .eq("user_id", value: userIdUUID.uuidString)
+                                .eq("related_media_id", value: mediaId.uuidString)
+                                .eq("transaction_type", value: "deduction")
+                                .limit(1)
+                                .execute()
+                            
+                            if let existingTransaction = existingTransactionResponse.value.first {
+                                shouldDeductCredits = false
+                                print("[JobStatusManager] ⚠️ Credits already deducted for this media item (likely processed by another device), skipping deduction: \(mediaId)")
+                            }
+                        }
+                        
+                        if shouldDeductCredits {
+                            let _ = try await CreditsManager.shared.deductCredits(
+                                userId: userIdUUID,
+                                amount: cost,
+                                description: "Image generation - \(imageMetadata.title ?? imageMetadata.model ?? "Unknown model")",
+                                relatedMediaId: mediaId
                             )
+                            print("[JobStatusManager] ✅ Deducted $\(String(format: "%.4f", cost)) credits for image generation")
+                            
+                            // Post notification to refresh credit balance in UI
+                            await MainActor.run {
+                                NotificationCenter.default.post(
+                                    name: NSNotification.Name("CreditsBalanceUpdated"),
+                                    object: nil,
+                                    userInfo: ["userId": userId]
+                                )
+                            }
                         }
                     } catch {
                         print("[JobStatusManager] ❌ Error deducting credits: \(error)")
@@ -985,14 +1037,34 @@ class JobStatusManager: ObservableObject {
                     resolution: metadata?.resolution
                 )
                 
-                let insertedResponse: PostgrestResponse<[UserImage]> = try await SupabaseManager.shared.client.database
+                // Check if video with this URL already exists (prevents duplicates when multiple devices process same job)
+                let existingVideoResponse: PostgrestResponse<[UserImage]> = try await SupabaseManager.shared.client.database
                     .from("user_media")
-                    .insert(videoMetadata)
                     .select()
+                    .eq("image_url", value: supabaseVideoURL)
+                    .eq("user_id", value: userId)
+                    .eq("media_type", value: "video")
+                    .limit(1)
                     .execute()
                 
-                let insertedVideo = insertedResponse.value.first
-                print("[JobStatusManager] 💾 Video metadata saved to database")
+                let existingVideo = existingVideoResponse.value.first
+                let insertedVideo: UserImage?
+                
+                if let existing = existingVideo {
+                    // Video already exists - another device already processed this job
+                    insertedVideo = existing
+                    print("[JobStatusManager] ⚠️ Video already exists in database (likely processed by another device), skipping insert: \(supabaseVideoURL)")
+                } else {
+                    // Video doesn't exist - safe to insert
+                    let insertedResponse: PostgrestResponse<[UserImage]> = try await SupabaseManager.shared.client.database
+                        .from("user_media")
+                        .insert(videoMetadata)
+                        .select()
+                        .execute()
+                    
+                    insertedVideo = insertedResponse.value.first
+                    print("[JobStatusManager] 💾 Video metadata saved to database")
+                }
                 
                 // MARK: Deduct Credits
                 if let cost = videoMetadata.cost, cost > 0, let userIdUUID = UUID(uuidString: userId) {
@@ -1001,21 +1073,42 @@ class JobStatusManager: ObservableObject {
                             guard let idString = insertedVideo?.id else { return nil }
                             return UUID(uuidString: idString)
                         }()
-                        let _ = try await CreditsManager.shared.deductCredits(
-                            userId: userIdUUID,
-                            amount: cost,
-                            description: "Video generation - \(videoMetadata.title ?? videoMetadata.model ?? "Unknown model")",
-                            relatedMediaId: mediaId
-                        )
-                        print("[JobStatusManager] ✅ Deducted $\(String(format: "%.4f", cost)) credits for video generation")
                         
-                        // Post notification to refresh credit balance in UI
-                        await MainActor.run {
-                            NotificationCenter.default.post(
-                                name: NSNotification.Name("CreditsBalanceUpdated"),
-                                object: nil,
-                                userInfo: ["userId": userId]
+                        // Check if credits were already deducted for this media item (prevents duplicate deductions)
+                        var shouldDeductCredits = true
+                        if let mediaId = mediaId {
+                            let existingTransactionResponse: PostgrestResponse<[CreditTransaction]> = try await SupabaseManager.shared.client.database
+                                .from("credit_transactions")
+                                .select()
+                                .eq("user_id", value: userIdUUID.uuidString)
+                                .eq("related_media_id", value: mediaId.uuidString)
+                                .eq("transaction_type", value: "deduction")
+                                .limit(1)
+                                .execute()
+                            
+                            if let existingTransaction = existingTransactionResponse.value.first {
+                                shouldDeductCredits = false
+                                print("[JobStatusManager] ⚠️ Credits already deducted for this media item (likely processed by another device), skipping deduction: \(mediaId)")
+                            }
+                        }
+                        
+                        if shouldDeductCredits {
+                            let _ = try await CreditsManager.shared.deductCredits(
+                                userId: userIdUUID,
+                                amount: cost,
+                                description: "Video generation - \(videoMetadata.title ?? videoMetadata.model ?? "Unknown model")",
+                                relatedMediaId: mediaId
                             )
+                            print("[JobStatusManager] ✅ Deducted $\(String(format: "%.4f", cost)) credits for video generation")
+                            
+                            // Post notification to refresh credit balance in UI
+                            await MainActor.run {
+                                NotificationCenter.default.post(
+                                    name: NSNotification.Name("CreditsBalanceUpdated"),
+                                    object: nil,
+                                    userInfo: ["userId": userId]
+                                )
+                            }
                         }
                     } catch {
                         print("[JobStatusManager] ❌ Error deducting credits: \(error)")

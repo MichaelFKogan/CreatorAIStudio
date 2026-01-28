@@ -337,6 +337,10 @@ class ProfileViewModel: ObservableObject {
     
     // Request deduplication: track in-flight requests to prevent duplicate queries
     private var inFlightModelRequests: [String: Task<[UserImage], Never>] = [:]
+
+    // Track in-flight image additions to prevent duplicates from race conditions
+    // (notification handler + Realtime INSERT can both try to add the same image)
+    private var inFlightImageIds: Set<String> = []
     
     // Pagination state for model-specific images (per model)
     private var modelCurrentPages: [String: Int] = [:] // model name -> current page
@@ -636,21 +640,61 @@ class ProfileViewModel: ObservableObject {
             print("🛑 [ProfileViewModel] Realtime subscription stopped")
         }
     }
-    
+
+    /// Ensures Realtime subscription is active for cross-device sync
+    /// Call this when the Profile view appears to ensure INSERT/DELETE events are received
+    func ensureRealtimeSubscription() async {
+        guard let userId = userId else { return }
+
+        // If no subscription exists, start one
+        if realtimeChannel == nil {
+            print("🔄 [ProfileViewModel] Restarting Realtime subscription on view appear")
+            await startRealtimeSubscription(userId: userId)
+        }
+    }
+
+    /// Syncs deletions from other devices by comparing local cache with database
+    /// Call this when the view appears to catch deletions that happened while away
+    func syncDeletions() async {
+        guard let userId = userId else { return }
+        guard !userImages.isEmpty else { return }
+
+        do {
+            // Lightweight query to get current IDs from database
+            let response: PostgrestResponse<[MediaCheck]> = try await client.database
+                .from("user_media")
+                .select("id,created_at")
+                .eq("user_id", value: userId)
+                .or("status.is.null,status.eq.success")
+                .order("created_at", ascending: false)
+                .limit(pageSize)
+                .execute()
+
+            let databaseIds = Set((response.value ?? []).map { $0.id })
+            let firstPageCachedIds = Set(userImages.prefix(pageSize).map { $0.id })
+            let deletedIds = firstPageCachedIds.subtracting(databaseIds)
+
+            if !deletedIds.isEmpty {
+                print("🗑️ [syncDeletions] Detected \(deletedIds.count) deleted item(s) - removing from cache")
+                userImages.removeAll { deletedIds.contains($0.id) }
+                saveCachedImages(for: userId)
+                await fetchUserStats()
+            }
+        } catch {
+            print("❌ [syncDeletions] Error: \(error)")
+        }
+    }
+
     /// Handles DELETE events from Realtime
     private func handleMediaDeletion(_ action: DeleteAction) async {
         // Extract the deleted record's ID from oldRecord
         let oldRecord = action.oldRecord
         if let idValue = oldRecord["id"],
-           let deletedId = stringValue(from: idValue) {
+           let deletedId = decodeIdString(from: idValue) {
             
             await MainActor.run {
-                // Remove from local array
-                let removedCount = userImages.count
-                userImages.removeAll { $0.id == deletedId }
-                let newCount = userImages.count
-                
-                if removedCount != newCount {
+                let removedCount = removeImagesLocally(imageIds: [deletedId])
+                if removedCount > 0 {
                     print("🗑️ [ProfileViewModel] Removed deleted image from cache: \(deletedId)")
                     
                     // Update cache
@@ -664,13 +708,63 @@ class ProfileViewModel: ObservableObject {
                     }
                 }
             }
+        } else {
+            print("⚠️ [ProfileViewModel] DELETE event missing usable id. oldRecord keys: \(oldRecord.keys)")
         }
+    }
+
+    /// Decode AnyJSON id as a stable String (handles numeric ids)
+    private func decodeIdString(from value: AnyJSON) -> String? {
+        // Try to extract as string first
+        if case .string(let string) = value {
+            return string
+        }
+        
+        // Try to extract as number (integer or double)
+        if let intValue = value.intValue {
+            return String(intValue)
+        }
+        if let doubleValue = value.doubleValue {
+            if doubleValue.rounded() == doubleValue {
+                return String(Int(doubleValue))
+            }
+            return String(doubleValue)
+        }
+        
+        // Try to extract as boolean
+        if let boolValue = value.boolValue {
+            return boolValue ? "true" : "false"
+        }
+        
+        // Fallback: try to get string representation
+        return String(describing: value)
+    }
+    
+    /// Removes images from local caches (main list, favorites, model cache)
+    @discardableResult
+    private func removeImagesLocally(imageIds: Set<String>) -> Int {
+        guard !imageIds.isEmpty else { return 0 }
+        
+        let originalCount = userImages.count
+        userImages.removeAll { imageIds.contains($0.id) }
+        cachedFavoriteImages.removeAll { imageIds.contains($0.id) }
+        
+        if !modelImagesCache.isEmpty {
+            for (modelName, cached) in modelImagesCache {
+                let filtered = cached.images.filter { !imageIds.contains($0.id) }
+                if filtered.count != cached.images.count {
+                    modelImagesCache[modelName] = (filtered, cached.fetchedAt)
+                }
+            }
+        }
+        
+        return originalCount - userImages.count
     }
 
     /// Handles INSERT events from Realtime
     private func handleMediaInsert(_ action: InsertAction) async {
         do {
-            let insertedMedia = try action.decodeRecord(as: UserImage.self)
+            let insertedMedia = try action.decodeRecord(as: UserImage.self, decoder: JSONDecoder())
 
             guard insertedMedia.isSuccess else {
                 print("⚠️ [ProfileViewModel] Ignoring failed media insert: \(insertedMedia.id)")
@@ -698,18 +792,10 @@ class ProfileViewModel: ObservableObject {
         }
     }
 
-    private func stringValue(from value: AnyJSON) -> String? {
-        switch value {
-        case .string(let stringValue):
-            return stringValue
-        case .number(let numberValue):
-            if numberValue.truncatingRemainder(dividingBy: 1) == 0 {
-                return String(Int(numberValue))
-            }
-            return String(numberValue)
-        default:
-            return nil
-        }
+    /// Convenience overload for removing images with an array
+    @discardableResult
+    private func removeImagesLocally(imageIds: [String]) -> Int {
+        return removeImagesLocally(imageIds: Set(imageIds))
     }
     
     private func loadCachedStats(for userId: String) {
@@ -1040,9 +1126,8 @@ class ProfileViewModel: ObservableObject {
                     .or("status.is.null,status.eq.success") // Only successful items
                     .execute()
                 freshItems = response.value ?? []
-            } else if newItemIds.count > 1 {
+            } else {
                 // Multiple IDs - use OR condition
-                // Format: "id.eq.id1,id.eq.id2,id.eq.id3"
                 let orCondition = newItemIds.map { "id.eq.\($0)" }.joined(separator: ",")
                 let response: PostgrestResponse<[UserImage]> = try await client.database
                     .from("user_media")
@@ -2061,8 +2146,8 @@ class ProfileViewModel: ObservableObject {
     func removeImage(imageId: String) {
         guard let userId = userId else { return }
         
-        // Remove from local array
-        userImages.removeAll { $0.id == imageId }
+        // Remove from local caches
+        _ = removeImagesLocally(imageIds: [imageId])
         
         // Update cache
         saveCachedImages(for: userId)
@@ -2163,7 +2248,7 @@ class ProfileViewModel: ObservableObject {
                     
                     // Success - remove from local array
                     await MainActor.run {
-                        userImages.removeAll { $0.id == imageId }
+                        _ = removeImagesLocally(imageIds: [imageId])
                     }
                     break // Success, exit retry loop
                     
@@ -2220,20 +2305,39 @@ class ProfileViewModel: ObservableObject {
     /// - Parameter image: The UserImage to add
     func addImage(_ image: UserImage) async {
         guard let userId = userId else { return }
-        
+
+        // Atomically check if we're already adding this image (race condition prevention)
+        // This prevents duplicates when notification handler and Realtime INSERT fire together
+        guard !inFlightImageIds.contains(image.id) else {
+            print("⏳ [addImage] Image \(image.id) is already being added, skipping duplicate")
+            return
+        }
+        inFlightImageIds.insert(image.id)
+        defer { inFlightImageIds.remove(image.id) }
+
         // Check if image already exists (avoid duplicates)
         guard !userImages.contains(where: { $0.id == image.id }) else {
             return
         }
-        
+
         // Validate the image before adding
         let hasValidUrl = !image.image_url.isEmpty && URL(string: image.image_url) != nil
         if !hasValidUrl {
             print("🚨 WARNING: Attempting to add image with INVALID URL - id: \(image.id), url: '\(image.image_url)'")
         }
-        
-        // Insert at the beginning (newest first)
-        userImages.insert(image, at: 0)
+
+        // Insert at the correct position based on created_at (maintain chronological order)
+        // This fixes Issue 3 where old images could appear at the top
+        let insertIndex: Int
+        if let newCreatedAt = image.created_at {
+            insertIndex = userImages.firstIndex { existingImage in
+                guard let existingCreatedAt = existingImage.created_at else { return true }
+                return newCreatedAt > existingCreatedAt // Insert before first older image
+            } ?? userImages.count
+        } else {
+            insertIndex = 0 // No date - insert at top as fallback
+        }
+        userImages.insert(image, at: insertIndex)
         
         // Clear model-specific cache for this image's model (if it has one)
         // This ensures the "Your Creations" section shows the new image

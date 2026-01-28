@@ -24,6 +24,12 @@ struct Profile: View {
                                     viewModel.userId = user.id.uuidString
                                 }
                                 Task {
+                                    // Ensure Realtime subscription is active for cross-device sync
+                                    await viewModel.ensureRealtimeSubscription()
+
+                                    // Sync deletions from other devices (catches deletes that happened while away)
+                                    await viewModel.syncDeletions()
+
                                     // Fetch stats FIRST so UI shows correct counts immediately
                                     // This is very cheap - just one row from user_stats table
                                     if !viewModel.hasLoadedStats || userIdChanged {
