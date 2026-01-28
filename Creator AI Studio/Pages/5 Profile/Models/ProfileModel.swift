@@ -911,7 +911,6 @@ class ProfileViewModel: ObservableObject {
         }
 
         let latestTimestamp = userImages.compactMap { $0.created_at }.max()
-        let existingIds = Set(userImages.map { $0.id })
         print("🔄 refreshLatest: Checking for new images (latest cached timestamp: \(latestTimestamp ?? "none"), cached count: \(userImages.count))")
 
         do {
@@ -928,6 +927,21 @@ class ProfileViewModel: ObservableObject {
             let checks = checkResponse.value ?? []
             print("🔄 refreshLatest: Checked \(checks.count) items (lightweight query)")
 
+            // DELETION SYNC: Detect items that were deleted on other devices
+            // If an item is in our cache but NOT in the database response, it was deleted
+            // This only checks the first page, which is sufficient for most deletion scenarios
+            let databaseIds = Set(checks.map { $0.id })
+            let firstPageCachedIds = Set(userImages.prefix(pageSize).map { $0.id })
+            let deletedIds = firstPageCachedIds.subtracting(databaseIds)
+
+            if !deletedIds.isEmpty {
+                print("🗑️ refreshLatest: Detected \(deletedIds.count) deleted item(s) - removing from cache")
+                userImages.removeAll { deletedIds.contains($0.id) }
+                saveCachedImages(for: userId)
+                // Refresh stats since items were deleted
+                await fetchUserStats()
+            }
+
             guard !checks.isEmpty else {
                 print("⚠️ refreshLatest: No images found in database")
                 lastFetchedAt = Date()
@@ -936,9 +950,10 @@ class ProfileViewModel: ObservableObject {
                 return
             }
 
-            // Find new items by comparing IDs
+            // Find new items by comparing IDs (use updated existingIds after deletion sync)
+            let currentExistingIds = Set(userImages.map { $0.id })
             let newItemIds = checks.filter { check in
-                !existingIds.contains(check.id)
+                !currentExistingIds.contains(check.id)
             }.map { $0.id }
 
             print("🔄 refreshLatest: Found \(newItemIds.count) new items (after ID check)")
