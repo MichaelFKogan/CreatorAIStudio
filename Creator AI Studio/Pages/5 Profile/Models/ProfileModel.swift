@@ -2415,12 +2415,20 @@ class ProfileViewModel: ObservableObject {
         }
 
         // Add the image and then sort to ensure correct chronological order
-        // IMPORTANT: Do this on MainActor to ensure SwiftUI detects the change
-        // Since userImages is @Published, SwiftUI will automatically detect the change
-        await MainActor.run {
-            userImages.append(image)
-            sortUserImagesByDate()
+        // IMPORTANT: Reassign the entire array to force SwiftUI to detect the change
+        // SwiftUI's @Published doesn't always detect in-place mutations (append + sort)
+        // We manually trigger objectWillChange to ensure the view updates immediately
+        objectWillChange.send()
+        var updatedImages = userImages
+        updatedImages.append(image)
+        updatedImages.sort { (a, b) -> Bool in
+            let aDate = a.created_at ?? ""
+            let bDate = b.created_at ?? ""
+            return aDate > bDate // Descending order (newest first)
         }
+        userImages = updatedImages
+        // Trigger another update to ensure SwiftUI picks up the change
+        objectWillChange.send()
         
         // Clear model-specific cache for this image's model (if it has one)
         // This ensures the "Your Creations" section shows the new image

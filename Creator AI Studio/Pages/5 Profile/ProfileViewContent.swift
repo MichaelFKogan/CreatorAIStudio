@@ -683,10 +683,13 @@ struct ProfileViewContent: View {
 
     @ViewBuilder
     private var filteredContent: some View {
+        // IMPORTANT: Access viewModel.userImages directly in the view body to ensure SwiftUI observes changes
+        // This forces SwiftUI to re-evaluate when userImages changes
+        let _ = viewModel.userImages // Force observation of userImages array
         let filteredImages = getFilteredImages()
         
         // Filter placeholders: only show placeholder cards in "All" tab
-        // In other tabs (Favorites, Images, Videos, Image Models, Video Models), hide all placeholders
+        // activePlaceholders already filters out completed ones, so they'll disappear automatically
         let filteredPlaceholders: [PlaceholderImage] = {
             if selectedTab == .all {
                 return notificationManager.activePlaceholders
