@@ -498,13 +498,38 @@ class ProfileViewModel: ObservableObject {
             return
         }
         
-        print("✅ Fetching image (preferring ID, then URL, then latest)")
-        // Add a delay to ensure database transaction is fully committed
-        // Increased delay for concurrent saves to prevent race conditions
+        // IMPORTANT: NotificationCenter broadcasts to ALL devices/app instances
+        // To prevent duplicates, we check if the image is already being added or exists
+        // before processing the notification. This allows immediate feedback on the
+        // device that generated it while preventing duplicates on other devices.
+        
         Task {
-            // Increased delay to ensure database transaction is committed
-            // This is especially important when multiple images are saved concurrently
-            try? await Task.sleep(for: .milliseconds(1000))
+            // Check immediately if image is already being added or exists
+            // This prevents duplicates with Realtime INSERT handler
+            if let imageId = imageId {
+                let alreadyExistsOrInFlight = await MainActor.run {
+                    return inFlightImageIds.contains(imageId) || userImages.contains(where: { $0.id == imageId })
+                }
+                if alreadyExistsOrInFlight {
+                    print("⏳ [handleImageSavedNotification] Image \(imageId) already being added or exists, skipping notification handler")
+                    return
+                }
+            }
+            
+            // Small delay to ensure database transaction is committed
+            // But keep it short for immediate appearance (250ms instead of 1000ms)
+            try? await Task.sleep(for: .milliseconds(250))
+            
+            // Double-check after delay (Realtime handler might have added it by now)
+            if let imageId = imageId {
+                let alreadyExists = await MainActor.run {
+                    return inFlightImageIds.contains(imageId) || userImages.contains(where: { $0.id == imageId })
+                }
+                if alreadyExists {
+                    print("✅ [handleImageSavedNotification] Image \(imageId) already added by Realtime handler, skipping")
+                    return
+                }
+            }
             
             // Priority 1: Fetch by ID if available (most reliable)
             if let imageId = imageId {
@@ -677,6 +702,8 @@ class ProfileViewModel: ObservableObject {
             if !deletedIds.isEmpty {
                 print("🗑️ [syncDeletions] Detected \(deletedIds.count) deleted item(s) - removing from cache")
                 userImages.removeAll { deletedIds.contains($0.id) }
+                // Re-sort after deletion to maintain chronological order
+                sortUserImagesByDate()
                 saveCachedImages(for: userId)
                 await fetchUserStats()
             }
@@ -740,6 +767,16 @@ class ProfileViewModel: ObservableObject {
         return String(describing: value)
     }
     
+    /// Sorts userImages array by created_at descending (newest first)
+    /// Call this after any operation that might affect the order (deletion, insertion, etc.)
+    private func sortUserImagesByDate() {
+        userImages.sort { (a, b) -> Bool in
+            let aDate = a.created_at ?? ""
+            let bDate = b.created_at ?? ""
+            return aDate > bDate // Descending order (newest first)
+        }
+    }
+    
     /// Removes images from local caches (main list, favorites, model cache)
     @discardableResult
     private func removeImagesLocally(imageIds: Set<String>) -> Int {
@@ -757,6 +794,9 @@ class ProfileViewModel: ObservableObject {
                 }
             }
         }
+        
+        // Re-sort after deletion to maintain chronological order
+        sortUserImagesByDate()
         
         return originalCount - userImages.count
     }
@@ -779,9 +819,13 @@ class ProfileViewModel: ObservableObject {
                 return
             }
 
-            let alreadyExists = userImages.contains { $0.id == insertedMedia.id }
-            guard !alreadyExists else {
-                print("✅ [ProfileViewModel] Insert already present, skipping: \(insertedMedia.id)")
+            // Check if already exists or is being added (prevent duplicates)
+            // This prevents race conditions if the handler is called multiple times quickly
+            let alreadyExistsOrInFlight = await MainActor.run {
+                return inFlightImageIds.contains(insertedMedia.id) || userImages.contains { $0.id == insertedMedia.id }
+            }
+            guard !alreadyExistsOrInFlight else {
+                print("✅ [ProfileViewModel] Insert already present or being added, skipping: \(insertedMedia.id)")
                 return
             }
 
@@ -864,6 +908,9 @@ class ProfileViewModel: ObservableObject {
             } else {
                 userImages = deduplicatedImages
             }
+            
+            // Sort by created_at descending (newest first) to ensure correct order
+            sortUserImagesByDate()
             
             lastFetchedAt = entry.lastFetchedAt
             // Set the page based on cached count so pagination continues correctly
@@ -1026,6 +1073,9 @@ class ProfileViewModel: ObservableObject {
             } else {
                 userImages.append(contentsOf: newImages)
             }
+            
+            // Ensure array is sorted by created_at descending (newest first)
+            sortUserImagesByDate()
 
             lastFetchedAt = Date()
             saveCachedImages(for: userId) // ✅ Store new images locally
@@ -1083,6 +1133,8 @@ class ProfileViewModel: ObservableObject {
             if !deletedIds.isEmpty {
                 print("🗑️ refreshLatest: Detected \(deletedIds.count) deleted item(s) - removing from cache")
                 userImages.removeAll { deletedIds.contains($0.id) }
+                // Re-sort after deletion to maintain chronological order
+                sortUserImagesByDate()
                 saveCachedImages(for: userId)
                 // Refresh stats since items were deleted
                 await fetchUserStats()
@@ -1155,13 +1207,11 @@ class ProfileViewModel: ObservableObject {
             // Add new items to the list
             if !validItems.isEmpty {
                 print("✅ refreshLatest: Adding \(validItems.count) new image(s) to list")
-                // Sort by created_at descending (newest first) to maintain correct chronological order
-                let sortedFreshItems = validItems.sorted { (a, b) -> Bool in
-                    let aDate = a.created_at ?? ""
-                    let bDate = b.created_at ?? ""
-                    return aDate > bDate // Descending order (newest first)
-                }
-                userImages.insert(contentsOf: sortedFreshItems, at: 0)
+                // Add items to the array (they will be inserted at correct positions by addImage or we'll sort after)
+                // Instead of inserting at 0, add them and then sort the entire array to ensure correct order
+                userImages.append(contentsOf: validItems)
+                // Re-sort entire array to maintain chronological order (handles any edge cases)
+                sortUserImagesByDate()
                 
                 // IMPORTANT: Do NOT increment counts here!
                 // These items may already be counted in the database stats (if they were filtered out
@@ -1214,6 +1264,8 @@ class ProfileViewModel: ObservableObject {
             
             // Append new images
             userImages.append(contentsOf: newImages)
+            // Ensure array is sorted by created_at descending (newest first)
+            sortUserImagesByDate()
             lastFetchedAt = Date()
             saveCachedImages(for: userId)
             currentPage += 1
@@ -2263,6 +2315,28 @@ class ProfileViewModel: ObservableObject {
             
             if lastError != nil {
                 print("❌ Failed to delete image \(imageId) after \(maxRetries) attempts")
+                
+                // Check if the image was already deleted by another device
+                // If it doesn't exist in the database, remove it locally anyway
+                do {
+                    let checkResponse: PostgrestResponse<[UserImage]> = try await client.database
+                        .from("user_media")
+                        .select("id")
+                        .eq("id", value: imageId)
+                        .limit(1)
+                        .execute()
+                    
+                    let stillExists = (checkResponse.value ?? []).count > 0
+                    if !stillExists {
+                        print("✅ Image \(imageId) was already deleted by another device, removing locally")
+                        await MainActor.run {
+                            _ = removeImagesLocally(imageIds: [imageId])
+                        }
+                    }
+                } catch {
+                    print("⚠️ Could not verify if image \(imageId) still exists: \(error)")
+                    // If we can't verify, we'll rely on Realtime DELETE event to sync
+                }
             }
         }
         
@@ -2326,18 +2400,10 @@ class ProfileViewModel: ObservableObject {
             print("🚨 WARNING: Attempting to add image with INVALID URL - id: \(image.id), url: '\(image.image_url)'")
         }
 
-        // Insert at the correct position based on created_at (maintain chronological order)
-        // This fixes Issue 3 where old images could appear at the top
-        let insertIndex: Int
-        if let newCreatedAt = image.created_at {
-            insertIndex = userImages.firstIndex { existingImage in
-                guard let existingCreatedAt = existingImage.created_at else { return true }
-                return newCreatedAt > existingCreatedAt // Insert before first older image
-            } ?? userImages.count
-        } else {
-            insertIndex = 0 // No date - insert at top as fallback
-        }
-        userImages.insert(image, at: insertIndex)
+        // Add the image and then sort to ensure correct chronological order
+        // This is safer than trying to calculate insert position, especially if array might be out of order
+        userImages.append(image)
+        sortUserImagesByDate()
         
         // Clear model-specific cache for this image's model (if it has one)
         // This ensures the "Your Creations" section shows the new image
@@ -2362,13 +2428,13 @@ class ProfileViewModel: ObservableObject {
             return
         }
         
-        // Check if image already exists to avoid duplicates
-        let alreadyExists = await MainActor.run {
-            return userImages.contains(where: { $0.id == imageId })
+        // Check if image already exists or is being added to avoid duplicates
+        let alreadyExistsOrInFlight = await MainActor.run {
+            return inFlightImageIds.contains(imageId) || userImages.contains(where: { $0.id == imageId })
         }
         
-        if alreadyExists {
-            print("✅ fetchAndAddImageById: Image \(imageId) already exists in list, skipping")
+        if alreadyExistsOrInFlight {
+            print("✅ fetchAndAddImageById: Image \(imageId) already exists or is being added, skipping")
             return
         }
         
@@ -2395,18 +2461,18 @@ class ProfileViewModel: ObservableObject {
                 
                 if let newImage = images.first {
                     print("✅ fetchAndAddImageById: Adding image to list (id: \(newImage.id), url: \(newImage.image_url))")
-                    // Check if already exists before adding
-                    let alreadyExists = await MainActor.run {
-                        return userImages.contains(where: { $0.id == newImage.id })
+                    // Check if already exists or is being added before adding (double-check after DB fetch)
+                    let alreadyExistsOrInFlight = await MainActor.run {
+                        return inFlightImageIds.contains(newImage.id) || userImages.contains(where: { $0.id == newImage.id })
                     }
                     
-                    if !alreadyExists {
+                    if !alreadyExistsOrInFlight {
                         await addImage(newImage)
                         await MainActor.run {
                             print("✅ fetchAndAddImageById: Image added successfully. Total images: \(userImages.count)")
                         }
                     } else {
-                        print("⚠️ fetchAndAddImageById: Image already exists in list, skipping")
+                        print("⚠️ fetchAndAddImageById: Image already exists or is being added, skipping")
                     }
                     return // Success, exit retry loop
                 } else {
@@ -2470,12 +2536,12 @@ class ProfileViewModel: ObservableObject {
                 
                 if let newImage = images.first {
                     print("✅ fetchAndAddImage: Adding image to list (id: \(newImage.id))")
-                    // Check if already exists before adding
-                    let alreadyExists = await MainActor.run {
-                        return userImages.contains(where: { $0.id == newImage.id })
+                    // Check if already exists or is being added before adding (double-check after DB fetch)
+                    let alreadyExistsOrInFlight = await MainActor.run {
+                        return inFlightImageIds.contains(newImage.id) || userImages.contains(where: { $0.id == newImage.id })
                     }
                     
-                    if !alreadyExists {
+                    if !alreadyExistsOrInFlight {
                         await addImage(newImage)
                         await MainActor.run {
                             print("✅ fetchAndAddImage: Image added successfully. Total images: \(userImages.count)")
