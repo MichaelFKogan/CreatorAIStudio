@@ -701,9 +701,11 @@ class ProfileViewModel: ObservableObject {
 
             if !deletedIds.isEmpty {
                 print("🗑️ [syncDeletions] Detected \(deletedIds.count) deleted item(s) - removing from cache")
-                userImages.removeAll { deletedIds.contains($0.id) }
-                // Re-sort after deletion to maintain chronological order
-                sortUserImagesByDate()
+                await MainActor.run {
+                    userImages.removeAll { deletedIds.contains($0.id) }
+                    // Re-sort after deletion to maintain chronological order
+                    sortUserImagesByDate()
+                }
                 saveCachedImages(for: userId)
                 await fetchUserStats()
             }
@@ -769,7 +771,9 @@ class ProfileViewModel: ObservableObject {
     
     /// Sorts userImages array by created_at descending (newest first)
     /// Call this after any operation that might affect the order (deletion, insertion, etc.)
+    /// IMPORTANT: Must be called on MainActor to ensure SwiftUI detects changes
     private func sortUserImagesByDate() {
+        assert(Thread.isMainThread, "sortUserImagesByDate must be called on MainActor")
         userImages.sort { (a, b) -> Bool in
             let aDate = a.created_at ?? ""
             let bDate = b.created_at ?? ""
@@ -796,6 +800,7 @@ class ProfileViewModel: ObservableObject {
         }
         
         // Re-sort after deletion to maintain chronological order
+        // Note: This function is called from MainActor context (removeImagesLocally is called from MainActor)
         sortUserImagesByDate()
         
         return originalCount - userImages.count
@@ -910,6 +915,7 @@ class ProfileViewModel: ObservableObject {
             }
             
             // Sort by created_at descending (newest first) to ensure correct order
+            // Note: loadCachedImages is called from init/onAppear which is on MainActor
             sortUserImagesByDate()
             
             lastFetchedAt = entry.lastFetchedAt
@@ -1068,14 +1074,16 @@ class ProfileViewModel: ObservableObject {
             hasMorePages = newImages.count == pageSize
 
             // Append new images (or replace if it's the first page)
-            if currentPage == 0 {
-                userImages = newImages
-            } else {
-                userImages.append(contentsOf: newImages)
+            await MainActor.run {
+                if currentPage == 0 {
+                    userImages = newImages
+                } else {
+                    userImages.append(contentsOf: newImages)
+                }
+                
+                // Ensure array is sorted by created_at descending (newest first)
+                sortUserImagesByDate()
             }
-            
-            // Ensure array is sorted by created_at descending (newest first)
-            sortUserImagesByDate()
 
             lastFetchedAt = Date()
             saveCachedImages(for: userId) // ✅ Store new images locally
@@ -1132,9 +1140,11 @@ class ProfileViewModel: ObservableObject {
 
             if !deletedIds.isEmpty {
                 print("🗑️ refreshLatest: Detected \(deletedIds.count) deleted item(s) - removing from cache")
-                userImages.removeAll { deletedIds.contains($0.id) }
-                // Re-sort after deletion to maintain chronological order
-                sortUserImagesByDate()
+                await MainActor.run {
+                    userImages.removeAll { deletedIds.contains($0.id) }
+                    // Re-sort after deletion to maintain chronological order
+                    sortUserImagesByDate()
+                }
                 saveCachedImages(for: userId)
                 // Refresh stats since items were deleted
                 await fetchUserStats()
@@ -1209,9 +1219,11 @@ class ProfileViewModel: ObservableObject {
                 print("✅ refreshLatest: Adding \(validItems.count) new image(s) to list")
                 // Add items to the array (they will be inserted at correct positions by addImage or we'll sort after)
                 // Instead of inserting at 0, add them and then sort the entire array to ensure correct order
-                userImages.append(contentsOf: validItems)
-                // Re-sort entire array to maintain chronological order (handles any edge cases)
-                sortUserImagesByDate()
+                await MainActor.run {
+                    userImages.append(contentsOf: validItems)
+                    // Re-sort entire array to maintain chronological order (handles any edge cases)
+                    sortUserImagesByDate()
+                }
                 
                 // IMPORTANT: Do NOT increment counts here!
                 // These items may already be counted in the database stats (if they were filtered out
@@ -1263,9 +1275,11 @@ class ProfileViewModel: ObservableObject {
             hasMorePages = newImages.count == pageSize
             
             // Append new images
-            userImages.append(contentsOf: newImages)
-            // Ensure array is sorted by created_at descending (newest first)
-            sortUserImagesByDate()
+            await MainActor.run {
+                userImages.append(contentsOf: newImages)
+                // Ensure array is sorted by created_at descending (newest first)
+                sortUserImagesByDate()
+            }
             lastFetchedAt = Date()
             saveCachedImages(for: userId)
             currentPage += 1
@@ -2401,9 +2415,12 @@ class ProfileViewModel: ObservableObject {
         }
 
         // Add the image and then sort to ensure correct chronological order
-        // This is safer than trying to calculate insert position, especially if array might be out of order
-        userImages.append(image)
-        sortUserImagesByDate()
+        // IMPORTANT: Do this on MainActor to ensure SwiftUI detects the change
+        // Since userImages is @Published, SwiftUI will automatically detect the change
+        await MainActor.run {
+            userImages.append(image)
+            sortUserImagesByDate()
+        }
         
         // Clear model-specific cache for this image's model (if it has one)
         // This ensures the "Your Creations" section shows the new image
@@ -2412,7 +2429,9 @@ class ProfileViewModel: ObservableObject {
         }
         
         // Update cache
-        saveCachedImages(for: userId)
+        await MainActor.run {
+            saveCachedImages(for: userId)
+        }
         
         // NOTE: If the image was already in the database, triggers will handle stats updates.
         // If this is a new image being added locally (before DB insert), we'll refresh stats
