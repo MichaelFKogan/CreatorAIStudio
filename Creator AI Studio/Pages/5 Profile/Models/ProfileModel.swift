@@ -349,6 +349,9 @@ class ProfileViewModel: ObservableObject {
     // Notification observers for new media saves
     private var imageSavedObserver: NSObjectProtocol?
     private var videoSavedObserver: NSObjectProtocol?
+    
+    // Realtime subscription for user_media DELETE events
+    private var realtimeChannel: RealtimeChannelV2?
 
     var userId: String? {
         didSet {
@@ -398,6 +401,11 @@ class ProfileViewModel: ObservableObject {
         }
         if let observer = videoSavedObserver {
             NotificationCenter.default.removeObserver(observer)
+        }
+        
+        // Stop Realtime subscription
+        Task {
+            await stopRealtimeSubscription()
         }
     }
     
@@ -566,6 +574,82 @@ class ProfileViewModel: ObservableObject {
         // DON'T load cached stats here - wait for fresh stats from database via fetchUserStats()
         // This prevents showing wrong stats from cache when switching users
         // ProfileMainView will call fetchUserStats() which will fetch fresh stats from database
+        
+        // Start Realtime subscription for instant deletion sync
+        Task {
+            await startRealtimeSubscription(userId: userId)
+        }
+    }
+    
+    // MARK: - Realtime Subscription for Deletions
+    
+    /// Starts listening for DELETE events on user_media table
+    /// This ensures deletions sync instantly across all devices without database queries
+    private func startRealtimeSubscription(userId: String) async {
+        // Stop any existing subscription first
+        await stopRealtimeSubscription()
+        
+        let channel = client.realtimeV2.channel("user-media-\(userId)")
+        
+        // Listen for DELETE events
+        let deletions = channel.postgresChange(
+            DeleteAction.self,
+            schema: "public",
+            table: "user_media",
+            filter: "user_id=eq.\(userId)"
+        )
+        
+        // Handle deletions
+        Task {
+            for await deletion in deletions {
+                await handleMediaDeletion(deletion)
+            }
+        }
+        
+        // Subscribe to the channel
+        await channel.subscribe()
+        realtimeChannel = channel
+        
+        print("✅ [ProfileViewModel] Realtime subscription active for user_media deletions")
+    }
+    
+    /// Stops the Realtime subscription
+    private func stopRealtimeSubscription() async {
+        if let channel = realtimeChannel {
+            await channel.unsubscribe()
+            realtimeChannel = nil
+            print("🛑 [ProfileViewModel] Realtime subscription stopped")
+        }
+    }
+    
+    /// Handles DELETE events from Realtime
+    private func handleMediaDeletion(_ action: DeleteAction) async {
+        // Extract the deleted record's ID from oldRecord
+        let oldRecord = action.oldRecord
+        if let idValue = oldRecord["id"],
+           case .string(let deletedId) = idValue {
+            
+            await MainActor.run {
+                // Remove from local array
+                let removedCount = userImages.count
+                userImages.removeAll { $0.id == deletedId }
+                let newCount = userImages.count
+                
+                if removedCount != newCount {
+                    print("🗑️ [ProfileViewModel] Removed deleted image from cache: \(deletedId)")
+                    
+                    // Update cache
+                    if let userId = userId {
+                        saveCachedImages(for: userId)
+                    }
+                    
+                    // Refresh stats (database triggers handle the count updates)
+                    Task {
+                        await fetchUserStats()
+                    }
+                }
+            }
+        }
     }
     
     private func loadCachedStats(for userId: String) {
