@@ -142,12 +142,7 @@ struct ImageModelDetailPage: View {
     ]
 
     private var costString: String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .decimal
-        formatter.maximumFractionDigits = 4
-        formatter.minimumFractionDigits = 0
-        return formatter.string(
-            from: NSDecimalNumber(decimal: item.resolvedCost ?? 0)) ?? "0"
+        return PricingManager.formatPrice(item.resolvedCost ?? 0)
     }
     
     // Calculate required credits as Double
@@ -604,8 +599,13 @@ struct BannerSection: View {
                     .background(Capsule().fill(Color.blue.opacity(0.8)))
 
                     HStack(spacing: 4) {
-                        Text("$\(costString)").font(.title3).fontWeight(.bold)
-                            .foregroundColor(.white)
+                        PriceDisplayView(
+                            price: item.resolvedCost ?? 0,
+                            showUnit: true,
+                            font: .title3,
+                            fontWeight: .bold,
+                            foregroundColor: .white
+                        )
                         Text("per image").font(.caption).foregroundColor(
                             .secondary)
                     }
@@ -786,13 +786,13 @@ struct CostCardSection: View {
                 HStack(spacing: 4) {
                     Text("1 image").font(.subheadline).foregroundColor(.primary)
                     Text("×").font(.caption).foregroundColor(.secondary)
-                    Text("$\(costString)").font(.subheadline).fontWeight(
+                    Text(costString).font(.subheadline).fontWeight(
                         .semibold
                     ).foregroundColor(.blue)
                 }
             }
             Spacer()
-            Text("$\(costString)").font(.title3).fontWeight(.bold)
+            Text(costString).font(.title3).fontWeight(.bold)
                 .foregroundColor(.blue)
         }
         .padding()

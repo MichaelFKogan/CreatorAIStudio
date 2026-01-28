@@ -329,9 +329,9 @@ struct FullScreenImageView: View {
         return formatter.string(from: NSNumber(value: cost)) ?? "$\(cost)"
     }
 
-    // Helper function to format credits
-    private func formatCredits(_ credits: Int) -> String {
-        return "\(credits)"
+    // Helper function to format credits with decimal precision
+    private func formatCredits(_ cost: Double) -> String {
+        return PricingManager.formatCredits(Decimal(cost))
     }
 
     // MARK: - View Components
@@ -818,7 +818,7 @@ struct FullScreenImageView: View {
             if let cost = userImage.cost {
                 CreditsDataCard(
                     icon: "dollarsign.circle.fill", label: "Credits",
-                    value: formatCredits(cost.credits))
+                    value: formatCredits(cost))
             }
             if isWavespeed {
                 MetadataCard(
@@ -884,7 +884,7 @@ struct FullScreenImageView: View {
             if let cost = userImage.cost {
                 CreditsDataCard(
                     icon: "dollarsign.circle.fill", label: "Credits",
-                    value: formatCredits(cost.credits))
+                    value: formatCredits(cost))
             }
             if let model = userImage.model, !model.isEmpty {
                 MetadataCard(icon: "cpu.fill", label: "Model", value: model)
@@ -1836,17 +1836,4 @@ struct FullScreenImageView: View {
 // }
 
 // MARK: - Credit Conversion Helper
-extension Double {
-    /// Converts dollar amount to credits (1 credit = $0.01)
-    var credits: Int {
-        return Int((self * 100).rounded())
-    }
-}
-
-extension Optional where Wrapped == Double {
-    /// Converts dollar amount to credits, returns 0 if nil
-    var credits: Int {
-        guard let value = self else { return 0 }
-        return value.credits
-    }
-}
+// Credit conversion now uses PricingManager.formatCredits for decimal precision.
