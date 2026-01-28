@@ -860,6 +860,11 @@ struct PhotoConfirmationView: View {
             }
 
             currentTaskIds = taskIds
+            
+            // Refresh pending credits after starting generation
+            if let userIdUUID = authViewModel.user?.id {
+                await creditsViewModel.fetchBalance(userId: userIdUUID)
+            }
         }
     }
 }

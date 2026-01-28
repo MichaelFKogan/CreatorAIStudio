@@ -12,6 +12,7 @@ import SwiftUI
 @MainActor
 class CreditsViewModel: ObservableObject {
     @Published var balance: Double = 0.00
+    @Published var pendingCredits: Double = 0.00
     @Published var isLoading: Bool = false
     @Published var errorMessage: String? = nil
     
@@ -20,7 +21,7 @@ class CreditsViewModel: ObservableObject {
     // Shared instance for accessing credits from anywhere
     static let shared = CreditsViewModel()
     
-    /// Fetches and updates the current credit balance
+    /// Fetches and updates the current credit balance and pending credits
     /// - Parameter userId: The user's UUID
     func fetchBalance(userId: UUID) async {
         isLoading = true
@@ -29,12 +30,18 @@ class CreditsViewModel: ObservableObject {
         do {
             let newBalance = try await creditsManager.fetchCreditBalance(userId: userId)
             self.balance = newBalance
-            print("✅ [CreditsViewModel] Balance updated: $\(String(format: "%.2f", newBalance))")
+            
+            // Also fetch pending credits
+            let pending = try await creditsManager.calculatePendingCredits(userId: userId)
+            self.pendingCredits = pending
+            
+            print("✅ [CreditsViewModel] Balance updated: $\(String(format: "%.2f", newBalance)), Pending: $\(String(format: "%.2f", pending))")
         } catch {
             print("❌ [CreditsViewModel] Error fetching balance: \(error)")
             errorMessage = error.localizedDescription
             // Set balance to 0 on error to prevent showing stale data
             self.balance = 0.00
+            self.pendingCredits = 0.00
         }
         
         isLoading = false
@@ -54,10 +61,13 @@ class CreditsViewModel: ObservableObject {
     }
     
     /// Checks if user has enough credits for a transaction
+    /// Accounts for pending credits that will be deducted when jobs complete
     /// - Parameter requiredAmount: The amount of credits required
-    /// - Returns: True if user has sufficient credits
+    /// - Returns: True if user has sufficient credits (including pending)
     func hasEnoughCredits(requiredAmount: Double) -> Bool {
-        return balance >= requiredAmount
+        // Available credits = balance - pending credits
+        let availableCredits = balance - pendingCredits
+        return availableCredits >= requiredAmount
     }
     
     /// Gets a warning message if credits are low

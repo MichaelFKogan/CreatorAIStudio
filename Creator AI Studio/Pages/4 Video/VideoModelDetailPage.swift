@@ -513,9 +513,8 @@ struct VideoModelDetailPage: View {
         .toolbar {
             // Leading title
             ToolbarItem(placement: .navigationBarLeading) {
-                Text(item.display.title)
+                Text("Video Models")
                     .font(.system(size: 28, weight: .bold, design: .rounded))
-                    .foregroundColor(.white)
                     .foregroundStyle(
                         LinearGradient(
                             colors: [.purple, .pink],
@@ -717,6 +716,11 @@ struct VideoModelDetailPage: View {
                     )
                 }
             )
+            
+            // Refresh pending credits after starting generation
+            if let userIdUUID = authViewModel.user?.id {
+                await creditsViewModel.fetchBalance(userId: userIdUUID)
+            }
         }
     }
 

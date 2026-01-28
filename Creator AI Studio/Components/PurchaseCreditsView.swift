@@ -91,7 +91,7 @@ struct PurchaseCreditsView: View {
                                     )
                                     .foregroundColor(.primary)
                             } else {
-                                Text("Please log in to view your balance")
+                                Text("Log in to view")
                                     .font(
                                         .system(
                                             size: 14, weight: .medium,

@@ -325,6 +325,38 @@ class CreditsManager {
             throw error
         }
     }
+    
+    // MARK: - Calculate Pending Credits
+    
+    /// Calculates the total cost of all pending/processing jobs for a user
+    /// This represents credits that will be deducted when jobs complete
+    /// - Parameter userId: The user's UUID
+    /// - Returns: Total pending credits (sum of costs from pending/processing jobs)
+    func calculatePendingCredits(userId: UUID) async throws -> Double {
+        do {
+            // Fetch all pending jobs that are not completed or failed
+            let pendingJobs: [PendingJob] = try await client.database
+                .from("pending_jobs")
+                .select()
+                .eq("user_id", value: userId.uuidString)
+                .in("status", values: ["pending", "processing"])
+                .execute()
+                .value
+            
+            // Sum up the costs from metadata
+            let totalPending = pendingJobs.reduce(0.0) { total, job in
+                let cost = job.metadata?.cost ?? 0.0
+                return total + cost
+            }
+            
+            let roundedTotal = roundBalance(totalPending)
+            print("✅ [CreditsManager] Calculated pending credits: $\(String(format: "%.4f", roundedTotal)) for user \(userId)")
+            return roundedTotal
+        } catch {
+            print("❌ [CreditsManager] Error calculating pending credits: \(error)")
+            throw error
+        }
+    }
 }
 
 // MARK: - Data Models
