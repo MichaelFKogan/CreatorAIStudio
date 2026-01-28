@@ -389,7 +389,7 @@ struct PurchaseCreditsView: View {
                     await MainActor.run {
                         isPurchasing = false
                         let creditAmount = purchaseManager.getCreditAmount(for: productId.rawValue)
-                        successMessage = "Successfully purchased \(PricingManager.dollarsToCredits(Decimal(creditAmount))) credits!"
+                        successMessage = "Successfully purchased \(PricingManager.formatCredits(Decimal(creditAmount))) credits!"
                         showingSuccessAlert = true
                         
                         // Refresh balance
@@ -661,7 +661,9 @@ struct CreditPackageCard: View {
                                     .font(.system(size: 12))
                                     .foregroundColor(.gray)
                                 Text(
-                                    "\(PricingManager.dollarsToCredits(Decimal(baseCreditsValue)))"
+                                    PricingManager.formatCredits(
+                                        Decimal(baseCreditsValue)
+                                    )
                                 )
                                 .font(
                                     .system(
@@ -760,7 +762,7 @@ struct CreditPackageCard: View {
                                         VStack(alignment: .leading, spacing: 2)
                                         {
                                             Text(
-                                                "\(PricingManager.dollarsToCredits(Decimal(baseCreditsValue))) Credits"
+                                                "\(PricingManager.formatCredits(Decimal(baseCreditsValue))) Credits"
                                             )
                                             .font(
                                                 .system(
