@@ -8,14 +8,6 @@
 import SwiftUI
 import StoreKit
 
-// Price formatting helper
-struct PriceCalculator {
-    // Format price as string
-    static func formatPrice(_ price: Double) -> String {
-        return String(format: "$%.2f", price)
-    }
-}
-
 // MARK: - StoreKit Product IDs
 enum CreditProductID: String, CaseIterable {
     case testPack = "com.runspeedai.credits.test"
@@ -489,131 +481,28 @@ struct CreditPackageCard: View {
     var storeKitProduct: Product? = nil
 
     @State private var isDetailsExpanded: Bool = false
-    private let maxExampleModels = 3
-
     // Image model prices from PricingManager
-    private let imageModelPrices: [String: Double] = [
-        "Z-Image-Turbo": 0.005,
-        "FLUX.2 [dev]": 0.0122,
-        "Wan2.5-Preview Image": 0.027,
-        "Seedream 4.0": 0.03,
-        "GPT Image 1.5": 0.034,
-        "Google Gemini Flash 2.5 (Nano Banana)": 0.039,
-        "Seedream 4.5": 0.04,
-        "FLUX.1 Kontext [pro]": 0.04,
-        "FLUX.1 Kontext [max]": 0.08,
-    ]
-
-    private let imageModelImageNames: [String: String] = [
-        "Z-Image-Turbo": "zimageturbo",
-        "FLUX.2 [dev]": "flux2dev",
-        "Wan2.5-Preview Image": "wan25previewimage",
-        "Seedream 4.0": "seedream40",
-        "GPT Image 1.5": "gptimage15",
-        "Google Gemini Flash 2.5 (Nano Banana)": "geminiflashimage25",
-        "Seedream 4.5": "seedream45",
-        "FLUX.1 Kontext [pro]": "fluxkontextpro",
-        "FLUX.1 Kontext [max]": "fluxkontextmax",
+    private let imageModelRates: [(name: String, imageName: String, price: Double)] = [
+        (name: "Z-Image-Turbo", imageName: "zimageturbo", price: 0.005),
+        (name: "FLUX.2 [dev]", imageName: "flux2dev", price: 0.0122),
+        (name: "Wan2.5-Preview Image", imageName: "wan25previewimage", price: 0.027),
+        (name: "Seedream 4.0", imageName: "seedream40", price: 0.03),
+        (name: "GPT Image 1.5", imageName: "gptimage15", price: 0.034),
+        (name: "Google Gemini Flash 2.5 (Nano Banana)", imageName: "geminiflashimage25", price: 0.039),
+        (name: "Seedream 4.5", imageName: "seedream45", price: 0.04),
+        (name: "FLUX.1 Kontext [pro]", imageName: "fluxkontextpro", price: 0.04),
+        (name: "FLUX.1 Kontext [max]", imageName: "fluxkontextmax", price: 0.08),
     ]
 
     // Video model prices (using cheapest options)
-    private let videoModelPrices: [String: Double] = [
-        "Seedance 1.0 Pro Fast": 0.0304,  // 5s at 480p (cheapest)
-        "Sora 2": 0.4,  // 4s at 720p (cheapest)
-        "KlingAI 2.5 Turbo Pro": 0.35,  // 5s at 1080p
-        "Wan2.6": 0.5,  // 5s at 720p (cheapest)
-        "Kling VIDEO 2.6 Pro": 0.70,  // 5s at 1080p
-        "Google Veo 3.1 Fast": 1.20,  // 8s at 1080p (only option)
+    private let videoModelRates: [(name: String, imageName: String, price: Double)] = [
+        (name: "Seedance 1.0 Pro Fast", imageName: "seedance10profast", price: 0.0304),  // 5s at 480p (cheapest)
+        (name: "Sora 2", imageName: "sora2", price: 0.4),  // 4s at 720p (cheapest)
+        (name: "KlingAI 2.5 Turbo Pro", imageName: "klingai25turbopro", price: 0.35),  // 5s at 1080p
+        (name: "Wan2.6", imageName: "wan26", price: 0.5),  // 5s at 720p (cheapest)
+        (name: "Kling VIDEO 2.6 Pro", imageName: "klingvideo26pro", price: 0.70),  // 5s at 1080p
+        (name: "Google Veo 3.1 Fast", imageName: "veo31fast", price: 1.20),  // 8s at 1080p (only option)
     ]
-
-    private let videoModelImageNames: [String: String] = [
-        "Seedance 1.0 Pro Fast": "seedance10profast",
-        "Sora 2": "sora2",
-        "KlingAI 2.5 Turbo Pro": "klingai25turbopro",
-        "Wan2.6": "wan26",
-        "Kling VIDEO 2.6 Pro": "klingvideo26pro",
-        "Google Veo 3.1 Fast": "veo31fast",
-    ]
-
-    // Calculate actual image generation range based on all models
-    private var imageGenerationsRange: (min: Int, max: Int) {
-        var minImages = Int.max
-        var maxImages = 0
-
-        for (_, price) in imageModelPrices {
-            guard price > 0 else { continue }
-            let count = Int(baseCreditsValue / price)
-            if count > 0 {
-                minImages = min(minImages, count)
-                maxImages = max(maxImages, count)
-            }
-        }
-
-        return (min: minImages == Int.max ? 0 : minImages, max: maxImages)
-    }
-
-    // Calculate actual video generation range based on all models
-    private var videoGenerationsRange: (min: Int, max: Int) {
-        var minVideos = Int.max
-        var maxVideos = 0
-
-        for (_, price) in videoModelPrices {
-            guard price > 0 else { continue }
-            let count = Int(baseCreditsValue / price)
-            if count > 0 {
-                minVideos = min(minVideos, count)
-                maxVideos = max(maxVideos, count)
-            }
-        }
-
-        return (min: minVideos == Int.max ? 0 : minVideos, max: maxVideos)
-    }
-
-    // Get all image models that can be afforded
-    private var exampleImageModels:
-        [(name: String, imageName: String, count: Int)]
-    {
-        return imageModelPrices.compactMap { (modelName, price) in
-            guard price > 0 else { return nil }
-            guard baseCreditsValue >= price else { return nil }
-            let count = Int(baseCreditsValue / price)
-            guard count > 0 else { return nil }
-            let imageName = imageModelImageNames[modelName] ?? ""
-            return (name: modelName, imageName: imageName, count: count)
-        }
-        .sorted { $0.count > $1.count }  // Sort by count descending
-    }
-
-    // Get all video models that can be afforded (using lowest settings/duration)
-    private var exampleVideoModels:
-        [(name: String, imageName: String, count: Int)]
-    {
-        return videoModelPrices.compactMap { (modelName, price) in
-            guard price > 0 else { return nil }
-            guard baseCreditsValue >= price else { return nil }
-            let count = Int(baseCreditsValue / price)
-            guard count > 0 else { return nil }
-            let imageName = videoModelImageNames[modelName] ?? ""
-            return (name: modelName, imageName: imageName, count: count)
-        }
-        .sorted { $0.count > $1.count }  // Sort by count descending
-    }
-
-    private var limitedImageModels: [(name: String, imageName: String, count: Int)] {
-        Array(exampleImageModels.prefix(maxExampleModels))
-    }
-
-    private var limitedVideoModels: [(name: String, imageName: String, count: Int)] {
-        Array(exampleVideoModels.prefix(maxExampleModels))
-    }
-
-    private var remainingImageModelsCount: Int {
-        max(0, exampleImageModels.count - limitedImageModels.count)
-    }
-
-    private var remainingVideoModelsCount: Int {
-        max(0, exampleVideoModels.count - limitedVideoModels.count)
-    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -657,9 +546,9 @@ struct CreditPackageCard: View {
                             }
 
                             HStack(spacing: 6) {
-                                Image(systemName: "dollarsign.circle.fill")
+                                Image(systemName: "diamond.fill")
                                     .font(.system(size: 12))
-                                    .foregroundColor(.gray)
+                                    .foregroundColor(.purple)
                                 Text(
                                     PricingManager.formatCredits(
                                         Decimal(baseCreditsValue)
@@ -730,300 +619,75 @@ struct CreditPackageCard: View {
                         .buttonStyle(PlainButtonStyle())
                     }
 
-                    // Expanded details section - What You Get
+                    // Expanded details section - Estimated Generations
                     if isDetailsExpanded {
                         VStack(alignment: .leading, spacing: 12) {
                             // Divider
                             Divider()
                                 .padding(.vertical, 4)
 
-                            // What You Get Section
+                            // Estimated Generations Section
                             VStack(alignment: .leading, spacing: 12) {
-                                Text("What You Get")
-                                    .font(
-                                        .system(
-                                            size: 14, weight: .semibold,
-                                            design: .rounded)
-                                    )
-                                    .foregroundColor(.primary)
-                                    .padding(.bottom, 4)
-
-                                // Checklist items
-                                VStack(alignment: .leading, spacing: 12) {
-                                    // Credits
-                                    HStack(alignment: .top, spacing: 10) {
-                                        Image(
-                                            systemName: "dollarsign.circle.fill"
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Estimated Generations")
+                                        .font(
+                                            .system(
+                                                size: 14, weight: .semibold,
+                                                design: .rounded)
                                         )
-                                        .font(.system(size: 16))
-                                        .foregroundColor(.green)
-                                        .frame(width: 20)
+                                        .foregroundColor(.primary)
+                                    Text("Credits per generation")
+                                        .font(.system(size: 11, design: .rounded))
+                                        .foregroundColor(.secondary)
+                                }
 
-                                        VStack(alignment: .leading, spacing: 2)
-                                        {
-                                            Text(
-                                                "\(PricingManager.formatCredits(Decimal(baseCreditsValue))) Credits"
-                                            )
-                                            .font(
-                                                .system(
-                                                    size: 13, weight: .medium,
-                                                    design: .rounded)
-                                            )
-                                            .foregroundColor(.primary)
-                                            Text(
-                                                "Use for images, videos, or any combination"
-                                            )
-                                            .font(
-                                                .system(
-                                                    size: 11, design: .rounded)
-                                            )
-                                            .foregroundColor(.secondary)
-                                        }
-                                    }
-
-                                    // Images section
+                                if !imageModelRates.isEmpty {
                                     VStack(alignment: .leading, spacing: 8) {
-                                        HStack(alignment: .top, spacing: 10) {
-                                            Image(
-                                                systemName:
-                                                    "photo.on.rectangle.angled"
-                                            )
-                                            .font(.system(size: 16))
-                                            .foregroundColor(.blue)
-                                            .frame(width: 20)
+                                        Text("Image Models")
+                                            .font(.system(size: 12, weight: .semibold, design: .rounded))
+                                            .foregroundColor(.secondary)
 
-                                            VStack(
-                                                alignment: .leading, spacing: 4
-                                            ) {
-                                                Text(
-                                                    imageGenerationsRange.min
-                                                        == imageGenerationsRange
-                                                        .max
-                                                        ? "\(imageGenerationsRange.max) Images"
-                                                        : "\(imageGenerationsRange.min)–\(imageGenerationsRange.max) Images"
-                                                )
-                                                .font(
-                                                    .system(
-                                                        size: 13,
-                                                        weight: .medium,
-                                                        design: .rounded)
-                                                )
-                                                .foregroundColor(.primary)
-
-                                                Text(
-                                                    "Depending on model chosen"
-                                                )
-                                                .font(
-                                                    .system(
-                                                        size: 11,
-                                                        design: .rounded)
-                                                )
-                                                .foregroundColor(.secondary)
-                                            }
-                                        }
-                                        
-                                        // Example image models - aligned to left edge
-                                        if !limitedImageModels.isEmpty {
-                                            VStack(
-                                                alignment: .leading,
-                                                spacing: 4
-                                            ) {
-                                                ForEach(
-                                                    limitedImageModels,
-                                                    id: \.name
-                                                ) { model in
-                                                    HStack(
-                                                        alignment: .top,
-                                                        spacing: 8
-                                                    ) {
-                                                        if !model
-                                                            .imageName
-                                                            .isEmpty
-                                                        {
-                                                            Image(
-                                                                model
-                                                                    .imageName
-                                                            )
-                                                            .resizable()
-                                                            .aspectRatio(
-                                                                contentMode:
-                                                                    .fit
-                                                            )
-                                                            .frame(
-                                                                width:
-                                                                    30,
-                                                                height:
-                                                                    30)
-                                                        }
-                                                        VStack(
-                                                            alignment:
-                                                                .leading,
-                                                            spacing: 2
-                                                        ) {
-                                                            Text(
-                                                                model
-                                                                    .name
-                                                            )
-                                                            .font(
-                                                                .system(
-                                                                    size:
-                                                                        12,
-                                                                    weight:
-                                                                        .semibold,
-                                                                    design:
-                                                                        .rounded
-                                                                )
-                                                            )
-                                                            .foregroundColor(
-                                                                .primary)
-                                                            Text(
-                                                                "For \(PriceCalculator.formatPrice(baseCreditsValue)) you can run this model approximately \(model.count) times"
-                                                            )
-                                                            .font(
-                                                                .system(
-                                                                    size:
-                                                                        11,
-                                                                    design:
-                                                                        .rounded
-                                                                )
-                                                            )
-                                                            .foregroundColor(
-                                                                .secondary
-                                                            )
-                                                            .italic()
-                                                        }
-                                                        Spacer()
-                                                    }
+                                        ForEach(imageModelRates, id: \.name) { model in
+                                            HStack(alignment: .center, spacing: 10) {
+                                                if !model.imageName.isEmpty {
+                                                    Image(model.imageName)
+                                                        .resizable()
+                                                        .aspectRatio(contentMode: .fit)
+                                                        .frame(width: 28, height: 28)
                                                 }
-                                                if remainingImageModelsCount > 0 {
-                                                    Text("And \(remainingImageModelsCount) more image model\(remainingImageModelsCount == 1 ? "" : "s")…")
-                                                        .font(.system(size: 11, design: .rounded))
-                                                        .foregroundColor(.secondary)
-                                                }
+                                                Text(model.name)
+                                                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+                                                    .foregroundColor(.primary)
+                                                Spacer()
+                                                Text("\(PricingManager.formatCredits(Decimal(model.price))) credits / gen")
+                                                    .font(.system(size: 11, weight: .medium, design: .rounded))
+                                                    .foregroundColor(.secondary)
                                             }
                                         }
                                     }
+                                }
 
-                                    // Videos section
-                                    if videoGenerationsRange.max > 0 {
-                                        VStack(alignment: .leading, spacing: 8) {
-                                            HStack(alignment: .top, spacing: 10) {
-                                                Image(systemName: "video.fill")
-                                                    .font(.system(size: 16))
-                                                    .foregroundColor(.purple)
-                                                    .frame(width: 20)
+                                if !videoModelRates.isEmpty {
+                                    VStack(alignment: .leading, spacing: 8) {
+                                        Text("Video Models")
+                                            .font(.system(size: 12, weight: .semibold, design: .rounded))
+                                            .foregroundColor(.secondary)
 
-                                                VStack(
-                                                    alignment: .leading,
-                                                    spacing: 4
-                                                ) {
-                                                    Text(
-                                                        videoGenerationsRange
-                                                            .min
-                                                            == videoGenerationsRange
-                                                            .max
-                                                            ? "\(videoGenerationsRange.max) Videos"
-                                                            : "\(videoGenerationsRange.min)–\(videoGenerationsRange.max) Videos"
-                                                    )
-                                                    .font(
-                                                        .system(
-                                                            size: 13,
-                                                            weight: .medium,
-                                                            design: .rounded)
-                                                    )
+                                        ForEach(videoModelRates, id: \.name) { model in
+                                            HStack(alignment: .center, spacing: 10) {
+                                                if !model.imageName.isEmpty {
+                                                    Image(model.imageName)
+                                                        .resizable()
+                                                        .aspectRatio(contentMode: .fit)
+                                                        .frame(width: 28, height: 28)
+                                                }
+                                                Text(model.name)
+                                                    .font(.system(size: 12, weight: .semibold, design: .rounded))
                                                     .foregroundColor(.primary)
-                                                    Text(
-                                                        "Based on lowest settings and shortest duration"
-                                                    )
-                                                    .font(
-                                                        .system(
-                                                            size: 11,
-                                                            design: .rounded)
-                                                    )
+                                                Spacer()
+                                                Text("\(PricingManager.formatCredits(Decimal(model.price))) credits / gen")
+                                                    .font(.system(size: 11, weight: .medium, design: .rounded))
                                                     .foregroundColor(.secondary)
-                                                }
-                                            }
-                                            
-                                            // Example video models - aligned to left edge
-                                            if !limitedVideoModels.isEmpty {
-                                                VStack(
-                                                    alignment: .leading,
-                                                    spacing: 4
-                                                ) {
-                                                    ForEach(
-                                                        limitedVideoModels,
-                                                        id: \.name
-                                                    ) { model in
-                                                        HStack(
-                                                            alignment: .top,
-                                                            spacing: 8
-                                                        ) {
-                                                            if !model
-                                                                .imageName
-                                                                .isEmpty
-                                                            {
-                                                                Image(
-                                                                    model
-                                                                        .imageName
-                                                                )
-                                                                .resizable()
-                                                                .aspectRatio(
-                                                                    contentMode:
-                                                                        .fit
-                                                                )
-                                                                .frame(
-                                                                    width:
-                                                                        30,
-                                                                    height:
-                                                                        30
-                                                                )
-                                                            }
-                                                            VStack(
-                                                                alignment:
-                                                                    .leading,
-                                                                spacing: 2
-                                                            ) {
-                                                                Text(
-                                                                    model
-                                                                        .name
-                                                                )
-                                                                .font(
-                                                                    .system(
-                                                                        size:
-                                                                            12,
-                                                                        weight:
-                                                                            .semibold,
-                                                                        design:
-                                                                            .rounded
-                                                                    )
-                                                                )
-                                                                .foregroundColor(
-                                                                    .primary
-                                                                )
-                                                                Text(
-                                                                    "For \(PriceCalculator.formatPrice(baseCreditsValue)) you can run this model approximately \(model.count) times (lowest settings)"
-                                                                )
-                                                                .font(
-                                                                    .system(
-                                                                        size:
-                                                                            11,
-                                                                        design:
-                                                                            .rounded
-                                                                    )
-                                                                )
-                                                                .foregroundColor(
-                                                                    .secondary
-                                                                )
-                                                                .italic()
-                                                            }
-                                                        }
-                                                    }
-                                                    if remainingVideoModelsCount > 0 {
-                                                        Text("And \(remainingVideoModelsCount) more video model\(remainingVideoModelsCount == 1 ? "" : "s")…")
-                                                            .font(.system(size: 11, design: .rounded))
-                                                            .foregroundColor(.secondary)
-                                                    }
-                                                }
                                             }
                                         }
                                     }
