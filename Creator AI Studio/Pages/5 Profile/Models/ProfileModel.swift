@@ -422,9 +422,11 @@ class ProfileViewModel: ObservableObject {
             NotificationCenter.default.removeObserver(observer)
         }
         
-        // Stop Realtime subscription
-        Task {
-            await stopRealtimeSubscription()
+        // Stop Realtime subscription without capturing self (avoid dangling reference)
+        let channel = realtimeChannel
+        realtimeChannel = nil
+        if let channel = channel {
+            Task { await channel.unsubscribe() }
         }
     }
     

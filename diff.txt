@@ -1,0 +1,181 @@
+diff --git a/Creator AI Studio/Pages/5 Profile/Models/ProfileModel.swift b/Creator AI Studio/Pages/5 Profile/Models/ProfileModel.swift
+index bb016ff..1bd4e16 100644
+--- a/Creator AI Studio/Pages/5 Profile/Models/ProfileModel.swift	
++++ b/Creator AI Studio/Pages/5 Profile/Models/ProfileModel.swift	
+@@ -422,9 +422,11 @@ class ProfileViewModel: ObservableObject {
+             NotificationCenter.default.removeObserver(observer)
+         }
+         
+-        // Stop Realtime subscription
+-        Task {
+-            await stopRealtimeSubscription()
++        // Stop Realtime subscription without capturing self (avoid dangling reference)
++        let channel = realtimeChannel
++        realtimeChannel = nil
++        if let channel = channel {
++            Task { await channel.unsubscribe() }
+         }
+     }
+     
+diff --git a/Creator AI Studio/Pages/5 Profile/ProfileViewContent.swift b/Creator AI Studio/Pages/5 Profile/ProfileViewContent.swift
+index e366e0c..319614b 100644
+--- a/Creator AI Studio/Pages/5 Profile/ProfileViewContent.swift	
++++ b/Creator AI Studio/Pages/5 Profile/ProfileViewContent.swift	
+@@ -67,94 +67,58 @@ struct ProfileViewContent: View {
+     @State private var cachedImageModelsMetadata: [(model: String, count: Int, imageName: String)]? = nil
+     @State private var cachedVideoModelsMetadata: [(model: String, count: Int, imageName: String)]? = nil
+     
+-    // Compute models with metadata - cached to avoid repeated computation
+-    // IMPORTANT: Merges models from BOTH user_stats AND loaded images to ensure no models are missed
+-    private func computeModelsWithMetadata() -> [(model: String, count: Int, imageName: String)] {
+-        // Use cached result if available and modelCounts haven't changed
+-        if let cached = cachedImageModelsMetadata, !viewModel.modelCounts.isEmpty {
+-            return cached
+-        }
+-        
+-        // Merge model names from both sources to ensure we don't miss any:
+-        // 1. modelCounts from user_stats (authoritative source, includes all images)
+-        // 2. uniqueModels from loaded images (in case stats are incomplete)
++    // Pure computation (no @State write) — safe to call from body.
++    // Merges models from BOTH user_stats AND loaded images to ensure no models are missed.
++    private func computeModelsWithMetadataPure() -> [(model: String, count: Int, imageName: String)] {
+         var allModelNames = Set<String>()
+-        
+-        // Add models from stats (preferred source - includes all images even if not loaded)
+-        for modelName in viewModel.modelCounts.keys {
+-            allModelNames.insert(modelName)
+-        }
+-        
+-        // Also add models from loaded images (backup if stats are incomplete)
+-        for modelName in viewModel.uniqueModels {
+-            allModelNames.insert(modelName)
+-        }
+-
++        for modelName in viewModel.modelCounts.keys { allModelNames.insert(modelName) }
++        for modelName in viewModel.uniqueModels { allModelNames.insert(modelName) }
+         var result: [(String, Int, String)] = []
+-
+         for modelName in allModelNames {
+-            // Prefer count from stats (includes all images), fall back to loaded images count
+             let count: Int
+             if let dbCount = viewModel.modelCounts[modelName], dbCount > 0 {
+                 count = dbCount
+             } else {
+                 count = viewModel.filteredImages(by: modelName, favoritesOnly: false).count
+             }
+-            
+             guard count > 0 else { continue }
+-
+-            let imageName = findImageModelImageName(for: modelName)
+-            result.append((modelName, count, imageName))
++            result.append((modelName, count, findImageModelImageName(for: modelName)))
+         }
+-
+-        let sorted = result.sorted { $0.1 > $1.1 }
+-        cachedImageModelsMetadata = sorted
+-        return sorted
++        return result.sorted { $0.1 > $1.1 }
+     }
+ 
+-    // Compute video models with metadata - cached to avoid repeated computation
+-    // IMPORTANT: Merges models from BOTH user_stats AND loaded videos to ensure no models are missed
+-    private func computeVideoModelsWithMetadata() -> [(model: String, count: Int, imageName: String)] {
+-        // Use cached result if available
+-        if let cached = cachedVideoModelsMetadata {
+-            return cached
+-        }
+-        
+-        // Merge model names from both sources to ensure we don't miss any:
+-        // 1. videoModelCounts from user_stats (authoritative source, includes all videos)
+-        // 2. uniqueVideoModels from loaded videos (in case stats are incomplete)
++    // Pure computation (no @State write) — safe to call from body.
++    private func computeVideoModelsWithMetadataPure() -> [(model: String, count: Int, imageName: String)] {
+         var allModelNames = Set<String>()
+-        
+-        // Add models from stats (preferred source - includes all videos even if not loaded)
+-        for modelName in viewModel.videoModelCounts.keys {
+-            allModelNames.insert(modelName)
+-        }
+-        
+-        // Also add models from loaded videos (backup if stats are incomplete)
+-        for modelName in viewModel.uniqueVideoModels {
+-            allModelNames.insert(modelName)
+-        }
+-
++        for modelName in viewModel.videoModelCounts.keys { allModelNames.insert(modelName) }
++        for modelName in viewModel.uniqueVideoModels { allModelNames.insert(modelName) }
+         var result: [(String, Int, String)] = []
+-
+         for modelName in allModelNames {
+-            // Prefer count from stats (includes all videos), fall back to loaded videos count
+             let count: Int
+             if let statsCount = viewModel.videoModelCounts[modelName], statsCount > 0 {
+                 count = statsCount
+             } else {
+                 count = viewModel.filteredVideos(by: modelName, favoritesOnly: false).count
+             }
+-            
+             guard count > 0 else { continue }
++            result.append((modelName, count, findVideoModelImageName(for: modelName)))
++        }
++        return result.sorted { $0.1 > $1.1 }
++    }
+ 
+-            let imageName = findVideoModelImageName(for: modelName)
+-            result.append((modelName, count, imageName))
++    // Returns cached value if valid; otherwise pure result. Never writes @State during body.
++    private func computeModelsWithMetadata() -> [(model: String, count: Int, imageName: String)] {
++        if let cached = cachedImageModelsMetadata, !viewModel.modelCounts.isEmpty {
++            return cached
+         }
++        return computeModelsWithMetadataPure()
++    }
+ 
+-        let sorted = result.sorted { $0.1 > $1.1 }
+-        cachedVideoModelsMetadata = sorted
+-        return sorted
++    private func computeVideoModelsWithMetadata() -> [(model: String, count: Int, imageName: String)] {
++        if let cached = cachedVideoModelsMetadata {
++            return cached
++        }
++        return computeVideoModelsWithMetadataPure()
+     }
+     
+     private func findImageModelImageName(for modelName: String) -> String {
+@@ -209,21 +173,21 @@ struct ProfileViewContent: View {
+             }
+             .onChange(of: viewModel.modelCounts) {
+                 _ in
+-                cachedImageModelsMetadata = nil
++                cachedImageModelsMetadata = computeModelsWithMetadataPure()
+             }
+             .onChange(of: viewModel.videoModelCounts) {
+                 _ in
+-                cachedVideoModelsMetadata = nil
++                cachedVideoModelsMetadata = computeVideoModelsWithMetadataPure()
+             }
+             // Invalidate all caches when userId changes (user switched accounts)
+             .onChange(of: viewModel.userId) {
+                 _, _ in
+                 invalidateCaches()
+             }
+-            // Invalidate video metadata cache when userVideos change
++            // Update video metadata cache when userVideos change
+             .onChange(of: viewModel.userVideos.count) {
+                 _ in
+-                cachedVideoModelsMetadata = nil
++                cachedVideoModelsMetadata = computeVideoModelsWithMetadataPure()
+             }
+             .sheet(item: $selectedUserImage) { userImage in
+                 FullScreenImageView(
+@@ -417,8 +381,8 @@ struct ProfileViewContent: View {
+     // MARK: - CACHE MANAGEMENT
+     
+     private func invalidateCaches() {
+-        cachedImageModelsMetadata = nil
+-        cachedVideoModelsMetadata = nil
++        cachedImageModelsMetadata = computeModelsWithMetadataPure()
++        cachedVideoModelsMetadata = computeVideoModelsWithMetadataPure()
+     }
+     
+     // MARK: - ACTIONS
