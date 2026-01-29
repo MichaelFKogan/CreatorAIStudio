@@ -316,6 +316,16 @@ class ProfileViewModel: ObservableObject {
     @Published var isLoadingFavorites = false
     @Published var isLoadingMoreFavorites = false
     @Published var hasMoreFavoritePages = true
+    /// Images-only tab: items from DB filtered by media_type = "image" (paginated)
+    @Published var tabImagesOnly: [UserImage] = []
+    @Published var isLoadingImagesOnly = false
+    @Published var hasMoreImagesOnlyPages = false
+    @Published var isLoadingMoreImagesOnly = false
+    /// Videos-only tab: items from DB filtered by media_type = "video" (paginated)
+    @Published var tabVideosOnly: [UserImage] = []
+    @Published var isLoadingVideosOnly = false
+    @Published var hasMoreVideosOnlyPages = false
+    @Published var isLoadingMoreVideosOnly = false
     @Published var modelCounts: [String: Int] = [:] // model name -> count
     @Published var videoModelCounts: [String: Int] = [:] // model name -> count
     @Published var hasLoadedStats = false // Track if stats have been fetched
@@ -346,7 +356,9 @@ class ProfileViewModel: ObservableObject {
     private var modelCurrentPages: [String: Int] = [:] // model name -> current page
     private var modelHasMorePages: [String: Bool] = [:] // model name -> has more pages
     
-    // Pagination for videos
+    // Pagination for Images-only and Videos-only tabs
+    private var imagesOnlyCurrentPage = 0
+    private var videosOnlyCurrentPage = 0
     
     // Pagination for favorites
     private var favoritesCurrentPage = 0
@@ -603,6 +615,14 @@ class ProfileViewModel: ObservableObject {
         modelImagesCache.removeAll()
         modelCurrentPages.removeAll()
         modelHasMorePages.removeAll()
+        
+        // Clear Images-only and Videos-only tab caches when user changes
+        tabImagesOnly = []
+        tabVideosOnly = []
+        imagesOnlyCurrentPage = 0
+        videosOnlyCurrentPage = 0
+        hasMoreImagesOnlyPages = false
+        hasMoreVideosOnlyPages = false
         
         // ALWAYS reset stats when user changes to prevent showing previous user's counts
         favoriteCount = 0
@@ -965,6 +985,14 @@ class ProfileViewModel: ObservableObject {
         
         // Clear model-specific caches
         modelImagesCache.removeAll()
+        
+        // Clear Images-only and Videos-only tab caches
+        tabImagesOnly = []
+        tabVideosOnly = []
+        imagesOnlyCurrentPage = 0
+        videosOnlyCurrentPage = 0
+        hasMoreImagesOnlyPages = false
+        hasMoreVideosOnlyPages = false
         
         // Clear stats cache
         cachedUserStatsMap.removeValue(forKey: userId)
@@ -1444,6 +1472,140 @@ class ProfileViewModel: ObservableObject {
     /// Checks if there are more pages available for a model
     func hasMoreModelPages(modelName: String) -> Bool {
         return modelHasMorePages[modelName] ?? false
+    }
+    
+    // MARK: - Fetch Images-Only / Videos-Only (for Images and Videos pills)
+    
+    /// Fetches the first page of user media filtered by media_type = "image".
+    /// Used when the user taps the Images pill so the gallery shows all images (not just those in the first 50 mixed rows).
+    func fetchImagesOnly(forceRefresh: Bool = false) async {
+        guard let userId = userId else { return }
+        await MainActor.run { isLoadingImagesOnly = true }
+        if forceRefresh {
+            imagesOnlyCurrentPage = 0
+            hasMoreImagesOnlyPages = true
+        }
+        do {
+            let response: PostgrestResponse<[UserImage]> = try await client.database
+                .from("user_media")
+                .select()
+                .eq("user_id", value: userId)
+                .eq("media_type", value: "image")
+                .or("status.is.null,status.eq.success")
+                .order("created_at", ascending: false)
+                .limit(pageSize)
+                .range(from: 0, to: pageSize - 1)
+                .execute()
+            let items = response.value ?? []
+            await MainActor.run {
+                tabImagesOnly = items
+                imagesOnlyCurrentPage = 1
+                hasMoreImagesOnlyPages = items.count == pageSize
+                isLoadingImagesOnly = false
+            }
+        } catch {
+            print("❌ Failed to fetch images-only: \(error)")
+            await MainActor.run {
+                tabImagesOnly = []
+                hasMoreImagesOnlyPages = false
+                isLoadingImagesOnly = false
+            }
+        }
+    }
+    
+    /// Fetches the first page of user media filtered by media_type = "video".
+    /// Used when the user taps the Videos pill so the gallery shows all videos (not just those in the first 50 mixed rows).
+    func fetchVideosOnly(forceRefresh: Bool = false) async {
+        guard let userId = userId else { return }
+        await MainActor.run { isLoadingVideosOnly = true }
+        if forceRefresh {
+            videosOnlyCurrentPage = 0
+            hasMoreVideosOnlyPages = true
+        }
+        do {
+            let response: PostgrestResponse<[UserImage]> = try await client.database
+                .from("user_media")
+                .select()
+                .eq("user_id", value: userId)
+                .eq("media_type", value: "video")
+                .or("status.is.null,status.eq.success")
+                .order("created_at", ascending: false)
+                .limit(pageSize)
+                .range(from: 0, to: pageSize - 1)
+                .execute()
+            let items = response.value ?? []
+            await MainActor.run {
+                tabVideosOnly = items
+                videosOnlyCurrentPage = 1
+                hasMoreVideosOnlyPages = items.count == pageSize
+                isLoadingVideosOnly = false
+            }
+        } catch {
+            print("❌ Failed to fetch videos-only: \(error)")
+            await MainActor.run {
+                tabVideosOnly = []
+                hasMoreVideosOnlyPages = false
+                isLoadingVideosOnly = false
+            }
+        }
+    }
+    
+    /// Loads the next page of images-only (Images pill).
+    func loadMoreImagesOnly() async {
+        guard hasMoreImagesOnlyPages, !isLoadingMoreImagesOnly else { return }
+        guard let userId = userId else { return }
+        isLoadingMoreImagesOnly = true
+        defer { isLoadingMoreImagesOnly = false }
+        do {
+            let response: PostgrestResponse<[UserImage]> = try await client.database
+                .from("user_media")
+                .select()
+                .eq("user_id", value: userId)
+                .eq("media_type", value: "image")
+                .or("status.is.null,status.eq.success")
+                .order("created_at", ascending: false)
+                .limit(pageSize)
+                .range(from: imagesOnlyCurrentPage * pageSize, to: (imagesOnlyCurrentPage + 1) * pageSize - 1)
+                .execute()
+            let newItems = response.value ?? []
+            await MainActor.run {
+                tabImagesOnly.append(contentsOf: newItems)
+                imagesOnlyCurrentPage += 1
+                hasMoreImagesOnlyPages = newItems.count == pageSize
+            }
+        } catch {
+            print("❌ Failed to load more images-only: \(error)")
+            await MainActor.run { hasMoreImagesOnlyPages = false }
+        }
+    }
+    
+    /// Loads the next page of videos-only (Videos pill).
+    func loadMoreVideosOnly() async {
+        guard hasMoreVideosOnlyPages, !isLoadingMoreVideosOnly else { return }
+        guard let userId = userId else { return }
+        isLoadingMoreVideosOnly = true
+        defer { isLoadingMoreVideosOnly = false }
+        do {
+            let response: PostgrestResponse<[UserImage]> = try await client.database
+                .from("user_media")
+                .select()
+                .eq("user_id", value: userId)
+                .eq("media_type", value: "video")
+                .or("status.is.null,status.eq.success")
+                .order("created_at", ascending: false)
+                .limit(pageSize)
+                .range(from: videosOnlyCurrentPage * pageSize, to: (videosOnlyCurrentPage + 1) * pageSize - 1)
+                .execute()
+            let newItems = response.value ?? []
+            await MainActor.run {
+                tabVideosOnly.append(contentsOf: newItems)
+                videosOnlyCurrentPage += 1
+                hasMoreVideosOnlyPages = newItems.count == pageSize
+            }
+        } catch {
+            print("❌ Failed to load more videos-only: \(error)")
+            await MainActor.run { hasMoreVideosOnlyPages = false }
+        }
     }
     
     /// Clears the model-specific cache (useful when new images are created)

@@ -520,7 +520,7 @@ struct ProfileViewContent: View {
 
                     // Images pill
                     // ALWAYS use database stats (imageCount) as source of truth
-                    // userImages is paginated and incomplete, so counting from it gives wrong results
+                    // When tapped, fetches images-only from DB (paginated) so count matches displayed items
                     GalleryTabPill(
                         title: "Images",
                         icon: "photo.fill",
@@ -534,11 +534,14 @@ struct ProfileViewContent: View {
                         selectedTab = .images
                         selectedModel = nil
                         selectedVideoModel = nil
+                        Task {
+                            await viewModel.fetchImagesOnly()
+                        }
                     }
 
                     // Videos pill
                     // ALWAYS use database stats (videoCount) as source of truth
-                    // userImages is paginated and incomplete, so counting from it gives wrong results
+                    // When tapped, fetches videos-only from DB (paginated) so count matches displayed items
                     GalleryTabPill(
                         title: "Videos",
                         icon: "video.fill",
@@ -552,6 +555,9 @@ struct ProfileViewContent: View {
                         selectedTab = .videos
                         selectedModel = nil
                         selectedVideoModel = nil
+                        Task {
+                            await viewModel.fetchVideosOnly()
+                        }
                     }
 
                     imageModelsButton
@@ -702,6 +708,12 @@ struct ProfileViewContent: View {
         // If not signed in, show placeholder grid
         if !isSignedIn {
             PlaceholderGrid()
+        } else if (selectedTab == .images && viewModel.isLoadingImagesOnly) || (selectedTab == .videos && viewModel.isLoadingVideosOnly) {
+            VStack {
+                Spacer()
+                ProgressView()
+                Spacer()
+            }
         } else if filteredImages.isEmpty
             && filteredPlaceholders.isEmpty
         {
@@ -730,7 +742,9 @@ struct ProfileViewContent: View {
                 viewModel: viewModel,
                 isSelectionMode: isSelectionMode,
                 selectedImageIds: $selectedImageIds,
-                isFavoritesTab: selectedTab == .favorites
+                isFavoritesTab: selectedTab == .favorites,
+                isImagesOnlyTab: selectedTab == .images,
+                isVideosOnlyTab: selectedTab == .videos
             )
             // Force SwiftUI to re-render when images or placeholders change
             // This ensures newly generated images appear immediately in the gallery
@@ -752,11 +766,11 @@ struct ProfileViewContent: View {
                 : viewModel.filteredImages(
                     by: selectedModel, favoritesOnly: true)
         case .images:
-            // Filter to show only images (not videos)
-            return viewModel.userImages.filter { !$0.isVideo }
+            // Use tab-specific fetch (images-only from DB with pagination), not filter of first 50
+            return viewModel.tabImagesOnly
         case .videos:
-            // Filter to show only videos
-            return viewModel.userVideos
+            // Use tab-specific fetch (videos-only from DB with pagination), not filter of first 50
+            return viewModel.tabVideosOnly
         case .imageModels:
             return selectedModel != nil
                 ? viewModel.filteredImages(

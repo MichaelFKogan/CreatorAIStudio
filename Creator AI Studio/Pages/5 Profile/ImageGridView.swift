@@ -12,6 +12,8 @@ struct ImageGridView: View {
     var isSelectionMode: Bool = false
     @Binding var selectedImageIds: Set<String>
     var isFavoritesTab: Bool = false
+    var isImagesOnlyTab: Bool = false
+    var isVideosOnlyTab: Bool = false
 
     @State private var favoritedImageIds: Set<String> = []
 
@@ -317,7 +319,14 @@ struct ImageGridView: View {
     
     @ViewBuilder
     private var loadingIndicator: some View {
-        if let viewModel = viewModel, viewModel.isLoadingMore {
+        let loading: Bool = {
+            guard let viewModel = viewModel else { return false }
+            if isFavoritesTab { return viewModel.isLoadingMoreFavorites }
+            if isImagesOnlyTab { return viewModel.isLoadingMoreImagesOnly }
+            if isVideosOnlyTab { return viewModel.isLoadingMoreVideosOnly }
+            return viewModel.isLoadingMore
+        }()
+        if loading {
             HStack {
                 Spacer()
                 ProgressView()
