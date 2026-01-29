@@ -666,7 +666,7 @@ struct CreditPackageCard: View {
                                                 // Generation count multiplier
                                                 Text("\(calculateGenerations(credits: baseCreditsValue, price: model.price))x")
                                                     .font(.system(size: 14, weight: .bold, design: .rounded))
-                                                    .foregroundColor(.blue)
+                                                    .foregroundColor(.white)
                                             }
                                             .padding(.vertical, 6)
                                             .padding(.horizontal, 10)
@@ -718,7 +718,7 @@ struct CreditPackageCard: View {
                                                 // Generation count multiplier
                                                 Text("\(calculateGenerations(credits: baseCreditsValue, price: model.price))x")
                                                     .font(.system(size: 14, weight: .bold, design: .rounded))
-                                                    .foregroundColor(.blue)
+                                                    .foregroundColor(.white)
                                             }
                                             .padding(.vertical, 6)
                                             .padding(.horizontal, 10)

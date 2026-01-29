@@ -346,10 +346,13 @@ class ProfileViewModel: ObservableObject {
     private var modelCurrentPages: [String: Int] = [:] // model name -> current page
     private var modelHasMorePages: [String: Bool] = [:] // model name -> has more pages
     
+    // Pagination for videos
+    
     // Pagination for favorites
     private var favoritesCurrentPage = 0
     private var hasFetchedFavorites = false
-    
+        
+
     // Notification observers for new media saves
     private var imageSavedObserver: NSObjectProtocol?
     private var videoSavedObserver: NSObjectProtocol?
@@ -476,7 +479,7 @@ class ProfileViewModel: ObservableObject {
             Task {
                 try? await Task.sleep(for: .seconds(1))
                 await MainActor.run {
-                    if let userId = self.userId, userId == savedUserId {
+                    if let userId = self.userId, userId.lowercased() == savedUserId.lowercased() {
                         print("📢 Retrying fetch after userId was set")
                         Task {
                             // Small delay to ensure database transaction is committed
@@ -493,7 +496,7 @@ class ProfileViewModel: ObservableObject {
             return
         }
         
-        guard savedUserId == currentUserId else {
+        guard savedUserId.lowercased() == currentUserId.lowercased() else {
             print("⚠️ Notification is for different user (saved: \(savedUserId), current: \(currentUserId))")
             return
         }
@@ -508,10 +511,14 @@ class ProfileViewModel: ObservableObject {
             // This prevents duplicates with Realtime INSERT handler
             if let imageId = imageId {
                 let alreadyExistsOrInFlight = await MainActor.run {
-                    return inFlightImageIds.contains(imageId) || userImages.contains(where: { $0.id == imageId })
+                    if inFlightImageIds.contains(imageId) { return true }
+                    if let existing = userImages.first(where: { $0.id == imageId }) {
+                        return hasValidMediaUrl(existing)
+                    }
+                    return false
                 }
                 if alreadyExistsOrInFlight {
-                    print("⏳ [handleImageSavedNotification] Image \(imageId) already being added or exists, skipping notification handler")
+                    print("⏳ [handleImageSavedNotification] Image \(imageId) already being added or exists with valid URLs, skipping notification handler")
                     return
                 }
             }
@@ -523,7 +530,11 @@ class ProfileViewModel: ObservableObject {
             // Double-check after delay (Realtime handler might have added it by now)
             if let imageId = imageId {
                 let alreadyExists = await MainActor.run {
-                    return inFlightImageIds.contains(imageId) || userImages.contains(where: { $0.id == imageId })
+                    if inFlightImageIds.contains(imageId) { return true }
+                    if let existing = userImages.first(where: { $0.id == imageId }) {
+                        return hasValidMediaUrl(existing)
+                    }
+                    return false
                 }
                 if alreadyExists {
                     print("✅ [handleImageSavedNotification] Image \(imageId) already added by Realtime handler, skipping")
@@ -535,7 +546,10 @@ class ProfileViewModel: ObservableObject {
             if let imageId = imageId {
                 await fetchAndAddImageById(imageId: imageId)
                 let imageWasAdded = await MainActor.run {
-                    return userImages.contains(where: { $0.id == imageId })
+                    let count = userImages.count
+                    let exists = userImages.contains(where: { $0.id == imageId })
+                    print("🔍 [handleImageSavedNotification] After fetchAndAddImageById - count: \(count), exists: \(exists), imageId: \(imageId)")
+                    return exists
                 }
                 if imageWasAdded {
                     print("✅ Image added successfully by ID: \(imageId)")
@@ -582,7 +596,8 @@ class ProfileViewModel: ObservableObject {
         favoritesCurrentPage = 0
         cachedFavoriteImages = []
         hasFetchedFavorites = false
-        hasMoreFavoritePages = true
+        
+    hasMoreFavoritePages = true
         
         // Clear model-specific caches when user changes
         modelImagesCache.removeAll()
@@ -1206,8 +1221,7 @@ class ProfileViewModel: ObservableObject {
             // This is a safety net in case the database query didn't filter them
             let validItems = freshItems.filter { item in
                 let isSuccessful = item.isSuccess
-                let hasValidUrl = !item.image_url.isEmpty && URL(string: item.image_url) != nil
-                return isSuccessful && hasValidUrl
+                return isSuccessful && hasValidMediaUrl(item)
             }
             let filteredCount = freshItems.count - validItems.count
             if filteredCount > 0 {
@@ -1631,6 +1645,8 @@ class ProfileViewModel: ObservableObject {
             // Compare with loaded videos in userImages array
             print("\n📊 LOADED VIDEOS IN APP (userImages array):")
             print(String(repeating: "-", count: 60))
+            // If we have cached videos, use them (they contain paginated videos)
+            // Otherwise, fall back to filtering from userImages (limited to first 50)
             let loadedVideos = userImages.filter { $0.isVideo }
             print("  Total loaded videos: \(loadedVideos.count)")
             
@@ -1972,7 +1988,8 @@ class ProfileViewModel: ObservableObject {
             favoritesCurrentPage = 0
             cachedFavoriteImages = []
             hasFetchedFavorites = false
-            hasMoreFavoritePages = true
+        
+        hasMoreFavoritePages = true
         }
         
         // If we've already fetched and not forcing refresh, skip
@@ -2053,11 +2070,8 @@ class ProfileViewModel: ObservableObject {
         
         isLoadingMoreFavorites = false
     }
-
-    // MARK: - Favorites Management
-
-    /// Toggles the favorite status of an image
-    /// - Parameter imageId: The ID of the image to toggle
+    // MARK: - Fetch Videos with Pagination
+    
     func toggleFavorite(imageId: String) async {
         guard let userId = userId else { return }
 
@@ -2386,6 +2400,13 @@ class ProfileViewModel: ObservableObject {
             userInfo: [NSLocalizedDescriptionKey: "Operation failed after \(maxAttempts) attempts"]
         )
     }
+
+    /// True when an image has at least one valid URL we can render in the grid.
+    private func hasValidMediaUrl(_ image: UserImage) -> Bool {
+        let hasValidImageUrl = !image.image_url.isEmpty && URL(string: image.image_url) != nil
+        let hasValidThumbnailUrl = image.thumbnail_url.map { !$0.isEmpty && URL(string: $0) != nil } ?? false
+        return hasValidImageUrl || hasValidThumbnailUrl
+    }
     
     // MARK: - Add Image
     
@@ -2403,30 +2424,31 @@ class ProfileViewModel: ObservableObject {
         inFlightImageIds.insert(image.id)
         defer { inFlightImageIds.remove(image.id) }
 
-        // Check if image already exists (avoid duplicates)
-        guard !userImages.contains(where: { $0.id == image.id }) else {
+        // Validate the image before adding (or updating existing)
+        guard hasValidMediaUrl(image) else {
+            print("🚨 WARNING: Attempting to add image with INVALID URL(s) - id: \(image.id), url: '\(image.image_url)'")
             return
-        }
-
-        // Validate the image before adding
-        let hasValidUrl = !image.image_url.isEmpty && URL(string: image.image_url) != nil
-        if !hasValidUrl {
-            print("🚨 WARNING: Attempting to add image with INVALID URL - id: \(image.id), url: '\(image.image_url)'")
         }
 
         // Add the image and then sort to ensure correct chronological order
         // Create a new array and assign it to trigger SwiftUI's @Published change detection
-        var updatedImages = userImages
-        updatedImages.append(image)
-        updatedImages.sort { (a, b) -> Bool in
-            let aDate = a.created_at ?? ""
-            let bDate = b.created_at ?? ""
-            return aDate > bDate // Descending order (newest first)
+        // CRITICAL: Wrap BOTH read and write in MainActor.run to ensure SwiftUI detects the change
+        await MainActor.run {
+            var updatedImages = userImages
+            if let existingIndex = updatedImages.firstIndex(where: { $0.id == image.id }) {
+                updatedImages[existingIndex] = image
+            } else {
+                updatedImages.append(image)
+            }
+            updatedImages.sort { (a, b) -> Bool in
+                let aDate = a.created_at ?? ""
+                let bDate = b.created_at ?? ""
+                return aDate > bDate // Descending order (newest first)
+            }
+            // Single assignment triggers @Published which calls objectWillChange automatically
+            userImages = updatedImages
+            print("✅ [addImage] Image added to userImages. New count: \(userImages.count), id: \(image.id)")
         }
-        // Single assignment triggers @Published which calls objectWillChange automatically
-        userImages = updatedImages
-
-        print("✅ [addImage] Image added to userImages. New count: \(userImages.count), id: \(image.id)")
         
         // Clear model-specific cache for this image's model (if it has one)
         // This ensures the "Your Creations" section shows the new image
@@ -2454,12 +2476,15 @@ class ProfileViewModel: ObservableObject {
         }
         
         // Check if image already exists or is being added to avoid duplicates
-        let alreadyExistsOrInFlight = await MainActor.run {
-            return inFlightImageIds.contains(imageId) || userImages.contains(where: { $0.id == imageId })
+        let existingImage = await MainActor.run {
+            return userImages.first(where: { $0.id == imageId })
         }
-        
-        if alreadyExistsOrInFlight {
-            print("✅ fetchAndAddImageById: Image \(imageId) already exists or is being added, skipping")
+        if let existingImage, hasValidMediaUrl(existingImage) {
+            print("✅ fetchAndAddImageById: Image \(imageId) already exists with valid URLs, skipping")
+            return
+        }
+        if await MainActor.run { inFlightImageIds.contains(imageId) } {
+            print("⏳ fetchAndAddImageById: Image \(imageId) is already being added, skipping")
             return
         }
         
@@ -2486,20 +2511,31 @@ class ProfileViewModel: ObservableObject {
                 
                 if let newImage = images.first {
                     print("✅ fetchAndAddImageById: Adding image to list (id: \(newImage.id), url: \(newImage.image_url))")
-                    // Check if already exists or is being added before adding (double-check after DB fetch)
-                    let alreadyExistsOrInFlight = await MainActor.run {
-                        return inFlightImageIds.contains(newImage.id) || userImages.contains(where: { $0.id == newImage.id })
-                    }
-                    
-                    if !alreadyExistsOrInFlight {
-                        await addImage(newImage)
-                        await MainActor.run {
-                            print("✅ fetchAndAddImageById: Image added successfully. Total images: \(userImages.count)")
-                        }
+                    if !hasValidMediaUrl(newImage) {
+                        print("⚠️ fetchAndAddImageById: Image found but URLs not ready yet, retrying...")
                     } else {
-                        print("⚠️ fetchAndAddImageById: Image already exists or is being added, skipping")
+                        // Check if already exists or is being added before adding (double-check after DB fetch)
+                        let alreadyExistsOrInFlight = await MainActor.run {
+                            return inFlightImageIds.contains(newImage.id) || userImages.contains(where: { $0.id == newImage.id })
+                        }
+                        
+                        if !alreadyExistsOrInFlight {
+                            await addImage(newImage)
+                            await MainActor.run {
+                                print("✅ fetchAndAddImageById: Image added successfully. Total images: \(userImages.count)")
+                            }
+                        } else if let existingImage = await MainActor.run { userImages.first(where: { $0.id == newImage.id }) },
+                                  !hasValidMediaUrl(existingImage),
+                                  hasValidMediaUrl(newImage) {
+                            await addImage(newImage)
+                            await MainActor.run {
+                                print("✅ fetchAndAddImageById: Updated existing image with valid URLs. Total images: \(userImages.count)")
+                            }
+                        } else {
+                            print("⚠️ fetchAndAddImageById: Image already exists or is being added, skipping")
+                        }
+                        return // Success, exit retry loop
                     }
-                    return // Success, exit retry loop
                 } else {
                     print("⚠️ fetchAndAddImageById: No image found with ID: \(imageId) (attempt \(retryCount + 1)/\(maxRetries))")
                 }
@@ -2528,11 +2564,11 @@ class ProfileViewModel: ObservableObject {
         }
         
         // Check if image already exists to avoid duplicates
-        let alreadyExists = await MainActor.run {
-            return userImages.contains(where: { $0.image_url == imageUrl })
+        let existingImage = await MainActor.run {
+            return userImages.first(where: { $0.image_url == imageUrl })
         }
         
-        if alreadyExists {
+        if let existingImage, hasValidMediaUrl(existingImage) {
             print("✅ fetchAndAddImage: Image with URL \(imageUrl) already exists in list, skipping")
             return
         }
@@ -2561,20 +2597,31 @@ class ProfileViewModel: ObservableObject {
                 
                 if let newImage = images.first {
                     print("✅ fetchAndAddImage: Adding image to list (id: \(newImage.id))")
-                    // Check if already exists or is being added before adding (double-check after DB fetch)
-                    let alreadyExistsOrInFlight = await MainActor.run {
-                        return inFlightImageIds.contains(newImage.id) || userImages.contains(where: { $0.id == newImage.id })
-                    }
-                    
-                    if !alreadyExistsOrInFlight {
-                        await addImage(newImage)
-                        await MainActor.run {
-                            print("✅ fetchAndAddImage: Image added successfully. Total images: \(userImages.count)")
-                        }
+                    if !hasValidMediaUrl(newImage) {
+                        print("⚠️ fetchAndAddImage: Image found but URLs not ready yet, retrying...")
                     } else {
-                        print("⚠️ fetchAndAddImage: Image already exists in list, skipping")
+                        // Check if already exists or is being added before adding (double-check after DB fetch)
+                        let alreadyExistsOrInFlight = await MainActor.run {
+                            return inFlightImageIds.contains(newImage.id) || userImages.contains(where: { $0.id == newImage.id })
+                        }
+                        
+                        if !alreadyExistsOrInFlight {
+                            await addImage(newImage)
+                            await MainActor.run {
+                                print("✅ fetchAndAddImage: Image added successfully. Total images: \(userImages.count)")
+                            }
+                        } else if let existingImage = await MainActor.run { userImages.first(where: { $0.id == newImage.id }) },
+                                  !hasValidMediaUrl(existingImage),
+                                  hasValidMediaUrl(newImage) {
+                            await addImage(newImage)
+                            await MainActor.run {
+                                print("✅ fetchAndAddImage: Updated existing image with valid URLs. Total images: \(userImages.count)")
+                            }
+                        } else {
+                            print("⚠️ fetchAndAddImage: Image already exists in list, skipping")
+                        }
+                        return // Success, exit retry loop
                     }
-                    return // Success, exit retry loop
                 } else {
                     print("⚠️ fetchAndAddImage: No image found with URL: \(imageUrl) (attempt \(retryCount + 1)/\(maxRetries))")
                 }
