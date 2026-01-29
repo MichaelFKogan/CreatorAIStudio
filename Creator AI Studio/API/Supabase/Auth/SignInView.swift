@@ -16,6 +16,7 @@ struct SignInView: View {
     @State private var navigateToEmail = false
     @State private var isGoogleSigningIn = false
     @State private var googleSignInError: String?
+    @State private var appleSignInError: String?
 
     var body: some View {
         NavigationStack {
@@ -201,17 +202,34 @@ struct SignInView: View {
                 Text(error)
             }
         }
+        .alert("Apple Sign In Error", isPresented: Binding(
+            get: { appleSignInError != nil },
+            set: { if !$0 { appleSignInError = nil } }
+        )) {
+            Button("OK", role: .cancel) {
+                appleSignInError = nil
+            }
+        } message: {
+            if let error = appleSignInError {
+                Text(error)
+            }
+        }
     }
 
     // MARK: - Apple Sign In
 
     func handleAppleSignIn() {
-        let request = ASAuthorizationAppleIDProvider().createRequest()
-        request.requestedScopes = [.email, .fullName]
-
-        let controller = ASAuthorizationController(authorizationRequests: [request])
-        controller.delegate = AppleSignInCoordinator(authViewModel: authViewModel)
-        controller.performRequests()
+        print("🍎 handleAppleSignIn called")
+        AppleSignInCoordinator.startSignIn(
+            authViewModel: authViewModel,
+            onError: { error in
+                print("🍎 onError callback: \(error)")
+                appleSignInError = error
+            },
+            onSuccess: {
+                print("🍎 onSuccess callback - user signed in!")
+            }
+        )
     }
     
     // MARK: - Google Sign In
@@ -527,6 +545,7 @@ struct SignUpView: View {
     @State private var navigateToEmail = false
     @State private var isGoogleSigningIn = false
     @State private var googleSignInError: String?
+    @State private var appleSignInError: String?
     @Environment(\.dismiss) var dismiss
     
     var body: some View {
@@ -706,16 +725,33 @@ struct SignUpView: View {
                 Text(error)
             }
         }
+        .alert("Apple Sign In Error", isPresented: Binding(
+            get: { appleSignInError != nil },
+            set: { if !$0 { appleSignInError = nil } }
+        )) {
+            Button("OK", role: .cancel) {
+                appleSignInError = nil
+            }
+        } message: {
+            if let error = appleSignInError {
+                Text(error)
+            }
+        }
     }
     
     // MARK: - Apple Sign Up
     func handleAppleSignUp() {
-        let request = ASAuthorizationAppleIDProvider().createRequest()
-        request.requestedScopes = [.email, .fullName]
-        
-        let controller = ASAuthorizationController(authorizationRequests: [request])
-        controller.delegate = AppleSignInCoordinator(authViewModel: authViewModel)
-        controller.performRequests()
+        print("🍎 handleAppleSignUp called")
+        AppleSignInCoordinator.startSignIn(
+            authViewModel: authViewModel,
+            onError: { error in
+                print("🍎 onError callback: \(error)")
+                appleSignInError = error
+            },
+            onSuccess: {
+                print("🍎 onSuccess callback - user signed in!")
+            }
+        )
     }
     
     // MARK: - Google Sign In
@@ -847,26 +883,180 @@ struct SignUpView: View {
 
 // MARK: - Apple Sign In Coordinator
 
-class AppleSignInCoordinator: NSObject, ASAuthorizationControllerDelegate {
-    let authViewModel: AuthViewModel
+class AppleSignInCoordinator: NSObject, ASAuthorizationControllerDelegate, ASAuthorizationControllerPresentationContextProviding {
+    // Static reference to keep coordinator alive during sign-in flow
+    private static var currentCoordinator: AppleSignInCoordinator?
 
-    init(authViewModel: AuthViewModel) {
+    let authViewModel: AuthViewModel
+    private var currentNonce: String?
+    var onError: ((String) -> Void)?
+    var onSuccess: (() -> Void)?
+
+    private init(authViewModel: AuthViewModel) {
         self.authViewModel = authViewModel
+        super.init()
     }
 
+    deinit {
+        print("🍎 AppleSignInCoordinator deallocated")
+    }
+
+    /// Static factory method that creates coordinator and immediately starts sign-in
+    static func startSignIn(
+        authViewModel: AuthViewModel,
+        onError: @escaping (String) -> Void,
+        onSuccess: @escaping () -> Void
+    ) {
+        print("🍎 startSignIn called")
+
+        let coordinator = AppleSignInCoordinator(authViewModel: authViewModel)
+        coordinator.onError = onError
+        coordinator.onSuccess = onSuccess
+
+        // Immediately retain in static reference BEFORE any async work
+        currentCoordinator = coordinator
+
+        // Generate a secure random nonce
+        let nonce = coordinator.randomNonceString()
+        coordinator.currentNonce = nonce
+
+        print("🍎 Generated nonce: \(nonce.prefix(10))...")
+
+        let request = ASAuthorizationAppleIDProvider().createRequest()
+        request.requestedScopes = [.email, .fullName]
+        request.nonce = coordinator.sha256(nonce)
+
+        let controller = ASAuthorizationController(authorizationRequests: [request])
+        controller.delegate = coordinator
+        controller.presentationContextProvider = coordinator
+
+        print("🍎 Performing Apple Sign-In request...")
+        controller.performRequests()
+    }
+
+    private func cleanUp() {
+        print("🍎 Cleaning up coordinator")
+        AppleSignInCoordinator.currentCoordinator = nil
+    }
+
+    // MARK: - ASAuthorizationControllerPresentationContextProviding
+
+    func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let window = windowScene.windows.first else {
+            return UIWindow()
+        }
+        return window
+    }
+
+    // MARK: - ASAuthorizationControllerDelegate
+
     func authorizationController(controller _: ASAuthorizationController, didCompleteWithAuthorization authorization: ASAuthorization) {
-        if let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential,
-           let identityToken = appleIDCredential.identityToken,
-           let idTokenString = String(data: identityToken, encoding: .utf8)
-        {
-            Task {
-                await authViewModel.signInWithApple(idToken: idTokenString)
+        print("🍎 didCompleteWithAuthorization called!")
+
+        guard let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential,
+              let identityToken = appleIDCredential.identityToken,
+              let idTokenString = String(data: identityToken, encoding: .utf8) else {
+            print("❌ Apple Sign-In: Failed to get identity token")
+            onError?("Failed to get Apple identity token")
+            cleanUp()
+            return
+        }
+
+        guard let nonce = currentNonce else {
+            print("❌ Apple Sign-In: No nonce found")
+            onError?("Authentication configuration error. Please try again.")
+            cleanUp()
+            return
+        }
+
+        print("✅ Apple Sign-In: Got identity token, length: \(idTokenString.count)")
+        print("🔑 Apple Sign-In: Using nonce: \(nonce.prefix(10))...")
+
+        // Get user info (only available on first sign-in)
+        let email = appleIDCredential.email
+        let fullName = appleIDCredential.fullName
+        if let email = email {
+            print("📧 Apple Sign-In: Email: \(email)")
+        }
+        if let fullName = fullName {
+            print("👤 Apple Sign-In: Name: \(fullName.givenName ?? "") \(fullName.familyName ?? "")")
+        }
+
+        Task {
+            await authViewModel.signInWithApple(idToken: idTokenString, rawNonce: nonce)
+
+            await MainActor.run {
+                if authViewModel.isSignedIn {
+                    print("✅ Apple Sign-In: Successfully signed in!")
+                    onSuccess?()
+                } else {
+                    if let error = authViewModel.lastError {
+                        print("❌ Apple Sign-In: Auth failed with error: \(error)")
+                        onError?(error)
+                    } else {
+                        onError?("Failed to sign in with Apple. Please try again.")
+                    }
+                }
+                cleanUp()
             }
         }
     }
 
     func authorizationController(controller _: ASAuthorizationController, didCompleteWithError error: Error) {
-        print("Apple sign in failed: \(error)")
+        print("❌ Apple sign in failed: \(error)")
+
+        // Check if user cancelled
+        if let authError = error as? ASAuthorizationError {
+            switch authError.code {
+            case .canceled:
+                // User cancelled, don't show error
+                print("ℹ️ Apple Sign-In: User cancelled")
+                cleanUp()
+                return
+            case .invalidResponse:
+                onError?("Invalid response from Apple. Please try again.")
+            case .notHandled:
+                onError?("Sign in request not handled. Please try again.")
+            case .failed:
+                onError?("Apple Sign-In failed. Please try again.")
+            case .notInteractive:
+                onError?("Sign in requires user interaction.")
+            case .unknown:
+                onError?("An unknown error occurred. Please try again.")
+            @unknown default:
+                onError?(error.localizedDescription)
+            }
+        } else {
+            onError?(error.localizedDescription)
+        }
+        cleanUp()
+    }
+
+    // MARK: - Nonce Helpers
+
+    private func randomNonceString(length: Int = 32) -> String {
+        precondition(length > 0)
+        var randomBytes = [UInt8](repeating: 0, count: length)
+        let errorCode = SecRandomCopyBytes(kSecRandomDefault, randomBytes.count, &randomBytes)
+        if errorCode != errSecSuccess {
+            fatalError("Unable to generate nonce. SecRandomCopyBytes failed with OSStatus \(errorCode)")
+        }
+
+        let charset: [Character] = Array("0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._")
+        let nonce = randomBytes.map { byte in
+            charset[Int(byte) % charset.count]
+        }
+        return String(nonce)
+    }
+
+    private func sha256(_ input: String) -> String {
+        let inputData = Data(input.utf8)
+        var hash = [UInt8](repeating: 0, count: Int(CC_SHA256_DIGEST_LENGTH))
+        inputData.withUnsafeBytes {
+            _ = CC_SHA256($0.baseAddress, CC_LONG(inputData.count), &hash)
+        }
+        return hash.map { String(format: "%02x", $0) }.joined()
     }
 }
 

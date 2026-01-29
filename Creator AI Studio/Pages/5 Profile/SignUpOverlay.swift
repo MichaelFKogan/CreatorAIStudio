@@ -11,6 +11,7 @@ struct SignUpOverlay: View {
     @State private var showEmailSignIn = false
     @State private var isGoogleSigningIn = false
     @State private var googleSignInError: String?
+    @State private var appleSignInError: String?
     @Environment(\.dismiss) var dismiss
     
     var body: some View {
@@ -193,12 +194,17 @@ struct SignUpOverlay: View {
     
     // MARK: - Apple Sign Up
     func handleAppleSignUp() {
-        let request = ASAuthorizationAppleIDProvider().createRequest()
-        request.requestedScopes = [.email, .fullName]
-        
-        let controller = ASAuthorizationController(authorizationRequests: [request])
-        controller.delegate = AppleSignInCoordinator(authViewModel: authViewModel)
-        controller.performRequests()
+        print("🍎 handleAppleSignUp called (SignUpOverlay)")
+        AppleSignInCoordinator.startSignIn(
+            authViewModel: authViewModel,
+            onError: { error in
+                print("🍎 onError callback: \(error)")
+                appleSignInError = error
+            },
+            onSuccess: {
+                print("🍎 onSuccess callback - user signed in!")
+            }
+        )
     }
     
     // MARK: - Google Sign In

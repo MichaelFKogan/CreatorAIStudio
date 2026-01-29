@@ -111,18 +111,63 @@ class AuthViewModel: ObservableObject {
 
     // MARK: - Apple Sign In
 
-    func signInWithApple(idToken: String) async {
+    /// Signs in with Apple using the ID token
+    /// - Parameters:
+    ///   - idToken: The identity token from Apple Sign-In
+    ///   - rawNonce: The raw (unhashed) nonce that was passed to Apple Sign-In.
+    ///               Apple hashes this and includes the hash in the ID token.
+    ///               Supabase will hash this raw nonce and compare it to the hash in the token.
+    func signInWithApple(idToken: String, rawNonce: String? = nil) async {
+        lastError = nil
+        print("🍎 [Apple Sign-In] Starting authentication...")
+        print("🍎 [Apple Sign-In] ID Token length: \(idToken.count)")
+        if let rawNonce = rawNonce {
+            print("🍎 [Apple Sign-In] Raw nonce provided: \(rawNonce.prefix(10))...")
+        } else {
+            print("🍎 [Apple Sign-In] No raw nonce provided")
+        }
+
         do {
-            let session = try await client.auth.signInWithIdToken(
-                credentials: .init(provider: .apple, idToken: idToken, accessToken: nil)
+            let credentials = OpenIDConnectCredentials(
+                provider: .apple,
+                idToken: idToken,
+                accessToken: nil,
+                nonce: rawNonce  // Pass the raw (unhashed) nonce
             )
+
+            let session = try await client.auth.signInWithIdToken(credentials: credentials)
+
+            print("✅ Apple sign-in successful: \(session.user.id)")
+            print("✅ User email: \(session.user.email ?? "no email")")
             self.user = session.user
             self.isSignedIn = true
-            
+
             // Start listening for webhook job completions
             await JobStatusManager.shared.startListening(userId: session.user.id.uuidString)
         } catch {
-            print("Apple sign-in error: \(error.localizedDescription)")
+            print("❌ Apple sign-in error: \(error)")
+            print("❌ Error type: \(type(of: error))")
+            if let supabaseError = error as? AuthError {
+                print("❌ Supabase Auth Error: \(supabaseError)")
+            }
+
+            let errorMessage = error.localizedDescription.lowercased()
+            let fullErrorDescription = String(describing: error)
+
+            // Check for nonce-related errors
+            if errorMessage.contains("nonce") || errorMessage.contains("nonces mismatch") {
+                lastError = "Authentication configuration error. Please try again."
+                print("❌ Nonce error detected")
+            }
+            // Check for user-related errors
+            else if errorMessage.contains("user not found") ||
+                    errorMessage.contains("invalid_credentials") ||
+                    errorMessage.contains("invalid login credentials") {
+                lastError = "Unable to sign in. Please try again."
+            } else {
+                lastError = fullErrorDescription
+                print("❌ Full error description: \(fullErrorDescription)")
+            }
         }
     }
 
