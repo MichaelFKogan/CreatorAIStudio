@@ -168,29 +168,6 @@ struct ImageModelDetailPage: View {
             ZStack(alignment: .bottom) {
                 ScrollView {
                     VStack(spacing: 24) {
-                        // Network connectivity disclaimer (shown when no internet)
-                        if !networkMonitor.isConnected {
-                            VStack(spacing: 4) {
-                                HStack(spacing: 6) {
-                                    Spacer()
-                                    Image(
-                                        systemName:
-                                            "exclamationmark.circle.fill"
-                                    )
-                                    .font(.system(size: 14))
-                                    .foregroundColor(.red)
-                                    Text(
-                                        "No internet connection. Please connect to the internet."
-                                    )
-                                    .font(.caption)
-                                    .foregroundColor(.red)
-                                    Spacer()
-                                }
-                            }
-                            .padding(.horizontal)
-                            .padding(.top, 8)
-                        }
-
                         LazyView(
                             BannerSection(item: item, costString: costString))
 
@@ -263,6 +240,7 @@ struct ImageModelDetailPage: View {
                                 primaryColor: .blue,
                                 secondaryColor: .cyan,
                                 loginMessage: "Log in to generate an image",
+                                isConnected: networkMonitor.isConnected,
                                 onSignIn: {
                                     showSignInSheet = true
                                 },

@@ -418,6 +418,7 @@ struct VideoModelDetailPage: View {
                                 primaryColor: .purple,
                                 secondaryColor: .pink,
                                 loginMessage: "Log in to generate a video",
+                                isConnected: networkMonitor.isConnected,
                                 onSignIn: {
                                     showSignInSheet = true
                                 },

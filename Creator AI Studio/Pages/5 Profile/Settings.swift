@@ -15,6 +15,7 @@ struct Settings: View {
     @State private var showTestCreditsView = false
     @State private var isRestoringPurchases = false
     @StateObject private var creditsViewModel = CreditsViewModel()
+    @ObservedObject private var networkMonitor = NetworkMonitor.shared
     
     // ProfileViewModel for cache clearing
     var profileViewModel: ProfileViewModel?
@@ -89,12 +90,21 @@ struct Settings: View {
                                // Current Balance
 
                 HStack {
-                    Image(systemName: "dollarsign.circle.fill")
-                        .foregroundColor(.green)
+                    if networkMonitor.isConnected {
+                        Image(systemName: "dollarsign.circle.fill")
+                            .foregroundColor(.green)
+                    } else {
+                        Image(systemName: "wifi.slash")
+                            .foregroundColor(.red)
+                    }
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Current Balance")
                             .font(.body)
-                        if creditsViewModel.isLoading {
+                        if !networkMonitor.isConnected {
+                            Text("No connection")
+                                .font(.caption)
+                                .foregroundColor(.red)
+                        } else if creditsViewModel.isLoading {
                             Text("Loading...")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
@@ -105,7 +115,7 @@ struct Settings: View {
                         }
                     }
                     Spacer()
-                    if creditsViewModel.isLoading {
+                    if networkMonitor.isConnected && creditsViewModel.isLoading {
                         ProgressView()
                             .scaleEffect(0.8)
                     }

@@ -548,34 +548,27 @@ struct PhotoConfirmationView: View {
     }
 
     private var generateButtonSection: some View {
-        VStack(spacing: 4) {
-            if !networkMonitor.isConnected {
-                networkErrorMessage
-                    .padding(.bottom, 12)
-            }
-            
-            VStack(spacing: 12) {
-                // Use the reusable AuthAwareCostCard component
-                AuthAwareCostCard(
-                    price: totalPrice,
-                    requiredCredits: requiredCredits,
-                    primaryColor: .blue,
-                    secondaryColor: .purple,
-                    loginMessage: "Log in to generate an image",
-                    onSignIn: {
-                        showSignInSheet = true
-                    },
-                    onBuyCredits: {
-                        showPurchaseCreditsView = true
-                    }
-                )
-            }
-            .padding(.bottom, 8)  // Compensate for parent VStack spacing: 4 to get total of 12
-
+        VStack(spacing: 12) {
             generateButton
                 .onAppear {
                     setupGenerateButtonAnimations()
                 }
+
+            // Below button: no-internet (when offline) or login/insufficient credits + cost (when online), matching PhotoFilterDetailView
+            AuthAwareCostCard(
+                price: totalPrice,
+                requiredCredits: requiredCredits,
+                primaryColor: .blue,
+                secondaryColor: .purple,
+                loginMessage: "Log in to generate an image",
+                isConnected: networkMonitor.isConnected,
+                onSignIn: {
+                    showSignInSheet = true
+                },
+                onBuyCredits: {
+                    showPurchaseCreditsView = true
+                }
+            )
         }
         .padding(.horizontal)
     }

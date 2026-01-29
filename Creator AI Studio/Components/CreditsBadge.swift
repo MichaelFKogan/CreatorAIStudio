@@ -14,6 +14,7 @@ import SwiftUI
 struct CreditsBadge: View {
     @EnvironmentObject var authViewModel: AuthViewModel
     @StateObject private var creditsViewModel = CreditsViewModel()
+    @ObservedObject private var networkMonitor = NetworkMonitor.shared
     @State private var showSignInSheet: Bool = false
     @State private var showPurchaseCreditsSheet: Bool = false
     
@@ -44,8 +45,28 @@ struct CreditsBadge: View {
                         )
                         .foregroundColor(.primary)
                 }
+            } else if !networkMonitor.isConnected {
+                // Show red no-wifi icon when logged in but offline (instead of 0 credits)
+                Button(action: {
+                    showPurchaseCreditsSheet = true
+                }) {
+                    Image(systemName: "wifi.slash")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.red)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(
+                            RoundedRectangle(cornerRadius: 6)
+                                .fill(Color.secondary.opacity(0.3))
+                                .shadow(
+                                    color: Color.black.opacity(0.2), radius: 4,
+                                    x: 0, y: 2
+                                )
+                        )
+                }
+                .buttonStyle(PlainButtonStyle())
             } else {
-                // Show credits badge when logged in - make it tappable
+                // Show credits badge when logged in and online
                 Button(action: {
                     showPurchaseCreditsSheet = true
                 }) {

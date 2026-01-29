@@ -249,6 +249,7 @@ struct PhotoFilterDetailView: View {
                 primaryColor: .blue,
                 secondaryColor: .mint,
                 loginMessage: "Log in to upload your photo",
+                isConnected: networkMonitor.isConnected,
                 onSignIn: {
                     showSignInSheet = true
                 },
@@ -378,21 +379,6 @@ struct PhotoFilterDetailView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
-                // Network connectivity disclaimer at the top
-                if !networkMonitor.isConnected {
-                    VStack(spacing: 4) {
-                        HStack(spacing: 6) {
-                            Image(systemName: "exclamationmark.circle.fill")
-                                .font(.system(size: 14))
-                                .foregroundColor(.red)
-                            Text("No internet connection. Please connect to the internet.")
-                                .font(.caption)
-                                .foregroundColor(.red)
-                        }
-                    }
-                    .padding(.top, 8)
-                }
-
                 heroSection
                 additionalFiltersSection
                 photoUploadSection

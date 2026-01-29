@@ -7,16 +7,18 @@
 
 import SwiftUI
 
-/// A reusable component that handles three states:
+/// A reusable component that handles four states:
 /// 1. Not signed in: Shows sign in/sign up card
-/// 2. Signed in with enough credits: Shows EnhancedCostCard with success state
-/// 3. Signed in without enough credits: Shows EnhancedCostCard with insufficient credits state
+/// 2. Signed in, no internet: Shows "No internet connection" message (replaces insufficient credits slot)
+/// 3. Signed in with enough credits: Shows EnhancedCostCard with success state
+/// 4. Signed in without enough credits: Shows EnhancedCostCard with insufficient credits state
 struct AuthAwareCostCard: View {
     let price: Decimal
     let requiredCredits: Double
     let primaryColor: Color
     let secondaryColor: Color
     let loginMessage: String  // e.g., "Log in to generate an image" or "Log in to generate a video"
+    var isConnected: Bool = true  // When false, show no-internet message instead of insufficient credits
     let onSignIn: () -> Void
     let onBuyCredits: () -> Void
     
@@ -58,8 +60,11 @@ struct AuthAwareCostCard: View {
                     }
                     .padding(.top, 6)
                 }
+            } else if !isConnected {
+                // Logged in but no internet: Show no-internet message (replaces insufficient credits slot)
+                noInternetCard
             } else {
-                // Logged in: Show enhanced cost card
+                // Logged in, connected: Show enhanced cost card
                 EnhancedCostCard(
                     price: price,
                     balance: creditsViewModel.formattedBalance(),
@@ -115,6 +120,43 @@ struct AuthAwareCostCard: View {
                     .foregroundColor(primaryColor)
             }
             .buttonStyle(.plain)
+        }
+        .padding(.vertical, 4)
+    }
+    
+    /// No-internet message shown below Generate/Upload button when user is logged in but offline
+    private var noInternetCard: some View {
+        VStack(spacing: 6) {
+            // No-internet message
+            HStack(spacing: 6) {
+                Image(systemName: "exclamationmark.circle.fill")
+                    .font(.system(size: 14))
+                    .foregroundColor(.red)
+                Text("No internet connection. Please connect to the internet.")
+                    .font(.caption)
+                    .foregroundColor(.red)
+                Spacer()
+            }
+            
+            // Cost display below the message, aligned to the right (same style as EnhancedCostCard)
+            HStack(spacing: 4) {
+                Spacer()
+                HStack(spacing: 4) {
+                    Image(systemName: "dollarsign.circle.fill")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Text("Cost")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                PriceDisplayView(
+                    price: price,
+                    showUnit: true,
+                    font: .caption,
+                    fontWeight: .semibold,
+                    foregroundColor: .primary
+                )
+            }
         }
         .padding(.vertical, 4)
     }

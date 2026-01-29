@@ -21,6 +21,7 @@ struct PurchaseCreditsView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
     @Environment(\.dismiss) private var dismiss
     @ObservedObject private var creditsViewModel = CreditsViewModel.shared
+    @ObservedObject private var networkMonitor = NetworkMonitor.shared
     @StateObject private var purchaseManager = StoreKitPurchaseManager.shared
 
     @State private var isPurchasing = false
@@ -75,13 +76,28 @@ struct PurchaseCreditsView: View {
                                 .foregroundColor(.secondary)
 
                             if let userId = authViewModel.user?.id {
-                                Text(creditsViewModel.formattedBalance())
-                                    .font(
-                                        .system(
-                                            size: 16, weight: .bold,
-                                            design: .rounded)
-                                    )
-                                    .foregroundColor(.primary)
+                                if !networkMonitor.isConnected {
+                                    HStack(spacing: 6) {
+                                        Image(systemName: "wifi.slash")
+                                            .font(.system(size: 16, weight: .medium))
+                                            .foregroundColor(.red)
+                                        Text("No connection")
+                                            .font(
+                                                .system(
+                                                    size: 14, weight: .medium,
+                                                    design: .rounded)
+                                            )
+                                            .foregroundColor(.red)
+                                    }
+                                } else {
+                                    Text(creditsViewModel.formattedBalance())
+                                        .font(
+                                            .system(
+                                                size: 16, weight: .bold,
+                                                design: .rounded)
+                                        )
+                                        .foregroundColor(.primary)
+                                }
                             } else {
                                 Text("Log in to view")
                                     .font(
