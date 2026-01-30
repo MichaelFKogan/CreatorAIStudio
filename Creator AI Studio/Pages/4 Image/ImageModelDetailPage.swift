@@ -9,6 +9,12 @@ import Kingfisher
 import PhotosUI
 import SwiftUI
 
+/// Input mode for image models that support both text and image: Text | Image.
+private enum ImageTextInputMode: String, CaseIterable {
+    case textToImage = "Text"
+    case imageToImage = "Image"
+}
+
 struct LazyView<Content: View>: View {
     let build: () -> Content
     init(_ build: @autoclosure @escaping () -> Content) { self.build = build }
@@ -25,6 +31,9 @@ struct ImageModelDetailPage: View {
 
     @State private var referenceImages: [UIImage] = []
     @State private var selectedPhotoItems: [PhotosPickerItem] = []
+
+    /// Text | Image segmented control (all image models except Z-Image-Turbo and Wan2.5-Preview Image).
+    @State private var imageTextInputMode: ImageTextInputMode = .imageToImage
 
     @State private var isGenerating: Bool = false
     @State private var keyboardHeight: CGFloat = 0
@@ -161,6 +170,17 @@ struct ImageModelDetailPage: View {
         item.display.title.lowercased().contains("midjourney")
     }
 
+    /// Text-only models: no segmented control, no reference images section.
+    private var isTextOnlyImageModel: Bool {
+        guard let name = item.display.modelName else { return false }
+        return name == "Z-Image-Turbo" || name == "Wan2.5-Preview Image"
+    }
+
+    /// True when the model shows Text | Image segmented control (all image models except text-only).
+    private var showsTextImageInputModePicker: Bool {
+        !isTextOnlyImageModel
+    }
+
     // MARK: BODY
 
     var body: some View {
@@ -189,9 +209,28 @@ struct ImageModelDetailPage: View {
                                 isProcessingOCR: $isProcessingOCR
                             ))
 
-                        if ModelConfigurationManager.shared.capabilities(
-                            for: item)?.contains("Image to Image") == true
-                        {
+                        // Input mode: Text | Image (all image models except Z-Image-Turbo and Wan2.5-Preview Image)
+                        if showsTextImageInputModePicker {
+                            VStack(alignment: .leading, spacing: 12) {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text("Input mode")
+                                        .font(.subheadline)
+                                        .fontWeight(.semibold)
+                                        .foregroundColor(.secondary)
+                                    Picker("Input mode", selection: $imageTextInputMode) {
+                                        ForEach(ImageTextInputMode.allCases, id: \.self) { mode in
+                                            Text(mode.rawValue).tag(mode)
+                                        }
+                                    }
+                                    .pickerStyle(.segmented)
+                                }
+                                ImageTextImageModeDescriptionBlock(mode: imageTextInputMode, color: .blue)
+                            }
+                            .padding(.horizontal)
+                        }
+
+                        // Reference images: only when Image segment is selected (never for text-only models)
+                        if showsTextImageInputModePicker && imageTextInputMode == .imageToImage {
                             LazyView(
                                 ReferenceImagesSection(
                                     referenceImages: $referenceImages,
@@ -483,7 +522,9 @@ struct ImageModelDetailPage: View {
         config.aspectRatio = selectedAspectOption.id
         modifiedItem.apiConfig = config
 
-        let imageToUse = referenceImages.first ?? createPlaceholderImage()
+        // Pass reference image only when Image segment is selected; text-only models never use ref image.
+        let useReferenceImage = showsTextImageInputModePicker && imageTextInputMode == .imageToImage
+        let imageToUse = (useReferenceImage ? referenceImages.first : nil) ?? createPlaceholderImage()
         guard let userId = authViewModel.user?.id.uuidString.lowercased(),
             !userId.isEmpty
         else {
@@ -544,6 +585,52 @@ struct ImageModelDetailPage: View {
                     "No text was found in the image. Please try again with a clearer image."
                 showOCRAlert = true
             }
+        }
+    }
+}
+
+// MARK: TEXT / IMAGE MODE DESCRIPTION BLOCK (IMAGE MODELS)
+
+/// Title + icon + short instructions for image models with Text | Image input mode.
+private struct ImageTextImageModeDescriptionBlock: View {
+    let mode: ImageTextInputMode
+    let color: Color
+
+    private var title: String {
+        switch mode {
+        case .textToImage: return "Text To Image"
+        case .imageToImage: return "Image To Image"
+        }
+    }
+
+    private var iconName: String {
+        switch mode {
+        case .textToImage: return "doc.text"
+        case .imageToImage: return "photo"
+        }
+    }
+
+    private var instructions: String {
+        switch mode {
+        case .textToImage: return "Describe your image with a prompt. No reference images are used."
+        case .imageToImage: return "Upload one or more reference images to guide the style and content."
+        }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 6) {
+                Image(systemName: iconName)
+                    .foregroundColor(color)
+                Text(title)
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.secondary)
+                Spacer()
+            }
+            Text(instructions)
+                .font(.caption)
+                .foregroundColor(.secondary.opacity(0.8))
         }
     }
 }

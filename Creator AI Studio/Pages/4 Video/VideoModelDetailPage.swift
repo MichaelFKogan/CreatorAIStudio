@@ -75,16 +75,16 @@ struct VideoModelDetailPage: View {
     @State private var showLastFrameCameraSheet: Bool = false
 
     /// Google Veo 3.1 Fast only: Text to Video | Image to Video | Frame Images
-    @State private var googleVeoInputMode: GoogleVeoInputMode = .textToVideo
+    @State private var googleVeoInputMode: GoogleVeoInputMode = .imageToVideo
 
     /// KlingAI 2.5 Turbo Pro only: Text | Image | Frames
-    @State private var klingAI25InputMode: KlingAI25TurboProInputMode = .textToVideo
+    @State private var klingAI25InputMode: KlingAI25TurboProInputMode = .imageToVideo
 
     /// Kling VIDEO 2.6 Pro only: Text | Image | Motion Control
-    @State private var klingVideo26InputMode: KlingVideo26ProInputMode = .textToVideo
+    @State private var klingVideo26InputMode: KlingVideo26ProInputMode = .imageToVideo
 
     /// Sora 2, Seedance 1.0 Pro Fast, Wan2.6: Text to Video | Image to Video
-    @State private var sora2InputMode: Sora2InputMode = .textToVideo
+    @State private var sora2InputMode: Sora2InputMode = .imageToVideo
 
     /// Motion Control (Kling VIDEO 2.6 Pro): reference video + character image (UI only for now)
     @State fileprivate var motionControlVideoItem: PhotosPickerItem? = nil

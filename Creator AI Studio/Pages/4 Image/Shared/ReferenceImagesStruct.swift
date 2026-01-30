@@ -77,29 +77,29 @@ struct ReferenceImagesSection: View {
                     }
                 }
             } else {
-                // Header section when images exist
-                VStack(spacing: 8) {
-                    HStack(spacing: 6) {
-                        Image(systemName: "photo.on.rectangle")
-                            .foregroundColor(color)
-                        Text("Your Photo")
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.secondary)
+                // // Header section when images exist
+                // VStack(spacing: 8) {
+                //     HStack(spacing: 6) {
+                //         Image(systemName: "photo.on.rectangle")
+                //             .foregroundColor(color)
+                //         Text("Your Photo")
+                //             .font(.subheadline)
+                //             .fontWeight(.semibold)
+                //             .foregroundColor(.secondary)
 
-                        Spacer()
-                    }
+                //         Spacer()
+                //     }
 
-                    HStack {
-                        Text("Add a prompt to transform your photo.")
-                            .font(.caption)
-                            .foregroundColor(.secondary.opacity(0.8))
-                            .padding(.bottom, 8)
+                //     HStack {
+                //         Text("Add a prompt to transform your photo.")
+                //             .font(.caption)
+                //             .foregroundColor(.secondary.opacity(0.8))
+                //             .padding(.bottom, 8)
 
-                        Spacer()
-                    }
-                }
-                .padding(.top, -4)
+                //         Spacer()
+                //     }
+                // }
+                // .padding(.top, -4)
 
                 // Grid layout when images exist - responsive to screen width
                 LazyVGrid(columns: columns, spacing: 12) {
