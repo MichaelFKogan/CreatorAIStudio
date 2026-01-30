@@ -15,6 +15,20 @@ import SwiftUI
 //    var body: some View { build() }
 //}
 
+/// Input mode for Google Veo 3.1 Fast (Text to Video, Image to Video, or Frame Images).
+/// Other video models can define their own mode enums (e.g. Motion Control for Kling VIDEO 2.6 Pro).
+private enum GoogleVeoInputMode: String, CaseIterable {
+    case textToVideo = "Text"
+    case imageToVideo = "Image"
+    case frameImages = "Frames"
+}
+
+/// Input mode for Sora 2, Seedance 1.0 Pro Fast, Wan2.6: Text to Video or Image to Video.
+private enum Sora2InputMode: String, CaseIterable {
+    case textToVideo = "Text"
+    case imageToVideo = "Image"
+}
+
 struct VideoModelDetailPage: View {
     @State var item: InfoPacket
 
@@ -30,6 +44,12 @@ struct VideoModelDetailPage: View {
     @State private var lastFrameImage: UIImage? = nil
     @State private var showFirstFrameCameraSheet: Bool = false
     @State private var showLastFrameCameraSheet: Bool = false
+
+    /// Google Veo 3.1 Fast only: Text to Video | Image to Video | Frame Images
+    @State private var googleVeoInputMode: GoogleVeoInputMode = .textToVideo
+
+    /// Sora 2 only: Text to Video | Image to Video
+    @State private var sora2InputMode: Sora2InputMode = .textToVideo
 
     @State private var isGenerating: Bool = false
     @State private var keyboardHeight: CGFloat = 0
@@ -165,6 +185,22 @@ struct VideoModelDetailPage: View {
     private var supportsFrameImages: Bool {
         guard let modelName = item.display.modelName else { return false }
         return modelName == "KlingAI 2.5 Turbo Pro" || modelName == "Google Veo 3.1 Fast"
+    }
+
+    /// True when the current model is Google Veo 3.1 Fast (shows Text | Image | Frames mode picker).
+    private var isGoogleVeo31Fast: Bool {
+        item.display.modelName == "Google Veo 3.1 Fast"
+    }
+
+    /// True when the current model is Sora 2 (used for disclaimer and duration default).
+    private var isSora2: Bool {
+        item.display.modelName == "Sora 2"
+    }
+
+    /// True when the current model shows Text | Image mode picker (Sora 2, Seedance 1.0 Pro Fast, Wan2.6).
+    private var showsTextImageInputModePicker: Bool {
+        guard let name = item.display.modelName else { return false }
+        return name == "Sora 2" || name == "Seedance 1.0 Pro Fast" || name == "Wan2.6"
     }
 
     private let examplePrompts: [String] = [
@@ -341,10 +377,55 @@ struct VideoModelDetailPage: View {
                                 isProcessingOCR: $isProcessingOCR
                             ))
 
-                        // Hide reference images section for KlingAI 2.5 Turbo Pro (uses frame images instead)
-                        if ModelConfigurationManager.shared.capabilities(
-                            for: item)?.contains("Image to Video") == true 
+                        // Google Veo 3.1 Fast: mode picker (Text | Image | Frames)
+                        if isGoogleVeo31Fast {
+                            VStack(alignment: .leading, spacing: 12) {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text("Input mode")
+                                        .font(.subheadline)
+                                        .fontWeight(.semibold)
+                                        .foregroundColor(.secondary)
+                                    Picker("Input mode", selection: $googleVeoInputMode) {
+                                        ForEach(GoogleVeoInputMode.allCases, id: \.self) { mode in
+                                            Text(mode.rawValue).tag(mode)
+                                        }
+                                    }
+                                    .pickerStyle(.segmented)
+                                }
+                                // Title + icon + short instructions for the selected mode
+                                VeoModeDescriptionBlock(mode: googleVeoInputMode, color: .purple)
+                            }
+                            .padding(.horizontal)
+                        }
+
+                        // Sora 2, Seedance 1.0 Pro Fast, Wan2.6: mode picker (Text | Image)
+                        if showsTextImageInputModePicker {
+                            VStack(alignment: .leading, spacing: 12) {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text("Input mode")
+                                        .font(.subheadline)
+                                        .fontWeight(.semibold)
+                                        .foregroundColor(.secondary)
+                                    Picker("Input mode", selection: $sora2InputMode) {
+                                        ForEach(Sora2InputMode.allCases, id: \.self) { mode in
+                                            Text(mode.rawValue).tag(mode)
+                                        }
+                                    }
+                                    .pickerStyle(.segmented)
+                                }
+                                // Title + icon + short instructions for the selected mode
+                                TextImageModeDescriptionBlock(mode: sora2InputMode, color: .purple)
+                            }
+                            .padding(.horizontal)
+                        }
+
+                        // Reference images: Image-to-Video (not frame-only, not Text|Image picker models) OR Text|Image picker in Image mode OR Veo in Image mode
+                        if (ModelConfigurationManager.shared.capabilities(
+                            for: item)?.contains("Image to Video") == true
                             && !supportsFrameImages
+                            && !showsTextImageInputModePicker)
+                            || (showsTextImageInputModePicker && sora2InputMode == .imageToVideo)
+                            || (isGoogleVeo31Fast && googleVeoInputMode == .imageToVideo)
                         {
                             LazyView(
                                 ReferenceImagesSection(
@@ -352,21 +433,24 @@ struct VideoModelDetailPage: View {
                                     selectedPhotoItems: $selectedPhotoItems,
                                     showCameraSheet: $showCameraSheet,
                                     color: .purple,
-                                    disclaimer: item.display.modelName == "Sora 2" 
+                                    disclaimer: item.display.modelName == "Sora 2"
                                         ? "Sora 2 does not allow reference images with people - these will be rejected. Images of cartoons, animated figures, or landscapes are allowed."
                                         : nil
                                 ))
                         }
-                        
-                        // Frame images section for KlingAI 2.5 Turbo Pro
-                        if supportsFrameImages {
+
+                        // Frame images: KlingAI 2.5 Turbo Pro always; Google Veo 3.1 Fast only in Frames mode
+                        if (supportsFrameImages && !isGoogleVeo31Fast)
+                            || (isGoogleVeo31Fast && googleVeoInputMode == .frameImages)
+                        {
                             LazyView(
                                 FrameImagesSection(
                                     firstFrameImage: $firstFrameImage,
                                     lastFrameImage: $lastFrameImage,
                                     showFirstFrameCameraSheet: $showFirstFrameCameraSheet,
                                     showLastFrameCameraSheet: $showLastFrameCameraSheet,
-                                    color: .purple
+                                    color: .purple,
+                                    showTitleAndDescription: !isGoogleVeo31Fast
                                 ))
                         }
 
@@ -687,7 +771,14 @@ struct VideoModelDetailPage: View {
         config.aspectRatio = selectedAspectOption.id
         modifiedItem.apiConfig = config
 
-        let imageToUse = referenceImages.first
+        // For Google Veo 3.1 Fast: use reference image only in Image mode; for Sora 2 / Seedance / Wan2.6 only in Image mode; else use reference image when available
+        let imageToUse: UIImage? = isGoogleVeo31Fast
+            ? (googleVeoInputMode == .imageToVideo ? referenceImages.first : nil)
+            : (showsTextImageInputModePicker ? (sora2InputMode == .imageToVideo ? referenceImages.first : nil) : referenceImages.first)
+        let useFirstLastFrame: Bool = isGoogleVeo31Fast
+            ? (googleVeoInputMode == .frameImages)
+            : supportsFrameImages
+
         guard let userId = authViewModel.user?.id.uuidString.lowercased(),
             !userId.isEmpty
         else {
@@ -705,8 +796,8 @@ struct VideoModelDetailPage: View {
                 resolution: hasVariableResolution
                     ? selectedResolutionOption.id : nil,
                 generateAudio: supportsAudio ? generateAudio : nil,
-                firstFrameImage: supportsFrameImages ? firstFrameImage : nil,
-                lastFrameImage: supportsFrameImages ? lastFrameImage : nil,
+                firstFrameImage: useFirstLastFrame ? firstFrameImage : nil,
+                lastFrameImage: useFirstLastFrame ? lastFrameImage : nil,
                 onVideoGenerated: { _ in
                     isGenerating = false
                 },
@@ -1677,6 +1768,101 @@ private struct AudioToggleSectionVideo: View {
     }
 }
 
+// MARK: VEO MODE DESCRIPTION BLOCK
+
+/// Title + icon + short instructions for Google Veo 3.1 Fast input mode (Text / Image / Frames).
+private struct VeoModeDescriptionBlock: View {
+    let mode: GoogleVeoInputMode
+    let color: Color
+
+    private var title: String {
+        switch mode {
+        case .textToVideo: return "Text To Video"
+        case .imageToVideo: return "Image To Video"
+        case .frameImages: return "Frame Images"
+        }
+    }
+
+    private var iconName: String {
+        switch mode {
+        case .textToVideo: return "doc.text"
+        case .imageToVideo: return "photo"
+        case .frameImages: return "photo.on.rectangle.angled"
+        }
+    }
+
+    private var instructions: String {
+        switch mode {
+        case .textToVideo: return "Describe your video with a prompt. No reference or frame images are used."
+        case .imageToVideo: return "Upload one or more reference images to guide the style and content of your video."
+        case .frameImages: return "Add first and last frame images to control the video start and end."
+        }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 6) {
+                Image(systemName: iconName)
+                    .foregroundColor(color)
+                Text(title)
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.secondary)
+                Spacer()
+            }
+            Text(instructions)
+                .font(.caption)
+                .foregroundColor(.secondary.opacity(0.8))
+        }
+    }
+}
+
+// MARK: TEXT / IMAGE MODE DESCRIPTION BLOCK
+
+/// Title + icon + short instructions for Sora 2, Seedance 1.0 Pro Fast, Wan2.6 input mode (Text | Image).
+private struct TextImageModeDescriptionBlock: View {
+    let mode: Sora2InputMode
+    let color: Color
+
+    private var title: String {
+        switch mode {
+        case .textToVideo: return "Text To Video"
+        case .imageToVideo: return "Image To Video"
+        }
+    }
+
+    private var iconName: String {
+        switch mode {
+        case .textToVideo: return "doc.text"
+        case .imageToVideo: return "photo"
+        }
+    }
+
+    private var instructions: String {
+        switch mode {
+        case .textToVideo: return "Describe your video with a prompt. No reference images are used."
+        case .imageToVideo: return "Upload one or more reference images to guide the style and content of your video."
+        }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 6) {
+                Image(systemName: iconName)
+                    .foregroundColor(color)
+                Text(title)
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.secondary)
+                Spacer()
+            }
+            Text(instructions)
+                .font(.caption)
+                .foregroundColor(.secondary.opacity(0.8))
+        }
+    }
+}
+
 // MARK: FRAME IMAGES SECTION
 
 private struct FrameImagesSection: View {
@@ -1685,29 +1871,33 @@ private struct FrameImagesSection: View {
     @Binding var showFirstFrameCameraSheet: Bool
     @Binding var showLastFrameCameraSheet: Bool
     let color: Color
-    
+    /// When false (e.g. Google Veo Frames mode), title and description are hidden; caller shows them via VeoModeDescriptionBlock.
+    var showTitleAndDescription: Bool = true
+
     @State private var showFirstFrameActionSheet: Bool = false
     @State private var showLastFrameActionSheet: Bool = false
     @State private var selectedFirstFramePhotoItem: PhotosPickerItem? = nil
     @State private var selectedLastFramePhotoItem: PhotosPickerItem? = nil
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 6) {
-                Image(systemName: "photo.on.rectangle.angled")
-                    .foregroundColor(color)
-                Text("Frame Images (Optional)")
-                    .font(.subheadline)
-                    .fontWeight(.semibold)
-                    .foregroundColor(.secondary)
-                Spacer()
+            if showTitleAndDescription {
+                HStack(spacing: 6) {
+                    Image(systemName: "photo.on.rectangle.angled")
+                        .foregroundColor(color)
+                    Text("Frame Images (Optional)")
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.secondary)
+                    Spacer()
+                }
+
+                Text("Add first and last frame images to control the video start and end")
+                    .font(.caption)
+                    .foregroundColor(.secondary.opacity(0.8))
+                    .padding(.bottom, 4)
             }
-            
-            Text("Add first and last frame images to control the video start and end")
-                .font(.caption)
-                .foregroundColor(.secondary.opacity(0.8))
-                .padding(.bottom, 4)
-            
+
             // Horizontal layout with arrow icon between first and last frame images
             HStack(spacing: 0) {
                 // First Frame Image - takes 50% of width
