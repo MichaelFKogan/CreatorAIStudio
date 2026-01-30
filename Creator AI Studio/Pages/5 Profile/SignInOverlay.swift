@@ -194,6 +194,18 @@ struct SignInOverlay: View {
                 Text(error)
             }
         }
+        .alert("Apple Sign In Error", isPresented: Binding(
+            get: { appleSignInError != nil },
+            set: { if !$0 { appleSignInError = nil } }
+        )) {
+            Button("OK", role: .cancel) {
+                appleSignInError = nil
+            }
+        } message: {
+            if let error = appleSignInError {
+                Text(error)
+            }
+        }
     }
     
     // MARK: - Apple Sign In
@@ -336,4 +348,3 @@ struct SignInOverlay: View {
         return nil
     }
 }
-
