@@ -100,7 +100,11 @@ struct Settings: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Current Balance")
                             .font(.body)
-                        if !networkMonitor.isConnected {
+                        if authViewModel.user == nil {
+                            Text("Please log in to view balance")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        } else if !networkMonitor.isConnected {
                             Text("No connection")
                                 .font(.caption)
                                 .foregroundColor(.red)

@@ -8,6 +8,21 @@
 import Kingfisher
 import PhotosUI
 import SwiftUI
+import UniformTypeIdentifiers
+
+/// Used by Motion Control section to load a selected video from PhotosPickerItem.
+private struct VideoTransferable: Transferable {
+    let url: URL
+    static var transferRepresentation: some TransferRepresentation {
+        FileRepresentation(contentType: .movie) { video in
+            SentTransferredFile(video.url)
+        } importing: { received in
+            let copy = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".mov")
+            try FileManager.default.copyItem(at: received.file, to: copy)
+            return Self.init(url: copy)
+        }
+    }
+}
 
 //struct LazyView<Content: View>: View {
 //    let build: () -> Content
@@ -21,6 +36,20 @@ private enum GoogleVeoInputMode: String, CaseIterable {
     case textToVideo = "Text"
     case imageToVideo = "Image"
     case frameImages = "Frames"
+}
+
+/// Input mode for KlingAI 2.5 Turbo Pro (Text | Image | Frames), same options as Google Veo 3.1 Fast.
+private enum KlingAI25TurboProInputMode: String, CaseIterable {
+    case textToVideo = "Text"
+    case imageToVideo = "Image"
+    case frameImages = "Frames"
+}
+
+/// Input mode for Kling VIDEO 2.6 Pro: Text | Image | Motion Control.
+private enum KlingVideo26ProInputMode: String, CaseIterable {
+    case textToVideo = "Text"
+    case imageToVideo = "Image"
+    case motionControl = "Motion"
 }
 
 /// Input mode for Sora 2, Seedance 1.0 Pro Fast, Wan2.6: Text to Video or Image to Video.
@@ -48,8 +77,20 @@ struct VideoModelDetailPage: View {
     /// Google Veo 3.1 Fast only: Text to Video | Image to Video | Frame Images
     @State private var googleVeoInputMode: GoogleVeoInputMode = .textToVideo
 
-    /// Sora 2 only: Text to Video | Image to Video
+    /// KlingAI 2.5 Turbo Pro only: Text | Image | Frames
+    @State private var klingAI25InputMode: KlingAI25TurboProInputMode = .textToVideo
+
+    /// Kling VIDEO 2.6 Pro only: Text | Image | Motion Control
+    @State private var klingVideo26InputMode: KlingVideo26ProInputMode = .textToVideo
+
+    /// Sora 2, Seedance 1.0 Pro Fast, Wan2.6: Text to Video | Image to Video
     @State private var sora2InputMode: Sora2InputMode = .textToVideo
+
+    /// Motion Control (Kling VIDEO 2.6 Pro): reference video + character image (UI only for now)
+    @State fileprivate var motionControlVideoItem: PhotosPickerItem? = nil
+    @State fileprivate var motionControlVideoURL: URL? = nil
+    @State fileprivate var motionControlCharacterImage: UIImage? = nil
+    @State fileprivate var motionControlCharacterPhotoItem: PhotosPickerItem? = nil
 
     @State private var isGenerating: Bool = false
     @State private var keyboardHeight: CGFloat = 0
@@ -190,6 +231,16 @@ struct VideoModelDetailPage: View {
     /// True when the current model is Google Veo 3.1 Fast (shows Text | Image | Frames mode picker).
     private var isGoogleVeo31Fast: Bool {
         item.display.modelName == "Google Veo 3.1 Fast"
+    }
+
+    /// True when the current model is KlingAI 2.5 Turbo Pro (shows Text | Image | Frames mode picker).
+    private var isKlingAI25TurboPro: Bool {
+        item.display.modelName == "KlingAI 2.5 Turbo Pro"
+    }
+
+    /// True when the current model is Kling VIDEO 2.6 Pro (shows Text | Image | Motion Control mode picker).
+    private var isKlingVideo26Pro: Bool {
+        item.display.modelName == "Kling VIDEO 2.6 Pro"
     }
 
     /// True when the current model is Sora 2 (used for disclaimer and duration default).
@@ -398,6 +449,46 @@ struct VideoModelDetailPage: View {
                             .padding(.horizontal)
                         }
 
+                        // KlingAI 2.5 Turbo Pro: mode picker (Text | Image | Frames)
+                        if isKlingAI25TurboPro {
+                            VStack(alignment: .leading, spacing: 12) {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text("Input mode")
+                                        .font(.subheadline)
+                                        .fontWeight(.semibold)
+                                        .foregroundColor(.secondary)
+                                    Picker("Input mode", selection: $klingAI25InputMode) {
+                                        ForEach(KlingAI25TurboProInputMode.allCases, id: \.self) { mode in
+                                            Text(mode.rawValue).tag(mode)
+                                        }
+                                    }
+                                    .pickerStyle(.segmented)
+                                }
+                                KlingAI25ModeDescriptionBlock(mode: klingAI25InputMode, color: .purple)
+                            }
+                            .padding(.horizontal)
+                        }
+
+                        // Kling VIDEO 2.6 Pro: mode picker (Text | Image | Motion Control)
+                        if isKlingVideo26Pro {
+                            VStack(alignment: .leading, spacing: 12) {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text("Input mode")
+                                        .font(.subheadline)
+                                        .fontWeight(.semibold)
+                                        .foregroundColor(.secondary)
+                                    Picker("Input mode", selection: $klingVideo26InputMode) {
+                                        ForEach(KlingVideo26ProInputMode.allCases, id: \.self) { mode in
+                                            Text(mode.rawValue).tag(mode)
+                                        }
+                                    }
+                                    .pickerStyle(.segmented)
+                                }
+                                KlingVideo26ModeDescriptionBlock(mode: klingVideo26InputMode, color: .purple)
+                            }
+                            .padding(.horizontal)
+                        }
+
                         // Sora 2, Seedance 1.0 Pro Fast, Wan2.6: mode picker (Text | Image)
                         if showsTextImageInputModePicker {
                             VStack(alignment: .leading, spacing: 12) {
@@ -419,13 +510,17 @@ struct VideoModelDetailPage: View {
                             .padding(.horizontal)
                         }
 
-                        // Reference images: Image-to-Video (not frame-only, not Text|Image picker models) OR Text|Image picker in Image mode OR Veo in Image mode
+                        // Reference images: Image-to-Video (not picker models) OR any picker model in Image mode only
                         if (ModelConfigurationManager.shared.capabilities(
                             for: item)?.contains("Image to Video") == true
                             && !supportsFrameImages
-                            && !showsTextImageInputModePicker)
+                            && !showsTextImageInputModePicker
+                            && !isKlingAI25TurboPro
+                            && !isKlingVideo26Pro)
                             || (showsTextImageInputModePicker && sora2InputMode == .imageToVideo)
                             || (isGoogleVeo31Fast && googleVeoInputMode == .imageToVideo)
+                            || (isKlingAI25TurboPro && klingAI25InputMode == .imageToVideo)
+                            || (isKlingVideo26Pro && klingVideo26InputMode == .imageToVideo)
                         {
                             LazyView(
                                 ReferenceImagesSection(
@@ -439,8 +534,8 @@ struct VideoModelDetailPage: View {
                                 ))
                         }
 
-                        // Frame images: KlingAI 2.5 Turbo Pro always; Google Veo 3.1 Fast only in Frames mode
-                        if (supportsFrameImages && !isGoogleVeo31Fast)
+                        // Frame images: KlingAI 2.5 Turbo Pro or Google Veo 3.1 Fast in Frames mode
+                        if (isKlingAI25TurboPro && klingAI25InputMode == .frameImages)
                             || (isGoogleVeo31Fast && googleVeoInputMode == .frameImages)
                         {
                             LazyView(
@@ -450,7 +545,20 @@ struct VideoModelDetailPage: View {
                                     showFirstFrameCameraSheet: $showFirstFrameCameraSheet,
                                     showLastFrameCameraSheet: $showLastFrameCameraSheet,
                                     color: .purple,
-                                    showTitleAndDescription: !isGoogleVeo31Fast
+                                    showTitleAndDescription: false
+                                ))
+                        }
+
+                        // Motion Control (Kling VIDEO 2.6 Pro only): character image (left) + reference video (right)
+                        if isKlingVideo26Pro && klingVideo26InputMode == .motionControl {
+                            LazyView(
+                                MotionControlSection(
+                                    videoItem: $motionControlVideoItem,
+                                    videoURL: $motionControlVideoURL,
+                                    characterImage: $motionControlCharacterImage,
+                                    characterPhotoItem: $motionControlCharacterPhotoItem,
+                                    color: .purple,
+                                    showTitleAndDescription: false
                                 ))
                         }
 
@@ -771,13 +879,16 @@ struct VideoModelDetailPage: View {
         config.aspectRatio = selectedAspectOption.id
         modifiedItem.apiConfig = config
 
-        // For Google Veo 3.1 Fast: use reference image only in Image mode; for Sora 2 / Seedance / Wan2.6 only in Image mode; else use reference image when available
+        // Reference image: only in Image mode for models with segmented input; else use when available
         let imageToUse: UIImage? = isGoogleVeo31Fast
             ? (googleVeoInputMode == .imageToVideo ? referenceImages.first : nil)
-            : (showsTextImageInputModePicker ? (sora2InputMode == .imageToVideo ? referenceImages.first : nil) : referenceImages.first)
-        let useFirstLastFrame: Bool = isGoogleVeo31Fast
-            ? (googleVeoInputMode == .frameImages)
-            : supportsFrameImages
+            : (isKlingAI25TurboPro
+                ? (klingAI25InputMode == .imageToVideo ? referenceImages.first : nil)
+                : (isKlingVideo26Pro
+                    ? (klingVideo26InputMode == .imageToVideo ? referenceImages.first : nil)
+                    : (showsTextImageInputModePicker ? (sora2InputMode == .imageToVideo ? referenceImages.first : nil) : referenceImages.first)))
+        let useFirstLastFrame: Bool = (isGoogleVeo31Fast && googleVeoInputMode == .frameImages)
+            || (isKlingAI25TurboPro && klingAI25InputMode == .frameImages)
 
         guard let userId = authViewModel.user?.id.uuidString.lowercased(),
             !userId.isEmpty
@@ -1794,8 +1905,8 @@ private struct VeoModeDescriptionBlock: View {
     private var instructions: String {
         switch mode {
         case .textToVideo: return "Describe your video with a prompt. No reference or frame images are used."
-        case .imageToVideo: return "Upload one or more reference images to guide the style and content of your video."
-        case .frameImages: return "Add first and last frame images to control the video start and end."
+        case .imageToVideo: return "Upload one or more reference images to guide the style and content of your video. Use a prompt to guide the action."
+        case .frameImages: return "Add first and last frame images to control the video start and end. Use a prompt to guide the action."
         }
     }
 
@@ -1841,7 +1952,7 @@ private struct TextImageModeDescriptionBlock: View {
     private var instructions: String {
         switch mode {
         case .textToVideo: return "Describe your video with a prompt. No reference images are used."
-        case .imageToVideo: return "Upload one or more reference images to guide the style and content of your video."
+        case .imageToVideo: return "Upload one or more reference images to guide the style and content of your video. Use a prompt to guide the action."
         }
     }
 
@@ -1859,6 +1970,309 @@ private struct TextImageModeDescriptionBlock: View {
             Text(instructions)
                 .font(.caption)
                 .foregroundColor(.secondary.opacity(0.8))
+        }
+    }
+}
+
+// MARK: KLINGAI 2.5 TURBO PRO MODE DESCRIPTION BLOCK
+
+/// Title + icon + short instructions for KlingAI 2.5 Turbo Pro (Text | Image | Frames).
+private struct KlingAI25ModeDescriptionBlock: View {
+    let mode: KlingAI25TurboProInputMode
+    let color: Color
+
+    private var title: String {
+        switch mode {
+        case .textToVideo: return "Text To Video"
+        case .imageToVideo: return "Image To Video"
+        case .frameImages: return "Frame Images"
+        }
+    }
+
+    private var iconName: String {
+        switch mode {
+        case .textToVideo: return "doc.text"
+        case .imageToVideo: return "photo"
+        case .frameImages: return "photo.on.rectangle.angled"
+        }
+    }
+
+    private var instructions: String {
+        switch mode {
+        case .textToVideo: return "Describe your video with a prompt. No reference or frame images are used."
+        case .imageToVideo: return "Upload one or more reference images to guide the style and content of your video."
+        case .frameImages: return "Add first and last frame images to control the video start and end."
+        }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 6) {
+                Image(systemName: iconName)
+                    .foregroundColor(color)
+                Text(title)
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.secondary)
+                Spacer()
+            }
+            Text(instructions)
+                .font(.caption)
+                .foregroundColor(.secondary.opacity(0.8))
+        }
+    }
+}
+
+// MARK: KLING VIDEO 2.6 PRO MODE DESCRIPTION BLOCK
+
+/// Title + icon + short instructions for Kling VIDEO 2.6 Pro (Text | Image | Motion Control).
+private struct KlingVideo26ModeDescriptionBlock: View {
+    let mode: KlingVideo26ProInputMode
+    let color: Color
+
+    private var title: String {
+        switch mode {
+        case .textToVideo: return "Text To Video"
+        case .imageToVideo: return "Image To Video"
+        case .motionControl: return "Motion Control"
+        }
+    }
+
+    private var iconName: String {
+        switch mode {
+        case .textToVideo: return "doc.text"
+        case .imageToVideo: return "photo"
+        case .motionControl: return "video.badge.waveform"
+        }
+    }
+
+    private var instructions: String {
+        switch mode {
+        case .textToVideo: return "Describe your video with a prompt. No reference or motion control inputs are used."
+        case .imageToVideo: return "Upload one or more reference images to guide the style and content of your video."
+        case .motionControl: return "Transfer movements from a reference video to any character image."
+        }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 6) {
+                Image(systemName: iconName)
+                    .foregroundColor(color)
+                Text(title)
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.secondary)
+                Spacer()
+            }
+            Text(instructions)
+                .font(.caption)
+                .foregroundColor(.secondary.opacity(0.8))
+        }
+    }
+}
+
+// MARK: MOTION CONTROL SECTION
+
+/// Motion Control (Kling VIDEO 2.6 Pro): character image + reference video. UI only; logic to be connected later.
+private struct MotionControlSection: View {
+    @Binding var videoItem: PhotosPickerItem?
+    @Binding var videoURL: URL?
+    @Binding var characterImage: UIImage?
+    @Binding var characterPhotoItem: PhotosPickerItem?
+    let color: Color
+    /// When false (Kling VIDEO 2.6 Pro), title and description are hidden; caller shows them via KlingVideo26ModeDescriptionBlock.
+    var showTitleAndDescription: Bool = true
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            if showTitleAndDescription {
+                HStack(spacing: 6) {
+                    Image(systemName: "video.badge.waveform")
+                        .foregroundColor(color)
+                    Text("Motion Control")
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.secondary)
+                    Spacer()
+                }
+
+                Text("Transfer movements from a reference video to any character image.")
+                    .font(.caption)
+                    .foregroundColor(.secondary.opacity(0.8))
+                    .padding(.bottom, 4)
+            }
+
+            HStack(spacing: 12) {
+                // Character Image slot (left)
+                MotionControlImageSlotCard(
+                    title: "Character Image",
+                    image: $characterImage,
+                    photoItem: $characterPhotoItem,
+                    color: color
+                )
+                .frame(maxWidth: .infinity)
+
+                Image(systemName: "arrow.right")
+                    .font(.system(size: 20))
+                    .foregroundColor(color.opacity(0.6))
+
+                // Reference Video slot (right)
+                MotionControlSlotCard(
+                    title: "Reference Video",
+                    iconName: "video.fill",
+                    videoItem: $videoItem,
+                    videoURL: $videoURL,
+                    color: color
+                )
+                .frame(maxWidth: .infinity)
+            }
+        }
+        .padding(.horizontal)
+    }
+}
+
+// MARK: MOTION CONTROL SLOT CARD (VIDEO)
+
+private struct MotionControlSlotCard: View {
+    let title: String
+    let iconName: String
+    @Binding var videoItem: PhotosPickerItem?
+    @Binding var videoURL: URL?
+    let color: Color
+
+    var body: some View {
+        VStack(spacing: 8) {
+            if let url = videoURL {
+                // Placeholder: show "Video selected" (actual thumbnail/player can be added later)
+                VStack(spacing: 6) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 28))
+                        .foregroundColor(color)
+                    Text("Video selected")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Button("Change") {
+                        videoItem = nil
+                        videoURL = nil
+                    }
+                    .font(.caption)
+                }
+                .frame(maxWidth: .infinity)
+                .frame(minHeight: 100)
+                .background(Color.gray.opacity(0.08))
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+            } else {
+                PhotosPicker(
+                    selection: $videoItem,
+                    matching: .videos
+                ) {
+                    VStack(spacing: 8) {
+                        Image(systemName: iconName)
+                            .font(.system(size: 28))
+                            .foregroundColor(color.opacity(0.7))
+                        Text(title)
+                            .font(.caption)
+                            .fontWeight(.medium)
+                            .foregroundColor(.secondary)
+                        Text("Tap to add")
+                            .font(.caption2)
+                            .foregroundColor(.secondary.opacity(0.8))
+                    }
+                    .frame(maxWidth: .infinity)
+                    .frame(minHeight: 100)
+                    .background(Color.gray.opacity(0.06))
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .strokeBorder(style: StrokeStyle(lineWidth: 2, dash: [6, 4]))
+                            .foregroundColor(color.opacity(0.3))
+                    )
+                }
+                .onChange(of: videoItem) { _, newItem in
+                    Task {
+                        if let item = newItem,
+                           let video = try? await item.loadTransferable(type: VideoTransferable.self) {
+                            await MainActor.run { videoURL = video.url }
+                        } else {
+                            await MainActor.run { videoURL = nil }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// MARK: MOTION CONTROL IMAGE SLOT CARD
+
+private struct MotionControlImageSlotCard: View {
+    let title: String
+    @Binding var image: UIImage?
+    @Binding var photoItem: PhotosPickerItem?
+    let color: Color
+
+    var body: some View {
+        VStack(spacing: 8) {
+            if let img = image {
+                Image(uiImage: img)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(minHeight: 100)
+                    .clipped()
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .overlay(alignment: .topTrailing) {
+                        Button {
+                            image = nil
+                            photoItem = nil
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .font(.title3)
+                                .foregroundStyle(.white)
+                                .shadow(radius: 2)
+                        }
+                        .padding(6)
+                    }
+            } else {
+                PhotosPicker(
+                    selection: $photoItem,
+                    matching: .images
+                ) {
+                    VStack(spacing: 8) {
+                        Image(systemName: "photo")
+                            .font(.system(size: 28))
+                            .foregroundColor(color.opacity(0.7))
+                        Text(title)
+                            .font(.caption)
+                            .fontWeight(.medium)
+                            .foregroundColor(.secondary)
+                        Text("Tap to add")
+                            .font(.caption2)
+                            .foregroundColor(.secondary.opacity(0.8))
+                    }
+                    .frame(maxWidth: .infinity)
+                    .frame(minHeight: 100)
+                    .background(Color.gray.opacity(0.06))
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .strokeBorder(style: StrokeStyle(lineWidth: 2, dash: [6, 4]))
+                            .foregroundColor(color.opacity(0.3))
+                    )
+                }
+                .onChange(of: photoItem) { _, newItem in
+                    Task {
+                        guard let item = newItem else {
+                            image = nil
+                            return
+                        }
+                        if let data = try? await item.loadTransferable(type: Data.self),
+                           let uiImage = UIImage(data: data) {
+                            image = uiImage
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -1892,7 +2306,7 @@ private struct FrameImagesSection: View {
                     Spacer()
                 }
 
-                Text("Add first and last frame images to control the video start and end")
+                Text("Add first and last frame images to control the video start and end. Use a prompt to guide the action.")
                     .font(.caption)
                     .foregroundColor(.secondary.opacity(0.8))
                     .padding(.bottom, 4)
@@ -1902,7 +2316,7 @@ private struct FrameImagesSection: View {
             HStack(spacing: 0) {
                 // First Frame Image - takes 50% of width
                 FrameImageCard(
-                    title: "First Frame (Optional)",
+                    title: "Start Frame",
                     image: $firstFrameImage,
                     showCameraSheet: $showFirstFrameCameraSheet,
                     showActionSheet: $showFirstFrameActionSheet,
@@ -1922,7 +2336,7 @@ private struct FrameImagesSection: View {
                 
                 // Last Frame Image - takes 50% of width
                 FrameImageCard(
-                    title: "Last Frame (Optional)",
+                    title: "End Frame",
                     image: $lastFrameImage,
                     showCameraSheet: $showLastFrameCameraSheet,
                     showActionSheet: $showLastFrameActionSheet,

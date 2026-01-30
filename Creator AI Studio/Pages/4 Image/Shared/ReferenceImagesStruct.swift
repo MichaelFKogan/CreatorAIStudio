@@ -41,9 +41,9 @@ struct ReferenceImagesSection: View {
                                     .font(.caption)
                                     .fontWeight(.medium)
                                     .foregroundColor(.gray)
-                                Text("(Optional)")
-                                    .font(.caption2)
-                                    .foregroundColor(.gray.opacity(0.7))
+                                // Text("(Optional)")
+                                //     .font(.caption2)
+                                //     .foregroundColor(.gray.opacity(0.7))
                             }
                         }
                         .frame(width: squareSize, height: squareSize)
