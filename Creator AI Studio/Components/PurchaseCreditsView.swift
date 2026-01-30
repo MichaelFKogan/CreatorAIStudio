@@ -137,7 +137,10 @@ struct PurchaseCreditsView: View {
                         // Combined Web Purchase Card
                         VStack(spacing: 12) {
                             HStack(spacing: 12) {
-                                Text("Save 30%")
+                                Image(systemName: "safari.fill")
+                                    .font(.system(size: 20, weight: .bold))
+                                    .foregroundColor(.primary)
+                                Text("Purchase On Website")
                                     .font(.system(size: 20, weight: .bold, design: .rounded))
                                     .foregroundColor(.primary)
 
@@ -166,14 +169,16 @@ struct PurchaseCreditsView: View {
                                 }
                             }) {
                                 HStack(spacing: 8) {
-                                    Image(systemName: "safari.fill")
-                                        .font(.system(size: 16))
-                                    Text("Purchase on Website")
+                                    Text("SAVE 30%")
+                                        .font(.system(size: 17, weight: .semibold, design: .rounded))
+                                        Spacer()
+                                    Image(systemName: "arrow.up.right")
                                         .font(.system(size: 17, weight: .semibold, design: .rounded))
                                 }
                                 .foregroundColor(.white)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 16)
+                                .padding(.horizontal)
                                 .background(
                                     LinearGradient(
                                         colors: [.purple, .pink],
@@ -507,12 +512,28 @@ struct CreditPackageCard: View {
     // Featured video models (matching website display)
     private let videoModelRates: [(name: String, imageName: String, price: Double, duration: String)] = [
         (name: "Kling Video 2.6 Pro", imageName: "klingvideo26pro", price: 0.70, duration: "5s"),
+        (name: "Sora 2", imageName: "sora2", price: 0.80, duration: "8s"),
         (name: "Veo 3.1 Fast", imageName: "veo31fast", price: 1.20, duration: "8s"),
     ]
 
+    // Estimated generations based on average model prices
+    private var estimatedImages: Int {
+        // Use average of featured image model prices for a representative estimate
+        let avgImagePrice = imageModelRates.map { $0.price }.reduce(0, +) / Double(imageModelRates.count)
+        guard avgImagePrice > 0 else { return 0 }
+        return Int(baseCreditsValue / avgImagePrice)
+    }
+
+    private var estimatedVideos: Int {
+        // Use average of featured video model prices for a representative estimate
+        let avgVideoPrice = videoModelRates.map { $0.price }.reduce(0, +) / Double(videoModelRates.count)
+        guard avgVideoPrice > 0 else { return 0 }
+        return Int(baseCreditsValue / avgVideoPrice)
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // Main card content - tappable for purchase
+            // Main card content - full card tappable for purchase; Details button stays separate
             Button(action: {
                 guard !isPurchasing else { return }
                 onPurchase(productId, baseCreditsValue)
@@ -570,6 +591,41 @@ struct CreditPackageCard: View {
                                     .font(.system(size: 13, design: .rounded))
                                     .foregroundColor(.secondary)
                             }
+
+                            // Estimated generations summary
+                            HStack(spacing: 8) {
+                                // Estimated images badge
+                                HStack(spacing: 4) {
+                                    Image(systemName: "photo.fill")
+                                        .font(.system(size: 10))
+                                        .foregroundColor(.blue)
+                                    Text("~\(estimatedImages) images")
+                                        .font(.system(size: 11, weight: .medium, design: .rounded))
+                                        .foregroundColor(.secondary)
+                                }
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .background(
+                                    Capsule()
+                                        .fill(Color.blue.opacity(0.1))
+                                )
+
+                                // Estimated videos badge
+                                HStack(spacing: 4) {
+                                    Image(systemName: "video.fill")
+                                        .font(.system(size: 10))
+                                        .foregroundColor(.purple)
+                                    Text("~\(estimatedVideos) videos")
+                                        .font(.system(size: 11, weight: .medium, design: .rounded))
+                                        .foregroundColor(.secondary)
+                                }
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .background(
+                                    Capsule()
+                                        .fill(Color.purple.opacity(0.1))
+                                )
+                            }
                         }
 
                         Spacer()
@@ -596,10 +652,13 @@ struct CreditPackageCard: View {
                             Text("Total Price")
                                 .font(.system(size: 11, design: .rounded))
                                 .foregroundColor(.secondary)
+                            Text("Tap to purchase")
+                                .font(.system(size: 10, weight: .medium, design: .rounded))
+                                .foregroundColor(.secondary.opacity(0.8))
                         }
                     }
 
-                    // Description and Details button row
+                    // Description and Details button row (Details is its own tap target)
                     HStack {
                         if let description = description {
                             Text(description)
@@ -621,6 +680,9 @@ struct CreditPackageCard: View {
                                         design: .rounded)
                                 )
                                 .foregroundColor(.blue)
+                                .padding(.vertical, 6)
+                                .padding(.horizontal, 4)
+                                .contentShape(Rectangle())
                         }
                         .buttonStyle(PlainButtonStyle())
                     }
@@ -750,6 +812,8 @@ struct CreditPackageCard: View {
                         .transition(.opacity.combined(with: .move(edge: .top)))
                     }
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(Rectangle())
                 .padding()
             }
             .buttonStyle(PlainButtonStyle())
