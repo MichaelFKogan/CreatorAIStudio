@@ -6,80 +6,31 @@
 -- 2. Deploying the send-push-notification Edge Function
 -- 3. Configuring APNs credentials in Supabase secrets
 --
--- This trigger calls the send-push-notification Edge Function
--- whenever a pending job's status changes to 'completed' or 'failed'
+-- This trigger sets notification_sent when status changes to 'completed' or 'failed'.
+-- Push is sent from the webhook-receiver Edge Function (not from this trigger).
 
--- 1. Enable the pg_net extension for HTTP requests
--- (This should already be enabled in most Supabase projects)
-CREATE EXTENSION IF NOT EXISTS pg_net;
-
--- 2. Create the notification function
+-- 1. Create the notification function
+-- IMPORTANT: This trigger only sets notification_sent so the webhook-receiver's
+-- UPDATE to pending_jobs always commits. We do NOT call pg_net here because
+-- pg_net/extension/settings can fail and roll back the whole transaction.
+-- To send push notifications, call send-push-notification from your
+-- webhook-receiver Edge Function AFTER it updates pending_jobs (see SETUP_INSTRUCTIONS).
 CREATE OR REPLACE FUNCTION notify_job_completion()
 RETURNS TRIGGER AS $$
-DECLARE
-    edge_function_url TEXT;
-    request_body JSONB;
-    notification_title TEXT;
-    notification_body TEXT;
 BEGIN
-    -- Only trigger when status changes to completed or failed
-    -- and device_token exists and notification hasn't been sent
+    -- When status changes to completed or failed and we have a device token,
+    -- mark notification_sent so the column is set. No HTTP call in trigger.
     IF (NEW.status IN ('completed', 'failed')) 
        AND (OLD.status IS NULL OR OLD.status NOT IN ('completed', 'failed'))
        AND NEW.device_token IS NOT NULL 
        AND (NEW.notification_sent IS NULL OR NEW.notification_sent = FALSE) THEN
-        
-        -- Build notification content based on job type and status
-        IF NEW.status = 'completed' THEN
-            IF NEW.job_type = 'video' THEN
-                notification_title := 'Video Ready!';
-                notification_body := 'Your AI video has been generated. Tap to view.';
-            ELSE
-                notification_title := 'Image Ready!';
-                notification_body := 'Your AI image has been generated. Tap to view.';
-            END IF;
-        ELSE -- failed
-            notification_title := 'Generation Failed';
-            notification_body := COALESCE(NEW.error_message, 'Something went wrong. Please try again.');
-        END IF;
-        
-        -- Build the Edge Function URL
-        -- Replace with your actual Supabase project URL
-        edge_function_url := 'https://inaffymocuppuddsewyq.supabase.co/functions/v1/send-push-notification';
-        
-        -- Build the request body
-        request_body := jsonb_build_object(
-            'device_token', NEW.device_token,
-            'job_id', NEW.id::TEXT,
-            'job_type', NEW.job_type,
-            'title', notification_title,
-            'body', notification_body,
-            'status', NEW.status
-        );
-        
-        -- Call the Edge Function asynchronously
-        -- Note: This uses pg_net which sends HTTP requests asynchronously
-        PERFORM net.http_post(
-            url := edge_function_url,
-            body := request_body::TEXT,
-            headers := jsonb_build_object(
-                'Content-Type', 'application/json',
-                'Authorization', 'Bearer ' || current_setting('app.settings.service_role_key', true)
-            )::jsonb
-        );
-        
-        -- Mark notification as sent (to prevent duplicates)
-        -- Note: This is done in the same transaction
         NEW.notification_sent := TRUE;
-        
-        RAISE LOG 'Push notification queued for job %', NEW.id;
     END IF;
-    
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- 3. Create the trigger
+-- 2. Create the trigger
 DROP TRIGGER IF EXISTS on_job_completion_notify ON pending_jobs;
 CREATE TRIGGER on_job_completion_notify
     BEFORE UPDATE ON pending_jobs

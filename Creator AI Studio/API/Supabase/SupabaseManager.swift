@@ -305,8 +305,25 @@ class SupabaseManager {
         }
     }
     
+    // MARK: - USER DEVICES (Push Notifications)
+
+    /// Upserts the current device token for a user (for push notifications on job completion).
+    /// Call this when the device token is received or when the user signs in.
+    func upsertDeviceToken(userId: String, deviceToken: String) async throws {
+        let record = UserDeviceRecord(
+            user_id: userId,
+            device_token: deviceToken,
+            updated_at: Date()
+        )
+        try await client.database
+            .from("user_devices")
+            .upsert(record)
+            .execute()
+        print("[UserDevices] Upserted device token for user: \(userId.prefix(8))...")
+    }
+
     // MARK: - PENDING JOBS (Webhook Support)
-    
+
     /// Creates a new pending job record in the database
     /// - Parameter job: The pending job to create
     func createPendingJob(_ job: PendingJob) async throws {
@@ -610,4 +627,13 @@ class SupabaseManager {
         
         return count
     }
+}
+
+// MARK: - User Device Record (Push Notifications)
+
+/// Encodable record for user_devices table (APNs device token per user).
+private struct UserDeviceRecord: Encodable {
+    let user_id: String
+    let device_token: String
+    let updated_at: Date
 }

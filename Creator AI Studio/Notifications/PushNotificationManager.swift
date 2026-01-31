@@ -148,20 +148,19 @@ class PushNotificationManager: NSObject, ObservableObject {
     
     // MARK: - Private Methods
     
-    /// Store device token in Supabase (for push notification delivery)
+    /// Store device token in Supabase (user_devices table) for push notification delivery.
+    /// Called when the token is received from APNs or when the user changes.
     private func storeDeviceToken(_ token: String) async {
         guard let userId = currentUserId else {
             print("[Push] No user ID set, skipping device token storage")
             return
         }
-        
-        // TODO: Implement device token storage in Supabase
-        // Options:
-        // 1. Store in a user_devices table
-        // 2. Store in user profile
-        // 3. Store directly in pending_jobs when creating jobs
-        
-        print("[Push] TODO: Store device token \(token.prefix(20))... for user \(userId)")
+        do {
+            try await SupabaseManager.shared.upsertDeviceToken(userId: userId, deviceToken: token)
+            print("[Push] Stored device token for user \(userId.prefix(8))...")
+        } catch {
+            print("[Push] Failed to store device token: \(error)")
+        }
     }
     
     /// Handle job completion notification

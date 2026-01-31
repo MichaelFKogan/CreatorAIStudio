@@ -474,13 +474,14 @@ class ImageGenerationTask: MediaGenerationTask {
                 jobProvider = .wavespeed
             }
             
+            let deviceToken = await MainActor.run { PushNotificationManager.shared.deviceToken }
             let pendingJob = PendingJob(
                 userId: userId,
                 taskId: taskId,
                 provider: jobProvider,
                 jobType: .image,
                 metadata: jobMetadata,
-                deviceToken: nil // TODO: Add device token for push notifications
+                deviceToken: deviceToken
             )
             
             // Insert pending job into database

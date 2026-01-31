@@ -26,6 +26,16 @@ SELECT relname, relrowsecurity FROM pg_class WHERE relname = 'pending_jobs';
 SELECT * FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'pending_jobs';
 ```
 
+### Step 1b: Create the User Devices Table (for Push Notifications)
+
+If you use push notifications so users get notified when a job completes:
+
+1. In **SQL Editor**, click **New Query**
+2. Copy the entire contents of `Database/user_devices_setup.sql` and paste it
+3. Click **Run** to execute the SQL
+
+This creates the `user_devices` table where the app stores each user’s APNs device token (upserted when they sign in or when the token is received).
+
 ## Step 2: Set Up Environment Secrets
 
 1. Go to **Project Settings** > **Edge Functions**
@@ -102,6 +112,10 @@ This is optional until you set up APNs:
 3. Name it: `send-push-notification`
 4. Copy the contents of `send-push-notification.ts` and paste it
 5. Click **Deploy**
+
+### Push trigger (optional)
+
+The `push_notification_trigger.sql` only sets `notification_sent` on the row so job updates always commit. It does **not** call the Edge Function from the database (to avoid rollbacks). To actually send a push when a job completes, call `send-push-notification` from your **webhook-receiver** Edge Function after it updates `pending_jobs` to completed (using the job’s `device_token` from the row).
 
 ### APNs Setup (For Future)
 

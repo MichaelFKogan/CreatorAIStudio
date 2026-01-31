@@ -35,6 +35,8 @@ class AuthViewModel: ObservableObject {
             
             // Start listening for webhook job completions
             await JobStatusManager.shared.startListening(userId: session.user.id.uuidString)
+            // Push notifications: set user and request permissions so we get device token
+            await setupPushNotificationsForUser(session.user.id.uuidString)
         } catch {
             print("❌ Session check failed: \(error)")
             self.isSignedIn = false
@@ -63,6 +65,7 @@ class AuthViewModel: ObservableObject {
                 
                 // Start listening for webhook job completions
                 await JobStatusManager.shared.startListening(userId: session.user.id.uuidString)
+                await setupPushNotificationsForUser(session.user.id.uuidString)
             } else {
                 print("⚠️ Email confirmation required - check your inbox")
                 // You might want to show an alert to the user here
@@ -96,6 +99,7 @@ class AuthViewModel: ObservableObject {
             
             // Start listening for webhook job completions
             await JobStatusManager.shared.startListening(userId: session.user.id.uuidString)
+            await setupPushNotificationsForUser(session.user.id.uuidString)
             
             // Test: Check if session persists in UserDefaults
             if let storedData = UserDefaults.standard.data(forKey: "supabase.session") {
@@ -210,6 +214,7 @@ class AuthViewModel: ObservableObject {
             
             // Start listening for webhook job completions
             await JobStatusManager.shared.startListening(userId: session.user.id.uuidString)
+            await setupPushNotificationsForUser(session.user.id.uuidString)
         } catch {
             // Log the full error details
             print("❌ Google sign-in error: \(error)")
@@ -271,12 +276,23 @@ class AuthViewModel: ObservableObject {
         do {
             // Stop listening for webhook job completions
             await JobStatusManager.shared.stopListening()
-            
+            // Clear push notification user so token isn't associated with this account
+            PushNotificationManager.shared.setCurrentUser(nil)
+
             try await client.auth.signOut()
             self.isSignedIn = false
             self.user = nil
         } catch {
             print("Sign-out error: \(error.localizedDescription)")
         }
+    }
+
+    // MARK: - Push Notifications
+
+    /// Sets the current user on PushNotificationManager and requests permissions so we get a device token.
+    /// Call this when the user has signed in (session established).
+    private func setupPushNotificationsForUser(_ userId: String) async {
+        PushNotificationManager.shared.setCurrentUser(userId)
+        _ = await PushNotificationManager.shared.requestPermissions()
     }
 }

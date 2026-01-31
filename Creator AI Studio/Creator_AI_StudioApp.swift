@@ -8,9 +8,11 @@
 import SwiftUI
 import GoogleSignIn
 import AVFoundation
+import UIKit
 
 @main
 struct Creator_AI_StudioApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject private var themeManager = ThemeManager()
     @StateObject private var authViewModel = AuthViewModel()
     @State private var showSplash = false

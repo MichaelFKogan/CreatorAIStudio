@@ -501,13 +501,14 @@ class VideoGenerationTask: MediaGenerationTask {
             // Determine provider based on request type
             let provider: JobProvider = isMotionControl ? .falai : .runware
             
+            let deviceToken = await MainActor.run { PushNotificationManager.shared.deviceToken }
             let pendingJob = PendingJob(
                 userId: userId,
                 taskId: taskId,
                 provider: provider,
                 jobType: .video,
                 metadata: jobMetadata,
-                deviceToken: nil // TODO: Add device token for push notifications
+                deviceToken: deviceToken
             )
             
             // Insert pending job into database
