@@ -35,31 +35,7 @@ struct AuthAwareCostCard: View {
         Group {
             if authViewModel.user == nil {
                 // Not logged in: Show login disclaimer and Sign In button
-                VStack(spacing: 0) {
-                    notLoggedInCard
-                    
-                    // Cost display below the card, aligned to the right
-                    // Add padding to position it closer to the Generate button
-                    HStack {
-                        Spacer()
-                        HStack(spacing: 4) {
-                            Image(systemName: "dollarsign.circle.fill")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                            Text("Cost:")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                            PriceDisplayView(
-                                price: price,
-                                showUnit: true,
-                                font: .caption,
-                                fontWeight: .semibold,
-                                foregroundColor: .primary
-                            )
-                        }
-                    }
-                    .padding(.top, 6)
-                }
+                notLoggedInCard
             } else if !isConnected {
                 // Logged in but no internet: Show no-internet message (replaces insufficient credits slot)
                 noInternetCard
@@ -126,37 +102,14 @@ struct AuthAwareCostCard: View {
     
     /// No-internet message shown below Generate/Upload button when user is logged in but offline
     private var noInternetCard: some View {
-        VStack(spacing: 6) {
-            // No-internet message
-            HStack(spacing: 6) {
-                Image(systemName: "exclamationmark.circle.fill")
-                    .font(.system(size: 14))
-                    .foregroundColor(.red)
-                Text("No internet connection. Please connect to the internet.")
-                    .font(.caption)
-                    .foregroundColor(.red)
-                Spacer()
-            }
-            
-            // Cost display below the message, aligned to the right (same style as EnhancedCostCard)
-            HStack(spacing: 4) {
-                Spacer()
-                HStack(spacing: 4) {
-                    Image(systemName: "dollarsign.circle.fill")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    Text("Cost")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-                PriceDisplayView(
-                    price: price,
-                    showUnit: true,
-                    font: .caption,
-                    fontWeight: .semibold,
-                    foregroundColor: .primary
-                )
-            }
+        HStack(spacing: 6) {
+            Image(systemName: "exclamationmark.circle.fill")
+                .font(.system(size: 14))
+                .foregroundColor(.red)
+            Text("No internet connection. Please connect to the internet.")
+                .font(.caption)
+                .foregroundColor(.red)
+            Spacer()
         }
         .padding(.vertical, 4)
     }

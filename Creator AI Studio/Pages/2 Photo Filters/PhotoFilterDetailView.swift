@@ -1146,41 +1146,17 @@ struct EnhancedCostCard: View {
     }
     
     var body: some View {
-        VStack(spacing: 6) {
-
-            // Warning message (only when insufficient)
-            if !hasEnoughCredits {
-                HStack(spacing: 6) {
-                    Image(systemName: "exclamationmark.triangle.fill")
-                        .font(.system(size: 14))
-                        .foregroundColor(.red)
-                    Text(disclaimerText)
-                        .font(.caption)
-                        .foregroundColor(.red)
-                    Spacer()
-                }
-            }
-
-            // Cost and balance
-            HStack(spacing: 4) {
+        // Warning message (only when insufficient)
+        if !hasEnoughCredits {
+            HStack(spacing: 6) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.system(size: 14))
+                    .foregroundColor(.red)
+                Text(disclaimerText)
+                    .font(.caption)
+                    .foregroundColor(.red)
                 Spacer()
-                HStack(spacing: 4) {
-                    Image(systemName: "dollarsign.circle.fill")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    Text("Cost")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-                PriceDisplayView(
-                    price: price,
-                    showUnit: true,
-                    font: .caption,
-                    fontWeight: .semibold,
-                    foregroundColor: .primary
-                )
             }
-
         }
     }
 }

@@ -914,11 +914,17 @@ struct GenerateButton: View {
                     } else {
                         // Image(systemName: "photo.on.rectangle")
                     }
-                    Text(
-                        isGenerating
-                            ? "Generating..."
-                            : "Generate"
-                    ).fontWeight(.semibold)
+                    if isGenerating {
+                        Text("Generating...")
+                            .fontWeight(.semibold)
+                    } else {
+                        Text("Generate")
+                            .fontWeight(.semibold)
+                        Image(systemName: "sparkle")
+                            .font(.system(size: 14))
+                        Text(costString)
+                            .fontWeight(.semibold)
+                    }
                 }
                 .frame(maxWidth: .infinity)
                 .padding()

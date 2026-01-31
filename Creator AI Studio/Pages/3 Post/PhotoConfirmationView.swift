@@ -617,9 +617,21 @@ struct PhotoConfirmationView: View {
                 //         // .rotationEffect(.degrees(rotation))
                 //         .drawingGroup()
                 // }
-                Text(isLoading ? generateButtonText : "Generate")
-                    .font(.system(size: 18, weight: .bold, design: .rounded))
-                    .foregroundColor(.black)
+                if isLoading {
+                    Text(generateButtonText)
+                        .font(.system(size: 18, weight: .bold, design: .rounded))
+                        .foregroundColor(.black)
+                } else {
+                    Text("Generate")
+                        .font(.system(size: 18, weight: .bold, design: .rounded))
+                        .foregroundColor(.black)
+                    Image(systemName: "sparkle")
+                        .font(.system(size: 14))
+                        .foregroundColor(.black)
+                    Text(PricingManager.formatPrice(totalPrice))
+                        .font(.system(size: 18, weight: .bold, design: .rounded))
+                        .foregroundColor(.black)
+                }
             }
             .padding(.vertical, 16)
             .frame(maxWidth: .infinity)
