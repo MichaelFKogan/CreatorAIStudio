@@ -912,12 +912,12 @@ struct GenerateButton: View {
                             CircularProgressViewStyle(tint: .white)
                         ).scaleEffect(0.8)
                     } else {
-                        Image(systemName: "photo.on.rectangle")
+                        // Image(systemName: "photo.on.rectangle")
                     }
                     Text(
                         isGenerating
                             ? "Generating..."
-                            : "Generate Image"
+                            : "Generate"
                     ).fontWeight(.semibold)
                 }
                 .frame(maxWidth: .infinity)

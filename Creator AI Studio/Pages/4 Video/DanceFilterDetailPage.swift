@@ -1143,9 +1143,9 @@ private struct GenerateButtonFilter: View {
                             CircularProgressViewStyle(tint: .white)
                         ).scaleEffect(0.8)
                     } else {
-                        Image(systemName: "video.fill")
+                        // Image(systemName: "video.fill")
                     }
-                    Text(isGenerating ? "Generating..." : "Generate Video")
+                    Text(isGenerating ? "Generating..." : "Generate")
                         .fontWeight(.semibold)
                 }
                 .frame(maxWidth: .infinity)

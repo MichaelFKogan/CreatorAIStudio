@@ -609,17 +609,17 @@ struct PhotoConfirmationView: View {
                         )
                         .scaleEffect(1.2)
                 }
+                // if !isLoading {
+                //     Image(systemName: "photo.on.rectangle")
+                //         .font(.system(size: 18))
+                //         .fontWeight(.bold)
+                //         .foregroundColor(.black)
+                //         // .rotationEffect(.degrees(rotation))
+                //         .drawingGroup()
+                // }
                 Text(isLoading ? generateButtonText : "Generate")
                     .font(.system(size: 18, weight: .bold, design: .rounded))
                     .foregroundColor(.black)
-                if !isLoading {
-                    Image(systemName: "photo.on.rectangle")
-                        .font(.system(size: 18))
-                        .fontWeight(.bold)
-                        .foregroundColor(.black)
-                        .rotationEffect(.degrees(rotation))
-                        .drawingGroup()
-                }
             }
             .padding(.vertical, 16)
             .frame(maxWidth: .infinity)

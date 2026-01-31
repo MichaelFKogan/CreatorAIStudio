@@ -298,10 +298,13 @@ struct PurchaseCreditsView: View {
                     Spacer(minLength: 100)
                 }
             }
-                    .background(Color(.systemGroupedBackground))
+            .scrollContentBackground(.hidden)
+            .background(Color.black)
             .disabled(isPurchasing)
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(Color.black, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Done") {
