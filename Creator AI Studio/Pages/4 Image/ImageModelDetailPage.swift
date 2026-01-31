@@ -291,8 +291,6 @@ struct ImageModelDetailPage: View {
                         .padding(.horizontal)
                         .padding(.top, -16)  // Bring closer to the button above
 
-                        Divider().padding(.horizontal)
-
                         //                        VStack {
                         //                            Button {
                         //                                //                            showActionSheet = true
@@ -356,11 +354,14 @@ struct ImageModelDetailPage: View {
                         //                            //     .padding(.bottom, 4)
                         //                        }
 
-                        LazyView(
-                            AspectRatioSection(
-                                options: imageAspectOptions,
-                                selectedIndex: $selectedAspectIndex
-                            ))
+                        VStack{
+                            LazyView(
+                                AspectRatioSection(
+                                    options: imageAspectOptions,
+                                    selectedIndex: $selectedAspectIndex
+                                ))
+                        }
+                        .padding(.top, -16) 
 
                         Divider().padding(.horizontal)
 
@@ -828,13 +829,6 @@ struct AspectRatioSection: View {
     @Binding var selectedIndex: Int
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            //            HStack(spacing: 6) {
-            //                Image(systemName: "slider.horizontal.3").foregroundColor(.blue)
-            Text("Size")
-                .font(.caption)
-                .foregroundColor(.secondary)
-                .padding(.top, -6)
-            //            }
             AspectRatioSelector(
                 options: options, selectedIndex: $selectedIndex, color: .blue
             )

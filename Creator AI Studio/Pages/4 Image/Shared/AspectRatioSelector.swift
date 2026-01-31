@@ -58,6 +58,10 @@ struct AspectRatioSelector: View {
                 }
                 
                 Spacer()
+
+                Text("Size")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
                 
                 Image(systemName: "chevron.right")
                     .font(.caption2)

@@ -48,6 +48,10 @@ struct DurationSelector: View {
                 }
                 
                 Spacer()
+
+                Text("Duration")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
                 
                 Image(systemName: "chevron.right")
                     .font(.caption2)

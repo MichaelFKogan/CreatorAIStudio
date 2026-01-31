@@ -47,6 +47,10 @@ struct ResolutionSelector: View {
                 }
                 
                 Spacer()
+
+                Text("Resolution")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
                 
                 Image(systemName: "chevron.right")
                     .font(.caption2)

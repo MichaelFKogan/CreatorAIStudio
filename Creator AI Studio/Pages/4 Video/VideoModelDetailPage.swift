@@ -622,7 +622,31 @@ struct VideoModelDetailPage: View {
                         .padding(.horizontal)
                         .padding(.top, -16)  // Bring closer to the button above
 
-                        Divider().padding(.horizontal)
+                        VStack{
+                            LazyView(
+                                AspectRatioSectionVideo(
+                                    options: videoAspectOptions,
+                                    selectedIndex: $selectedAspectIndex
+                                ))
+
+                            // Only show resolution selector for models with variable pricing
+                            if hasVariableResolution {
+                                LazyView(
+                                    ResolutionSectionVideo(
+                                        options: videoResolutionOptions,
+                                        selectedIndex: $selectedResolutionIndex
+                                    ))
+                            }
+
+                            LazyView(
+                                DurationSectionVideo(
+                                    options: videoDurationOptions,
+                                    selectedIndex: $selectedDurationIndex
+                                ))
+                        }
+                        .padding(.top, -16)  // Bring closer to the button above
+
+                        // Divider().padding(.horizontal)
 
                         // Audio toggle - only show for models that support audio generation
                         if supportsAudio {
@@ -643,29 +667,6 @@ struct VideoModelDetailPage: View {
 
                             Divider().padding(.horizontal)
                         }
-
-                        LazyView(
-                            AspectRatioSectionVideo(
-                                options: videoAspectOptions,
-                                selectedIndex: $selectedAspectIndex
-                            ))
-
-                        // Only show resolution selector for models with variable pricing
-                        if hasVariableResolution {
-                            LazyView(
-                                ResolutionSectionVideo(
-                                    options: videoResolutionOptions,
-                                    selectedIndex: $selectedResolutionIndex
-                                ))
-                        }
-
-                        LazyView(
-                            DurationSectionVideo(
-                                options: videoDurationOptions,
-                                selectedIndex: $selectedDurationIndex
-                            ))
-
-                        Divider().padding(.horizontal)
 
                         // Example Gallery Section - Only show if model name exists
                         if let modelName = item.display.modelName,
@@ -1156,10 +1157,6 @@ private struct AspectRatioSectionVideo: View {
     @Binding var selectedIndex: Int
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("Size")
-                .font(.caption)
-                .foregroundColor(.secondary)
-                .padding(.top, -6)
             AspectRatioSelector(
                 options: options, selectedIndex: $selectedIndex, color: .purple
             )
@@ -1175,10 +1172,6 @@ private struct ResolutionSectionVideo: View {
     @Binding var selectedIndex: Int
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("Resolution")
-                .font(.caption)
-                .foregroundColor(.secondary)
-                .padding(.top, -6)
             ResolutionSelector(
                 options: options, selectedIndex: $selectedIndex, color: .purple
             )
@@ -1194,10 +1187,6 @@ private struct DurationSectionVideo: View {
     @Binding var selectedIndex: Int
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("Duration")
-                .font(.caption)
-                .foregroundColor(.secondary)
-                .padding(.top, -6)
             DurationSelector(
                 options: options, selectedIndex: $selectedIndex, color: .purple
             )
@@ -1235,7 +1224,7 @@ private struct PricingTableSectionVideo: View {
                         Text("View")
                             .font(.caption)
                             .foregroundColor(.purple)
-                        Image(systemName: "chevron.right")
+                        Image(systemName: "chevron.down")
                             .font(.system(size: 12, weight: .medium))
                             .foregroundColor(.purple)
                     }
