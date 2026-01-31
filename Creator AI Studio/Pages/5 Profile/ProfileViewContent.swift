@@ -189,6 +189,14 @@ struct ProfileViewContent: View {
                 _ in
                 cachedVideoModelsMetadata = computeVideoModelsWithMetadataPure()
             }
+            // Fetch videos when a video model is selected
+            .onChange(of: selectedVideoModel) { _, newModel in
+                if let modelName = newModel {
+                    Task {
+                        await viewModel.fetchModelVideos(modelName: modelName)
+                    }
+                }
+            }
             .sheet(item: $selectedUserImage) { userImage in
                 FullScreenImageView(
                     userImage: userImage,
@@ -672,7 +680,9 @@ struct ProfileViewContent: View {
         // If not signed in, show placeholder grid
         if !isSignedIn {
             PlaceholderGrid()
-        } else if (selectedTab == .images && viewModel.isLoadingImagesOnly) || (selectedTab == .videos && viewModel.isLoadingVideosOnly) {
+        } else if (selectedTab == .images && viewModel.isLoadingImagesOnly)
+                    || (selectedTab == .videos && viewModel.isLoadingVideosOnly)
+                    || (selectedTab == .videoModels && selectedVideoModel != nil && viewModel.isLoadingModelVideos) {
             VStack {
                 Spacer()
                 ProgressView()
@@ -708,7 +718,9 @@ struct ProfileViewContent: View {
                 selectedImageIds: $selectedImageIds,
                 isFavoritesTab: selectedTab == .favorites,
                 isImagesOnlyTab: selectedTab == .images,
-                isVideosOnlyTab: selectedTab == .videos
+                isVideosOnlyTab: selectedTab == .videos,
+                isVideoModelsTab: selectedTab == .videoModels,
+                selectedVideoModel: selectedVideoModel
             )
             // Force SwiftUI to re-render when images or placeholders change
             // This ensures newly generated images appear immediately in the gallery
@@ -741,10 +753,12 @@ struct ProfileViewContent: View {
                     by: selectedModel, favoritesOnly: false)
                 : viewModel.userImages
         case .videoModels:
-            return selectedVideoModel != nil
-                ? viewModel.filteredVideos(
-                    by: selectedVideoModel, favoritesOnly: false)
-                : viewModel.userVideos
+            // Use fetched model videos from database (not filtered from in-memory array)
+            if selectedVideoModel != nil {
+                return viewModel.currentModelVideos
+            } else {
+                return viewModel.userVideos
+            }
         }
     }
 

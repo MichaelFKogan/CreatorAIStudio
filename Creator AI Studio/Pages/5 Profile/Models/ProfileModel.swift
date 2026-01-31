@@ -326,6 +326,10 @@ class ProfileViewModel: ObservableObject {
     @Published var isLoadingVideosOnly = false
     @Published var hasMoreVideosOnlyPages = false
     @Published var isLoadingMoreVideosOnly = false
+    /// Model-specific videos: videos for a specific model (paginated)
+    @Published var currentModelVideos: [UserImage] = []
+    @Published var currentVideoModelName: String? = nil
+    @Published var isLoadingModelVideos = false
     @Published var modelCounts: [String: Int] = [:] // model name -> count
     @Published var videoModelCounts: [String: Int] = [:] // model name -> count
     @Published var hasLoadedStats = false // Track if stats have been fetched
@@ -344,9 +348,13 @@ class ProfileViewModel: ObservableObject {
     // Cache for model-specific images to avoid repeated queries
     private var modelImagesCache: [String: (images: [UserImage], fetchedAt: Date)] = [:]
     private let modelCacheStaleInterval: TimeInterval = 10 * 60 // 10 minutes
-    
+
+    // Cache for model-specific videos to avoid repeated queries
+    private var modelVideosCache: [String: (videos: [UserImage], fetchedAt: Date)] = [:]
+
     // Request deduplication: track in-flight requests to prevent duplicate queries
     private var inFlightModelRequests: [String: Task<[UserImage], Never>] = [:]
+    private var inFlightModelVideoRequests: [String: Task<[UserImage], Never>] = [:]
 
     // Track in-flight image additions to prevent duplicates from race conditions
     // (notification handler + Realtime INSERT can both try to add the same image)
@@ -355,6 +363,10 @@ class ProfileViewModel: ObservableObject {
     // Pagination state for model-specific images (per model)
     private var modelCurrentPages: [String: Int] = [:] // model name -> current page
     private var modelHasMorePages: [String: Bool] = [:] // model name -> has more pages
+
+    // Pagination state for model-specific videos (per model)
+    private var modelVideoCurrentPages: [String: Int] = [:] // model name -> current page
+    private var modelVideoHasMorePages: [String: Bool] = [:] // model name -> has more pages
     
     // Pagination for Images-only and Videos-only tabs
     private var imagesOnlyCurrentPage = 0
@@ -617,6 +629,9 @@ class ProfileViewModel: ObservableObject {
         modelImagesCache.removeAll()
         modelCurrentPages.removeAll()
         modelHasMorePages.removeAll()
+        modelVideosCache.removeAll()
+        modelVideoCurrentPages.removeAll()
+        modelVideoHasMorePages.removeAll()
         
         // Clear Images-only and Videos-only tab caches when user changes
         tabImagesOnly = []
@@ -987,7 +1002,10 @@ class ProfileViewModel: ObservableObject {
         
         // Clear model-specific caches
         modelImagesCache.removeAll()
-        
+        modelVideosCache.removeAll()
+        modelVideoCurrentPages.removeAll()
+        modelVideoHasMorePages.removeAll()
+
         // Clear Images-only and Videos-only tab caches
         tabImagesOnly = []
         tabVideosOnly = []
@@ -1475,7 +1493,176 @@ class ProfileViewModel: ObservableObject {
     func hasMoreModelPages(modelName: String) -> Bool {
         return modelHasMorePages[modelName] ?? false
     }
-    
+
+    // MARK: - Fetch Model Videos (for Video Models pill)
+
+    /// Fetches the first page of user videos filtered by a specific model name
+    /// Uses pagination (50 videos per page) to reduce database egress
+    /// Also updates `currentModelVideos` and `currentVideoModelName` published properties
+    /// - Parameters:
+    ///   - modelName: The model name to filter by
+    ///   - forceRefresh: Whether to force a refresh from database
+    /// - Returns: Array of UserImage (videos) filtered by model (first page only)
+    func fetchModelVideos(modelName: String, forceRefresh: Bool = false) async -> [UserImage] {
+        guard let userId = userId else { return [] }
+
+        await MainActor.run {
+            isLoadingModelVideos = true
+            currentVideoModelName = modelName
+        }
+
+        // Reset pagination state if forcing refresh
+        if forceRefresh {
+            modelVideoCurrentPages[modelName] = 0
+            modelVideoHasMorePages[modelName] = true
+            modelVideosCache.removeValue(forKey: modelName)
+        }
+
+        // Check model-specific cache first (if not forcing refresh)
+        if !forceRefresh {
+            if let cached = modelVideosCache[modelName] {
+                let cacheAge = Date().timeIntervalSince(cached.fetchedAt)
+                if cacheAge < modelCacheStaleInterval {
+                    print("✅ Using cached model videos for \(modelName): \(cached.videos.count) videos")
+                    // Restore pagination state from cache
+                    let cachedCount = cached.videos.count
+                    modelVideoCurrentPages[modelName] = cachedCount >= pageSize ? 1 : 0
+                    modelVideoHasMorePages[modelName] = cachedCount >= pageSize
+                    await MainActor.run {
+                        currentModelVideos = cached.videos
+                        isLoadingModelVideos = false
+                    }
+                    return cached.videos
+                } else {
+                    print("⏰ Model video cache stale for \(modelName), refreshing...")
+                }
+            }
+        }
+
+        // ✅ REQUEST DEDUPLICATION: Check if there's already an in-flight request for this model
+        if let existingTask = inFlightModelVideoRequests[modelName] {
+            print("🔄 Reusing in-flight video request for \(modelName)")
+            let result = await existingTask.value
+            await MainActor.run {
+                currentModelVideos = result
+                isLoadingModelVideos = false
+            }
+            return result
+        }
+
+        // Create a new task for this request
+        let requestTask = Task<[UserImage], Never> {
+            defer {
+                inFlightModelVideoRequests.removeValue(forKey: modelName)
+            }
+
+            // Query database - fetch first page only (50 videos)
+            print("📡 Querying database for model videos (first page): \(modelName)")
+            do {
+                let response: PostgrestResponse<[UserImage]> = try await client.database
+                    .from("user_media")
+                    .select()
+                    .eq("user_id", value: userId)
+                    .eq("model", value: modelName)
+                    .eq("media_type", value: "video")
+                    .or("status.is.null,status.eq.success")
+                    .order("created_at", ascending: false)
+                    .limit(pageSize)
+                    .range(from: 0, to: pageSize - 1)
+                    .execute()
+
+                let videos = response.value ?? []
+
+                // Update pagination state
+                modelVideoCurrentPages[modelName] = 1
+                modelVideoHasMorePages[modelName] = videos.count == pageSize
+
+                // Cache the results
+                modelVideosCache[modelName] = (videos, Date())
+                print("✅ Fetched and cached \(videos.count) videos for model \(modelName) (hasMore: \(modelVideoHasMorePages[modelName] ?? false))")
+
+                return videos
+            } catch {
+                print("❌ Failed to fetch model videos for \(modelName): \(error)")
+                modelVideoHasMorePages[modelName] = false
+                return []
+            }
+        }
+
+        // Store the task for deduplication
+        inFlightModelVideoRequests[modelName] = requestTask
+
+        // Wait for and return the result
+        let result = await requestTask.value
+        await MainActor.run {
+            currentModelVideos = result
+            isLoadingModelVideos = false
+        }
+        return result
+    }
+
+    /// Loads the next page of videos for a specific model
+    func loadMoreModelVideos(modelName: String) async -> [UserImage] {
+        guard let userId = userId else { return [] }
+        guard modelVideoHasMorePages[modelName] == true else { return [] }
+
+        let currentPage = modelVideoCurrentPages[modelName] ?? 0
+
+        print("📡 Loading more model videos for \(modelName), page \(currentPage + 1)")
+
+        do {
+            let response: PostgrestResponse<[UserImage]> = try await client.database
+                .from("user_media")
+                .select()
+                .eq("user_id", value: userId)
+                .eq("model", value: modelName)
+                .eq("media_type", value: "video")
+                .or("status.is.null,status.eq.success")
+                .order("created_at", ascending: false)
+                .limit(pageSize)
+                .range(from: currentPage * pageSize, to: (currentPage + 1) * pageSize - 1)
+                .execute()
+
+            let newVideos = response.value ?? []
+
+            // Update pagination state
+            modelVideoHasMorePages[modelName] = newVideos.count == pageSize
+            modelVideoCurrentPages[modelName] = currentPage + 1
+
+            // Update cache with new videos appended
+            if let cached = modelVideosCache[modelName] {
+                var updatedVideos = cached.videos
+                updatedVideos.append(contentsOf: newVideos)
+                modelVideosCache[modelName] = (updatedVideos, cached.fetchedAt)
+
+                // Update published property if this is the current model
+                await MainActor.run {
+                    if currentVideoModelName == modelName {
+                        currentModelVideos = updatedVideos
+                    }
+                }
+            }
+
+            print("✅ Loaded \(newVideos.count) more videos for \(modelName) (hasMore: \(modelVideoHasMorePages[modelName] ?? false))")
+
+            return newVideos
+        } catch {
+            print("❌ Failed to load more model videos for \(modelName): \(error)")
+            modelVideoHasMorePages[modelName] = false
+            return []
+        }
+    }
+
+    /// Checks if there are more pages available for a video model
+    func hasMoreModelVideoPages(modelName: String) -> Bool {
+        return modelVideoHasMorePages[modelName] ?? false
+    }
+
+    /// Gets cached videos for a specific model (returns nil if not cached)
+    func getCachedModelVideos(modelName: String) -> [UserImage]? {
+        return modelVideosCache[modelName]?.videos
+    }
+
     // MARK: - Fetch Images-Only / Videos-Only (for Images and Videos pills)
     
     /// Fetches the first page of user media filtered by media_type = "image".
@@ -1610,14 +1797,20 @@ class ProfileViewModel: ObservableObject {
         }
     }
     
-    /// Clears the model-specific cache (useful when new images are created)
+    /// Clears the model-specific cache (useful when new images/videos are created)
     func clearModelCache() {
         modelImagesCache.removeAll()
+        modelVideosCache.removeAll()
     }
-    
-    /// Clears cache for a specific model
+
+    /// Clears cache for a specific model (images only)
     func clearModelCache(for modelName: String) {
         modelImagesCache.removeValue(forKey: modelName)
+    }
+
+    /// Clears video cache for a specific model
+    func clearModelVideoCache(for modelName: String) {
+        modelVideosCache.removeValue(forKey: modelName)
     }
 
     // MARK: - Fetch User Stats (from user_stats table)

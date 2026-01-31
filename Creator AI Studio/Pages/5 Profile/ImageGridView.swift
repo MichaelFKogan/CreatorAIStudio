@@ -14,6 +14,8 @@ struct ImageGridView: View {
     var isFavoritesTab: Bool = false
     var isImagesOnlyTab: Bool = false
     var isVideosOnlyTab: Bool = false
+    var isVideoModelsTab: Bool = false
+    var selectedVideoModel: String? = nil
 
     @State private var favoritedImageIds: Set<String> = []
 
@@ -307,10 +309,16 @@ struct ImageGridView: View {
         guard let viewModel = viewModel,
               let index = validUserImages.firstIndex(where: { $0.id == userImage.id }),
               index >= validUserImages.count - 10 else { return }
-        
+
         Task {
             if isFavoritesTab {
                 await viewModel.loadMoreFavorites()
+            } else if isImagesOnlyTab {
+                await viewModel.loadMoreImagesOnly()
+            } else if isVideosOnlyTab {
+                await viewModel.loadMoreVideosOnly()
+            } else if isVideoModelsTab, let modelName = selectedVideoModel {
+                _ = await viewModel.loadMoreModelVideos(modelName: modelName)
             } else {
                 await viewModel.loadMoreImages()
             }
@@ -324,6 +332,7 @@ struct ImageGridView: View {
             if isFavoritesTab { return viewModel.isLoadingMoreFavorites }
             if isImagesOnlyTab { return viewModel.isLoadingMoreImagesOnly }
             if isVideosOnlyTab { return viewModel.isLoadingMoreVideosOnly }
+            if isVideoModelsTab { return viewModel.isLoadingModelVideos }
             return viewModel.isLoadingMore
         }()
         if loading {
