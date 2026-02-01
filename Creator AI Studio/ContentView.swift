@@ -4,6 +4,7 @@ import UIKit
 struct ContentView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
     @StateObject private var notificationManager = NotificationManager.shared
+    @StateObject private var pushNotificationManager = PushNotificationManager.shared
     @Environment(\.colorScheme) var colorScheme
     @Environment(\.scenePhase) private var scenePhase
 
@@ -148,6 +149,19 @@ struct ContentView: View {
             if newPhase == .active {
                 let uid = authViewModel.user?.id.uuidString
                 Task { await JobStatusManager.shared.refreshPendingJobsIfNeeded(userId: uid) }
+            }
+        }
+        .onChange(of: pushNotificationManager.shouldNavigateToGallery) { _, shouldNavigate in
+            // Navigate to Gallery tab when user taps a push notification
+            if shouldNavigate {
+                currentTransitionEdge = 4 > selectedTab ? .trailing : .leading
+                previousTab = selectedTab
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    selectedTab = 4
+                }
+                notificationManager.clearBadges()
+                // Reset the flag so it can be triggered again
+                pushNotificationManager.shouldNavigateToGallery = false
             }
         }
     }

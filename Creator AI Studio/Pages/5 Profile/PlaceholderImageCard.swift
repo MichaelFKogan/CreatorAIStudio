@@ -451,39 +451,59 @@ struct PlaceholderImageCard: View {
     }
     
     private func updateMessages() {
+        // Check the actual notification state from NotificationManager (not the stale placeholder copy)
+        let actualState: NotificationState
+        if let notification = notificationManager.notifications.first(where: { $0.id == placeholder.id }) {
+            actualState = notification.state
+        } else {
+            // Notification no longer exists - stop the timer
+            messageUpdateTimer?.invalidate()
+            messageUpdateTimer = nil
+            return
+        }
+
         // Handle failed state - don't show timeout messages
-        if placeholder.state == .failed {
+        if actualState == .failed {
             showTimeoutMessage = false
             timeoutMessage = ""
             showCancelButton = false
+            messageUpdateTimer?.invalidate()
+            messageUpdateTimer = nil
             return
         }
-        
+
         // Don't show timeout messages if generation is completed
-        if placeholder.state == .completed {
+        if actualState == .completed {
             dynamicMessage = GenerationMessageHelper.getDynamicMessage(
                 elapsedSeconds: 0,
                 isVideo: false,
                 baseMessage: placeholder.message,
-                state: placeholder.state
+                state: actualState
             )
             showTimeoutMessage = false
             timeoutMessage = ""
             showCancelButton = false
+            messageUpdateTimer?.invalidate()
+            messageUpdateTimer = nil
             return
         }
-        
+
         let elapsed = Date().timeIntervalSince(placeholder.createdAt)
         let isVideo = placeholder.title.contains("Video") || placeholder.title.contains("video")
         let elapsedMinutes = Int(elapsed / 60)
-        print("🔍 [PlaceholderImageCard] updateMessages: elapsed=\(elapsed)s (\(elapsedMinutes)min), state=\(placeholder.state), id=\(placeholder.id)")
+        // Only log in debug builds and less frequently
+        #if DEBUG
+        if elapsedMinutes > 0 || Int(elapsed) % 30 == 0 {
+            print("🔍 [PlaceholderImageCard] updateMessages: elapsed=\(elapsed)s (\(elapsedMinutes)min), state=\(actualState), id=\(placeholder.id)")
+        }
+        #endif
         
         // Update dynamic message
         dynamicMessage = GenerationMessageHelper.getDynamicMessage(
             elapsedSeconds: elapsed,
             isVideo: isVideo,
             baseMessage: placeholder.message,
-            state: placeholder.state
+            state: actualState
         )
         
         // Cancel button disabled - users cannot cancel generations

@@ -20,6 +20,13 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         return true
     }
 
+    func applicationDidBecomeActive(_ application: UIApplication) {
+        // Clear badge when app becomes active (user opens the app)
+        Task { @MainActor in
+            PushNotificationManager.shared.clearBadge()
+        }
+    }
+
     func application(
         _ application: UIApplication,
         didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data

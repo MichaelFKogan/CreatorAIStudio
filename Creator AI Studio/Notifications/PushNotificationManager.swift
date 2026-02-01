@@ -23,10 +23,13 @@ class PushNotificationManager: NSObject, ObservableObject {
     static let shared = PushNotificationManager()
     
     // MARK: - Published Properties
-    
+
     @Published var isRegistered: Bool = false
     @Published var deviceToken: String?
     @Published var authorizationStatus: UNAuthorizationStatus = .notDetermined
+
+    /// Set to true when user taps a notification to trigger navigation to Gallery
+    @Published var shouldNavigateToGallery: Bool = false
     
     // MARK: - Private Properties
     
@@ -39,7 +42,12 @@ class PushNotificationManager: NSObject, ObservableObject {
     }
     
     // MARK: - Public Methods
-    
+
+    /// Clear the app badge count (the red circle with number on app icon)
+    func clearBadge() {
+        UIApplication.shared.applicationIconBadgeNumber = 0
+    }
+
     /// Request push notification permissions from the user
     func requestPermissions() async -> Bool {
         let center = UNUserNotificationCenter.current()
@@ -136,9 +144,15 @@ class PushNotificationManager: NSObject, ObservableObject {
     /// Handle notification tap (user opened app from notification)
     func handleNotificationResponse(_ response: UNNotificationResponse) {
         let userInfo = response.notification.request.content.userInfo
-        
+
         print("[Push] User tapped notification: \(userInfo)")
-        
+
+        // Clear badge when user taps notification
+        clearBadge()
+
+        // Navigate to Gallery tab when user taps notification
+        shouldNavigateToGallery = true
+
         // Extract job info and navigate to result
         if let jobId = userInfo["job_id"] as? String,
            let jobType = userInfo["job_type"] as? String {
