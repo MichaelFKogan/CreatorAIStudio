@@ -142,7 +142,8 @@ class CreditsManager {
                 related_media_id: nil,
                 payment_method: paymentMethod,
                 payment_transaction_id: paymentTransactionId,
-                created_at: Date()
+                created_at: Date(),
+                balance_after: nil
             )
             
             try await client.database
@@ -217,6 +218,7 @@ class CreditsManager {
                 .eq("user_id", value: userId.uuidString)
                 .execute()
             
+            let newBalanceDouble = NSDecimalNumber(decimal: newBalance).doubleValue
             // Create transaction record (negative amount for deduction)
             let transaction = CreditTransaction(
                 id: UUID(),
@@ -227,7 +229,8 @@ class CreditsManager {
                 related_media_id: relatedMediaId,
                 payment_method: nil,
                 payment_transaction_id: nil,
-                created_at: Date()
+                created_at: Date(),
+                balance_after: newBalanceDouble
             )
             
             try await client.database
@@ -235,7 +238,6 @@ class CreditsManager {
                 .insert(transaction)
                 .execute()
             
-            let newBalanceDouble = NSDecimalNumber(decimal: newBalance).doubleValue
             print("✅ [CreditsManager] Deducted \(amount) credits from user \(userId). New balance: \(newBalanceDouble)")
             return newBalanceDouble
         } catch {
@@ -284,7 +286,8 @@ class CreditsManager {
                 related_media_id: nil,
                 payment_method: "test",
                 payment_transaction_id: nil,
-                created_at: Date()
+                created_at: Date(),
+                balance_after: nil
             )
             
             try await client.database
@@ -381,4 +384,52 @@ struct CreditTransaction: Codable, Identifiable {
     let payment_method: String? // 'apple', 'external', null for deductions
     let payment_transaction_id: String?
     let created_at: Date
+    /// Balance after this transaction (stored for deductions so we can show "balance before" in usage)
+    let balance_after: Double?
+    
+    enum CodingKeys: String, CodingKey {
+        case id, user_id, amount, transaction_type, description
+        case related_media_id, payment_method, payment_transaction_id, created_at
+        case balance_after
+    }
+    
+    init(id: UUID, user_id: UUID, amount: Double, transaction_type: String, description: String?, related_media_id: UUID?, payment_method: String?, payment_transaction_id: String?, created_at: Date, balance_after: Double?) {
+        self.id = id
+        self.user_id = user_id
+        self.amount = amount
+        self.transaction_type = transaction_type
+        self.description = description
+        self.related_media_id = related_media_id
+        self.payment_method = payment_method
+        self.payment_transaction_id = payment_transaction_id
+        self.created_at = created_at
+        self.balance_after = balance_after
+    }
+    
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(UUID.self, forKey: .id)
+        user_id = try c.decode(UUID.self, forKey: .user_id)
+        amount = try Self.decodeDoubleOrString(c, forKey: .amount)
+        transaction_type = try c.decode(String.self, forKey: .transaction_type)
+        description = try c.decodeIfPresent(String.self, forKey: .description)
+        related_media_id = try c.decodeIfPresent(UUID.self, forKey: .related_media_id)
+        payment_method = try c.decodeIfPresent(String.self, forKey: .payment_method)
+        payment_transaction_id = try c.decodeIfPresent(String.self, forKey: .payment_transaction_id)
+        created_at = try c.decode(Date.self, forKey: .created_at)
+        balance_after = try Self.decodeDoubleOrStringIfPresent(c, forKey: .balance_after)
+    }
+    
+    private static func decodeDoubleOrString(_ c: KeyedDecodingContainer<CodingKeys>, forKey key: CodingKeys) throws -> Double {
+        if let d = try? c.decode(Double.self, forKey: key) { return d }
+        if let s = try? c.decode(String.self, forKey: key), let d = Double(s) { return d }
+        throw DecodingError.typeMismatch(Double.self, DecodingError.Context(codingPath: c.codingPath + [key], debugDescription: "Expected Double or numeric String"))
+    }
+    
+    private static func decodeDoubleOrStringIfPresent(_ c: KeyedDecodingContainer<CodingKeys>, forKey key: CodingKeys) throws -> Double? {
+        if c.contains(key) == false { return nil }
+        if let d = try? c.decode(Double.self, forKey: key) { return d }
+        if let s = try? c.decode(String.self, forKey: key), let d = Double(s) { return d }
+        return nil
+    }
 }

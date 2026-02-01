@@ -60,7 +60,7 @@ class PricingManager {
     private init() {
 
         // MARK: IMAGE PRICES
-        // Initialize with current model prices (fixed pricing)
+        // Prices in dollars (same unit as balance). Display: 100 credits = $1.
         prices = [
             "GPT Image 1.5": 0.034,  // Medium quality 1024x1024 as default display price
             "Wan2.5-Preview Image": 0.027,
@@ -70,7 +70,7 @@ class PricingManager {
             "FLUX.2 [dev]": 0.0122,
             "FLUX.1 Kontext [pro]": 0.04,
             "FLUX.1 Kontext [max]": 0.08,
-            "Z-Image-Turbo": 0.005,
+            "Z-Image-Turbo": 0.005,  // $0.005 (displays as 0.5 credits; 100 credits = $1)
             "Wavespeed Ghibli": 0.005,
         ]
 
@@ -184,6 +184,14 @@ class PricingManager {
     }
 
     // MARK: METHODS
+
+    /// Returns the fixed price for an image model by name (used at deduction time to avoid rounding from stored metadata).
+    /// - Parameter modelName: The display/model name (e.g. "Z-Image-Turbo")
+    /// - Returns: The price in dollars as Double, or nil if not found (use metadata cost as fallback)
+    func priceForImageModel(_ modelName: String) -> Double? {
+        guard let decimalPrice = prices[modelName] else { return nil }
+        return NSDecimalNumber(decimal: decimalPrice).doubleValue
+    }
 
     /// Returns the price for a given InfoPacket based on its model name.
     /// For variable pricing models (video), returns the default configuration price.

@@ -30,6 +30,7 @@ enum UsageItem: Identifiable {
 struct UsageView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
     @StateObject private var viewModel = UsageViewModel()
+    @StateObject private var creditsViewModel = CreditsViewModel()
     @State private var selectedFilter: UsageFilter = .all
     @State private var selectedMediaType: MediaTypeFilter = .all
     
@@ -80,19 +81,19 @@ struct UsageView: View {
                     )
                 }
                 
-                StatisticsRow(
-                    title: "Total Cost",
-                    value: PricingManager.formatPriceWithUnit(Decimal(viewModel.totalCost)),
-                    icon: "dollarsign.circle.fill",
-                    color: .purple
-                )
+                // StatisticsRow(
+                //     title: "Total Spent",
+                //     value: PricingManager.formatPriceWithUnit(Decimal(viewModel.totalCost)),
+                //     icon: "dollarsign.circle.fill",
+                //     color: .purple
+                // )
                 
-                StatisticsRow(
-                    title: "Credits added",
-                    value: "\(viewModel.creditsAddedCount)",
-                    icon: "dollarsign.circle.fill",
-                    color: .green
-                )
+                // StatisticsRow(
+                //     title: "Credits added",
+                //     value: "\(viewModel.creditsAddedCount)",
+                //     icon: "dollarsign.circle.fill",
+                //     color: .green
+                // )
             }
             
             // Filters Section
@@ -111,7 +112,7 @@ struct UsageView: View {
             }
             
             // Activity List (generations + credits added)
-            Section("Activity") {
+            Section {
                 if viewModel.isLoading {
                     HStack {
                         Spacer()
@@ -136,10 +137,25 @@ struct UsageView: View {
                     ForEach(filteredUsageItems) { item in
                         switch item {
                         case .generation(let generation):
-                            GenerationRow(generation: generation)
+                            GenerationRow(
+                                generation: generation,
+                                balanceBefore: viewModel.balanceBeforeByMediaId[generation.id.lowercased()]
+                            )
                         case .creditAdded(let transaction):
                             CreditAddedRow(transaction: transaction)
                         }
+                    }
+                }
+            } header: {
+                HStack {
+                    Text("Activity")
+                    Spacer()
+                    if creditsViewModel.isLoading {
+                        ProgressView()
+                            .scaleEffect(0.8)
+                    } else {
+                        Text(creditsViewModel.formattedBalance())
+                            .foregroundColor(.secondary)
                     }
                 }
             }
@@ -147,9 +163,15 @@ struct UsageView: View {
         .navigationTitle("Usage")
         .task {
             await viewModel.fetchUsage(userId: authViewModel.user?.id.uuidString)
+            if let userId = authViewModel.user?.id {
+                await creditsViewModel.fetchBalance(userId: userId)
+            }
         }
         .refreshable {
             await viewModel.fetchUsage(userId: authViewModel.user?.id.uuidString)
+            if let userId = authViewModel.user?.id {
+                await creditsViewModel.fetchBalance(userId: userId)
+            }
         }
     }
     
@@ -326,6 +348,7 @@ struct CreditAddedRow: View {
 
 struct GenerationRow: View {
     let generation: UserImage
+    var balanceBefore: Double?
     @State private var isExpanded = false
     @State private var showCopiedIndicator = false
     
@@ -359,14 +382,22 @@ struct GenerationRow: View {
                         
                         Spacer(minLength: 4)
                         
-                        // Cost (if available and generation succeeded)
-                        if let cost = generation.cost, cost > 0, !generation.isFailed {
-                            Text(PricingManager.formatPrice(Decimal(cost)))
-                                .font(.caption2)
-                                .fontWeight(.medium)
-                                .foregroundColor(.white)
+                        VStack{
+                            // Cost (if available and generation succeeded)
+                            if let cost = generation.cost, cost > 0, !generation.isFailed {
+                                Text("-" + PricingManager.formatPrice(Decimal(cost)))
+                                    .font(.caption2)
+                                    .fontWeight(.medium)
+                                    .foregroundColor(.red)
+                            }
+                            // Balance before deduction (beneath cost when available)
+                            if let before = balanceBefore, generation.cost != nil, !generation.isFailed {
+                                Text("\(PricingManager.formatPrice(Decimal(before)))")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                            }
                         }
-                    }
+                    }         
                     
                     // Line 2: Model + Type + Time + Error
                     HStack(spacing: 6) {
@@ -664,6 +695,7 @@ struct GenerationRow: View {
 class UsageViewModel: ObservableObject {
     @Published var generations: [UserImage] = []
     @Published var creditTransactions: [CreditTransaction] = []
+    @Published var deductionTransactions: [CreditTransaction] = []
     @Published var isLoading = false
     
     var totalAttempts: Int {
@@ -705,6 +737,19 @@ class UsageViewModel: ObservableObject {
         }
     }
     
+    /// Balance before deduction for each generation (key = user_media id, lowercased). Only set when we have balance_after on the deduction transaction.
+    var balanceBeforeByMediaId: [String: Double] {
+        var map: [String: Double] = [:]
+        for tx in deductionTransactions {
+            guard let mediaId = tx.related_media_id,
+                  let after = tx.balance_after else { continue }
+            // amount is negative for deduction; balance_before = balance_after - amount
+            let before = after - tx.amount
+            map[mediaId.uuidString.lowercased()] = before
+        }
+        return map
+    }
+    
     private let client = SupabaseManager.shared.client
     
     func fetchUsage(userId: String?) async {
@@ -736,7 +781,19 @@ class UsageViewModel: ObservableObject {
             
             creditTransactions = txResponse.value ?? []
             
-            print("✅ Fetched \(generations.count) generations, \(creditTransactions.count) credit additions for usage view")
+            // Fetch deduction transactions (for "balance before" on generations)
+            let dedResponse: PostgrestResponse<[CreditTransaction]> = try await client.database
+                .from("credit_transactions")
+                .select()
+                .eq("user_id", value: userId)
+                .eq("transaction_type", value: "deduction")
+                .order("created_at", ascending: false)
+                .limit(1000)
+                .execute()
+            
+            deductionTransactions = (dedResponse.value ?? []).filter { $0.related_media_id != nil }
+            
+            print("✅ Fetched \(generations.count) generations, \(creditTransactions.count) credit additions, \(deductionTransactions.count) deductions for usage view")
         } catch {
             print("❌ Failed to fetch usage data: \(error)")
         }

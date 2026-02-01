@@ -854,13 +854,15 @@ class JobStatusManager: ObservableObject {
                     }
                 }
                 
+                // Use canonical image price from PricingManager to avoid rounding from stored metadata (e.g. 0.005 → 0.01)
+                let imageCost = PricingManager.shared.priceForImageModel(modelName) ?? metadata?.cost
                 // Save metadata to user_media table
                 let imageMetadata = ImageMetadata(
                     userId: userId,
                     imageUrl: supabaseImageURL,
                     model: modelName,
                     title: metadata?.title,
-                    cost: metadata?.cost,
+                    cost: imageCost,
                     type: metadata?.type,
                     endpoint: metadata?.endpoint,
                     prompt: metadata?.prompt,
@@ -896,8 +898,8 @@ class JobStatusManager: ObservableObject {
                     print("[JobStatusManager] 💾 Image metadata saved to database")
                 }
                 
-                // MARK: Deduct Credits
-                if let cost = imageMetadata.cost, cost > 0, let userIdUUID = UUID(uuidString: userId) {
+                // MARK: Deduct Credits (use imageCost = canonical price from PricingManager; DB may round to 2 decimals unless amount column has 4+ decimal places)
+                if let cost = imageCost, cost > 0, let userIdUUID = UUID(uuidString: userId) {
                     do {
                         let mediaId: UUID? = {
                             guard let idString = insertedImage?.id else { return nil }
@@ -946,7 +948,7 @@ class JobStatusManager: ObservableObject {
                         // The cost is already recorded in metadata for audit purposes
                     }
                 } else {
-                    print("[JobStatusManager] ⚠️ Skipping credit deduction - cost: \(imageMetadata.cost ?? 0), userId: \(userId)")
+                    print("[JobStatusManager] ⚠️ Skipping credit deduction - cost: \(imageCost ?? 0), userId: \(userId)")
                 }
                 
                 // Post notification that image was saved (for Profile page refresh)
