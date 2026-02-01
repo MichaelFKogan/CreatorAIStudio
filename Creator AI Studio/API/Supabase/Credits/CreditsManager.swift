@@ -371,7 +371,7 @@ struct UserCredits: Codable {
 }
 
 /// Represents a credit transaction
-struct CreditTransaction: Codable {
+struct CreditTransaction: Codable, Identifiable {
     let id: UUID
     let user_id: UUID
     let amount: Double

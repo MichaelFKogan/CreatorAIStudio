@@ -2,6 +2,31 @@ import SwiftUI
 import Supabase
 import Kingfisher
 
+// MARK: - Usage Item (unified row: generation or credit added)
+
+enum UsageItem: Identifiable {
+    case generation(UserImage)
+    case creditAdded(CreditTransaction)
+    
+    var id: String {
+        switch self {
+        case .generation(let g): return "gen-\(g.id)"
+        case .creditAdded(let t): return "credit-\(t.id.uuidString)"
+        }
+    }
+    
+    var sortDate: Date? {
+        switch self {
+        case .generation(let g):
+            guard let s = g.created_at else { return nil }
+            let f = ISO8601DateFormatter()
+            f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+            return f.date(from: s)
+        case .creditAdded(let t): return t.created_at
+        }
+    }
+}
+
 struct UsageView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
     @StateObject private var viewModel = UsageViewModel()
@@ -12,6 +37,7 @@ struct UsageView: View {
         case all = "All"
         case success = "Successful"
         case failed = "Failed"
+        case creditsAdded = "Credits added"
     }
     
     enum MediaTypeFilter: String, CaseIterable {
@@ -60,6 +86,13 @@ struct UsageView: View {
                     icon: "dollarsign.circle.fill",
                     color: .purple
                 )
+                
+                StatisticsRow(
+                    title: "Credits added",
+                    value: "\(viewModel.creditsAddedCount)",
+                    icon: "dollarsign.circle.fill",
+                    color: .green
+                )
             }
             
             // Filters Section
@@ -77,8 +110,8 @@ struct UsageView: View {
                 }
             }
             
-            // Generations List
-            Section("Generations") {
+            // Activity List (generations + credits added)
+            Section("Activity") {
                 if viewModel.isLoading {
                     HStack {
                         Spacer()
@@ -86,22 +119,27 @@ struct UsageView: View {
                         Spacer()
                     }
                     .padding()
-                } else if filteredGenerations.isEmpty {
+                } else if filteredUsageItems.isEmpty {
                     HStack {
                         Spacer()
                         VStack(spacing: 8) {
                             Image(systemName: "tray")
                                 .font(.system(size: 40))
                                 .foregroundColor(.secondary)
-                            Text("No generations found")
+                            Text(emptyMessage)
                                 .foregroundColor(.secondary)
                         }
                         .padding()
                         Spacer()
                     }
                 } else {
-                    ForEach(filteredGenerations) { generation in
-                        GenerationRow(generation: generation)
+                    ForEach(filteredUsageItems) { item in
+                        switch item {
+                        case .generation(let generation):
+                            GenerationRow(generation: generation)
+                        case .creditAdded(let transaction):
+                            CreditAddedRow(transaction: transaction)
+                        }
                     }
                 }
             }
@@ -115,30 +153,48 @@ struct UsageView: View {
         }
     }
     
-    private var filteredGenerations: [UserImage] {
-        var filtered = viewModel.generations
+    private var emptyMessage: String {
+        switch selectedFilter {
+        case .creditsAdded: return "No credit purchases found"
+        default: return "No generations found"
+        }
+    }
+    
+    private var filteredUsageItems: [UsageItem] {
+        var items: [UsageItem] = []
         
-        // Filter by status
         switch selectedFilter {
         case .all:
-            break
+            items = viewModel.sortedUsageItems
         case .success:
-            filtered = filtered.filter { $0.isSuccess }
+            items = viewModel.generations
+                .filter { $0.isSuccess }
+                .map { UsageItem.generation($0) }
         case .failed:
-            filtered = filtered.filter { $0.isFailed }
+            items = viewModel.generations
+                .filter { $0.isFailed }
+                .map { UsageItem.generation($0) }
+        case .creditsAdded:
+            items = viewModel.creditTransactions.map { UsageItem.creditAdded($0) }
         }
         
-        // Filter by media type
-        switch selectedMediaType {
-        case .all:
-            break
-        case .images:
-            filtered = filtered.filter { $0.isImage }
-        case .videos:
-            filtered = filtered.filter { $0.isVideo }
+        // Filter by media type (only for generations)
+        if selectedMediaType != .all {
+            items = items.filter { item in
+                switch item {
+                case .generation(let g):
+                    switch selectedMediaType {
+                    case .images: return g.isImage
+                    case .videos: return g.isVideo
+                    default: return true
+                    }
+                case .creditAdded:
+                    return true // keep credit rows when filtering media
+                }
+            }
         }
         
-        return filtered
+        return items
     }
 }
 
@@ -161,6 +217,108 @@ struct StatisticsRow: View {
                 .fontWeight(.semibold)
                 .foregroundColor(.secondary)
         }
+    }
+}
+
+// MARK: - Credit Added Row
+
+struct CreditAddedRow: View {
+    let transaction: CreditTransaction
+    @State private var isExpanded = false
+    
+    private var displayDescription: String {
+        if let desc = transaction.description, !desc.isEmpty {
+            return String(desc.prefix(50))
+        }
+        return transaction.transaction_type == "refund" ? "Refund" : "Credit purchase"
+    }
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 8) {
+                // Icon
+                Image(systemName: "dollarsign.circle.fill")
+                    .foregroundColor(.green)
+                    .font(.title2)
+                    .frame(width: 40, height: 40)
+                    .background(Color.green.opacity(0.15))
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                
+                VStack(alignment: .leading, spacing: 3) {
+                    HStack(spacing: 6) {
+                        Text(displayDescription)
+                            .font(.subheadline)
+                            .lineLimit(1)
+                            .foregroundColor(.primary)
+                        Spacer(minLength: 4)
+                        Text("+" + PricingManager.formatPrice(Decimal(transaction.amount)))
+                            .font(.caption)
+                            .fontWeight(.medium)
+                            .foregroundColor(.green)
+                    }
+                    HStack(spacing: 6) {
+                        if let method = transaction.payment_method, !method.isEmpty {
+                            Text(method == "apple" ? "App Store" : method.capitalized)
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                        }
+                        Text(formatDateCompact(transaction.created_at))
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                        Spacer()
+                        Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
+                }
+            }
+            .padding(.vertical, 6)
+            .contentShape(Rectangle())
+            .onTapGesture {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    isExpanded.toggle()
+                }
+            }
+            
+            if isExpanded {
+                VStack(alignment: .leading, spacing: 8) {
+                    Divider()
+                    if let desc = transaction.description, !desc.isEmpty {
+                        Text(desc)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    HStack(spacing: 3) {
+                        Image(systemName: "calendar")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                        Text(formatDate(transaction.created_at))
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                .padding(.vertical, 8)
+            }
+        }
+    }
+    
+    private func formatDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .short
+        formatter.timeStyle = .short
+        return formatter.string(from: date)
+    }
+    
+    private func formatDateCompact(_ date: Date) -> String {
+        let now = Date()
+        let interval = now.timeIntervalSince(date)
+        if interval < 60 { return "now" }
+        if interval < 3600 { return "\(Int(interval / 60))m" }
+        if interval < 86400 { return "\(Int(interval / 3600))h" }
+        if interval < 604800 { return "\(Int(interval / 86400))d" }
+        let formatter = DateFormatter()
+        formatter.dateFormat = "M/d"
+        return formatter.string(from: date)
     }
 }
 
@@ -505,6 +663,7 @@ struct GenerationRow: View {
 @MainActor
 class UsageViewModel: ObservableObject {
     @Published var generations: [UserImage] = []
+    @Published var creditTransactions: [CreditTransaction] = []
     @Published var isLoading = false
     
     var totalAttempts: Int {
@@ -519,6 +678,10 @@ class UsageViewModel: ObservableObject {
         generations.filter { $0.isFailed }.count
     }
     
+    var creditsAddedCount: Int {
+        creditTransactions.count
+    }
+    
     var successRate: Double {
         guard totalAttempts > 0 else { return 0 }
         return (Double(successfulCount) / Double(totalAttempts)) * 100
@@ -530,6 +693,18 @@ class UsageViewModel: ObservableObject {
             .reduce(0, +)
     }
     
+    /// Merged list of generations and credit additions, sorted by date descending.
+    var sortedUsageItems: [UsageItem] {
+        let genItems = generations.map { UsageItem.generation($0) }
+        let creditItems = creditTransactions.map { UsageItem.creditAdded($0) }
+        let combined = genItems + creditItems
+        return combined.sorted { (a, b) in
+            let da = a.sortDate ?? .distantPast
+            let db = b.sortDate ?? .distantPast
+            return da > db
+        }
+    }
+    
     private let client = SupabaseManager.shared.client
     
     func fetchUsage(userId: String?) async {
@@ -538,17 +713,30 @@ class UsageViewModel: ObservableObject {
         isLoading = true
         
         do {
-            // Fetch all generations (both successful and failed)
+            // Fetch generations (success and failed)
             let response: PostgrestResponse<[UserImage]> = try await client.database
                 .from("user_media")
                 .select()
                 .eq("user_id", value: userId)
                 .order("created_at", ascending: false)
-                .limit(1000) // Fetch up to 1000 records
+                .limit(1000)
                 .execute()
             
             generations = response.value ?? []
-            print("✅ Fetched \(generations.count) generations for usage view")
+            
+            // Fetch credit additions (purchase + refund)
+            let txResponse: PostgrestResponse<[CreditTransaction]> = try await client.database
+                .from("credit_transactions")
+                .select()
+                .eq("user_id", value: userId)
+                .in("transaction_type", values: ["purchase", "refund"])
+                .order("created_at", ascending: false)
+                .limit(500)
+                .execute()
+            
+            creditTransactions = txResponse.value ?? []
+            
+            print("✅ Fetched \(generations.count) generations, \(creditTransactions.count) credit additions for usage view")
         } catch {
             print("❌ Failed to fetch usage data: \(error)")
         }

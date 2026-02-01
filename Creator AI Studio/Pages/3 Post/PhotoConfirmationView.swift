@@ -757,7 +757,7 @@ struct PhotoConfirmationView: View {
                 InfoRow(
                     number: "2",
                     text:
-                        "Processing usually takes 30-60 seconds, but may take longer"
+                        "Processing usually takes a minute or two, but may take longer"
                 )
                 InfoRow(
                     number: "3",
