@@ -55,25 +55,25 @@ struct Home: View {
                             CategoryRow(categoryName: "Art", animationType: .scanHorizontal)
                         }
                         
-                        // // Image Models Row (inserted after 2nd category)
-                        // if !imageModels.isEmpty {
-                        //     ModelRow(
-                        //         title: "Image Models",
-                        //         iconName: "photo.on.rectangle",
-                        //         items: imageModels,
-                        //         seeAllDestination: AnyView(ImageModelsPage())
-                        //     )
-                        // }
+                        // Image Models Row (inserted after 2nd category)
+                        if !imageModels.isEmpty {
+                            ModelRowGrid(
+                                title: "Image Models",
+                                iconName: "photo.on.rectangle",
+                                items: imageModels,
+                                seeAllDestination: AnyView(ImageModelsPage())
+                            )
+                        }
 
-                        // // Video Models Row (inserted after 3rd category)
-                        // if !videoModels.isEmpty {
-                        //     ModelRow(
-                        //         title: "Video Models",
-                        //         iconName: "video.fill",
-                        //         items: videoModels,
-                        //         seeAllDestination: AnyView(VideoModelsPage())
-                        //     )
-                        // }
+                        // Video Models Row (inserted after 3rd category)
+                        if !videoModels.isEmpty {
+                            ModelRowGrid(
+                                title: "Video Models",
+                                iconName: "video.fill",
+                                items: videoModels,
+                                seeAllDestination: AnyView(VideoModelsPage())
+                            )
+                        }
                         
                         if hasCategoryItems("Character") {
                             CategoryRow(categoryName: "Character", animationType: .flipCard)
@@ -83,7 +83,7 @@ struct Home: View {
                             CategoryRow(categoryName: "Video Games", animationType: .scanHorizontal)
                         }
                         if hasCategoryItems("Photography") {
-                            CategoryRow(categoryName: "Photography", animationType: .cameraAperture)
+                            CategoryRowGrid(categoryName: "Photography", animationType: .cameraAperture)
                         }
                         if hasCategoryItems("Instagram") {
                             CategoryRow(categoryName: "Instagram", animationType: nil)
@@ -92,13 +92,13 @@ struct Home: View {
                             CategoryRow(categoryName: "Photobooth", animationType: nil)
                         }
                         if hasCategoryItems("Fashion") {
-                            CategoryRow(categoryName: "Fashion", animationType: nil)
+                            CategoryRowGrid(categoryName: "Fashion", animationType: nil)
                         }
                         if hasCategoryItems("Spooky") {
                             CategoryRow(categoryName: "Spooky", animationType: nil)
                         }
                         if hasCategoryItems("Luxury") {
-                            CategoryRow(categoryName: "Luxury", animationType: nil)
+                            CategoryRowGrid(categoryName: "Luxury", animationType: nil)
                         }
                         if hasCategoryItems("Professional") {
                             CategoryRow(categoryName: "Professional", animationType: nil)
@@ -107,7 +107,7 @@ struct Home: View {
                             CategoryRow(categoryName: "Chibi", animationType: nil)
                         }
                         if hasCategoryItems("Just For Fun") {
-                            CategoryRow(categoryName: "Just For Fun", animationType: nil)
+                            CategoryRowGrid(categoryName: "Just For Fun", animationType: nil)
                         }
                         if hasCategoryItems("Back In Time") {
                             CategoryRow(categoryName: "Back In Time", animationType: nil)

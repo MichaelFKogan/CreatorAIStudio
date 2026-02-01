@@ -1,13 +1,6 @@
 [
   {
     "display": {
-      "title": "Sora 2",
-      "imageName": "sora2",
-      "modelName": "Sora 2"
-    }
-  },
-  {
-    "display": {
       "title": "Google Veo 3.1 Fast",
       "imageName": "veo31fast",
       "modelName": "Google Veo 3.1 Fast"
@@ -15,9 +8,9 @@
   },
   {
     "display": {
-      "title": "Seedance 1.0 Pro Fast",
-      "imageName": "seedance10profast",
-      "modelName": "Seedance 1.0 Pro Fast"
+      "title": "Sora 2",
+      "imageName": "sora2",
+      "modelName": "Sora 2"
     }
   },
   {
@@ -39,6 +32,13 @@
       "title": "Wan2.6",
       "imageName": "wan26",
       "modelName": "Wan2.6"
+    }
+  },
+  {
+    "display": {
+      "title": "Seedance 1.0 Pro Fast",
+      "imageName": "seedance10profast",
+      "modelName": "Seedance 1.0 Pro Fast"
     }
   }
 ]
