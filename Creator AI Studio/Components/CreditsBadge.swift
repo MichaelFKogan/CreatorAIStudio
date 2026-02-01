@@ -9,14 +9,14 @@ import SwiftUI
 
 /// A reusable credits badge component that shows "Sign in" when logged out,
 /// and displays credits when logged in.
-/// Handles sign-in and purchase credits sheet presentation.
+/// Handles sign-in and balance/usage sheet presentation.
 /// Automatically fetches and updates credit balance.
 struct CreditsBadge: View {
     @EnvironmentObject var authViewModel: AuthViewModel
     @StateObject private var creditsViewModel = CreditsViewModel()
     @ObservedObject private var networkMonitor = NetworkMonitor.shared
     @State private var showSignInSheet: Bool = false
-    @State private var showPurchaseCreditsSheet: Bool = false
+    @State private var showBalanceSheet: Bool = false
     
     // Customization options
     let diamondColor: Color
@@ -48,7 +48,7 @@ struct CreditsBadge: View {
             } else if !networkMonitor.isConnected {
                 // Show red no-wifi icon when logged in but offline (instead of 0 credits)
                 Button(action: {
-                    showPurchaseCreditsSheet = true
+                    showBalanceSheet = true
                 }) {
                     Image(systemName: "wifi.slash")
                         .font(.system(size: 14, weight: .medium))
@@ -68,7 +68,7 @@ struct CreditsBadge: View {
             } else {
                 // Show credits badge when logged in and online
                 Button(action: {
-                    showPurchaseCreditsSheet = true
+                    showBalanceSheet = true
                 }) {
                     HStack(spacing: 6) {
                         Image(systemName: "dollarsign.circle.fill")
@@ -106,8 +106,8 @@ struct CreditsBadge: View {
                 .environmentObject(authViewModel)
                 .presentationDragIndicator(.visible)
         }
-        .sheet(isPresented: $showPurchaseCreditsSheet) {
-            PurchaseCreditsView()
+        .sheet(isPresented: $showBalanceSheet) {
+            CreditsBalanceSheet()
                 .environmentObject(authViewModel)
                 .presentationDragIndicator(.visible)
         }
