@@ -32,11 +32,11 @@ struct ImageModelsPage: View {
                         )
                 }
 
-                // Trailing credits or crown
+                // Trailing credits or buy-credits (diamond) icon
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Group {
                         if authViewModel.user == nil {
-                            // Show "Sign in" button and crown icon when not signed in
+                            // Show "Sign in" button and credits (diamond) icon when not signed in
                             HStack(spacing: 16) {
                                 Button(action: {
                                     showSignInSheet = true
@@ -53,19 +53,13 @@ struct ImageModelsPage: View {
                                 Button(action: {
                                     showPurchaseCreditsView = true
                                 }) {
-                                    Image(systemName: "crown.fill")
+                                    Image(systemName: "diamond.fill")
                                         .font(
                                             .system(
                                                 size: 14, weight: .semibold,
                                                 design: .rounded)
                                         )
-                                        .foregroundStyle(
-                                            LinearGradient(
-                                                colors: [.yellow, .orange],
-                                                startPoint: .topLeading,
-                                                endPoint: .bottomTrailing
-                                            )
-                                        )
+                                        .foregroundColor(.purple)
                                 }
                             }
                         } else {
@@ -121,11 +115,11 @@ struct ImageModelsPageContent: View {
                         )
                 }
 
-                // Trailing credits or crown
+                // Trailing credits or buy-credits (diamond) icon
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Group {
                         if authViewModel.user == nil {
-                            // Show "Sign in" button and crown icon when not signed in
+                            // Show "Sign in" button and credits (diamond) icon when not signed in
                             HStack(spacing: 16) {
                                 Button(action: {
                                     showSignInSheet = true
@@ -142,19 +136,13 @@ struct ImageModelsPageContent: View {
                                 Button(action: {
                                     showPurchaseCreditsView = true
                                 }) {
-                                    Image(systemName: "crown.fill")
+                                    Image(systemName: "diamond.fill")
                                         .font(
                                             .system(
                                                 size: 14, weight: .semibold,
                                                 design: .rounded)
                                         )
-                                        .foregroundStyle(
-                                            LinearGradient(
-                                                colors: [.yellow, .orange],
-                                                startPoint: .topLeading,
-                                                endPoint: .bottomTrailing
-                                            )
-                                        )
+                                        .foregroundColor(.purple)
                                 }
                             }
                         } else {

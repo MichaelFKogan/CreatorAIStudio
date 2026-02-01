@@ -5,8 +5,6 @@ struct Home: View {
     @EnvironmentObject var authViewModel: AuthViewModel
     @StateObject private var filtersViewModel = PhotoFiltersViewModel.shared
     @StateObject private var videoFiltersViewModel = VideoFiltersViewModel.shared
-    @State private var showSignInSheet: Bool = false
-    @State private var showPurchaseCreditsView: Bool = false
     let resetTrigger: UUID
     
     private let categoryManager = CategoryConfigurationManager.shared
@@ -144,45 +142,14 @@ struct Home: View {
                         }
                     }
 
-                    // MARK: Sign In / Crown Icon for Subscription
+                    // MARK: Credits badge (Sign in / balance + diamond)
                     ToolbarItem(placement: .navigationBarTrailing) {
-                        HStack(spacing: 16) {
-                            Group {
-//                                if authViewModel.user == nil {
-//                                    // Show "Sign in" button when logged out
-//                                    Button(action: {
-//                                        showSignInSheet = true
-//                                    }) {
-//                                        Text("Sign in")
-//                                            .font(
-//                                                .system(
-//                                                    size: 16, weight: .semibold,
-//                                                    design: .rounded)
-//                                            )
-//                                            .foregroundColor(.primary)
-//                                    }
-//                                } else {
-                                    // Show credits badge when logged in
-                                    Button(action: {
-                                        showPurchaseCreditsView = true
-                                    }) {
-                                        Image(systemName: "crown.fill")
-                                            .font(
-                                                .system(
-                                                    size: 14, weight: .semibold,
-                                                    design: .rounded)
-                                            )
-                                            .foregroundStyle(
-                                                LinearGradient(
-                                                    colors: [.yellow, .orange],
-                                                    startPoint: .topLeading,
-                                                    endPoint: .bottomTrailing
-                                                )
-                                            )
-                                    }
-//                                }
-                            }
-                            
+                        HStack(spacing: 0) {
+                            CreditsBadge(
+                                diamondColor: .purple,
+                                borderColor: .purple
+                            )
+
                             // Settings button
                             NavigationLink(
                                 destination: Settings(profileViewModel: nil)
@@ -195,16 +162,6 @@ struct Home: View {
                         }
                     }
                 }
-            .sheet(isPresented: $showSignInSheet) {
-                SignInView()
-                    .environmentObject(authViewModel)
-                    .presentationDragIndicator(.visible)
-            }
-            .sheet(isPresented: $showPurchaseCreditsView) {
-                PurchaseCreditsView()
-                    .environmentObject(authViewModel)
-                    .presentationDragIndicator(.visible)
-            }
         }
     }
     

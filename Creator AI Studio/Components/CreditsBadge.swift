@@ -71,9 +71,9 @@ struct CreditsBadge: View {
                     showBalanceSheet = true
                 }) {
                     HStack(spacing: 6) {
-                        Image(systemName: "dollarsign.circle.fill")
-                            .font(.system(size: 12))
-                            .foregroundColor(.gray)
+                        Image(systemName: "diamond.fill")
+                            .font(.system(size: 10))
+                            .foregroundColor(.purple)
                         
                         Text(
                             PricingManager.formatCredits(

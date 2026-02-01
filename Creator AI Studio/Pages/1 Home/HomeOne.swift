@@ -129,10 +129,8 @@ struct HomeOne: View {
 
                 ToolbarItem(placement: .navigationBarTrailing) {
                     HStack(spacing: 6) {
-                        Image(systemName: "crown.fill")
-                            .foregroundStyle(
-                                LinearGradient(colors: [.blue, .purple], startPoint: .topLeading, endPoint: .bottomTrailing)
-                            )
+                        Image(systemName: "diamond.fill")
+                            .foregroundColor(.purple)
                             .font(.system(size: 8))
                         Text("$5.00")
                             .font(.system(size: 14, weight: .semibold, design: .rounded))

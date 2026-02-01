@@ -700,13 +700,8 @@ struct PhotoConfirmationView: View {
     private var costBadge: some View {
         HStack(spacing: 6) {
             if PricingManager.displayMode == .credits {
-                Image(systemName: "crown.fill")
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [.yellow, .orange],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing)
-                    )
+                Image(systemName: "diamond.fill")
+                    .foregroundColor(.purple)
                     .font(.system(size: 12))
             }
 

@@ -64,14 +64,8 @@ struct TestCreditsView: View {
                             setCredits(amount: amount)
                         }) {
                             HStack {
-                                Image(systemName: "crown.fill")
-                                    .foregroundStyle(
-                                        LinearGradient(
-                                            colors: [.yellow, .orange],
-                                            startPoint: .topLeading,
-                                            endPoint: .bottomTrailing
-                                        )
-                                    )
+                                Image(systemName: "diamond.fill")
+                                    .foregroundColor(.purple)
                                     .font(.system(size: 16))
                                 
                                 Text(formatAmount(amount))

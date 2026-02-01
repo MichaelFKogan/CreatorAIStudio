@@ -39,15 +39,9 @@ struct PurchaseCreditsView: View {
                     // Header
                     VStack(spacing: 12) {
                         HStack(spacing: 8) {
-                            Image(systemName: "crown.fill")
-                                .font(.system(size: 28))
-                                .foregroundStyle(
-                                    LinearGradient(
-                                        colors: [.yellow, .orange],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
-                                )
+                            Image(systemName: "cart.fill")
+                                .font(.system(size: 24))
+                                .foregroundColor(.purple)
 
                             Text("Buy Credits")
                                 .font(
@@ -467,6 +461,17 @@ struct CreditPackageCard: View {
         return Int(baseCreditsValue / avgVideoPrice)
     }
 
+    /// SF Symbol name for the pack title (distinct icon per pack)
+    private var titleIconName: String {
+        switch productId {
+        case .testPack: return "flask.fill"
+        case .starterPack: return "star.fill"
+        case .proPack: return "crown.fill"
+        case .megaPack: return "flame.fill"
+        case .ultraPack: return "sparkles"
+        }
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // Main card content - full card tappable for purchase; Details button stays separate
@@ -479,15 +484,9 @@ struct CreditPackageCard: View {
                     HStack(alignment: .top) {
                         VStack(alignment: .leading, spacing: 6) {
                             HStack(spacing: 8) {
-                                Image(systemName: "crown.fill")
+                                Image(systemName: titleIconName)
                                     .font(.system(size: 16))
-                                    .foregroundStyle(
-                                        LinearGradient(
-                                            colors: [.yellow, .orange],
-                                            startPoint: .topLeading,
-                                            endPoint: .bottomTrailing
-                                        )
-                                    )
+                                    .foregroundColor(.secondary)
                                 Text(title)
                                     .font(
                                         .system(

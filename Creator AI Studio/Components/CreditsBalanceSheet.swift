@@ -26,9 +26,9 @@ struct CreditsBalanceSheet: View {
                         .scaleEffect(0.8)
                 } else {
                     HStack(spacing: 8) {
-                        Image(systemName: "dollarsign.circle.fill")
-                            .font(.system(size: 16))
-                            .foregroundColor(.gray)
+                        Image(systemName: "diamond.fill")
+                            .font(.system(size: 12))
+                            .foregroundColor(.purple)
                         Text(creditsViewModel.formattedBalance())
                             .font(.system(size: 20, weight: .bold, design: .rounded))
                             .foregroundColor(.primary)
@@ -58,15 +58,9 @@ struct CreditsBalanceSheet: View {
             } label: {
                 HStack(spacing: 8) {
                     Spacer(minLength: 0)
-                    Image(systemName: "crown.fill")
+                    Image(systemName: "cart.fill")
                         .font(.system(size: 14, weight: .semibold, design: .rounded))
-                        .foregroundStyle(
-                            LinearGradient(
-                                colors: [.yellow, .orange],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
+                        .foregroundColor(.white)
                     Text("Get More Credits")
                         .font(.system(size: 17, weight: .semibold, design: .rounded))
                         .foregroundColor(.white)
