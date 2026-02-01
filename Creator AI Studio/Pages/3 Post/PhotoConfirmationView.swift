@@ -827,6 +827,10 @@ struct PhotoConfirmationView: View {
         }
 
         Task { @MainActor in
+            await PushNotificationManager.shared.checkAuthorizationStatus()
+            if PushNotificationManager.shared.authorizationStatus == .notDetermined {
+                _ = await PushNotificationManager.shared.requestPermissions()
+            }
             var taskIds: [UUID] = []
             var completedCount = 0
             let totalCount = images.count * allFilters.count

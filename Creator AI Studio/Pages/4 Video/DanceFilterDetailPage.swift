@@ -360,6 +360,10 @@ struct DanceFilterDetailPage: View {
         }
         
         Task { @MainActor in
+            await PushNotificationManager.shared.checkAuthorizationStatus()
+            if PushNotificationManager.shared.authorizationStatus == .notDetermined {
+                _ = await PushNotificationManager.shared.requestPermissions()
+            }
             _ = VideoGenerationCoordinator.shared.startVideoGeneration(
                 item: modifiedItem,
                 image: image,

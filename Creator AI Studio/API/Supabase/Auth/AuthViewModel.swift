@@ -289,10 +289,9 @@ class AuthViewModel: ObservableObject {
 
     // MARK: - Push Notifications
 
-    /// Sets the current user on PushNotificationManager and requests permissions so we get a device token.
-    /// Call this when the user has signed in (session established).
+    /// Sets the current user on PushNotificationManager so the device token is associated when permission is later granted.
+    /// Call this when the user has signed in (session established). Permission is requested when the user taps Generate.
     private func setupPushNotificationsForUser(_ userId: String) async {
         PushNotificationManager.shared.setCurrentUser(userId)
-        _ = await PushNotificationManager.shared.requestPermissions()
     }
 }

@@ -534,6 +534,10 @@ struct ImageModelDetailPage: View {
         }
 
         Task { @MainActor in
+            await PushNotificationManager.shared.checkAuthorizationStatus()
+            if PushNotificationManager.shared.authorizationStatus == .notDetermined {
+                _ = await PushNotificationManager.shared.requestPermissions()
+            }
             _ = ImageGenerationCoordinator.shared.startImageGeneration(
                 item: modifiedItem,
                 image: imageToUse,
