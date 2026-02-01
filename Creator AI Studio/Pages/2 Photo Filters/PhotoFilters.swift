@@ -130,9 +130,6 @@ struct PhotoFilters: View {
     @State private var selectedCategoryTab: String? = nil
     @State private var isMultiSelectMode: Bool = false
     @State private var selectedFilterIds: Set<UUID> = []
-    @State private var showPurchaseCreditsView: Bool = false
-    @State private var showSignInSheet: Bool = false
-    
     // // Convert presets to InfoPacket format
     // private var presetInfoPackets: [InfoPacket] {
     //     let allModels = ImageModelsViewModel.loadImageModels()
@@ -415,42 +412,7 @@ struct PhotoFilters: View {
                 }
 
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Group {
-                        if authViewModel.user == nil {
-                            // Show "Sign in" button and credits (diamond) icon when not signed in
-                            HStack(spacing: 16) {
-                                Button(action: {
-                                    showSignInSheet = true
-                                }) {
-                                    Text("Sign in")
-                                        .font(
-                                            .system(
-                                                size: 16, weight: .semibold,
-                                                design: .rounded)
-                                        )
-                                        .foregroundColor(.primary)
-                                }
-                                
-                                Button(action: {
-                                    showPurchaseCreditsView = true
-                                }) {
-                                    Image(systemName: "diamond.fill")
-                                        .font(
-                                            .system(
-                                                size: 14, weight: .semibold,
-                                                design: .rounded)
-                                        )
-                                        .foregroundColor(.purple)
-                                }
-                            }
-                        } else {
-                            // Show credits badge when signed in
-                            CreditsBadge(
-                                diamondColor: .teal,
-                                borderColor: .mint
-                            )
-                        }
-                    }
+                    CreditsToolbarView(diamondColor: .teal, borderColor: .mint)
                 }
             }
 
@@ -461,16 +423,6 @@ struct PhotoFilters: View {
             )
             .navigationDestination(for: InfoPacket.self) { filter in
                 PhotoFilterDetailView(item: filter)
-            }
-            .sheet(isPresented: $showSignInSheet) {
-                SignInView()
-                    .environmentObject(authViewModel)
-                    .presentationDragIndicator(.visible)
-            }
-            .sheet(isPresented: $showPurchaseCreditsView) {
-                PurchaseCreditsView()
-                    .environmentObject(authViewModel)
-                    .presentationDragIndicator(.visible)
             }
         }
         .onChange(of: selectedPhotoItem, perform: loadPhoto)

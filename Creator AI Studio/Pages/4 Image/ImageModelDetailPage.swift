@@ -444,8 +444,11 @@ struct ImageModelDetailPage: View {
                 Button("Done") { isPromptFocused = false }
             }
             ToolbarItem(placement: .navigationBarTrailing) {
-                CreditsBadge(
-                    borderColor: .blue
+                CreditsToolbarView(
+                    diamondColor: .blue,
+                    borderColor: .blue,
+                    showSignInSheet: $showSignInSheet,
+                    showPurchaseCreditsView: $showPurchaseCreditsView
                 )
             }
         }
@@ -486,16 +489,6 @@ struct ImageModelDetailPage: View {
             Button("OK", role: .cancel) {}
         } message: {
             Text(ocrAlertMessage)
-        }
-        .sheet(isPresented: $showSignInSheet) {
-            SignInView()
-                .environmentObject(authViewModel)
-                .presentationDragIndicator(.visible)
-        }
-        .sheet(isPresented: $showPurchaseCreditsView) {
-            PurchaseCreditsView()
-                .environmentObject(authViewModel)
-                .presentationDragIndicator(.visible)
         }
     }
 

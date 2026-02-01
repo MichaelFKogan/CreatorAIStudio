@@ -138,16 +138,6 @@ struct PhotoConfirmationView: View {
         }
         .background(Color(.systemBackground))
         .toolbar { toolbarContent }
-        .sheet(isPresented: $showSignInSheet) {
-            SignInView()
-                .environmentObject(authViewModel)
-                .presentationDragIndicator(.visible)
-        }
-        .sheet(isPresented: $showPurchaseCreditsView) {
-            PurchaseCreditsView()
-                .environmentObject(authViewModel)
-                .presentationDragIndicator(.visible)
-        }
         .onAppear {
             // Note: Credit balance fetching is now handled by AuthAwareCostCard
         }
@@ -770,9 +760,11 @@ struct PhotoConfirmationView: View {
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
         ToolbarItem(placement: .navigationBarTrailing) {
-            CreditsBadge(
+            CreditsToolbarView(
                 diamondColor: .teal,
-                borderColor: .mint
+                borderColor: .mint,
+                showSignInSheet: $showSignInSheet,
+                showPurchaseCreditsView: $showPurchaseCreditsView
             )
         }
     }

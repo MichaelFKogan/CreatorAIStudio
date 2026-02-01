@@ -56,6 +56,7 @@ struct PurchaseCreditsView: View {
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                     }
+                    .padding(.top, 12)
 
                     // Credit Packages
                     VStack(spacing: 12) {

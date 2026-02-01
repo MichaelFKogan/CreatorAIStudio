@@ -408,9 +408,11 @@ struct PhotoFilterDetailView: View {
                         )
                 }
             ToolbarItem(placement: .navigationBarTrailing) {
-                CreditsBadge(
+                CreditsToolbarView(
                     diamondColor: .teal,
-                    borderColor: .mint
+                    borderColor: .mint,
+                    showSignInSheet: $showSignInSheet,
+                    showPurchaseCreditsView: $showPurchaseCreditsView
                 )
             }
         }
@@ -487,30 +489,6 @@ struct PhotoFilterDetailView: View {
             Button("Cancel", role: .cancel) {}
         } message: {
             Text("You need \(String(format: "$%.2f", requiredCredits)) to generate this. Your current balance is \(creditsViewModel.formattedBalance()).")
-        }
-        .sheet(isPresented: $showSignInSheet, onDismiss: {
-            // Fetch credits when sign-in sheet is dismissed (user may have signed in)
-            if let userId = authViewModel.user?.id {
-                Task {
-                    await creditsViewModel.fetchBalance(userId: userId)
-                }
-            }
-        }) {
-            SignInView()
-                .environmentObject(authViewModel)
-                .presentationDragIndicator(.visible)
-        }
-        .sheet(isPresented: $showPurchaseCreditsView, onDismiss: {
-            // Fetch credits when purchase credits sheet is dismissed (user may have purchased credits)
-            if let userId = authViewModel.user?.id {
-                Task {
-                    await creditsViewModel.fetchBalance(userId: userId)
-                }
-            }
-        }) {
-            PurchaseCreditsView()
-                .environmentObject(authViewModel)
-                .presentationDragIndicator(.visible)
         }
     }
 }

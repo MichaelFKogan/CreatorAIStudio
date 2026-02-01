@@ -216,9 +216,11 @@ struct DanceFilterDetailPage: View {
                     )
             }
             ToolbarItem(placement: .navigationBarTrailing) {
-                CreditsBadge(
+                CreditsToolbarView(
                     diamondColor: .purple,
-                    borderColor: .pink
+                    borderColor: .pink,
+                    showSignInSheet: $showSignInSheet,
+                    showPurchaseCreditsView: $showPurchaseCreditsView
                 )
             }
         }
@@ -240,16 +242,6 @@ struct DanceFilterDetailPage: View {
                 image: $referenceImage,
                 color: .purple
             )
-        }
-        .sheet(isPresented: $showSignInSheet) {
-            SignInView()
-                .environmentObject(authViewModel)
-                .presentationDragIndicator(.visible)
-        }
-        .sheet(isPresented: $showPurchaseCreditsView) {
-            PurchaseCreditsView()
-                .environmentObject(authViewModel)
-                .presentationDragIndicator(.visible)
         }
         .onAppear {
             // Configure audio session immediately when view appears

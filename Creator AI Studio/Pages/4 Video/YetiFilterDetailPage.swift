@@ -348,9 +348,11 @@ struct YetiFilterDetailPage: View {
                 Button("Done") { isPromptFocused = false }
             }
             ToolbarItem(placement: .navigationBarTrailing) {
-                CreditsBadge(
+                CreditsToolbarView(
                     diamondColor: .purple,
-                    borderColor: .pink
+                    borderColor: .pink,
+                    showSignInSheet: $showSignInSheet,
+                    showPurchaseCreditsView: $showPurchaseCreditsView
                 )
             }
         }
@@ -382,16 +384,6 @@ struct YetiFilterDetailPage: View {
             Button("Cancel", role: .cancel) {}
         } message: {
             Text("You need \(String(format: "$%.2f", requiredCredits)) to generate this. Your current balance is \(creditsViewModel.formattedBalance()).")
-        }
-        .sheet(isPresented: $showSignInSheet) {
-            SignInView()
-                .environmentObject(authViewModel)
-                .presentationDragIndicator(.visible)
-        }
-        .sheet(isPresented: $showPurchaseCreditsView) {
-            PurchaseCreditsView()
-                .environmentObject(authViewModel)
-                .presentationDragIndicator(.visible)
         }
         .onAppear {
             // Setup video player if video is available

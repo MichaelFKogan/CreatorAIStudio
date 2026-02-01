@@ -8,8 +8,6 @@ struct ImageModelsPage: View {
     @StateObject private var viewModel = ImageModelsViewModel()
     @AppStorage("imageModelsIsGridView") private var isGridView = true
     @EnvironmentObject var authViewModel: AuthViewModel
-    @State private var showPurchaseCreditsView: Bool = false
-    @State private var showSignInSheet: Bool = false
 
     var body: some View {
         NavigationView {
@@ -19,7 +17,6 @@ struct ImageModelsPage: View {
             }
             .navigationTitle("")
             .toolbar {
-                // Leading title
                 ToolbarItem(placement: .navigationBarLeading) {
                     Text("Image Models")
                         .font(.system(size: 28, weight: .bold, design: .rounded))
@@ -31,56 +28,9 @@ struct ImageModelsPage: View {
                             )
                         )
                 }
-
-                // Trailing credits or buy-credits (diamond) icon
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Group {
-                        if authViewModel.user == nil {
-                            // Show "Sign in" button and credits (diamond) icon when not signed in
-                            HStack(spacing: 16) {
-                                Button(action: {
-                                    showSignInSheet = true
-                                }) {
-                                    Text("Sign in")
-                                        .font(
-                                            .system(
-                                                size: 16, weight: .semibold,
-                                                design: .rounded)
-                                        )
-                                        .foregroundColor(.primary)
-                                }
-                                
-                                Button(action: {
-                                    showPurchaseCreditsView = true
-                                }) {
-                                    Image(systemName: "diamond.fill")
-                                        .font(
-                                            .system(
-                                                size: 14, weight: .semibold,
-                                                design: .rounded)
-                                        )
-                                        .foregroundColor(.purple)
-                                }
-                            }
-                        } else {
-                            // Show credits badge when signed in
-                            CreditsBadge(
-                                diamondColor: .blue,
-                                borderColor: .blue
-                            )
-                        }
-                    }
+                    CreditsToolbarView(diamondColor: .blue, borderColor: .blue)
                 }
-            }
-            .sheet(isPresented: $showSignInSheet) {
-                SignInView()
-                    .environmentObject(authViewModel)
-                    .presentationDragIndicator(.visible)
-            }
-            .sheet(isPresented: $showPurchaseCreditsView) {
-                PurchaseCreditsView()
-                    .environmentObject(authViewModel)
-                    .presentationDragIndicator(.visible)
             }
         }
     }
@@ -91,8 +41,6 @@ struct ImageModelsPageContent: View {
     @StateObject private var viewModel = ImageModelsViewModel()
     @AppStorage("imageModelsIsGridView") private var isGridView = true
     @EnvironmentObject var authViewModel: AuthViewModel
-    @State private var showPurchaseCreditsView: Bool = false
-    @State private var showSignInSheet: Bool = false
 
     var body: some View {
         NavigationView {
@@ -102,7 +50,6 @@ struct ImageModelsPageContent: View {
             }
             .navigationTitle("")
             .toolbar {
-                // Leading title
                 ToolbarItem(placement: .navigationBarLeading) {
                     Text("Image Models")
                         .font(.system(size: 28, weight: .bold, design: .rounded))
@@ -114,56 +61,9 @@ struct ImageModelsPageContent: View {
                             )
                         )
                 }
-
-                // Trailing credits or buy-credits (diamond) icon
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Group {
-                        if authViewModel.user == nil {
-                            // Show "Sign in" button and credits (diamond) icon when not signed in
-                            HStack(spacing: 16) {
-                                Button(action: {
-                                    showSignInSheet = true
-                                }) {
-                                    Text("Sign in")
-                                        .font(
-                                            .system(
-                                                size: 16, weight: .semibold,
-                                                design: .rounded)
-                                        )
-                                        .foregroundColor(.primary)
-                                }
-                                
-                                Button(action: {
-                                    showPurchaseCreditsView = true
-                                }) {
-                                    Image(systemName: "diamond.fill")
-                                        .font(
-                                            .system(
-                                                size: 14, weight: .semibold,
-                                                design: .rounded)
-                                        )
-                                        .foregroundColor(.purple)
-                                }
-                            }
-                        } else {
-                            // Show credits badge when signed in
-                            CreditsBadge(
-                                diamondColor: .blue,
-                                borderColor: .blue
-                            )
-                        }
-                    }
+                    CreditsToolbarView(diamondColor: .blue, borderColor: .blue)
                 }
-            }
-            .sheet(isPresented: $showSignInSheet) {
-                SignInView()
-                    .environmentObject(authViewModel)
-                    .presentationDragIndicator(.visible)
-            }
-            .sheet(isPresented: $showPurchaseCreditsView) {
-                PurchaseCreditsView()
-                    .environmentObject(authViewModel)
-                    .presentationDragIndicator(.visible)
             }
         }
     }

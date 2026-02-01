@@ -8,8 +8,6 @@ struct VideoModelsPage: View {
     @StateObject private var viewModel = VideoModelsViewModel()
     @AppStorage("videoModelsIsGridView") private var isGridView = true
     @EnvironmentObject var authViewModel: AuthViewModel
-    @State private var showPurchaseCreditsView: Bool = false
-    @State private var showSignInSheet: Bool = false
 
     var body: some View {
         NavigationView {
@@ -19,12 +17,9 @@ struct VideoModelsPage: View {
             }
             .navigationTitle("")
             .toolbar {
-                // Leading title
                 ToolbarItem(placement: .navigationBarLeading) {
                     Text("Video Models")
-                        .font(
-                            .system(size: 28, weight: .bold, design: .rounded)
-                        )
+                        .font(.system(size: 28, weight: .bold, design: .rounded))
                         .foregroundStyle(
                             LinearGradient(
                                 colors: [.purple, .pink],
@@ -32,56 +27,9 @@ struct VideoModelsPage: View {
                                 endPoint: .trailing)
                         )
                 }
-
-                // Trailing credits or buy-credits (diamond) icon
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Group {
-                        if authViewModel.user == nil {
-                            // Show "Sign in" button and credits (diamond) icon when not signed in
-                            HStack(spacing: 16) {
-                                Button(action: {
-                                    showSignInSheet = true
-                                }) {
-                                    Text("Sign in")
-                                        .font(
-                                            .system(
-                                                size: 16, weight: .semibold,
-                                                design: .rounded)
-                                        )
-                                        .foregroundColor(.primary)
-                                }
-                                
-                                Button(action: {
-                                    showPurchaseCreditsView = true
-                                }) {
-                                    Image(systemName: "diamond.fill")
-                                        .font(
-                                            .system(
-                                                size: 14, weight: .semibold,
-                                                design: .rounded)
-                                        )
-                                        .foregroundColor(.purple)
-                                }
-                            }
-                        } else {
-                            // Show credits badge when signed in
-                            CreditsBadge(
-                                diamondColor: .purple,
-                                borderColor: .purple
-                            )
-                        }
-                    }
+                    CreditsToolbarView(diamondColor: .purple, borderColor: .purple)
                 }
-            }
-            .sheet(isPresented: $showSignInSheet) {
-                SignInView()
-                    .environmentObject(authViewModel)
-                    .presentationDragIndicator(.visible)
-            }
-            .sheet(isPresented: $showPurchaseCreditsView) {
-                PurchaseCreditsView()
-                    .environmentObject(authViewModel)
-                    .presentationDragIndicator(.visible)
             }
         }
     }
@@ -92,8 +40,6 @@ struct VideoModelsPageContent: View {
     @StateObject private var viewModel = VideoModelsViewModel()
     @AppStorage("videoModelsIsGridView") private var isGridView = true
     @EnvironmentObject var authViewModel: AuthViewModel
-    @State private var showPurchaseCreditsView: Bool = false
-    @State private var showSignInSheet: Bool = false
 
     var body: some View {
         NavigationView {
@@ -103,12 +49,9 @@ struct VideoModelsPageContent: View {
             }
             .navigationTitle("")
             .toolbar {
-                // Leading title
                 ToolbarItem(placement: .navigationBarLeading) {
                     Text("Video Models")
-                        .font(
-                            .system(size: 28, weight: .bold, design: .rounded)
-                        )
+                        .font(.system(size: 28, weight: .bold, design: .rounded))
                         .foregroundStyle(
                             LinearGradient(
                                 colors: [.purple, .pink],
@@ -116,56 +59,9 @@ struct VideoModelsPageContent: View {
                                 endPoint: .trailing)
                         )
                 }
-
-                // Trailing credits or buy-credits (diamond) icon
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Group {
-                        if authViewModel.user == nil {
-                            // Show "Sign in" button and credits (diamond) icon when not signed in
-                            HStack(spacing: 16) {
-                                Button(action: {
-                                    showSignInSheet = true
-                                }) {
-                                    Text("Sign in")
-                                        .font(
-                                            .system(
-                                                size: 16, weight: .semibold,
-                                                design: .rounded)
-                                        )
-                                        .foregroundColor(.primary)
-                                }
-                                
-                                Button(action: {
-                                    showPurchaseCreditsView = true
-                                }) {
-                                    Image(systemName: "diamond.fill")
-                                        .font(
-                                            .system(
-                                                size: 14, weight: .semibold,
-                                                design: .rounded)
-                                        )
-                                        .foregroundColor(.purple)
-                                }
-                            }
-                        } else {
-                            // Show credits badge when signed in
-                            CreditsBadge(
-                                diamondColor: .purple,
-                                borderColor: .purple
-                            )
-                        }
-                    }
+                    CreditsToolbarView(diamondColor: .purple, borderColor: .purple)
                 }
-            }
-            .sheet(isPresented: $showSignInSheet) {
-                SignInView()
-                    .environmentObject(authViewModel)
-                    .presentationDragIndicator(.visible)
-            }
-            .sheet(isPresented: $showPurchaseCreditsView) {
-                PurchaseCreditsView()
-                    .environmentObject(authViewModel)
-                    .presentationDragIndicator(.visible)
             }
         }
     }

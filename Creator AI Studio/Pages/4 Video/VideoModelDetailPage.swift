@@ -722,8 +722,11 @@ struct VideoModelDetailPage: View {
                 Button("Done") { isPromptFocused = false }
             }
             ToolbarItem(placement: .navigationBarTrailing) {
-                CreditsBadge(
-                    borderColor: .purple
+                CreditsToolbarView(
+                    diamondColor: .purple,
+                    borderColor: .purple,
+                    showSignInSheet: $showSignInSheet,
+                    showPurchaseCreditsView: $showPurchaseCreditsView
                 )
             }
         }
@@ -774,16 +777,6 @@ struct VideoModelDetailPage: View {
             Button("OK", role: .cancel) {}
         } message: {
             Text(ocrAlertMessage)
-        }
-        .sheet(isPresented: $showSignInSheet) {
-            SignInView()
-                .environmentObject(authViewModel)
-                .presentationDragIndicator(.visible)
-        }
-        .sheet(isPresented: $showPurchaseCreditsView) {
-            PurchaseCreditsView()
-                .environmentObject(authViewModel)
-                .presentationDragIndicator(.visible)
         }
         .onAppear {
             // Validate and reset indices if they're out of bounds for model-specific options

@@ -5,6 +5,7 @@ struct Home: View {
     @EnvironmentObject var authViewModel: AuthViewModel
     @StateObject private var filtersViewModel = PhotoFiltersViewModel.shared
     @StateObject private var videoFiltersViewModel = VideoFiltersViewModel.shared
+    @State private var showSignInSheet = false
     let resetTrigger: UUID
     
     private let categoryManager = CategoryConfigurationManager.shared
@@ -142,15 +143,17 @@ struct Home: View {
                         }
                     }
 
-                    // MARK: Credits badge (Sign in / balance + diamond)
+                    // MARK: Sign in (Home only) + Credits + Settings
                     ToolbarItem(placement: .navigationBarTrailing) {
-                        HStack(spacing: 0) {
-                            CreditsBadge(
-                                diamondColor: .purple,
-                                borderColor: .purple
-                            )
+                        HStack(spacing: 6) {
+                            if authViewModel.user == nil {
+                                Button("Sign in") {
+                                    showSignInSheet = true
+                                }
+                                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                                .foregroundColor(.primary)
+                            }
 
-                            // Settings button
                             NavigationLink(
                                 destination: Settings(profileViewModel: nil)
                                     .environmentObject(authViewModel)
@@ -162,6 +165,11 @@ struct Home: View {
                         }
                     }
                 }
+            .sheet(isPresented: $showSignInSheet) {
+                SignInView()
+                    .environmentObject(authViewModel)
+                    .presentationDragIndicator(.visible)
+            }
         }
     }
     
