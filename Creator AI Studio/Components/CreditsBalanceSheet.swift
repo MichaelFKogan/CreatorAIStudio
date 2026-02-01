@@ -27,10 +27,10 @@ struct CreditsBalanceSheet: View {
                 } else {
                     HStack(spacing: 8) {
                         Image(systemName: "dollarsign.circle.fill")
-                            .font(.system(size: 24))
+                            .font(.system(size: 16))
                             .foregroundColor(.gray)
                         Text(creditsViewModel.formattedBalance())
-                            .font(.system(size: 24, weight: .bold, design: .rounded))
+                            .font(.system(size: 20, weight: .bold, design: .rounded))
                             .foregroundColor(.primary)
                     }
                 }
