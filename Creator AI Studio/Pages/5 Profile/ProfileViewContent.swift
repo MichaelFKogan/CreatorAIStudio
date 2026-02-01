@@ -17,6 +17,8 @@ struct ProfileViewContent: View {
     @State private var selectedVideoModel: String? = nil
     @State private var showImageModelsPopover: Bool = false
     @State private var showVideoModelsPopover: Bool = false
+    @State private var showPlaylistsPopover: Bool = false
+    @State private var selectedPlaylist: Playlist? = nil
     @State private var showPresetsSheet: Bool = false
     @State private var isSelectionMode: Bool = false
     @State private var selectedImageIds: Set<String> = []
@@ -28,6 +30,7 @@ struct ProfileViewContent: View {
     @State private var showShareSheet: Bool = false
     @State private var showNoSelectionAlert: Bool = false
     @State private var noSelectionAlertMessage: String = ""
+    @State private var showBulkAddToPlaylistSheet: Bool = false
 
     // Load model data to get images - cache at static level to avoid repeated loading
     private static var cachedImageModels: [InfoPacket]?
@@ -60,6 +63,7 @@ struct ProfileViewContent: View {
         case videos = "Videos"
         case imageModels = "Image Models"
         case videoModels = "Video Models"
+        case playlists = "Collections"
     }
 
     // MARK: - CACHED COMPUTATIONS
@@ -292,9 +296,10 @@ struct ProfileViewContent: View {
     }
     
     private var selectionModeToolbar: some View {
-        HStack(spacing: 24) {
+        HStack(spacing: 20) {
             saveButton
             shareButton
+            addToPlaylistButton
             deleteButton
             cancelButton
         }
@@ -355,6 +360,36 @@ struct ProfileViewContent: View {
         }
         .buttonStyle(.plain)
         .disabled(isSharing || isDeleting)
+    }
+    
+    private var addToPlaylistButton: some View {
+        Button(action: handleAddToPlaylistAction) {
+            VStack(spacing: 6) {
+                Image(systemName: "rectangle.stack.badge.plus")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.teal)
+                    .opacity(0.8)
+                    .frame(height: 14)
+                Text("Collection")
+                    .font(.caption2)
+                    .foregroundColor(.teal)
+            }
+            .frame(height: 32)
+        }
+        .buttonStyle(.plain)
+        .disabled(isDeleting)
+        .sheet(isPresented: $showBulkAddToPlaylistSheet) {
+            AddToPlaylistSheet(
+                viewModel: viewModel,
+                imageIds: Array(selectedImageIds),
+                isPresented: $showBulkAddToPlaylistSheet,
+                onComplete: {
+                    // Clear selection after adding to collection
+                    selectedImageIds.removeAll()
+                    isSelectionMode = false
+                }
+            )
+        }
     }
     
     private var deleteButton: some View {
@@ -425,6 +460,15 @@ struct ProfileViewContent: View {
             showDeleteConfirmation = true
         }
     }
+    
+    private func handleAddToPlaylistAction() {
+        if selectedImageIds.isEmpty {
+            noSelectionAlertMessage = "Please select at least one image to add to a collection."
+            showNoSelectionAlert = true
+        } else {
+            showBulkAddToPlaylistSheet = true
+        }
+    }
 
     private func handleNotificationChange(
         oldNotifications: [NotificationData],
@@ -489,6 +533,8 @@ struct ProfileViewContent: View {
                             await viewModel.fetchFavorites()
                         }
                     }
+
+                    collectionsButton
 
                     // Images pill
                     // ALWAYS use database stats (imageCount) as source of truth
@@ -645,6 +691,54 @@ struct ProfileViewContent: View {
         .background(isSelected ? Color.purple : Color.gray.opacity(0.15))
         .clipShape(Capsule())
     }
+    
+    private var collectionsButton: some View {
+        Button {
+            showPlaylistsPopover = true
+        } label: {
+            collectionsButtonLabel
+        }
+        .sheet(isPresented: $showPlaylistsPopover) {
+            PlaylistsSheet(
+                viewModel: viewModel,
+                selectedPlaylist: $selectedPlaylist,
+                selectedModel: $selectedModel,
+                selectedVideoModel: $selectedVideoModel,
+                selectedTab: $selectedTab,
+                isPresented: $showPlaylistsPopover
+            )
+        }
+    }
+    
+    private var collectionsButtonLabel: some View {
+        let isSelected = selectedTab == .playlists && selectedPlaylist != nil
+        let title = isSelected && selectedPlaylist != nil ? selectedPlaylist!.displayName : "Collections"
+        let playlistCount = viewModel.playlists.count
+        
+        return HStack(spacing: 6) {
+            Image(systemName: "rectangle.stack")
+                .font(.system(size: 12, weight: .medium))
+            
+            Text(title)
+                .font(.system(size: 14, weight: isSelected ? .semibold : .regular))
+                .lineLimit(1)
+            
+            // Show count when not selected and user is signed in
+            if isSignedIn && !isSelected && playlistCount > 0 {
+                Text("(\(playlistCount))")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(.secondary)
+            }
+            
+            Image(systemName: "chevron.down")
+                .font(.system(size: 10, weight: .medium))
+        }
+        .foregroundColor(isSelected ? .white : .primary)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 8)
+        .background(isSelected ? Color.teal : Color.gray.opacity(0.15))
+        .clipShape(Capsule())
+    }
 
     // MARK: - CONTENT SECTION
 
@@ -758,6 +852,13 @@ struct ProfileViewContent: View {
                 return viewModel.currentModelVideos
             } else {
                 return viewModel.userVideos
+            }
+        case .playlists:
+            // Use fetched playlist images from database
+            if selectedPlaylist != nil {
+                return viewModel.currentPlaylistImages
+            } else {
+                return viewModel.userImages
             }
         }
     }

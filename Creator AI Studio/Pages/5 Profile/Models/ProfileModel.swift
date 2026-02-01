@@ -333,6 +333,15 @@ class ProfileViewModel: ObservableObject {
     @Published var modelCounts: [String: Int] = [:] // model name -> count
     @Published var videoModelCounts: [String: Int] = [:] // model name -> count
     @Published var hasLoadedStats = false // Track if stats have been fetched
+    
+    // MARK: - Playlist Properties
+    @Published var playlists: [Playlist] = []
+    @Published var currentPlaylistImages: [UserImage] = []
+    @Published var playlistItemCounts: [String: Int] = [:] // playlist_id -> count
+    @Published var isLoadingPlaylists = false
+    @Published var isLoadingPlaylistImages = false
+    @Published var selectedPlaylistId: String? = nil
+    @Published var imagePlaylistMemberships: [String: Set<String>] = [:] // image_id -> Set<playlist_id>
 
     private struct CachedUserMediaEntry: Codable {
         let images: [UserImage]
@@ -3052,4 +3061,407 @@ class ProfileViewModel: ObservableObject {
             print("❌ Failed to fetch latest image: \(error)")
         }
     }
+    
+    // MARK: - Playlist Operations
+    
+    /// Fetches all playlists for the current user with item counts
+    func fetchPlaylists() async {
+        guard let userId = userId else {
+            print("⚠️ fetchPlaylists: userId is nil")
+            return
+        }
+        
+        await MainActor.run {
+            isLoadingPlaylists = true
+        }
+        
+        do {
+            // Fetch playlists
+            let response: PostgrestResponse<[Playlist]> = try await client.database
+                .from("user_playlists")
+                .select()
+                .eq("user_id", value: userId)
+                .order("created_at", ascending: false)
+                .execute()
+            
+            let fetchedPlaylists = response.value ?? []
+            print("✅ fetchPlaylists: Found \(fetchedPlaylists.count) playlists")
+            
+            // Fetch item counts for each playlist
+            var counts: [String: Int] = [:]
+            for playlist in fetchedPlaylists {
+                let countResponse: PostgrestResponse<[CountResult]> = try await client.database
+                    .from("user_playlist_items")
+                    .select("id", head: false, count: .exact)
+                    .eq("playlist_id", value: playlist.id)
+                    .execute()
+                
+                counts[playlist.id] = countResponse.count ?? 0
+            }
+            
+            await MainActor.run {
+                playlists = fetchedPlaylists
+                playlistItemCounts = counts
+                isLoadingPlaylists = false
+            }
+        } catch {
+            print("❌ fetchPlaylists: Error: \(error)")
+            await MainActor.run {
+                isLoadingPlaylists = false
+            }
+        }
+    }
+    
+    /// Creates a new playlist with the given name
+    /// - Parameter name: The name for the new playlist
+    /// - Returns: The created playlist, or nil if creation failed
+    @discardableResult
+    func createPlaylist(name: String) async -> Playlist? {
+        guard let userId = userId else {
+            print("⚠️ createPlaylist: userId is nil")
+            return nil
+        }
+        
+        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedName.isEmpty else {
+            print("⚠️ createPlaylist: name is empty")
+            return nil
+        }
+        
+        do {
+            let request = CreatePlaylistRequest(user_id: userId, name: trimmedName)
+            
+            let response: PostgrestResponse<[Playlist]> = try await client.database
+                .from("user_playlists")
+                .insert(request)
+                .select()
+                .execute()
+            
+            if let newPlaylist = response.value.first {
+                print("✅ createPlaylist: Created playlist '\(newPlaylist.name)' with id \(newPlaylist.id)")
+                
+                await MainActor.run {
+                    playlists.insert(newPlaylist, at: 0)
+                    playlistItemCounts[newPlaylist.id] = 0
+                }
+                
+                return newPlaylist
+            }
+        } catch {
+            print("❌ createPlaylist: Error: \(error)")
+        }
+        
+        return nil
+    }
+    
+    /// Renames an existing playlist
+    /// - Parameters:
+    ///   - playlistId: The ID of the playlist to rename
+    ///   - newName: The new name for the playlist
+    func renamePlaylist(playlistId: String, newName: String) async {
+        guard userId != nil else {
+            print("⚠️ renamePlaylist: userId is nil")
+            return
+        }
+        
+        let trimmedName = newName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedName.isEmpty else {
+            print("⚠️ renamePlaylist: newName is empty")
+            return
+        }
+        
+        do {
+            try await client.database
+                .from("user_playlists")
+                .update(["name": trimmedName])
+                .eq("id", value: playlistId)
+                .execute()
+            
+            print("✅ renamePlaylist: Renamed playlist \(playlistId) to '\(trimmedName)'")
+            
+            await MainActor.run {
+                if let index = playlists.firstIndex(where: { $0.id == playlistId }) {
+                    // Create updated playlist with new name
+                    let old = playlists[index]
+                    let updated = Playlist(
+                        id: old.id,
+                        user_id: old.user_id,
+                        name: trimmedName,
+                        created_at: old.created_at,
+                        updated_at: ISO8601DateFormatter().string(from: Date())
+                    )
+                    playlists[index] = updated
+                }
+            }
+        } catch {
+            print("❌ renamePlaylist: Error: \(error)")
+        }
+    }
+    
+    /// Deletes a playlist
+    /// - Parameter playlistId: The ID of the playlist to delete
+    func deletePlaylist(playlistId: String) async {
+        guard userId != nil else {
+            print("⚠️ deletePlaylist: userId is nil")
+            return
+        }
+        
+        do {
+            try await client.database
+                .from("user_playlists")
+                .delete()
+                .eq("id", value: playlistId)
+                .execute()
+            
+            print("✅ deletePlaylist: Deleted playlist \(playlistId)")
+            
+            await MainActor.run {
+                playlists.removeAll { $0.id == playlistId }
+                playlistItemCounts.removeValue(forKey: playlistId)
+                
+                // Clear selection if deleted playlist was selected
+                if selectedPlaylistId == playlistId {
+                    selectedPlaylistId = nil
+                    currentPlaylistImages = []
+                }
+                
+                // Update image memberships
+                for (imageId, var playlistIds) in imagePlaylistMemberships {
+                    playlistIds.remove(playlistId)
+                    imagePlaylistMemberships[imageId] = playlistIds
+                }
+            }
+        } catch {
+            print("❌ deletePlaylist: Error: \(error)")
+        }
+    }
+    
+    /// Adds images to a playlist
+    /// - Parameters:
+    ///   - playlistId: The ID of the playlist
+    ///   - imageIds: Array of image IDs to add
+    func addToPlaylist(playlistId: String, imageIds: [String]) async {
+        guard userId != nil else {
+            print("⚠️ addToPlaylist: userId is nil")
+            return
+        }
+        
+        guard !imageIds.isEmpty else {
+            print("⚠️ addToPlaylist: imageIds is empty")
+            return
+        }
+        
+        do {
+            let requests = imageIds.map { imageId in
+                AddToPlaylistRequest(playlist_id: playlistId, image_id: imageId)
+            }
+            
+            // Insert all items (duplicates will be ignored due to UNIQUE constraint)
+            try await client.database
+                .from("user_playlist_items")
+                .insert(requests)
+                .execute()
+            
+            print("✅ addToPlaylist: Added \(imageIds.count) image(s) to playlist \(playlistId)")
+            
+            // Update local state
+            await MainActor.run {
+                // Update count
+                let currentCount = playlistItemCounts[playlistId] ?? 0
+                playlistItemCounts[playlistId] = currentCount + imageIds.count
+                
+                // Update image memberships
+                for imageId in imageIds {
+                    var memberships = imagePlaylistMemberships[imageId] ?? Set()
+                    memberships.insert(playlistId)
+                    imagePlaylistMemberships[imageId] = memberships
+                }
+            }
+            
+            // Refresh playlist images if this playlist is currently selected
+            if await MainActor.run { selectedPlaylistId } == playlistId {
+                await fetchPlaylistImages(playlistId: playlistId)
+            }
+        } catch {
+            print("❌ addToPlaylist: Error: \(error)")
+        }
+    }
+    
+    /// Removes an image from a playlist
+    /// - Parameters:
+    ///   - playlistId: The ID of the playlist
+    ///   - imageId: The ID of the image to remove
+    func removeFromPlaylist(playlistId: String, imageId: String) async {
+        guard userId != nil else {
+            print("⚠️ removeFromPlaylist: userId is nil")
+            return
+        }
+        
+        do {
+            try await client.database
+                .from("user_playlist_items")
+                .delete()
+                .eq("playlist_id", value: playlistId)
+                .eq("image_id", value: imageId)
+                .execute()
+            
+            print("✅ removeFromPlaylist: Removed image \(imageId) from playlist \(playlistId)")
+            
+            await MainActor.run {
+                // Update count
+                let currentCount = playlistItemCounts[playlistId] ?? 0
+                playlistItemCounts[playlistId] = max(0, currentCount - 1)
+                
+                // Update image memberships
+                if var memberships = imagePlaylistMemberships[imageId] {
+                    memberships.remove(playlistId)
+                    imagePlaylistMemberships[imageId] = memberships
+                }
+                
+                // Remove from current playlist images if showing this playlist
+                if selectedPlaylistId == playlistId {
+                    currentPlaylistImages.removeAll { $0.id == imageId }
+                }
+            }
+        } catch {
+            print("❌ removeFromPlaylist: Error: \(error)")
+        }
+    }
+    
+    /// Fetches all images in a playlist
+    /// - Parameter playlistId: The ID of the playlist
+    func fetchPlaylistImages(playlistId: String) async {
+        guard userId != nil else {
+            print("⚠️ fetchPlaylistImages: userId is nil")
+            return
+        }
+        
+        await MainActor.run {
+            isLoadingPlaylistImages = true
+            selectedPlaylistId = playlistId
+        }
+        
+        do {
+            // First get the image IDs in this playlist
+            let itemsResponse: PostgrestResponse<[PlaylistItem]> = try await client.database
+                .from("user_playlist_items")
+                .select()
+                .eq("playlist_id", value: playlistId)
+                .order("added_at", ascending: false)
+                .execute()
+            
+            let items = itemsResponse.value ?? []
+            let imageIds = items.map { $0.image_id }
+            
+            guard !imageIds.isEmpty else {
+                await MainActor.run {
+                    currentPlaylistImages = []
+                    isLoadingPlaylistImages = false
+                }
+                print("✅ fetchPlaylistImages: Playlist is empty")
+                return
+            }
+            
+            // Fetch the actual images
+            let imagesResponse: PostgrestResponse<[UserImage]> = try await client.database
+                .from("user_media")
+                .select()
+                .in("id", values: imageIds)
+                .execute()
+            
+            let fetchedImages = imagesResponse.value ?? []
+            
+            // Sort by the order they appear in the playlist (most recently added first)
+            let orderedImages = imageIds.compactMap { id in
+                fetchedImages.first { $0.id == id }
+            }
+            
+            await MainActor.run {
+                currentPlaylistImages = orderedImages
+                isLoadingPlaylistImages = false
+            }
+            
+            print("✅ fetchPlaylistImages: Fetched \(orderedImages.count) images for playlist \(playlistId)")
+        } catch {
+            print("❌ fetchPlaylistImages: Error: \(error)")
+            await MainActor.run {
+                isLoadingPlaylistImages = false
+            }
+        }
+    }
+    
+    /// Gets the playlists that contain a specific image
+    /// - Parameter imageId: The ID of the image
+    /// - Returns: Array of playlist IDs that contain the image
+    func getPlaylistsForImage(imageId: String) async -> [String] {
+        guard userId != nil else {
+            print("⚠️ getPlaylistsForImage: userId is nil")
+            return []
+        }
+        
+        do {
+            let response: PostgrestResponse<[PlaylistItem]> = try await client.database
+                .from("user_playlist_items")
+                .select()
+                .eq("image_id", value: imageId)
+                .execute()
+            
+            let items = response.value ?? []
+            let playlistIds = items.map { $0.playlist_id }
+            
+            // Update local cache
+            await MainActor.run {
+                imagePlaylistMemberships[imageId] = Set(playlistIds)
+            }
+            
+            return playlistIds
+        } catch {
+            print("❌ getPlaylistsForImage: Error: \(error)")
+            return []
+        }
+    }
+    
+    /// Fetches playlist memberships for multiple images
+    /// - Parameter imageIds: Array of image IDs to check
+    func fetchPlaylistMemberships(for imageIds: [String]) async {
+        guard userId != nil else { return }
+        
+        do {
+            let response: PostgrestResponse<[PlaylistItem]> = try await client.database
+                .from("user_playlist_items")
+                .select()
+                .in("image_id", values: imageIds)
+                .execute()
+            
+            let items = response.value ?? []
+            
+            // Group by image_id
+            var memberships: [String: Set<String>] = [:]
+            for item in items {
+                var set = memberships[item.image_id] ?? Set()
+                set.insert(item.playlist_id)
+                memberships[item.image_id] = set
+            }
+            
+            await MainActor.run {
+                for (imageId, playlistIds) in memberships {
+                    imagePlaylistMemberships[imageId] = playlistIds
+                }
+            }
+        } catch {
+            print("❌ fetchPlaylistMemberships: Error: \(error)")
+        }
+    }
+    
+    /// Clears the current playlist selection
+    func clearPlaylistSelection() {
+        selectedPlaylistId = nil
+        currentPlaylistImages = []
+    }
+}
+
+// MARK: - Helper for count queries
+
+private struct CountResult: Codable {
+    let id: String
 }

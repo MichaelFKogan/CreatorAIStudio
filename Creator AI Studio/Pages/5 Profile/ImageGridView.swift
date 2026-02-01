@@ -18,6 +18,8 @@ struct ImageGridView: View {
     var selectedVideoModel: String? = nil
 
     @State private var favoritedImageIds: Set<String> = []
+    @State private var showAddToCollectionSheet = false
+    @State private var imageIdForCollectionSheet: String? = nil
 
     private var gridColumns: [GridItem] {
         Array(repeating: GridItem(.flexible(), spacing: spacing), count: 3)
@@ -58,6 +60,17 @@ struct ImageGridView: View {
             .padding(.horizontal, 4)
         }
         .frame(height: calculateHeight(for: placeholders.count + validUserImages.count))
+        .sheet(isPresented: $showAddToCollectionSheet, onDismiss: { imageIdForCollectionSheet = nil }) {
+            Group {
+                if let vm = viewModel, let id = imageIdForCollectionSheet {
+                    AddToPlaylistSheet(
+                        viewModel: vm,
+                        imageIds: [id],
+                        isPresented: $showAddToCollectionSheet
+                    )
+                }
+            }
+        }
     }
     
     // MARK: - Grid Components
@@ -135,6 +148,7 @@ struct ImageGridView: View {
             imageButton(userImage: userImage, url: url, itemWidth: itemWidth, itemHeight: itemHeight)
             if !isSelectionMode {
                 favoriteOverlay(userImage: userImage)
+                collectionOverlay(userImage: userImage)
             }
         }
         .onAppear {
@@ -287,6 +301,30 @@ struct ImageGridView: View {
                 }
             }
             Spacer()
+        }
+    }
+    
+    private func collectionOverlay(userImage: UserImage) -> some View {
+        VStack {
+            Spacer()
+            HStack {
+                Spacer()
+                ZStack {
+                    Color.clear
+                        .frame(width: 32, height: 32)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            imageIdForCollectionSheet = userImage.id
+                            showAddToCollectionSheet = true
+                        }
+                    
+                    Image(systemName: "rectangle.stack.badge.plus")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.white)
+                        .shadow(color: .black.opacity(0.5), radius: 2, x: 0, y: 1)
+                        .allowsHitTesting(false)
+                }
+            }
         }
     }
     

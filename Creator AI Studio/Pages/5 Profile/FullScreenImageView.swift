@@ -230,6 +230,7 @@ struct FullScreenImageView: View {
 //    @StateObject private var presetViewModel = PresetViewModel()
     @State private var isSharing = false
     @State private var shareItem: URL?
+    @State private var showAddToPlaylistSheet = false
 
     // MARK: - Computed Properties
 
@@ -592,13 +593,13 @@ struct FullScreenImageView: View {
 
     @ViewBuilder
     private var actionButtons: some View {
-        HStack(spacing: 36) {
+        HStack(spacing: 28) {
             likeButton
             saveButton
             if mediaURL != nil {
                 shareButton
             }
-            // presetButton
+            playlistButton
             deleteButton
         }
         .padding(.top, 8)
@@ -718,6 +719,33 @@ struct FullScreenImageView: View {
 //        .buttonStyle(.plain)
 //        .disabled(isDeleting || isDownloading)
 //    }
+
+    private var playlistButton: some View {
+        Button(action: {
+            showAddToPlaylistSheet = true
+        }) {
+            VStack(spacing: 6) {
+                Image(systemName: "rectangle.stack.badge.plus")
+                    .font(.system(size: 20, weight: .medium))
+                    .foregroundColor(.white)
+                    .opacity(0.8)
+                Text("Collection")
+                    .font(.caption)
+                    .foregroundColor(.gray)
+            }
+        }
+        .buttonStyle(.plain)
+        .disabled(isDeleting || isDownloading)
+        .sheet(isPresented: $showAddToPlaylistSheet) {
+            if let viewModel = viewModel {
+                AddToPlaylistSheet(
+                    viewModel: viewModel,
+                    imageIds: [userImage.id],
+                    isPresented: $showAddToPlaylistSheet
+                )
+            }
+        }
+    }
 
     private var deleteButton: some View {
         Button(action: {
