@@ -4,7 +4,7 @@
       "title": "Convenience Store Portrait",
       "imageName": "conveniencestoreportrait",
       "imageNameOriginal": "four",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a medium shot portrait while preserving her exact facial identity, hair color, hairstyle, and body shape.\n\nThe subject is a young woman with long dark brown hair, standing in a well-lit convenience store aisle between two large glass-door refrigerators filled with colorful drinks. She is wearing a white 'I [heart] PARIS' crop top and light-wash baggy low-rise jeans, with accessories including a black shoulder bag, small hoop earrings, and a belly button ring. Her right hand is touching her midriff near the navel piercing, and her left hand rests relaxed by her side. She looks away to her right with a neutral, contemplative expression.\n\nThe environment includes the brightly lit interiors of fridges, colorful labels, black metal frames, grey tiled floor, and 'Energy' signs on fridge headers. Lighting is bright, fluorescent, slightly cool, with soft minimal shadows cast mostly downwards from the front and above.\n\nThe composition is a medium, eye-level shot, slightly off-center, with shallow depth of field. The subject is aligned with the left vertical line of the rule of thirds. Emphasize smooth skin, cotton fabric, denim texture, glass, and plastic surfaces. Maintain consistent color palette with white, black, blue, and multi-colored products.\n\nThe overall style is candid, social-media portrait-like, casual and posed. The final image should read as a natural, photorealistic scene with accurate subject identity and proportions, with clear, bright lighting and visually engaging composition.\n\nOptional text or product labels may appear on t-shirts, fridge headers, and packaging, but the subject remains the clear focal point.\n\nNegative prompt: blurry, out of focus, low resolution, dark lighting, empty shelves, man, child, outdoor setting."
   },
@@ -14,7 +14,7 @@
       "title": "Nighttime Car Trunk Portrait",
       "imageName": "nighttimecartrunkportrait",
       "imageNameOriginal": "eleven",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a high-angle nighttime portrait while preserving her exact facial identity, hair color, hairstyle, and body shape.\n\nThe subject is lying relaxed inside the open trunk of a bright yellow sports car. She has long, ash-brown textured wolf-cut hair and a relaxed, dreamy expression, looking to the side. Her pose includes bent, crossed legs, her right arm stretched upward, and her left hand holding a lit cigarette near her mouth.\n\nShe wears a sleeveless cropped black hoodie with a high collar, faded black denim shorts with a raw frayed hem, and yellow-and-black Onitsuka Tiger Mexico 66 sneakers. \n\nThe environment is a dark outdoor nighttime setting, with faint building silhouettes and a partial wheel of another vehicle visible on the left. The trunk contains a transparent box and a yellow bottle or black tube attached to the side.\n\nLighting is hard direct flash in a 35mm analog style, creating stark highlights and shadows, with dark ambient background. The image should have a grainy film texture and convey an edgy, mysterious, candid atmosphere.\n\nEnsure the subject remains the focal point with accurate identity and proportions, while applying dramatic flash photography and cinematic composition. Optional small environmental details like trunk contents may be included to enhance realism."
   },
@@ -24,7 +24,7 @@
       "title": "Tokyo Neon Payphone Portrait",
       "imageName": "tokyoneonpayphoneportrait",
       "imageNameOriginal": "six",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a low-angle, dramatic Tokyo night portrait while preserving her exact facial identity, hair color, hairstyle, and body shape.\n\nThe subject stands inside a green Japanese public telephone booth with sliding glass doors, leaning forward from the waist in a power pose, arm extended towards the camera, holding the payphone receiver off-hook. She maintains direct eye contact with the lens.\n\nShe wears a beige winter jacket, beige mini skirt, black leather belt, and beige chunky boots. Her pose emphasizes dynamic perspective, with the foreground dominated by her hand holding the receiver, midground showing her face and torso, and background including the booth interior and wet neon-lit Tokyo street.\n\nThe environment is post-rain, with reflective wet pavement, neon signage, and ambient city glow. Interior booth lighting comes from overhead fluorescent tubes.\n\nThe image should have a gritty, lo-fi aesthetic with photorealistic details, heavy film grain, and high-contrast neon-noir color grading. Use extreme wide-angle lens distortion subtly to enhance the dramatic low-angle composition.\n\nMaintain consistent identity and body proportions while applying the stylized urban cinematic look. Optional narrative elements like signage or payphone text may appear, but the subject remains the clear focal point."
   },
@@ -34,7 +34,7 @@
       "title": "10K Followers",
       "imageName": "10kfollowerspink",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the uploaded photo into a celebratory social media scene.\n\nThe subject is a young woman with long wavy dark hair sitting cross-legged on a white bed, smiling softly with eyes closed, holding two sparklers.\n\nShe wears a light pink blouse with wide flowy sleeves and black shorts, with pink manicured nails.\n\nSurrounding her are metallic rose-gold and pastel pink balloons. Behind her are giant rose-gold balloons spelling '10K' and a transparent balloon containing smaller pink balloons.\n\nIn front of her is a pink frosted cake on a crystal-decorated cake stand, topped with a '10K' decoration. A small pink tray beside the cake holds a glass pitcher of orange juice and a filled stemmed glass.\n\nLighting: soft, Instagram-style, feminine, festive, and celebratory with pink and rose-gold tones."
   },
@@ -44,7 +44,7 @@
       "title": "Neon Snow Rooftop Portrait",
       "imageName": "neonsnowrooftopportrait",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a sharp retro-Y2K rooftop winter portrait while preserving her exact facial identity, hair color, hairstyle, and body shape.\n\nThe subject is lying on a rooftop lounge chair lightly dusted with snow. She wears a white faux-fur jacket over a sequined winter dress. Her long hair is styled naturally, and a few strands are blown across her forehead by the wind. Snowflakes cling subtly to her jewelry and sleeves. Her expression is relaxed and dreamy, facing the camera with one hand shielding her eyes from a bright pinkish neon light.\n\nThe environment includes neon reflections bouncing off snowflakes, blurred city lights in the distance, and a softly glowing, snowy rooftop surface. Tiny snow droplets form near her lips, adding a delicate winter detail.\n\nLighting is soft but colorful, combining ambient neon glows with gentle winter reflections. The composition is close-up for her face and hands, mid-range for her body and immediate surroundings, and highlights subtle atmospheric details like frost and snow texture.\n\nApply a photorealistic, social-media-portrait style with crisp details in skin, hair, fabric, and reflective surfaces. Keep the subject sharply in focus while maintaining a dreamy, cinematic mood with retro-Y2K neon aesthetics.\n\nOptional: subtle hints of cityscape in the background to enhance depth and narrative context, but the subject remains the focal point."
   },
@@ -54,7 +54,7 @@
       "title": "Rooftop Fisheye Portrait",
       "imageName": "rooftop_fisheye_portrait",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a 9:16 ultra-wide, low-angle urban portrait captured with a dramatic fisheye perspective. Preserve the subject’s facial identity, hair color, hairstyle, and body shape from the uploaded image.\n\nThe subject is crouched on a rooftop parking lot under bright daylight, with vibrant blue sky and soft clouds filling the background. They reach toward the camera with one hand, holding oversized reflective sunglasses close to the lens, creating a strong sense of depth and distortion.\n\nOutfit: fitted light-grey camisole dress with thin straps, tall pastel-toned gradient socks just below the knee, and chunky metallic silver sneakers with sculpted soles and layered mesh panels. Hair frames the face naturally, and the expression is candid and dynamic, as if mid-conversation or surprised.\n\nSurroundings: parked cars, industrial structures, and a rooftop edge, subtly blurred by lens distortion. Lighting is bright and crisp, emphasizing textures of the outfit, shoes, and accessories while keeping shadows minimal.\n\nMood: energetic, playful, and modern, with an immersive close-up perspective drawing the viewer directly into the scene.\n\nStyle: ultra-realistic urban photography with crisp details, vibrant colors, and natural textures. Maintain full likeness of the subject with accurate proportions, skin tone, and hair."
   },
@@ -63,7 +63,7 @@
       "title": "Green Tea Mirror Selfie",
       "imageName": "green_tea_mirror_selfie",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a realistic mirror selfie scene while preserving the subject’s facial identity, hair color, hairstyle, and body shape.\n\nThe subject is a young woman playfully biting the straw of an iced green drink. She has long straight brown hair falling over her shoulders, natural sunkissed makeup, glowing skin, and nude glossy lips. She wears a white ribbed knit cami top with a dainty bow at the neckline and light wash blue relaxed denim jeans with a visible button fly.\n\nAccessories include an olive green baseball cap with white NY logo embroidery, silver over-ear headphones worn over the cap, large gold hoop earrings, thin gold chain with cross pendant, mixed gold bangles and bracelets, and multiple gold rings. She holds a smartphone with a white case and pink floral pattern in one hand and the iced matcha latte with a green straw in the other.\n\nPose and composition: waist-up, eye-level mirror reflection, subject positioned on the right side of the frame. Lighting is soft natural daylight, indoor casual bedroom setting. Background includes a bright bedroom with a white wall, bed with white textured duvet, black woven shoulder bag, leopard print throw pillow, distressed white vintage nightstand, and a modern bedside lamp with a white shade.\n\nStyle: clean, social-media realism, sharp focus, cozy and casual atmosphere. Maintain accurate proportions, facial features, hair, and body shape.\n\nExclude: cartoon, CGI, AI artifacts, over-smoothing, plastic skin, motion blur, warped anatomy, extra fingers, disfigured hands, text, or clutter."
   },
@@ -72,7 +72,7 @@
       "title": "Festival Party Portrait",
       "imageName": "festival_party_portrait",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a vibrant festival-style portrait while preserving the subject’s facial identity, hair color, hairstyle, and body shape.\n\nThe subject wears playful glitter makeup and is framed from the shoulders up. The expression is energetic and candid.\n\nThe background includes colorful lights, lens flares, and a softly blurred crowd. Lighting is dynamic and high-energy.\n\nUse high saturation and bokeh effects while keeping the subject’s likeness intact."
   },
@@ -82,7 +82,7 @@
       "title": "Natural Indoor Smartphone Portrait",
       "imageName": "natural_indoor_portrait",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a realistic waist-up indoor portrait captured with a front-facing smartphone aesthetic. Preserve the subject’s facial identity, freckles, hair color, hairstyle, and body shape exactly as shown.\n\nThe subject is seated and leaning back slightly, with relaxed posture and subtle facial asymmetry intact. Maintain visible freckles across the nose and cheeks, light flushing, glossy parted lips, and natural eye catchlights.\n\nUse soft indoor lighting with gentle shadows and moderate grain in darker areas. Hair retains micro-bangs, flyaways, and natural drape against the background.\n\nApply a candid, unposed photographic style with shallow depth of field, natural skin texture, and authentic smartphone realism."
   },
@@ -92,7 +92,7 @@
       "title": "Autumn Academy Portrait",
       "imageName": "autumnacademiaportrait",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a seated autumn academy portrait while preserving her exact facial identity, hair color, hairstyle, and body shape.\n\nThe subject is seated naturally on a wooden railing in a high-elevation temperate deciduous forest during late autumn. She wears a white cotton poplin shirt under a loose beige wool cable-knit cardigan, a brown and black plaid flannel mini skirt, and knee-high black socks. Her pose is relaxed and natural, with limbs resting comfortably and spine upright.\n\nThe environment includes backlit maple trees with vivid orange-red foliage, warm golden-hour sunlight casting micro-shimmering particulates, and high-elevation mountain scenery in the background. The lighting is warm and directional, highlighting the subject and creating soft, cinematic shadows.\n\nUse an 85mm portrait lens with shallow depth of field and creamy circular bokeh, keeping the subject sharply in focus while foreground and background elements are softly blurred. Apply a photorealistic, film-photography style with heavy detail on textures such as skin, fabric, wood, and leaves. Color grading should emphasize warm golden and red tones to evoke the late-autumn atmosphere.\n\nEnsure the composition feels cinematic and balanced, with the subject as the clear focal point. Optional environmental details such as scattered leaves or visible railing grain may enhance depth and realism, but the subject remains the central focus."
   }

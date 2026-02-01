@@ -4,7 +4,7 @@
       "title": "Japanese Painting",
       "imageName": "japanesepainting-man",
       "imageNameOriginal": "one",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform to Japanese Painting style.\n\nThe person should be wearing traditional Japanese clothing (kimono for women, yukata or hakama for men)"
   },
@@ -14,7 +14,7 @@
       "title": "Japanese Painting",
       "imageName": "japanesepainting-woman",
       "imageNameOriginal": "two",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform to Japanese Painting style.\n\nThe person should be wearing traditional Japanese clothing (kimono for women, yukata or hakama for men)"
   },
@@ -34,7 +34,7 @@
       "title": "Salvador Dali Painting",
       "imageName": "salvador-dali-painting",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform to a Salvador Dali painting"
   },
@@ -62,7 +62,7 @@
       "title": "Andy Warhol Pop Art",
       "imageName": "andywarhol-popart-man",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into Andy Warhol pop art style.\n\nPreserve facial identity, hair color, hairstyle, and body shape.\n\nUse bright flat colors, bold outlines, and high contrast. Repeat the subject multiple times in a classic Warhol grid pattern with vibrant contrasting backgrounds. Keep a clean, minimal composition while emphasizing iconic pop art aesthetics."
   },
@@ -72,7 +72,7 @@
       "title": "Andy Warhol Pop Art",
       "imageName": "andywarhol-popart-woman",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into Andy Warhol pop art style.\n\nPreserve facial identity, hair color, hairstyle, and body shape.\n\nUse bright flat colors, bold outlines, and high contrast. Repeat the subject multiple times in a classic Warhol grid pattern with vibrant contrasting backgrounds. Keep a clean, minimal composition while emphasizing iconic pop art aesthetics."
   },
@@ -81,7 +81,7 @@
       "title": "Pablo Picasso Cubism",
       "imageName": "picasso-cubism",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into Pablo Picasso cubist style.\n\nPreserve facial identity, hair color, hairstyle, and body shape.\n\nUse geometric abstraction, angular forms, and multiple perspectives. Break the subject into fragmented shapes and planes with a muted but varied color palette. Compose the image as a dynamic, abstract portrait with layered visual depth."
   },
@@ -90,7 +90,7 @@
       "title": "Claude Monet Impressionism",
       "imageName": "monet-impressionism",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into Claude Monet impressionist style.\n\nPreserve facial identity, hair color, hairstyle, and body shape.\n\nApply soft focus and gentle pastel colors. Place the subject in an outdoor natural light setting, like a garden or water lilies scene. Use visible painterly brush strokes and a light, airy atmosphere to convey classic impressionism."
   },
@@ -99,7 +99,7 @@
       "title": "Frida Kahlo Portrait",
       "imageName": "fridakahlo-portrait",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a Frida Kahlo–inspired portrait.\n\nPreserve facial identity, hair color, hairstyle, and body shape.\n\nUse vivid, symbolic colors and incorporate narrative elements or cultural motifs around the subject. Emphasize detailed facial features, expressive eyes, and emotional intensity. Create a surreal yet intimate portrait reflecting personal storytelling."
   },
@@ -109,7 +109,7 @@
       "title": "Michelangelo Sculptural Portrait",
       "imageName": "michelangelo-sculptural",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into Michelangelo sculptural portrait style.\n\nPreserve facial identity, hair color, hairstyle, and body shape.\n\nDepict the subject with heroic proportions, dramatic shadowing, and sculptural forms. Emphasize strong musculature and classical pose. Use high-contrast lighting to convey volume and depth, inspired by Renaissance sculpture aesthetics."
   },
@@ -118,7 +118,7 @@
       "title": "Rembrandt Baroque Portrait",
       "imageName": "rembrandt-baroque",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a Rembrandt Baroque-style portrait.\n\nPreserve facial identity, hair color, hairstyle, and body shape.\n\nUse rich warm tones, deep shadows, and dramatic lighting. Place the subject in a classical Baroque composition with textured, subtle background. Highlight facial contours and expressions with soft, painterly detail."
   },
@@ -127,7 +127,7 @@
       "title": "Gustav Klimt Decorative Portrait",
       "imageName": "gustavklimt-decorative",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into Gustav Klimt decorative style.\n\nPreserve facial identity, hair color, hairstyle, and body shape.\n\nUse gold leaf textures, ornate patterns, and elegant stylization. Decorate clothing and background with intricate motifs, geometric shapes, and luxurious decorative elements. Emphasize a harmonious and sophisticated portrait with symbolic details."
   },
@@ -136,7 +136,7 @@
       "title": "Jackson Pollock Abstract",
       "imageName": "jacksonpollock-abstract",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a Jackson Pollock abstract expressionist style.\n\nPreserve facial identity, hair color, hairstyle, and body shape.\n\nUse energetic splatter paint, chaotic brushstrokes, and layered textures. Place the subject against a dynamic, expressive background that conveys motion and emotion. Emphasize abstraction while retaining recognizable features."
   },
@@ -145,7 +145,7 @@
       "title": "Roy Lichtenstein Comic Pop Art",
       "imageName": "roylichtenstein-popart",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into Roy Lichtenstein comic-style pop art.\n\nPreserve facial identity, hair color, hairstyle, and body shape.\n\nUse bold outlines, Ben-Day dots, bright flat colors, and exaggerated expressions. Place the subject in a dynamic comic panel with clear graphical elements. Emphasize visual impact and playful pop art style."
   }

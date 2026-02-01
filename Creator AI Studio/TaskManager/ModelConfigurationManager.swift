@@ -71,7 +71,7 @@ class ModelConfigurationManager {
                     outputQuality: 85
                 )
             ),
-            "Google Gemini Flash 2.5 (Nano Banana)": APIConfiguration(
+            "Nano Banana": APIConfiguration(
                 provider: .runware,
                 endpoint: "https://api.runware.ai/v1",
                 runwareModel: "google:4@1",
@@ -352,7 +352,7 @@ class ModelConfigurationManager {
         capabilitiesMap = [
             "GPT Image 1.5": ["Text to Image", "Image to Image"],
             "Wan2.5-Preview Image": ["Text to Image"],
-            "Google Gemini Flash 2.5 (Nano Banana)": ["Text to Image", "Image to Image"],
+            "Nano Banana": ["Text to Image", "Image to Image"],
             "Seedream 4.5": ["Text to Image", "Image to Image"],
             "Seedream 4.0": ["Text to Image", "Image to Image"],
             "FLUX.2 [dev]": ["Text to Image", "Image to Image"],
@@ -381,7 +381,7 @@ class ModelConfigurationManager {
             
             "Wan2.5-Preview Image": "Alibaba's Wan2.5-Preview Image delivers high-fidelity single frame generation built from the Wan2.5 video architecture. This model focuses on detailed depth structure, strong prompt following, multilingual text rendering, and video-grade visual quality for production-ready stills.",
 
-            "Google Gemini Flash 2.5 (Nano Banana)": "Google's lightweight and extremely fast image model optimized for speed-driven creativity. Perfect for quick edits, simple transformations, and fast turnarounds while still producing sharp, balanced results. Ideal for social content and rapid experimentation.",
+            "Nano Banana": "Google's lightweight and extremely fast image model optimized for speed-driven creativity. Perfect for quick edits, simple transformations, and fast turnarounds while still producing sharp, balanced results. Ideal for social content and rapid experimentation.",
 
             "Seedream 4.5": "Seedream is a Bytedance-built aesthetic image model known for dreamy lighting, smooth gradients, and magazine-like visual polish. Version 4.5 produces vibrant lifestyle imagery, cinematic outdoor scenes, stylized portraits, and soft artistic effects.",
             "Seedream 4.0": "An earlier but still beautiful version of Bytedance's Seedream model, focusing on gentle realism, pastel tones, and atmospheric lighting. Great for travel-style photos, creative illustration, and soft artistic transformations.",
@@ -409,7 +409,7 @@ class ModelConfigurationManager {
         modelImageNames = [
             "GPT Image 1.5": "gptimage15",
             "Wan2.5-Preview Image": "wan25previewimage",
-            "Google Gemini Flash 2.5 (Nano Banana)": "geminiflashimage25",
+            "Nano Banana": "geminiflashimage25",
             "Seedream 4.5": "seedream45",
             "Seedream 4.0": "seedream40",
             "FLUX.2 [dev]": "flux2dev",

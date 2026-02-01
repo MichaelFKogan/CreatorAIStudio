@@ -4,7 +4,7 @@
       "title": "Fitness Progress Portrait",
       "imageName": "fitness_progress_portrait",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a fitness magazine–style portrait while preserving the subject’s facial identity, hair color, hairstyle, and body shape.\n\nThe subject is captured mid-workout in a gym setting, with realistic athletic posture and movement. The body proportions remain natural and believable.\n\nLighting is dramatic side lighting that enhances muscle definition against a darker background. The style is realistic, high-contrast, and crisp.\n\nAvoid exaggerated muscle growth, artificial smoothing, or unrealistic anatomy."
   }

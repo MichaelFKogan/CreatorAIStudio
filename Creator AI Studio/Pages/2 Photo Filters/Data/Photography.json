@@ -4,7 +4,7 @@
       "title": "Golden Hour Stairs Portrait",
       "imageName": "goldenhourstairs-male",
       "imageNameOriginal": "three",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into an ultra-realistic vertical (9:16) fashion portrait while preserving their facial identity, hair color, hairstyle, and body shape.\n\nThe subject is seated on indoor stairs beside a matte concrete wall. A rectangular beam of golden sunlight from a window hits the wall, casting a crisp shadow silhouette inside the bright frame. They wear a black ribbed knit sweater, tapered grey chinos, and chunky white sneakers. Pose: elbows on thighs, hands loosely clasped, chin slightly lifted, eyes looking toward the light, calm and confident expression.\n\nLighting: hard warm sunlight from camera-right as the key, soft ambient bounce fill, high contrast with long shadows, cinematic golden-hour mood.\n\nCamera & composition: low-mid angle from a few steps below, 50–85mm f/2.2 lens, shallow depth of field, clean optics, realistic skin texture, fine film grain, subtle vignette.\n\nStyle: minimalist background, no clutter, fashion editorial realism. Keep all proportions, facial features, hair, and body shape accurate.\n\nExclude: cartoon, CGI, AI artifacts, over-smoothing, plastic skin, excessive sharpening, motion blur, warped anatomy, extra fingers, disfigured hands, double shadow, blown highlights, banding, watermark, logo, text, bad perspective, dirty wall, clutter."
   },
@@ -14,7 +14,7 @@
       "title": "Golden Hour Stairs Portrait",
       "imageName": "goldenhourstairs-female",
       "imageNameOriginal": "seven",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into an ultra-realistic vertical (9:16) fashion portrait while preserving their facial identity, hair color, hairstyle, and body shape.\n\nThe subject is seated on indoor stairs beside a matte concrete wall. A rectangular beam of golden sunlight from a window hits the wall, casting a crisp shadow silhouette inside the bright frame. They wear a black ribbed knit sweater, tapered grey chinos, and chunky white sneakers. Pose: elbows on thighs, hands loosely clasped, chin slightly lifted, eyes looking toward the light, calm and confident expression.\n\nLighting: hard warm sunlight from camera-right as the key, soft ambient bounce fill, high contrast with long shadows, cinematic golden-hour mood.\n\nCamera & composition: low-mid angle from a few steps below, 50–85mm f/2.2 lens, shallow depth of field, clean optics, realistic skin texture, fine film grain, subtle vignette.\n\nStyle: minimalist background, no clutter, fashion editorial realism. Keep all proportions, facial features, hair, and body shape accurate.\n\nExclude: cartoon, CGI, AI artifacts, over-smoothing, plastic skin, excessive sharpening, motion blur, warped anatomy, extra fingers, disfigured hands, double shadow, blown highlights, banding, watermark, logo, text, bad perspective, dirty wall, clutter."
   },
@@ -23,7 +23,7 @@
       "title": "Classic Monochrome Portrait",
       "imageName": "classic_bw_portrait-man",
       "imageNameOriginal": "eight",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a classic black-and-white half-length artistic portrait while preserving facial identity, hair color, hairstyle, and body shape.\n\nUse studio-style lighting with a single diffused light to emphasize facial contours and eyes. Apply soft film grain and a subtle gradient background.\n\nCompose the portrait slightly off-center with generous negative space. Maintain a quiet, elegant mood inspired by classic photographer portraiture. Do not include text or logos."
   },
@@ -32,7 +32,7 @@
       "title": "Classic Monochrome Portrait",
       "imageName": "classic_bw_portrait-woman",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a classic black-and-white half-length artistic portrait while preserving facial identity, hair color, hairstyle, and body shape.\n\nUse studio-style lighting with a single diffused light to emphasize facial contours and eyes. Apply soft film grain and a subtle gradient background.\n\nCompose the portrait slightly off-center with generous negative space. Maintain a quiet, elegant mood inspired by classic photographer portraiture. Do not include text or logos."
   },
@@ -41,7 +41,7 @@
       "title": "Casual Street Portrait",
       "imageName": "casual_street_portrait-man",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a cinematic casual street-style portrait while preserving the subject’s facial identity, hair color, hairstyle, and body shape.\n\nThe subject is walking naturally down a city street at night, wearing a plain T-shirt, jeans, and sneakers. The framing is a waist-up mid-shot.\n\nThe background features neon signs, city lights, and reflections on wet pavement. Lighting is moody and urban, with a shallow depth of field and slight film grain.\n\nThe overall look is realistic, cinematic, and Instagram-ready without altering the subject’s likeness."
   },
@@ -50,7 +50,7 @@
       "title": "Casual Street Portrait",
       "imageName": "casual_street_portrait-woman",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a cinematic casual street-style portrait while preserving the subject’s facial identity, hair color, hairstyle, and body shape.\n\nThe subject is walking naturally down a city street at night, wearing a plain T-shirt, jeans, and sneakers. The framing is a waist-up mid-shot.\n\nThe background features neon signs, city lights, and reflections on wet pavement. Lighting is moody and urban, with a shallow depth of field and slight film grain.\n\nThe overall look is realistic, cinematic, and Instagram-ready without altering the subject’s likeness."
   },
@@ -59,7 +59,7 @@
       "title": "Soft Pastel Aesthetic Portrait",
       "imageName": "soft_pastel_aesthetic",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a soft pastel aesthetic portrait while preserving the subject’s facial identity, hair color, hairstyle, and body shape.\n\nThe background features softly blurred flowers in pastel tones. The subject remains naturally posed and recognizable.\n\nLighting is warm golden-hour sunlight with a gentle glow. The style is dreamy and romantic with light film grain.\n\nMaintain realistic facial features and proportions while enhancing softness and mood."
   },
@@ -68,7 +68,7 @@
       "title": "Cozy Indoor Window Portrait",
       "imageName": "cozy_indoor_portrait",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a cozy indoor lifestyle portrait while preserving the subject’s facial identity, hair color, hairstyle, and body shape.\n\nThe subject is seated near a window holding a warm mug of coffee, wrapped in a soft blanket. A bookshelf appears subtly in the background.\n\nLighting is natural window light with a warm, slightly desaturated tone. Depth of field is shallow for a relaxed, intimate feel.\n\nThe overall mood is calm, comfortable, and authentic."
   },
@@ -78,7 +78,7 @@
       "title": "Black & White Studio Portrait",
       "imageName": "bw_studio_portrait-man",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a high-resolution black-and-white cinematic studio portrait while preserving the subject’s exact facial identity, hair color, hairstyle, and body shape.\n\nStyle the subject wearing a sharp black turtleneck and chic small gold earrings, with hair styled in a neat Korean bun.\n\nPlace the subject in a minimal studio environment with dramatic professional lighting that creates bold geometric shadows and strong cross-beams of light across the face and background.\n\nCapture a calm, introspective, slightly distant expression with a refined cinematic atmosphere."
   },
@@ -88,7 +88,7 @@
       "title": "Black & White Studio Portrait",
       "imageName": "bw_studio_portrait-woman",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a high-resolution black-and-white cinematic studio portrait while preserving the subject’s exact facial identity, hair color, hairstyle, and body shape.\n\nStyle the subject wearing a sharp black turtleneck and chic small gold earrings, with hair styled in a neat Korean bun.\n\nPlace the subject in a minimal studio environment with dramatic professional lighting that creates bold geometric shadows and strong cross-beams of light across the face and background.\n\nCapture a calm, introspective, slightly distant expression with a refined cinematic atmosphere."
   },
@@ -98,7 +98,7 @@
       "title": "Retro Christmas Movie Still",
       "imageName": "retro_christmas_movie-man",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into an ultra-realistic retro Christmas movie still while preserving the subject’s exact facial identity, hair color, hairstyle, and body shape.\n\nDepict the subject sitting in the center of shiny red gift boxes tied with ribbons and surrounded by plush toys in cream, caramel, brown, and sky-blue tones.\n\nDress the subject in a scarlet hand-knitted sweater, matching pants, thick pink socks, gloves, and a winter cap.\n\nSet the scene in a cozy living room with Christmas decorations, warm lights, a small decorated Christmas tree, and a lit brick fireplace.\n\nUse warm, gentle lighting and show the subject smiling cutely while holding a steaming coffee cup."
   },
@@ -108,7 +108,7 @@
       "title": "Retro Christmas Movie Still",
       "imageName": "retro_christmas_movie-woman",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into an ultra-realistic retro Christmas movie still while preserving the subject’s exact facial identity, hair color, hairstyle, and body shape.\n\nDepict the subject sitting in the center of shiny red gift boxes tied with ribbons and surrounded by plush toys in cream, caramel, brown, and sky-blue tones.\n\nDress the subject in a scarlet hand-knitted sweater, matching pants, thick pink socks, gloves, and a winter cap.\n\nSet the scene in a cozy living room with Christmas decorations, warm lights, a small decorated Christmas tree, and a lit brick fireplace.\n\nUse warm, gentle lighting and show the subject smiling cutely while holding a steaming coffee cup."
   },
@@ -118,7 +118,7 @@
       "title": "VHS Picnic Sunset",
       "imageName": "vhs_picnic_sunset",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into an 8K, UHD, photorealistic VHS-style portrait while preserving the subject’s exact facial identity, hair color, hairstyle, and body shape.\n\nShow the subject sitting comfortably on a picnic blanket with a picnic basket and plates nearby, holding a small French croissant.\n\nDress the subject in a light brown leather jacket over a white silky shirt, paired with a deep blue floral maxi skirt and white trainers.\n\nPlace the background in a sunset-lit field with tall grass, flowers, butterflies, and dreamy bokeh.\n\nApply a slightly golden VHS tint, warm sunset tones, and soft natural lighting for a cheerful spring mood."
   },
@@ -128,7 +128,7 @@
       "title": "Winter Snowman Scene",
       "imageName": "winter_snowman_scene",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a 4K ultra-realistic winter portrait while preserving the subject’s exact facial identity, hair color, hairstyle, and body shape.\n\nDepict the subject standing beside a snowman in a snowy suburban neighborhood, smiling cheerfully at the viewer.\n\nDress the subject in a deep navy blue sweater with white and pink Christmas patterns, light beige pants, and thick woolen gloves.\n\nThe snowman is built from three large snowballs with twig arms, a carrot nose, and small dark stones for eyes and mouth.\n\nUse natural winter lighting, slight snowfall, subtle film grain, and a close-view framing from head to knees."
   },
@@ -138,7 +138,7 @@
       "title": "Cozy Coffee Portrait",
       "imageName": "cozy_coffee_portrait",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a warm, lifestyle portrait while preserving the subject’s exact facial identity, hair color, hairstyle, and body shape.\n\nShow the subject smiling brightly at the camera while holding a dark brown coffee cup with both hands.\n\nDress the subject in a cozy pink cable-knit sweater with blue design details on the sleeves.\n\nPlace the background with softly blurred green monstera plants and a dark wall, illuminated by golden-hour sunlight highlighting the subject’s face."
   },
@@ -148,7 +148,7 @@
       "title": "Paintball Vlog Scene",
       "imageName": "paintball_vlog_scene",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a 4K ultra-realistic vlog-style action portrait while preserving the subject’s exact facial identity, hair color, hairstyle, and body shape.\n\nDepict the subject mid-paintball game, smiling toward the viewer.\n\nDress the subject in a black paintball vest with colorful paint splatters over a bright red T-shirt and blue jeans.\n\nShow a shiny black paintball gun raised in one hand and a black helmet held in the other.\n\nSet the background as a paintball arena with walls, stacked tires, trees, blurred players, and golden-hour sunlight for a sharp, energetic focus."
   },
@@ -158,7 +158,7 @@
       "title": "Roses Portrait",
       "imageName": "roses_portrait",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a soft, romantic portrait while preserving the subject’s exact facial identity, hair color, hairstyle, and body shape.\n\nShow the subject smiling gently while holding a bouquet of deep red roses with baby’s breath.\n\nDress the subject in an off-the-shoulder black top with puff sleeves and a black pleated skirt.\n\nPlace the scene indoors with a softly blurred background and warm glowing lights, using gentle natural lighting on the face and flowers."
   },
@@ -168,7 +168,7 @@
       "title": "90s Vogue Park Scene",
       "imageName": "vogue_90s_park",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a Vogue-style natural portrait while preserving the subject’s exact facial identity, hair color, hairstyle, and body shape.\n\nDress the subject in a pistachio green shirt paired with baggy white pants in a Pinterest-inspired aesthetic.\n\nPlace the subject sitting on a wooden park bench under an atmospheric streetlight, reading a book as leaves gently blow through the air.\n\nUse a romantic, windy 90s movie vibe with dramatic contrast, artistic lighting, and a 1:1 frame composition."
   },
@@ -178,7 +178,7 @@
       "title": "Café Date Portrait",
       "imageName": "cafe_date_portrait",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a stylish café portrait while preserving the subject’s exact facial identity, hair color, hairstyle, and body shape.\n\nShow the subject seated at a café table wearing a white off-the-shoulder top with small earrings, a bracelet, and a wristwatch.\n\nPlace a latte coffee, quilted handbag, and smartphone on the table.\n\nUse soft, warm lighting to create an intimate dating atmosphere with gentle background blur."
   },
@@ -188,7 +188,7 @@
       "title": "Mirror Selfie Library",
       "imageName": "mirror_selfie_library",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into an ultra-realistic 4K mirror selfie portrait while preserving the subject’s exact facial identity, hair color, hairstyle, and body shape.\n\nDress the subject in a loose maroon sweater layered over a crisp white T-shirt, paired with blue jeans and a silver chain necklace.\n\nShow the subject holding a modern white smartphone partially covering the face, with the other hand holding a stack of books.\n\nPlace the scene in a small library-like room with warm indoor lighting, soft shadows, and a cinematic, moody atmosphere."
   },
@@ -198,7 +198,7 @@
       "title": "Guitar Bedroom Portrait",
       "imageName": "guitar_bedroom_portrait-man",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a close-up, artistic bedroom portrait while preserving the subject’s exact facial identity, hair color, hairstyle, and body shape.\n\nShow the subject strumming an acoustic guitar while wearing a dark, slightly unbuttoned denim shirt, focused on the guitar strings.\n\nSet the scene in a dimly lit bedroom with subtle bokeh lights in the background and a single soft spotlight illuminating the face and hands.\n\nUse high contrast, slightly desaturated colors to convey passion, artistry, and an authentic folk or rock-inspired mood."
   },
@@ -208,7 +208,7 @@
       "title": "Guitar Bedroom Portrait",
       "imageName": "guitar_bedroom_portrait-woman",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a close-up, artistic bedroom portrait while preserving the subject’s exact facial identity, hair color, hairstyle, and body shape.\n\nShow the subject strumming an acoustic guitar while wearing a dark, slightly unbuttoned denim shirt, focused on the guitar strings.\n\nSet the scene in a dimly lit bedroom with subtle bokeh lights in the background and a single soft spotlight illuminating the face and hands.\n\nUse high contrast, slightly desaturated colors to convey passion, artistry, and an authentic folk or rock-inspired mood."
   },
@@ -217,7 +217,7 @@
       "title": "Creative Artist Portrait",
       "imageName": "creative_artist_portrait-man",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a refined creative artist studio portrait while preserving the subject’s exact facial identity, hair color, hairstyle, and body shape.\n\nCompose a half-body portrait with a subtle close emphasis on the face. Style the subject in urban casual clothing with relaxed, natural gestures and understated movement.\n\nSet the scene in a photography studio with a soft gradient background that creates depth and a calm, serene atmosphere. The overall mood should feel quiet, introspective, and gentle rather than posed or dramatic.\n\nUse softly diffused directional lighting to delicately shape the cheeks and create subtle catchlights in the eyes. Maintain off-center composition with generous negative space.\n\nApply a delicate film grain texture reminiscent of classic black-and-white portrait photography. No text or logos. Minimal, emotional, top-photographer portrait style."
   },
@@ -227,7 +227,7 @@
       "title": "Creative Artist Portrait",
       "imageName": "creative_artist_portrait-woman",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a refined creative artist studio portrait while preserving the subject’s exact facial identity, hair color, hairstyle, and body shape.\n\nCompose a half-body portrait with a subtle close emphasis on the face. Style the subject in urban casual clothing with relaxed, natural gestures and understated movement.\n\nSet the scene in a photography studio with a soft gradient background that creates depth and a calm, serene atmosphere. The overall mood should feel quiet, introspective, and gentle rather than posed or dramatic.\n\nUse softly diffused directional lighting to delicately shape the cheeks and create subtle catchlights in the eyes. Maintain off-center composition with generous negative space.\n\nApply a delicate film grain texture reminiscent of classic black-and-white portrait photography. No text or logos. Minimal, emotional, top-photographer portrait style."
   },
@@ -237,7 +237,7 @@
       "title": "Corporate Team Studio Portrait",
       "imageName": "corporate_team_studio-man",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a clean, professional corporate studio portrait while preserving the subject’s exact facial identity, hair color, hairstyle, and body shape.\n\nPresent the subject wearing a simple black T-shirt against a pure black studio background. Pose the body with a slight natural tilt to avoid stiffness.\n\nUse controlled side lighting to create subtle contrast and depth across the face and shoulders while maintaining a polished, professional look.\n\nKeep the composition minimal and distraction-free with no text or logos. The final image should feel cohesive, confident, and suitable for a modern corporate team presentation."
   },
@@ -247,7 +247,7 @@
       "title": "Corporate Team Studio Portrait",
       "imageName": "corporate_team_studio-woman",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a clean, professional corporate studio portrait while preserving the subject’s exact facial identity, hair color, hairstyle, and body shape.\n\nPresent the subject wearing a simple black T-shirt against a pure black studio background. Pose the body with a slight natural tilt to avoid stiffness.\n\nUse controlled side lighting to create subtle contrast and depth across the face and shoulders while maintaining a polished, professional look.\n\nKeep the composition minimal and distraction-free with no text or logos. The final image should feel cohesive, confident, and suitable for a modern corporate team presentation."
   },
@@ -257,7 +257,7 @@
       "title": "Confetti Celebration Moment",
       "imageName": "confetti_celebration",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a joyful celebration portrait captured mid-motion. Preserve the subject’s facial identity, hair color, hairstyle, and body shape.\n\nThe subject tosses colorful confetti into the air while smiling with eyes closed. Hair lifts naturally with motion. The subject wears a dark blouse and a delicate necklace.\n\nConfetti in gold, blue, pink, and metallic tones floats sharply in focus around the subject. Use soft natural indoor lighting with shallow depth of field.\n\nRender in cinematic, professional photography style with natural skin tones, crisp detail, candid emotion, and ultra-realistic motion freeze."
   },
@@ -267,7 +267,7 @@
       "title": "Chiaroscuro Sunlit Portrait",
       "imageName": "chiaroscuro_sunray_portrait",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a hyper-realistic 8K chiaroscuro-style cinematic portrait. Preserve the subject’s exact facial identity, hair color, hairstyle, and body shape without alteration.\n\nPose the subject gazing slightly upward and to the side with a soft, calm, introspective expression. Lips are glossy and slightly parted, catching subtle highlights. Hair falls naturally across the forehead with fine realistic texture.\n\nIlluminate the face using dramatic chiaroscuro lighting: a thin ray of warm sunlight striking the eyes and upper cheek while deep shadows envelop the background and lower face. Maintain strong contrast between light and darkness for emotional depth.\n\nRender in ultra-detailed 8K realism with natural skin tones, painterly contrast, soft hair detailing, and cinematic mood. Portrait orientation, minimal background fading into shadow."
   }

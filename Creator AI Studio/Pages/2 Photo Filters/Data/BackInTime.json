@@ -4,7 +4,7 @@
       "title": "Prehistoric Human Portrait",
       "imageName": "prehistoric_human_portrait",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a prehistoric-era portrait while preserving the subject’s exact facial identity, hair color, hairstyle, and body shape.\n\nStyle the subject with primitive clothing made from natural materials such as hides or woven fibers, without altering hair color or facial features.\n\nSet the environment in a natural landscape with firelight, stone tools, and raw earth textures.\n\nUse dramatic natural lighting, earthy tones, and cinematic realism while maintaining a fully recognizable likeness."
   },
@@ -13,7 +13,7 @@
       "title": "Ancient Egyptian Portrait",
       "imageName": "ancient_egypt_portrait-female",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into an Ancient Egyptian–inspired portrait while preserving the subject’s exact facial identity, hair color, hairstyle, and body shape.\n\nDress the subject in historically inspired Egyptian garments with linen textures and gold-accented accessories, carefully adapted to their original hair and facial features.\n\nPlace the subject against a sunlit desert temple or stone relief background with warm golden tones.\n\nUse stylized yet realistic lighting and color grading inspired by ancient art while keeping the subject’s likeness fully intact."
   },
@@ -22,7 +22,7 @@
       "title": "Ancient Egyptian Portrait",
       "imageName": "ancient_egypt_portrait-male",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into an Ancient Egyptian–inspired portrait while preserving the subject’s exact facial identity, hair color, hairstyle, and body shape.\n\nDress the subject in historically inspired Egyptian garments with linen textures and gold-accented accessories, carefully adapted to their original hair and facial features.\n\nPlace the subject against a sunlit desert temple or stone relief background with warm golden tones.\n\nUse stylized yet realistic lighting and color grading inspired by ancient art while keeping the subject’s likeness fully intact."
   },
@@ -31,7 +31,7 @@
       "title": "Ancient Roman Portrait",
       "imageName": "ancient_rome_portrait",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into an Ancient Roman–era portrait while preserving the subject’s exact facial identity, hair color, hairstyle, and body shape.\n\nStyle the subject in historically accurate Roman clothing such as a toga or tunic, adapted without altering their natural hair color or facial structure.\n\nSet the scene among marble columns, stone architecture, and warm Mediterranean daylight.\n\nApply clean classical composition, realistic sculptural lighting, and restrained color tones while keeping the subject instantly recognizable."
   },
@@ -40,7 +40,7 @@
       "title": "Medieval Court Portrait",
       "imageName": "medieval_court_portrait",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a medieval-era portrait while preserving the subject’s exact facial identity, hair color, hairstyle, and body shape.\n\nDress the subject in authentic medieval attire such as layered robes, cloaks, or simple court garments, keeping all hair color and facial features unchanged.\n\nPlace the subject inside a stone hall or candle-lit chamber with tapestries, wooden textures, and soft warm illumination.\n\nUse muted, natural color grading and a slightly painterly realism to evoke medieval artistry while maintaining full likeness."
   },
@@ -49,7 +49,7 @@
       "title": "Renaissance Oil Portrait",
       "imageName": "renaissance_oil_portrait",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a Renaissance-era portrait while preserving the subject’s exact facial identity, hair color, hairstyle, and body shape.\n\nDepict the subject wearing historically accurate Renaissance clothing such as a finely tailored tunic, gown, or doublet, adapted carefully to their original hair color and facial structure.\n\nRender the scene as a classical oil painting with soft directional lighting, rich earth tones, and subtle shadow modeling inspired by Old Master portraiture.\n\nMaintain a dignified, timeless atmosphere with painterly textures while keeping the subject clearly recognizable."
   },
@@ -58,7 +58,7 @@
       "title": "1920s Art Deco Portrait",
       "imageName": "1920s_gatsby_portrait-female",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a 1920s Great Gatsby–era portrait while preserving the subject’s exact facial identity, hair color, hairstyle, and body shape.\n\nStyle the subject in historically accurate 1920s fashion, such as a flapper-inspired dress or a tailored suit, with finger waves or neatly slicked hair adapted without changing hair color or structure.\n\nPlace the subject inside an elegant Art Deco interior with geometric patterns, warm ambient lighting, and luxurious textures.\n\nMaintain a refined, cinematic tone with period-accurate color grading and props while keeping the subject fully recognizable."
   },
@@ -67,7 +67,7 @@
       "title": "1920s Art Deco Portrait",
       "imageName": "1920s_gatsby_portrait-male",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a 1920s Great Gatsby–era portrait while preserving the subject’s exact facial identity, hair color, hairstyle, and body shape.\n\nStyle the subject in historically accurate 1920s fashion, such as a flapper-inspired dress or a tailored suit, with finger waves or neatly slicked hair adapted without changing hair color or structure.\n\nPlace the subject inside an elegant Art Deco interior with geometric patterns, warm ambient lighting, and luxurious textures.\n\nMaintain a refined, cinematic tone with period-accurate color grading and props while keeping the subject fully recognizable."
   },
@@ -76,7 +76,7 @@
       "title": "1950s Diner Portrait",
       "imageName": "1950s_diner_portrait",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a 1950s American diner–era portrait while preserving the subject’s exact facial identity, hair color, hairstyle, and body shape.\n\nDress the subject in classic 1950s fashion such as a poodle skirt, cardigan, or greaser-inspired outfit, adapted to the original hairstyle and hair color.\n\nSet the scene inside a retro diner with chrome seating, checkered floors, and a classic car visible outside the window.\n\nUse bright, clean lighting and vibrant mid-century color tones while keeping the subject’s likeness fully intact."
   },
@@ -85,7 +85,7 @@
       "title": "1980s Neon Mall Portrait",
       "imageName": "1980s_mall_portrait-female",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a 1980s mall-era portrait while preserving the subject’s exact facial identity, hair color, hairstyle, and body shape.\n\nStyle the subject in bold 1980s fashion with neon colors, layered clothing, and era-appropriate accessories, keeping hair color and structure unchanged.\n\nPlace the subject inside a vintage shopping mall or arcade with glowing signs, retro decor, and colorful lighting.\n\nApply vibrant saturation and nostalgic color grading while maintaining a realistic and recognizable appearance."
   },
@@ -94,7 +94,7 @@
       "title": "1980s Neon Mall Portrait",
       "imageName": "1980s_mall_portrait-male",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a 1980s mall-era portrait while preserving the subject’s exact facial identity, hair color, hairstyle, and body shape.\n\nStyle the subject in bold 1980s fashion with neon colors, layered clothing, and era-appropriate accessories, keeping hair color and structure unchanged.\n\nPlace the subject inside a vintage shopping mall or arcade with glowing signs, retro decor, and colorful lighting.\n\nApply vibrant saturation and nostalgic color grading while maintaining a realistic and recognizable appearance."
   },
@@ -103,7 +103,7 @@
       "title": "90s Mall Portrait",
       "imageName": "retro_90s_mall_portrait",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a candid retro 1990s shopping mall scene while preserving the subject’s exact facial identity, hair color, hairstyle, and body shape.\n\nDress the subject in authentic 90s fashion such as a slightly oversized jacket, baggy jeans, or sneakers, keeping proportions and features unchanged.\n\nPlace the subject inside a classic 90s indoor mall with tiled floors, neon signage, escalators, storefronts, and food court lighting in the background.\n\nUse natural mall lighting with slight color casts from neon signs, mild motion blur or depth of field, and subtle film grain to create a nostalgic, everyday 90s mall atmosphere."
   },
@@ -112,7 +112,7 @@
       "title": "1990s Grunge Portrait",
       "imageName": "1990s_grunge_portrait-female",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a 1990s grunge-era portrait while preserving the subject’s exact facial identity, hair color, hairstyle, and body shape.\n\nDress the subject in authentic 1990s grunge clothing such as flannel shirts, worn denim, and combat boots, adapted without altering hair color or facial structure.\n\nSet the scene on a slightly gritty urban street with muted tones, concrete textures, and overcast lighting.\n\nUse subdued color grading and a raw, documentary-style feel while keeping the subject instantly recognizable."
   },
@@ -122,7 +122,7 @@
       "title": "1990s Grunge Portrait",
       "imageName": "1990s_grunge_portrait-male",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a 1990s grunge-era portrait while preserving the subject’s exact facial identity, hair color, hairstyle, and body shape.\n\nDress the subject in authentic 1990s grunge clothing such as flannel shirts, worn denim, and combat boots, adapted without altering hair color or facial structure.\n\nSet the scene on a slightly gritty urban street with muted tones, concrete textures, and overcast lighting.\n\nUse subdued color grading and a raw, documentary-style feel while keeping the subject instantly recognizable."
   },
@@ -131,7 +131,7 @@
       "title": "2020s Minimalist Portrait",
       "imageName": "2020s_minimalist_portrait",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a modern 2020s minimalist portrait while preserving the subject’s exact facial identity, hair color, hairstyle, and body shape.\n\nStyle the subject in clean, neutral-toned contemporary clothing with simple silhouettes and modern textures.\n\nPlace the subject in a bright, modern interior with soft natural lighting, minimal decor, and neutral materials.\n\nUse a clean, refined aesthetic with natural color grading and realistic detail to reflect contemporary lifestyle photography."
   }

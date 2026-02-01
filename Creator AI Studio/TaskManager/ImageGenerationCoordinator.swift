@@ -149,6 +149,19 @@ class ImageGenerationCoordinator: ObservableObject {
             NotificationManager.shared.updateProgress(0.50, for: notificationId)
             
             // Register the notification with JobStatusManager so it can update it when complete
+            // #region agent log
+            do {
+                let logPath = "/Users/mike/Desktop/Desktop/iOS Apps/Creator AI Studio/.cursor/debug.log"
+                let payload: [String: Any] = ["sessionId": "debug-session", "runId": "run1", "hypothesisId": "D", "location": "ImageGenerationCoordinator:registerNotification", "message": "registering webhook task", "data": ["webhookTaskId": webhookTaskId, "notificationId": notificationId.uuidString], "timestamp": Int(Date().timeIntervalSince1970 * 1000)]
+                if let json = try? JSONSerialization.data(withJSONObject: payload), let line = String(data: json, encoding: .utf8) {
+                    let lineData = (line + "\n").data(using: .utf8)!
+                    if !FileManager.default.fileExists(atPath: logPath) { FileManager.default.createFile(atPath: logPath, contents: nil) }
+                    if let h = FileHandle(forUpdatingAtPath: logPath) {
+                        h.seekToEndOfFile(); h.write(lineData); try? h.close()
+                    }
+                }
+            }
+            // #endregion
             JobStatusManager.shared.registerNotification(taskId: webhookTaskId, notificationId: notificationId)
             
             // For webhook mode, we don't wait - the result comes via Realtime/push notification

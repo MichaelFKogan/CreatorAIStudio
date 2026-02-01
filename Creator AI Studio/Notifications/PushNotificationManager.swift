@@ -43,8 +43,12 @@ class PushNotificationManager: NSObject, ObservableObject {
     
     // MARK: - Public Methods
 
-    /// Clear the app badge count (the red circle with number on app icon)
+    /// Clear the app badge count (the red circle with number on app icon).
+    /// Uses setBadgeCount(0) on iOS 16+ for reliable clearing; falls back to applicationIconBadgeNumber on older iOS.
     func clearBadge() {
+        if #available(iOS 16.0, *) {
+            UNUserNotificationCenter.current().setBadgeCount(0) { _ in }
+        }
         UIApplication.shared.applicationIconBadgeNumber = 0
     }
 

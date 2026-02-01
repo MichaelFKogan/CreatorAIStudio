@@ -4,8 +4,8 @@ This document lists all image and video models available in Creator AI Studio.
 
 ## Image Models
 
-1. **Google Gemini Flash 2.5 (Nano Banana)**
-   - Model Name: `Google Gemini Flash 2.5 (Nano Banana)`
+1. **Nano Banana**
+   - Model Name: `Nano Banana`
    - Image Asset: `geminiflashimage25`
 
 2. **GPT Image 1.5**

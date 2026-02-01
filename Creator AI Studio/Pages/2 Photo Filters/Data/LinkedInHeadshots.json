@@ -4,7 +4,7 @@
       "title": "LinkedIn Headshot",
       "imageName": "linkedinheadshotboy",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the uploaded photo into a high-quality, professional LinkedIn headshot.\n\nHighlight the subject’s natural facial features, including eyes, hair, and skin tone, using true-to-life colors and smooth, even lighting.\n\nDress the subject in modern, polished attire that feels approachable. Avoid suits, ties, and collared shirts.\n\nUse a clean, neutral, quiet cityscape background with soft depth of field so the subject remains the main focus.\n\nFrame the image tightly on the head and upper shoulders.\n\nThe final image should be sharp, well-lit, and convey confidence, professionalism, and approachability while fully preserving the subject’s natural appearance."
   },
@@ -13,7 +13,7 @@
       "title": "LinkedIn Headshot",
       "imageName": "linkedinheadshotgirl",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the uploaded photo into a high-quality, professional LinkedIn headshot.\n\nEnhance the subject’s natural facial features such as eyes, hair, and skin tone with soft, flattering, true-to-life lighting.\n\nDress the subject in modern, polished attire that feels approachable and contemporary. Avoid suits, ties, and collared shirts.\n\nPlace the subject against a clean, neutral cityscape background with gentle depth of field.\n\nCrop the image tightly around the head and upper shoulders.\n\nEnsure the final image looks sharp, professional, confident, and approachable while preserving the subject’s natural look."
   },
@@ -22,7 +22,7 @@
       "title": "LinkedIn Headshot",
       "imageName": "clean_linkedin_headshot-boy",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a professional LinkedIn-style headshot while preserving the subject’s facial identity, hair color, hairstyle, and body shape.\n\nThe subject is framed from the chest up against a softly blurred modern office background with large windows. The expression is calm, confident, and approachable.\n\nLighting is soft, natural daylight coming from the front, evenly illuminating the face with gentle shadows. The style is clean and realistic with subtle retouching only.\n\nAvoid heavy filters, exaggerated effects, text, logos, or stylization. Keep the result suitable for professional and corporate use."
   },
@@ -31,7 +31,7 @@
       "title": "LinkedIn Headshot",
       "imageName": "clean_linkedin_headshot-girl",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a professional LinkedIn-style headshot while preserving the subject’s facial identity, hair color, hairstyle, and body shape.\n\nThe subject is framed from the chest up against a softly blurred modern office background with large windows. The expression is calm, confident, and approachable.\n\nLighting is soft, natural daylight coming from the front, evenly illuminating the face with gentle shadows. The style is clean and realistic with subtle retouching only.\n\nAvoid heavy filters, exaggerated effects, text, logos, or stylization. Keep the result suitable for professional and corporate use."
   },
@@ -40,7 +40,7 @@
       "title": "Professional Headshot",
       "imageName": "headshot1",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Create a polished corporate headshot using the uploaded image.\n\nUse soft, even studio lighting with no harsh shadows.\n\nRetouch skin naturally by removing minor blemishes and smoothing texture without creating a plastic appearance.\n\nSharpen facial details while maintaining a realistic, natural look.\n\nDress the subject in a fitted white business shirt with a dark grey suit jacket and dark blue tie.\n\nUse a clean, neutral background in light grey or a subtle gradient.\n\nThe final result should feel confident, professional, and suitable for LinkedIn or corporate profiles."
   },
@@ -49,7 +49,7 @@
       "title": "Professional Headshot",
       "imageName": "headshot2",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Create a professional corporate headshot from the uploaded image.\n\nApply soft, evenly balanced studio lighting without harsh shadows.\n\nRetouch the skin naturally while keeping realistic texture and detail.\n\nEnhance facial sharpness while preserving a natural appearance.\n\nDress the subject in a fitted white business shirt with a dark grey suit jacket and dark blue tie.\n\nUse a neutral light grey or softly graded background.\n\nThe final image should appear confident, clean, and appropriate for LinkedIn or professional use."
   },
@@ -58,7 +58,7 @@
       "title": "Professional Headshot",
       "imageName": "proheadshotwhiteboy",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Create a clean, professional corporate headshot from the uploaded image.\n\nUse soft studio lighting that evenly illuminates the face without harsh shadows.\n\nRetouch the skin naturally while keeping realistic texture.\n\nSharpen facial details subtly while maintaining a natural look.\n\nDress the subject in a fitted white business shirt.\n\nUse a clean, neutral background in light grey or a soft gradient.\n\nThe final image should look polished, confident, and suitable for professional profiles."
   },
@@ -67,7 +67,7 @@
       "title": "Professional Headshot",
       "imageName": "proheadshotwhitegirl",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Create a professional corporate headshot using the uploaded image.\n\nApply soft, evenly balanced studio lighting to avoid harsh shadows.\n\nRetouch the skin naturally while preserving realistic detail and texture.\n\nEnhance facial clarity without over-processing.\n\nDress the subject in a fitted white business shirt.\n\nUse a clean, neutral background in light grey or a soft gradient.\n\nThe final image should feel confident, polished, and appropriate for LinkedIn or corporate profiles."
   },
@@ -76,7 +76,7 @@
       "title": "Formal Blazer Portrait",
       "imageName": "formal_blazer_portrait-male",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a polished studio portrait while preserving the subject’s facial identity, hair color, hairstyle, and body shape.\n\nThe subject wears a dark blazer layered over a plain T-shirt. The pose is relaxed but confident, suitable for a professional website or About page.\n\nThe background is a neutral grey gradient. Lighting uses softbox-style portrait lighting with gentle shadows and sharp, clean detail.\n\nMaintain a realistic, professional appearance without stylization or visual effects."
   },
@@ -85,7 +85,7 @@
       "title": "Formal Blazer Portrait",
       "imageName": "formal_blazer_portrait-female",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a polished studio portrait while preserving the subject’s facial identity, hair color, hairstyle, and body shape.\n\nThe subject wears a dark blazer layered over a plain T-shirt. The pose is relaxed but confident, suitable for a professional website or About page.\n\nThe background is a neutral grey gradient. Lighting uses softbox-style portrait lighting with gentle shadows and sharp, clean detail.\n\nMaintain a realistic, professional appearance without stylization or visual effects."
   }

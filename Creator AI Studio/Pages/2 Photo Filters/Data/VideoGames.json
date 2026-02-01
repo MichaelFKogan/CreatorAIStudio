@@ -4,7 +4,7 @@
       "title": "GTA V Character",
       "imageName": "gta_v_character",
       "imageNameOriginal": "one",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a Grand Theft Auto V–style character illustration while strictly preserving the subject’s exact facial identity, hair color, hairstyle, and body shape.\n\nRender the subject in the iconic GTA V loading-screen aesthetic with bold outlines, semi-realistic proportions, and stylized realism. Keep facial features clearly recognizable and faithful to the reference photo.\n\nUse dramatic, high-contrast lighting and saturated colors typical of GTA promotional artwork. Pose the subject confidently in a casual stance.\n\nBackground should feel urban and cinematic, inspired by Los Santos, but simplified and illustrative. No text or logos. Clean, polished game-art finish."
   },
@@ -14,7 +14,7 @@
       "title": "GTA V Action Mode",
       "imageName": "gta_v_action_mode",
       "imageNameOriginal": "five",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into GTA V promotional-style action artwork while preserving the subject’s exact facial identity, hair color, hairstyle, and body shape.\n\nDepict the subject in a cinematic action pose with dynamic body language, maintaining realistic anatomy and recognizable facial structure.\n\nUse bold colors, dramatic lighting, and strong contrast consistent with Grand Theft Auto poster art. Incorporate a Los Santos–inspired city backdrop with depth and motion.\n\nOverall composition should feel like official game key art—cinematic, energetic, and polished. No text or logos."
   },
@@ -23,7 +23,7 @@
       "title": "Persona5 Graffiti Pop Art",
       "imageName": "Persona5-graffitipopart-man",
       "imageNameOriginal": "eight",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject in the uploaded photo into a visually explosive and trendy pop-art anime illustration while strictly preserving the exact facial identity, features, and likeness of the real person in the reference photo. The face must remain instantly recognizable as the same individual—no generic anime face, no heavy stylization that alters bone structure, eye shape, nose, mouth, jawline, or unique facial details. Even under the extreme Persona 5 / graffiti style, the character’s real-world face must stay 100% consistent and accurate to the photo.\n\nThe overall style must be a high-contrast blend of Persona 5’s aesthetic and street graffiti visuals, making the subject look like an extremely flamboyant, extremely flat, ultra-cool anime figure—like an over-the-top chuunibyou character or a phantom thief preparing for a special attack.\n\n• Character and Shading: Apply sharp cel-shading with hard, clean lines and crisp contours. The pose must be exaggerated and full of motion. Use a wide-angle or fisheye perspective to make parts (like the hands or props) appear extremely close to the camera, emphasizing the action. The expression should be highly dramatic, confident, manic, or cold-blooded “overacting” intensity, but it must still be the same person’s face from the photo performing that expression.\n\n• Color and Contrast: Reject realistic volume and shading. Instead, rely on large areas of pure black heavy shadows and highly saturated flat color blocks to create an extreme, high-contrast flat look. Use a palette of bright red, lemon yellow, electric blue, and neon purple, contrasting them against large black shadow silhouettes. Hair and eye color should match the reference photo exactly unless the photo is black-and-white.\n\n• Texture and Graphics: Integrate screentones, halftone dots, speed lines, and radiating lines in the shadows and background to create a maximalist, layered graphic feel, like printed manga mixed with street art. Add rough spray paint, smears, or hand-drawn graffiti textures in select areas (avoid placing heavy textures directly over the face that would obscure identity).\n\n• Background and UI: The background should be a flat visual collage stage—not a realistic perspective space. Fill it with huge sans-serif English letters, torn paper effects, ink splatters, bold arrow graphics, speech bubbles, and onomatopoeia (e.g., “BOOM,” “SLASH,” “WAKE UP” graffiti sound effects). Seamlessly integrate game UI elements (health bars, skill names, tooltips, buttons) floating around the main character, merging the game interface and the illustration, breaking the fourth wall.\n\n• Mood and Resolution: Keep the lighting high-contrast and graphic, not physically realistic. Edges must be very sharp, without soft gradients. The final mood must be extremely dynamic, chuunibyou, and cool, like the image is about to explode off the screen. Avoid realistic painting styles, low-saturation vintage looks, soft pastels, and natural landscapes. The image should be a vertical 2:3 high-resolution illustration suitable as a tension-filled, maximalist pop-art manga poster.\n\nKey consistency directives (repeat for best results): –identitical face to reference, same person, preserve exact facial structure, do not change eye-smile or genericize, keep real proportions and unique traits of the uploaded person’s face even in extreme anime style, face must remain 100% recognizable."
   },
@@ -33,7 +33,7 @@
       "title": "Persona5 Graffiti Pop Art",
       "imageName": "Persona5-graffitipopart-woman",
       "imageNameOriginal": "nine",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject in the uploaded photo into a visually explosive and trendy pop-art anime illustration while strictly preserving the exact facial identity, features, and likeness of the real person in the reference photo. The face must remain instantly recognizable as the same individual—no generic anime face, no heavy stylization that alters bone structure, eye shape, nose, mouth, jawline, or unique facial details. Even under the extreme Persona 5 / graffiti style, the character’s real-world face must stay 100% consistent and accurate to the photo.\n\nThe overall style must be a high-contrast blend of Persona 5’s aesthetic and street graffiti visuals, making the subject look like an extremely flamboyant, extremely flat, ultra-cool anime figure—like an over-the-top chuunibyou character or a phantom thief preparing for a special attack.\n\n• Character and Shading: Apply sharp cel-shading with hard, clean lines and crisp contours. The pose must be exaggerated and full of motion. Use a wide-angle or fisheye perspective to make parts (like the hands or props) appear extremely close to the camera, emphasizing the action. The expression should be highly dramatic, confident, manic, or cold-blooded “overacting” intensity, but it must still be the same person’s face from the photo performing that expression.\n\n• Color and Contrast: Reject realistic volume and shading. Instead, rely on large areas of pure black heavy shadows and highly saturated flat color blocks to create an extreme, high-contrast flat look. Use a palette of bright red, lemon yellow, electric blue, and neon purple, contrasting them against large black shadow silhouettes. Hair and eye color should match the reference photo exactly unless the photo is black-and-white.\n\n• Texture and Graphics: Integrate screentones, halftone dots, speed lines, and radiating lines in the shadows and background to create a maximalist, layered graphic feel, like printed manga mixed with street art. Add rough spray paint, smears, or hand-drawn graffiti textures in select areas (avoid placing heavy textures directly over the face that would obscure identity).\n\n• Background and UI: The background should be a flat visual collage stage—not a realistic perspective space. Fill it with huge sans-serif English letters, torn paper effects, ink splatters, bold arrow graphics, speech bubbles, and onomatopoeia (e.g., “BOOM,” “SLASH,” “WAKE UP” graffiti sound effects). Seamlessly integrate game UI elements (health bars, skill names, tooltips, buttons) floating around the main character, merging the game interface and the illustration, breaking the fourth wall.\n\n• Mood and Resolution: Keep the lighting high-contrast and graphic, not physically realistic. Edges must be very sharp, without soft gradients. The final mood must be extremely dynamic, chuunibyou, and cool, like the image is about to explode off the screen. Avoid realistic painting styles, low-saturation vintage looks, soft pastels, and natural landscapes. The image should be a vertical 2:3 high-resolution illustration suitable as a tension-filled, maximalist pop-art manga poster.\n\nKey consistency directives (repeat for best results): –identitical face to reference, same person, preserve exact facial structure, do not change eye-smile or genericize, keep real proportions and unique traits of the uploaded person’s face even in extreme anime style, face must remain 100% recognizable."
   },
@@ -42,7 +42,7 @@
       "title": "16-Bit Adventure",
       "imageName": "16bit_adventure",
       "imageNameOriginal": "one",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a 16-bit retro video game character while preserving the subject’s facial identity, hair color, hairstyle, and body shape in pixel-art form.\n\nRecreate the subject as a detailed 16-bit sprite with clear facial cues, hairstyle silhouette, and recognizable proportions adapted to classic pixel limitations.\n\nPlace the character inside a 2D side-scrolling platformer level featuring pixelated terrain, platforms, and retro environmental details.\n\nUse a vibrant, nostalgic color palette inspired by classic 16-bit console games. Clean pixel edges, no text, authentic retro game aesthetic."
   },
@@ -51,7 +51,7 @@
       "title": "Video Game Character",
       "imageName": "videogamecharacter",
       "imageNameOriginal": "one",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject in the uploaded photo into a 16-bit video game character inside a classic 2D platformer level. Outfit: current outfit of the subject in the photo. Background: floating pixel platforms with retro clouds and mountains. Style: pixel art, bright arcade colors, cartoonish proportions, crisp sharp outlines."
   },
@@ -61,7 +61,7 @@
       "title": "Superhero Comic Cover",
       "imageName": "superherocomiccover",
       "imageNameOriginal": "one",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a dramatic superhero comic book cover. Preserve the subject’s facial identity, hairstyle, and body shape while adapting them into a dynamic comic illustration.\n\nPosition the subject in an iconic, heroic pose that conveys power, confidence, or mystery. Use cinematic camera angles, exaggerated perspective, and bold foreshortening for dramatic effect.\n\nCreate a striking background with visually symbolic or thematic elements, such as a futuristic cityscape, swirling energy, abstract patterns, or bold lighting effects. Use high-contrast, saturated colors with rim lighting or glow effects to make the cover visually impactful.\n\nKeep the composition clean, with a clear focal point on the subject. Optional space for a comic title or logo can be included. Avoid extra characters unless essential for visual storytelling. The final image should feel like a finished comic book cover, ready to grab attention on a shelf."
   },
@@ -71,7 +71,7 @@
       "title": "Superhero 3-Frame Comic",
       "imageName": "superhero3framecomic",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a 3-frame superhero comic. Preserve the subject’s facial identity, hair color, hairstyle, and body shape while converting them into a dynamic Marvel-style comic character.\n\nAllow the AI to determine the narrative and events for each frame. Include expressive poses, cinematic angles, and bold inked outlines with vibrant Marvel-style colors. Ensure the composition conveys action, emotion, and storytelling appropriate for a superhero comic.\n\nMaintain consistent art style, bold color palette, and inked outlines across all frames. Keep facial identity, body, and hair accurate while applying dynamic superhero comic stylization. Include readable English text if desired, but allow the AI to generate dialogue, action effects, and story beats for each frame."
   },
@@ -81,7 +81,7 @@
       "title": "Manga 3-Frame Comic",
       "imageName": "manga3framecomic",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a 3-frame manga comic. Preserve the subject’s facial identity, hair color, hairstyle, and body shape while adapting them into a dynamic manga-style character.\n\nAllow the AI to determine the narrative and events in each frame. Include expressive poses, dramatic manga-style panel composition, and bold black-and-white inked outlines with screentone shading and dynamic action lines.\n\nUse cinematic angles and exaggerated expressions typical of manga storytelling. Ensure that facial identity, hair, and body proportions remain accurate across all frames.\n\nInclude readable text in English if desired, but allow the AI to choose dialogue, onomatopoeia, and story beats. The final result should feel like a self-contained 3-frame manga story featuring the subject in a compelling and visually engaging way."
   },
@@ -91,7 +91,7 @@
       "title": "Two-Panel Manga Moment",
       "imageName": "two_panel_manga",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a cute Japanese-style two-panel vertical manga while preserving facial identity, hair color, hairstyle, body shape, and outfit.\n\nRender the subject as a moe-style anime character with expressive emotions and a cartoony aesthetic. Panel one conveys a happy mood inspired by the theme [Journey]. Panel two shows a state of fatigue.\n\nUse colorful, energetic visuals with cute handwritten-style fonts, in English, intentional white space, and expressive poses. Keep all visual details clearly tied to the original photo."
   }

@@ -4,7 +4,7 @@
       "title": "Chibi",
       "imageName": "chibi1",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Convert this image into an ultra-cute chibi character with the following features: The character should have enormous, expressive eyes with thick black outlines, and should lack any other facial features, including the mouth, for a super simplified and adorable look. For the character's attire keep the design minimalist. The body should be tiny, with very short limbs, accentuating the chibi style's characteristics. Place the character against a plain, dark background to ensure it stands out with a stark contrast."
   },
@@ -13,7 +13,7 @@
       "title": "Chibi",
       "imageName": "chibi2",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Convert this image into an ultra-cute chibi character with the following features: The character should have enormous, expressive eyes with thick black outlines, and should lack any other facial features, including the mouth, for a super simplified and adorable look. For the character's attire keep the design minimalist. The body should be tiny, with very short limbs, accentuating the chibi style's characteristics. Place the character against a plain, dark background to ensure it stands out with a stark contrast."
   },
@@ -23,7 +23,7 @@
       "title": "Gallery Doppelgänger",
       "imageName": "gallerydoppelganger-man",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a realistic scene where the person stands next to a large figure of herself inside a bright, modern art gallery.\n\nThe gallery features smooth polished floors, clean white walls, ceiling-mounted track lights, and geometric sculptures displayed throughout the space.\n\nThe figure beside her is a statue version of herself with the same hairstyle and outfit, designed to look adorable and toy-like with a round face, big cute eyes, a soft smile, an oversized head, and a small body. Use a soft matte or vinyl-toy texture to enhance the cuteness.\n\nThe real person is making a natural gesture while standing close to the statue, which is slightly taller and positioned nearby.\n\nCarefully match lighting, perspective, and shadows between the person and the statue so they exist naturally in the same environment. Add ambient lighting, clean reflections on the floor, and realistic contact shadows.\n\nHigh detail, soft lighting, no harsh edges, no extra people."
   },
@@ -33,7 +33,7 @@
       "title": "Gallery Doppelgänger",
       "imageName": "gallerydoppelganger-woman",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a realistic scene where the person stands next to a large figure of herself inside a bright, modern art gallery.\n\nThe gallery features smooth polished floors, clean white walls, ceiling-mounted track lights, and geometric sculptures displayed throughout the space.\n\nThe figure beside her is a statue version of herself with the same hairstyle and outfit, designed to look adorable and toy-like with a round face, big cute eyes, a soft smile, an oversized head, and a small body. Use a soft matte or vinyl-toy texture to enhance the cuteness.\n\nThe real person is making a natural gesture while standing close to the statue, which is slightly taller and positioned nearby.\n\nCarefully match lighting, perspective, and shadows between the person and the statue so they exist naturally in the same environment. Add ambient lighting, clean reflections on the floor, and realistic contact shadows.\n\nHigh detail, soft lighting, no harsh edges, no extra people."
   },
@@ -43,7 +43,7 @@
       "title": "Knitted Doll",
       "imageName": "knitteddoll-man",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "A close-up, professionally composed photograph showcasing a hand-crocheted yarn doll gently cradled by two hands. The doll is full body, and has a rounded shape featuring the cute chibi image of the [upload image] character, with vivid contrasting colors rich details. The doll's hair color and clothing are consistent with the provided image.\n\nThe hands holding the doll are natural and gentle, with clearly visible finger postures, and natural skin texture and light/shadow transitions, conveying a warm and realistic touch. \n\nThe background is slightly blurred, depicting an indoor environment with a warm wooden tabletop and natural light streaming in from a window, creating a comfortable and intimate atmosphere. \n\nThe overall image conveys a sense of exquisite craftsmanship and cherished warmth."
   },
@@ -52,7 +52,7 @@
       "title": "Knitted Doll",
       "imageName": "knitteddoll-woman",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "A close-up, professionally composed photograph showcasing a hand-crocheted yarn doll gently cradled by two hands. The doll is full body, and has a rounded shape featuring the cute chibi image of the [upload image] character, with vivid contrasting colors rich details. The doll's hair color and clothing are consistent with the provided image.\n\nThe hands holding the doll are natural and gentle, with clearly visible finger postures, and natural skin texture and light/shadow transitions, conveying a warm and realistic touch. \n\nThe background is slightly blurred, depicting an indoor environment with a warm wooden tabletop and natural light streaming in from a window, creating a comfortable and intimate atmosphere. \n\nThe overall image conveys a sense of exquisite craftsmanship and cherished warmth."
   },
@@ -62,7 +62,7 @@
       "title": "Snow Globe",
       "imageName": "snowglobe2",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "A delicate snow globe crystal ball rests quietly on a warm, softly lit tabletop by the window. The background is blurred and hazy, with warm-toned sunlight gently passing through the crystal ball, refracting specks of golden light that softly illuminate the dim surroundings.\n\nInside the crystal ball, a miniature three-dimensional world themed around the provided image, is naturally displayed — a finely detailed, dreamlike 3D scene. All characters and objects are rendered in adorable chibi style, exquisitely crafted and visually charming, with vivid emotional interactions between them.\n\nThe overall atmosphere is rich with fantasy elements, full of intricate details and a surreal magical realism texture. The entire scene feels poetic and dreamy, luxurious yet elegant, radiating a gentle, comforting glow — as if imbued with life through the warm play of light and shadow."
   },
@@ -71,7 +71,7 @@
       "title": "Chibi Capsule Collectible",
       "imageName": "chibi_capsule_collectible",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a compact, cute gashapon-style capsule figure while preserving the subject’s facial identity, hair color, hairstyle, and body shape.\n\nStylize the subject as a chibi collectible with simplified proportions, a larger head, and a smaller body, while keeping recognizable facial features, hair, and a simplified version of the original outfit.\n\nPlace the figure inside a transparent capsule with a softly colored base that complements the character. Add small decorative motifs relevant to the subject’s personality or style.\n\nLighting should be soft and warm with photorealistic textures, subtle reflections on the capsule, and shallow depth of field to create a premium miniature collectible look."
   },
@@ -81,7 +81,7 @@
       "title": "Chibi Sticker Sheet",
       "imageName": "chibi_sticker_sheet",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a sheet of six chibi-style stickers while preserving the subject’s exact facial identity, hair color, hairstyle, and body shape.\n\nRender the character in a kawaii chibi style with bold outlines, flat colors, and simplified proportions while keeping facial features recognizable.\n\nEach sticker shows a different expression or outfit: happy, angry, tired, excited, thinking, and laughing.\n\nPlace all stickers on a plain background with clean white sticker borders."
   },
@@ -90,7 +90,7 @@
       "title": "Social Frame Chibi",
       "imageName": "social_frame_chibi",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a 3D chibi-style character while preserving facial identity, hair color, hairstyle, and body shape.\n\nThe chibi character accurately reflects the subject’s facial features and outfit and is making a finger heart with the left hand, with a small red heart floating above the fingers.\n\nPlace the character playfully perched on the edge of a giant Instagram-style frame, legs dangling. Display the username at the top of the frame and surround the scene with floating like, comment, and share icons, plus playful emojis.\n\nUse bright, cheerful lighting and a lively, social-media-inspired atmosphere."
   }

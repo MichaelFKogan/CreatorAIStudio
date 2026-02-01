@@ -4,7 +4,7 @@
       "title": "Magazine Cover",
       "imageName": "magazinecover",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Convert the uploaded image into a fashion magazine cover.\n\nThe subject is a beautiful woman wearing a pink qipao, with delicate floral accessories in her hair and colorful blossoms woven through.\n\nAround her neck is an elegant white lace collar. One hand gently holds several large butterflies.\n\nPhotography style should emphasize high-definition detail and texture, resembling a professional magazine cover.\n\nThe title “FASHION DESIGN” is placed at the top center of the image. The background is a minimalist light gray to highlight the subject."
   },
@@ -13,7 +13,7 @@
       "title": "Flower Field Portrait",
       "imageName": "flowerfieldportrait",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Use the uploaded photo as a reference and preserve 100% of the subject’s face and identity.\n\nGenerate a realistic outdoor portrait of the person standing in a dense field of tall white flowers with organic centers. Flowers should reach shoulder and head height, surrounding the subject closely, with some overlapping and blurred in the extreme foreground.\n\nThe subject wears a delicate white dress with lace and relaxed fabric details, standing upright and centered with a calm, serene expression, directly facing the camera.\n\nBackground: tall blooming flowers and a bright blue sky with soft clouds.\n\nLighting: warm golden daylight, soft natural sunlight highlighting textures and gently illuminating the face and hair. Shadows are subtle.\n\nCamera: vertical 4:5 close-to-medium portrait, eye-level perspective, lens 85-105mm full-frame equivalent for soft natural field focus.\n\nThe subject should appear integrated into the flower field, not superimposed. Avoid altering face, adding text/logos, distorting flowers or clothing, or leaving empty backgrounds.\n\nFinal output: ultra-realistic, high-resolution, immersive floral editorial portrait in 4K."
   },
@@ -23,7 +23,7 @@
       "title": "Indie Aesthetic",
       "imageName": "aestheticfridgeshot",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Do not change the subject’s face or hairstyle.\n\nThe person is sitting on the floor in front of an open messy fridge, leaning slightly back with relaxed posture, legs spread casually, confident body language. One hand holds a snack near the mouth, the other rests on the lap holding a snack bag.\n\nExpression: candid indie fashion model look, sharp gaze, lips slightly parted. Outfit: oversized Y2K white shirt with cartoon illustration, oversized jeans.\n\nFridge interior filled with messy food and drinks (watermelon, yogurt cups, milk cartons, soda cans, cheese packs, colorful boxes). Fridge light casts a cool bluish tone, contrasting with warm reds of pants and snack bag.\n\nPhotography style: candid indie, cinematic RAW, high-resolution, soft grain, artsy aesthetic. Warm cinematic film tone, golden highlights, creamy whites, deep reds and oranges.\n\nUltra HD photo with immersive, cozy indie vibe."
   },
@@ -33,7 +33,7 @@
       "title": "Beauty Editorial",
       "imageName": "beautyeditorial",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of this photo into a high-fashion beauty editorial portrait. The subject's skin is flawless with professional retouching, featuring bold, artistic makeup accents and statement jewelry. The lighting is a classic three-point softbox setup, creating a clean, shadowless look against a solid gray or pastel backdrop. Shot with a Hasselblad medium format camera for incredible detail. Minimalist magazine layout elements, like clean typography (e.g., 'BEAUTY') overlaid in a corner. The overall vibe is polished, luxurious, and print-ready."
   },
@@ -42,7 +42,7 @@
       "title": "Editorial Beauty Portrait",
       "imageName": "editorial_beauty_portrait",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into an editorial-style beauty portrait while preserving the subject’s facial identity, hair color, hairstyle, and body shape.\n\nThe background is a clean, solid color chosen to complement the subject’s skin tone. The framing focuses on the face and upper shoulders.\n\nLighting is soft yet directional, highlighting cheekbones and facial structure with clear catchlights in the eyes.\n\nThe style is high-end magazine beauty photography with sharp, clean details."
   },
@@ -52,7 +52,7 @@
       "title": "Met Gala",
       "imageName": "metgala",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of this photo into a high-fashion, avant-garde portrait in the style of a Met Gala feature by Annie Leibovitz. The subject is wearing abstract, sculptural couture. The background is an artistic, painterly canvas with dramatic textures. The lighting is theatrical and unconventional, using a single, hard light source to create sharp, defined shadows and a powerful silhouette. The pose is non-traditional and expressive. The final image is a work of art, pushing the boundaries of portraiture with a bold, conceptual, and editorial feel."
   },
@@ -61,7 +61,7 @@
       "title": "Urban Culture Magazine Cover",
       "imageName": "urban_mag_cover",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into the main cover model of a lifestyle and urban culture magazine while preserving facial identity, hair color, hairstyle, and body shape.\n\nTheme: streetwear model in Rome. Use vibrant colors with neon accents, bold typography, and a collage-inspired layout with playful sketches and stickers.\n\nInclude headlines such as “Style Remix,” “Street Art Meets AI,” and “Secrets of the Colosseum,” along with a LIMITED EDITION callout. Maintain a high-fashion editorial look with dynamic energy."
   },
@@ -71,7 +71,7 @@
       "title": "OOTD Breakdown",
       "imageName": "ootd_breakdown",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a Q-style 3D C4D-rendered character while preserving facial identity, hair color, hairstyle, and body shape.\n\nRecreate the original clothing, accessories, colors, and hairstyle exactly from the photo style.\n\nSubtly integrate profession-inspired accessories related to the specified profession without changing the outfit itself.\n\nLayout includes top text reading “OOTD,” a full-body character on the left, and individual outfit and accessory items displayed on the right. Use a solid background color that complements the outfit."
   },
@@ -81,7 +81,7 @@
       "title": "Enchanted Fairy Editorial",
       "imageName": "enchanted_fairy_editorial",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a whimsical enchanted fairy fashion editorial. Preserve the subject’s exact facial identity, original hair color, hairstyle, and body shape, only adding subtle magical styling.\n\nThe subject lies gracefully on her stomach, propped on elbows, head tilted toward the camera with a playful, mischievous smile. Maintain recognizable facial features and proportions.\n\nPlace the subject in a dreamy studio with a lavender-to-pink gradient backdrop, floating sparkles, and ethereal mist. Outfit is a modern fairy-princess bodysuit with iridescent fabric and delicate crystal accents.\n\nSoft enchanted studio lighting creates a dewy glow on skin and gentle sparkle on hair and accessories. Ultra-photorealistic fantasy fashion editorial style with shallow depth of field."
   }

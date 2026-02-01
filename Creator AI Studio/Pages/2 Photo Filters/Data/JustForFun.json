@@ -4,7 +4,7 @@
       "title": "Neon Arcade Candy Pop",
       "imageName": "neonarcadecandypop",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a playful, hyper-stylized scene of a young woman sitting sideways on an arcade stool with one knee up, loosely hugging her legs, winking with exaggerated cuteness and a lively expression.\n\nShe wears a teal t-shirt with comic-outline shading, pink shorts, purple crew socks, and bright neon sneakers with translucent soles. Her black hair is styled in braided pigtails with neon hair ties.\n\nThe setting is a retro arcade interior filled with glowing cabinets, colorful reflections, and cluttered neon lights, lit with intense mixed neon lighting for an electric, kinetic mood. Use a low-to-medium camera angle with a wide lens and subtle distortion, tightly framed.\n\nSurround her with an overloaded sweets-monster pop-art illustration overlay: a dense explosion of candy-inspired monsters and neon graphic shapes while keeping her skin fully photorealistic. Include cute-ugly creatures made of donuts, chocolate chunks, banana ghosts, candy worms, gummy bears, soda bottles, strawberries, and melting ice cream blobs, plus drips, splashes, stars, hearts, zigzags, spirals, speed lines, sparkles, and comic bursts without text, all in bright neon colors with thick black outlines.\n\nIllustrations should fill nearly all negative space, layering heavily in the background, peeking around her shoulders, popping near her head, and sitting near her feet. Allow overlap on clothing with subtle shading interaction, but do not place any illustrated elements on her face, arms, or legs. Use front and back layers for chaotic depth, enhanced with glowing rims, white spark dots, and dynamic speed lines.\n\nOverall style merges hyper-realistic photography with maximalist pop-art illustration: photorealistic skin with natural texture and lighting, realistic fabric folds and materials, and flat neon vector illustrations with thick black outlines."
   },
@@ -13,7 +13,7 @@
       "title": "Pastel Street Candy Pop",
       "imageName": "pastelstreetcandypop",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a pastel-toned urban street scene, preserving the subject’s exact facial identity, hair color, hairstyle, body shape, and proportions from the uploaded image. The subject is sitting sideways on a concrete street barrier with one knee raised and one arm resting on it, giving a cute, confident, playful winking smile.\n\nDo not change the subject’s face, hair color, or body. Maintain accurate likeness and natural anatomy while applying stylization only to the scene and illustrative elements.\n\nShe wears a lavender cropped hoodie with soft contour shading, a mint pleated skirt, white ankle socks with tiny pastel stripes, and chunky white sneakers with teal accents.\n\nThe environment is an urban street corner with a painted curb, faded crosswalk lines, distant buildings, and a cloudy-bright sky. Lighting is bright, diffused afternoon light, creating a soft, airy pastel mood. Use a mid-to-low camera angle with a wide lens and mild depth warp, centering the subject while leaving space for decorative layers.\n\nSurround the subject with a dense, maximalist sweets-monster pop-art overlay. Fill the background with overlapping banana ghosts, donut creatures, strawberry heads, melting chocolate blobs, cookie beasts, gummy worms, and tiny soda-bottle critters, combined with neon stars, hearts, zigzags, drips, splashes, bubbles, speed lines, and comic bursts without text. Use flat neon pastel colors like pink, cyan, lime, yellow, and purple with thick black outlines.\n\nAllow some illustrated creatures to rest on the hoodie, skirt, and shoes with subtle clothing shadows, but keep the face, arms, and legs clean and fully photorealistic. Use layered depth in front of and behind the subject for stacked, chaotic energy, enhanced with glowing rim lines, white spark dots, and motion lines around the subject.\n\nOverall style blends pastel street photography with maximalist pop-art illustration: photorealistic skin with natural lighting and texture, realistic fabric drape and material response, and flat neon vector illustrations with thick black outlines."
   },
@@ -23,7 +23,7 @@
       "title": "Tokyo Y2K Street Collage",
       "imageName": "tokyoy2kstreetcollage",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into the same retro Y2K comic-style as the other characters in the scene, preserving the subject’s facial identity, hair color, hairstyle, and body shape. Integrate the subject seamlessly into the collage of street-fashion characters with strong expressions and bold, dynamic postures, blending comic-style energy with a raw punk temperament.\n\nUse a dense, high-impact layout with high-saturation color collisions and layered visual elements, matching the style, line work, and energy of the surrounding characters. Cover parts of the composition with bold Japanese and English typography in a way that harmonizes the subject with the overall magazine-poster aesthetic.\n\nThe final image should feel energetic, rebellious, and stylish, capturing the spirit of early-2000s Tokyo street fashion while maintaining the subject’s exact likeness and body proportions."
   },
@@ -32,7 +32,7 @@
       "title": "Anime Poster Portrait",
       "imageName": "anime_poster_portrait",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a Japanese anime poster–style character while preserving the subject’s exact facial identity, hair color, hairstyle, and body shape.\n\nAdapt the subject into an anime style using bold colors, clean cel shading, and expressive line work without altering recognizable features.\n\nPlace the character in front of a dramatic nighttime city skyline with glowing lights.\n\nUse a dynamic pose and cinematic composition. Do not include any text."
   },
@@ -41,7 +41,7 @@
       "title": "Y2K Retro Fashion",
       "imageName": "y2k_retro_fashion",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a Y2K-era digital fashion illustration while preserving the subject’s exact facial identity, hair color, hairstyle, and body shape.\n\nStyle the subject in futuristic early-2000s fashion featuring glossy materials, metallic textures, and neon accents. Maintain recognizable facial features and proportions.\n\nUse a clean, stylized illustration approach with bold colors, smooth gradients, and a fashion-forward pose.\n\nBackground should feel minimal and graphic, inspired by Y2K digital design. Overall mood is trendy, futuristic, and nostalgic. No text or logos."
   }

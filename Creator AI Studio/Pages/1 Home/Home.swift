@@ -52,7 +52,7 @@ struct Home: View {
                         }
                         
                         if hasCategoryItems("Art") {
-                            CategoryRow(categoryName: "Art", animationType: .scanHorizontal)
+                            CategoryRowGrid(categoryName: "Art", animationType: .scanHorizontal)
                         }
                         
                         // Image Models Row (inserted after 2nd category)

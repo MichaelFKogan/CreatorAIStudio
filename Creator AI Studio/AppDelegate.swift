@@ -17,6 +17,10 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     ) -> Bool {
         // Set delegate so we receive foreground notifications and notification taps
         UNUserNotificationCenter.current().delegate = PushNotificationManager.shared
+        // Clear app icon badge as soon as app launches (fixes badge sticking from push)
+        Task { @MainActor in
+            PushNotificationManager.shared.clearBadge()
+        }
         return true
     }
 

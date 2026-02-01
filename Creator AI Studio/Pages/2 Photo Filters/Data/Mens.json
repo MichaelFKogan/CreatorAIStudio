@@ -4,7 +4,7 @@
       "title": "Billionaire Editorial Portrait",
       "imageName": "billionaire_editorial",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a stylish billionaire editorial portrait while preserving the subject’s exact facial identity, hair color, hairstyle, and body shape.\n\nStyle the subject wearing an elegant black suit paired with a navy blue dress shirt, no tie, and a luxury gold wristwatch visible on the left wrist.\n\nPlace the subject in a dark, minimal studio environment with dramatic Rembrandt lighting, using side light to illuminate half of the face and create deep cinematic shadows.\n\nCapture with a full-frame DSLR look, 85mm f/1.4 lens, shallow depth of field, sharp focus on the face and hand. High contrast, deep tones, realistic skin texture, subtle film grain. Editorial Vogue/GQ-style fashion photography."
   },
@@ -14,7 +14,7 @@
       "title": "Corporate Lounge Portrait",
       "imageName": "corporate_lounge_portrait",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into an ultra-realistic corporate lounge portrait while preserving the subject’s exact facial identity, hair color, hairstyle, and body shape.\n\nDepict the subject seated on a dark leather sofa in a professional lounge, leaning slightly forward with one hand resting on the face and the other near a laptop on the lap.\n\nDress the subject in a black blazer, plain black T-shirt, and slim black pants.\n\nUse warm, soft ambient indoor lighting with cinematic contrast. Background features elegant dark office wall panels and a refined corporate atmosphere.\n\nCapture with a DSLR-style 50mm f/1.8 lens, medium shot including knees, slightly side angle, realistic skin texture, warm tones, and subtle film grain. Editorial business magazine photography."
   },
@@ -24,7 +24,7 @@
       "title": "Overhead Crosswalk Scene",
       "imageName": "overhead_crosswalk",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a cinematic overhead street portrait while preserving the subject’s exact facial identity, hair color, hairstyle, and body shape.\n\nShow the subject standing confidently on a zebra crossing, holding a takeaway coffee cup, wearing baggy beige cargo pants, a black shirt, and clean sneakers.\n\nAccessories include headphones around the neck and black sunglasses.\n\nUse a clean, casual urban aesthetic with natural daylight, crisp composition, and a top-down cinematic camera angle."
   },
@@ -34,7 +34,7 @@
       "title": "Moody Urban Shoulder Look",
       "imageName": "urban_shoulder_look",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a cinematic urban street portrait while preserving the subject’s exact facial identity, hair color, hairstyle, and body shape.\n\nDepict the subject standing on a busy city street, looking over the shoulder with a calm, confident expression.\n\nStyle the subject with round vintage sunglasses, a dark turtleneck, and a loose black bomber jacket.\n\nUse shallow depth of field with softly blurred city lights and out-of-focus pedestrians, creating a moody, cinematic nighttime atmosphere."
   },
@@ -44,7 +44,7 @@
       "title": "Golden Hour Urban Fashion",
       "imageName": "golden_hour_urban",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into an ultra-realistic urban fashion portrait while preserving the subject’s exact facial identity, hair color, hairstyle, and body shape.\n\nShow the subject standing confidently on an urban street wearing an elegant black overcoat and dark sunglasses, hands in pockets.\n\nGolden-hour sunlight shines from behind, creating a strong warm glow, cinematic backlight, and subtle lens flare.\n\nBackground buildings and people are softly blurred. Capture with an 85mm f/1.4 lens look, waist-up framing, eye-level angle, realistic skin texture, warm golden tones, and dramatic atmosphere. Editorial urban fashion photography."
   },
@@ -54,7 +54,7 @@
       "title": "Luxury Restaurant Editorial",
       "imageName": "luxury_restaurant_editorial",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into an ultra-realistic luxury editorial portrait while preserving the subject’s exact facial identity, hair color, hairstyle, and body shape.\n\nDress the subject in a tailored white suit paired with a black shirt, no tie, seated elegantly at a marble table with one arm resting naturally.\n\nPlace the scene inside a high-end restaurant lounge featuring filament pendant lights, mirrors, marble statues, and refined décor.\n\nUse warm ambient lighting with a golden glow, intimate atmosphere, and cinematic contrast. Capture with an 85mm f/1.4 lens look, waist-up framing, slightly side angle, realistic skin texture, and natural fabric detail. Luxury corporate magazine style."
   },
@@ -64,7 +64,7 @@
       "title": "Minimalist Fashion Close-Up",
       "imageName": "minimalist_fashion_closeup",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a hyper-realistic minimalist fashion close-up while preserving the subject’s exact facial identity, hair color, hairstyle, and body shape.\n\nShow a front-facing close-up portrait with the subject wearing round black sunglasses, a deep-blue trench coat with structured shoulders, layered over a matte black turtleneck.\n\nLight the scene with a hard, cool overhead light, creating sculptural shadows beneath the chin and nose.\n\nUse a clean off-white background with subtle film grain and faint vignette. Include minor realistic imperfections such as dust on the lenses, a loose thread near a coat button, and slightly dry lips.\n\nStyle inspired by minimalist fashion photography and the cinematic tone of Nicolas Winding Refn films."
   }

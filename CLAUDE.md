@@ -121,7 +121,7 @@ Creator AI Studio/
 
 ### Image Models (9)
 
-- Google Gemini Flash 2.5
+- Nano Banana
 - GPT Image 1.5
 - Wan2.5-Preview
 - Z-Image-Turbo

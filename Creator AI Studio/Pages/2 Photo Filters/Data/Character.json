@@ -4,7 +4,7 @@
       "title": "Designer Toy Figure",
       "imageName": "designertoyfigure-man",
       "imageNameOriginal": "one",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Turn this photo into a character figure.\n\nBehind it, place a box with the character's image printed on it, and a computer showing the Blender modeling process on its screen.\n\nIn front of the box, add a round plastic base with the character figure standing on it.\n\nSet the scene indoors if possible."
   },
@@ -14,7 +14,7 @@
       "title": "Designer Toy Figure",
       "imageName": "designertoyfigure-woman",
       "imageNameOriginal": "two",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Turn this photo into a character figure.\n\nBehind it, place a box with the character's image printed on it, and a computer showing the Blender modeling process on its screen.\n\nIn front of the box, add a round plastic base with the character figure standing on it.\n\nSet the scene indoors if possible."
   },
@@ -24,7 +24,7 @@
       "title": "3D Caricature",
       "imageName": "3dcaricature",
       "imageNameOriginal": "musk",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Full-body 3D caricature of [Character Name] in Pixar/DreamWorks style, featuring expressive large eyes, slightly oversized head, and subtly exaggerated facial features.\n\nRealistic skin with soft subsurface scattering, detailed hair, and a gentle warm smile.\n\nSmooth polished surfaces with subtle fabric texture on clothing.\n\nDynamic pose showing personality, with full body visible and balanced proportions.\n\nSoft ambient lighting, warm reddish-orange gradient background.\n\nCinematic quality, high detail, vibrant yet natural colors, stylized charm with balanced realism."
   },
@@ -34,7 +34,7 @@
       "title": "3D Caricature",
       "imageName": "3dcaricature-dog",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Full-body 3D caricature of [Character Name] in Pixar/DreamWorks style, featuring expressive large eyes, slightly oversized head, and subtly exaggerated facial features.\n\nRealistic skin with soft subsurface scattering, detailed hair, and a gentle warm smile.\n\nSmooth polished surfaces with subtle fabric texture on clothing.\n\nDynamic pose showing personality, with full body visible and balanced proportions.\n\nSoft ambient lighting, warm reddish-orange gradient background.\n\nCinematic quality, high detail, vibrant yet natural colors, stylized charm with balanced realism."
   },
@@ -44,7 +44,7 @@
       "title": "Action Figure Doppelgänger",
       "imageName": "action_figure_doppelganger",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a playful scene featuring both the real person and a miniature action figure version of the same subject, while preserving facial identity, hair color, hairstyle, and body shape.\n\nInclude a detailed action figure posed on a nearby desk or shelf, wearing the same outfit and hairstyle as the real subject. The figure should look polished and collectible, with realistic posing.\n\nIn the same frame, include the real person striking an exaggerated but matching pose for a fun visual echo. Use warm, soft indoor lighting, lifelike textures, and a candid, energetic mood."
   },
@@ -53,7 +53,7 @@
       "title": "Funko Pop Edition",
       "imageName": "funko_pop_edition",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a Funko Pop–style figure while preserving facial identity, hair color, hairstyle, and recognizable body proportions.\n\nCreate a standing Funko Pop figure inside a branded packaging box shown from an isometric angle, with a matching loose figure displayed beside the box.\n\nRecreate the subject’s outfit, accessories, and expression in Funko Pop style, maintaining clear likeness and identity. Use clean lighting and polished, collectible presentation."
   },
@@ -62,7 +62,7 @@
       "title": "3D Action Figure",
       "imageName": "action_figure_3d",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject of the uploaded photo into a stylized 3D action figure while preserving the subject’s exact facial identity, hair color, hairstyle, and body shape.\n\nRender the character as a collectible plastic toy with a glossy finish, slightly oversized eyes, and simplified but recognizable facial features.\n\nPlace the figure on a toy store–style shelf with softly blurred packaging boxes in the background.\n\nUse clean studio lighting, shallow depth of field, and realistic plastic textures while keeping the subject clearly identifiable."
   }

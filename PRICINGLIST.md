@@ -18,7 +18,7 @@ Image models have fixed pricing per generation, regardless of size or other para
 | **Wan2.5-Preview Image** | $0.027 |
 | **Seedream 4.0** | $0.03 |
 | **GPT Image 1.5** | $0.034 |
-| **Google Gemini Flash 2.5 (Nano Banana)** | $0.039 |
+| **Nano Banana** | $0.039 |
 | **Seedream 4.5** | $0.04 |
 | **FLUX.1 Kontext [pro]** | $0.04 |
 | **FLUX.1 Kontext [max]** | $0.08 |

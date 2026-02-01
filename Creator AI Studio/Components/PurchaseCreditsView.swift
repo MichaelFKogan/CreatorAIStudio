@@ -63,73 +63,6 @@ struct PurchaseCreditsView: View {
                             .foregroundColor(.secondary)
                     }
 
-                    // Current Balance Display
-                    VStack(spacing: 8) {
-                        HStack {
-                            Spacer()
-                            Text("Current Balance")
-                                .font(
-                                    .system(
-                                        size: 14, weight: .semibold,
-                                        design: .rounded)
-                                )
-                                .foregroundColor(.secondary)
-
-                            if let userId = authViewModel.user?.id {
-                                if !networkMonitor.isConnected {
-                                    HStack(spacing: 6) {
-                                        Image(systemName: "wifi.slash")
-                                            .font(.system(size: 16, weight: .medium))
-                                            .foregroundColor(.red)
-                                        Text("No connection")
-                                            .font(
-                                                .system(
-                                                    size: 14, weight: .medium,
-                                                    design: .rounded)
-                                            )
-                                            .foregroundColor(.red)
-                                    }
-                                } else {
-                                    Text(creditsViewModel.formattedBalance())
-                                        .font(
-                                            .system(
-                                                size: 16, weight: .bold,
-                                                design: .rounded)
-                                        )
-                                        .foregroundColor(.primary)
-                                }
-                            } else {
-                                Text("Log in to view")
-                                    .font(
-                                        .system(
-                                            size: 14, weight: .medium,
-                                            design: .rounded)
-                                    )
-                                    .foregroundColor(.secondary)
-                            }
-                            Spacer()
-                        }
-
-                        // Credits never expire disclosure
-                        if authViewModel.user?.id != nil {
-                            HStack(spacing: 4) {
-                                Image(systemName: "checkmark.seal.fill")
-                                    .font(.system(size: 12))
-                                    .foregroundColor(.green)
-                                Text("Credits never expire")
-                                    .font(.system(size: 12, weight: .medium, design: .rounded))
-                                    .foregroundColor(.secondary)
-                            }
-                        }
-                    }
-                    .padding()
-                    .frame(maxWidth: .infinity)
-                    .background(
-                        RoundedRectangle(cornerRadius: 16)
-                            .fill(Color(.secondarySystemBackground))
-                    )
-                    .padding(.horizontal)
-
                     // Credit Packages
                     VStack(spacing: 12) {
                         SectionHeader(title: "Save with Web Purchase", subtitle: "30% off on all packs")
@@ -508,7 +441,7 @@ struct CreditPackageCard: View {
     // Featured image models (matching website display)
     private let imageModelRates: [(name: String, imageName: String, price: Double)] = [
         (name: "Z-Image-Turbo", imageName: "zimageturbo", price: 0.005),
-        (name: "Gemini Flash 2.5", imageName: "geminiflashimage25", price: 0.039),
+        (name: "Nano Banana", imageName: "geminiflashimage25", price: 0.039),
         (name: "Seedream 4.5", imageName: "seedream45", price: 0.04),
     ]
 

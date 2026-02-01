@@ -2,137 +2,109 @@
 //  CreditsBalanceSheet.swift
 //  Creator AI Studio
 //
-//  Balance & Usage sheet: balance, pending, short stats, link to full usage, Buy credits CTA.
+//  Small bottom sheet: credit balance available and Get more credits button.
 //
 
 import SwiftUI
 
-/// Sheet presented when user taps the toolbar credit badge.
-/// Shows balance, optional pending credits, short usage stats, "View full usage" link, and "Get more credits" CTA.
+/// Small sheet presented when user taps the toolbar credit badge.
+/// Shows credit balance (available) and Get more credits button.
 struct CreditsBalanceSheet: View {
     @EnvironmentObject var authViewModel: AuthViewModel
     @ObservedObject private var creditsViewModel = CreditsViewModel.shared
-    @StateObject private var usageViewModel = UsageViewModel()
     @State private var showPurchaseCredits: Bool = false
-    
+
     var body: some View {
-        NavigationStack {
-            List {
-                // Balance block
-                Section {
-                    if creditsViewModel.isLoading {
-                        HStack {
-                            Spacer()
-                            ProgressView()
-                            Spacer()
-                        }
-                        .padding(.vertical, 8)
-                    } else {
-                        VStack(alignment: .leading, spacing: 8) {
-                            HStack {
-                                Text("Available")
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
-                                Spacer()
-                                Text(creditsViewModel.formattedBalance())
-                                    .font(.title2.weight(.semibold))
-                            }
-                            if creditsViewModel.pendingCredits > 0 {
-                                HStack {
-                                    Text("Pending")
-                                        .font(.subheadline)
-                                        .foregroundColor(.secondary)
-                                    Spacer()
-                                    Text(PricingManager.formatPriceWithUnit(Decimal(creditsViewModel.pendingCredits)))
-                                        .font(.subheadline.weight(.medium))
-                                        .foregroundColor(.secondary)
-                                }
-                            }
-                        }
-                        .padding(.vertical, 4)
+        VStack(spacing: 20) {
+            // Current Balance card
+            VStack(spacing: 8) {
+                Text("Current Balance")
+                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                    .foregroundColor(.secondary)
+                if creditsViewModel.isLoading {
+                    ProgressView()
+                        .scaleEffect(0.8)
+                } else {
+                    HStack(spacing: 8) {
+                        Image(systemName: "dollarsign.circle.fill")
+                            .font(.system(size: 24))
+                            .foregroundColor(.gray)
+                        Text(creditsViewModel.formattedBalance())
+                            .font(.system(size: 24, weight: .bold, design: .rounded))
+                            .foregroundColor(.primary)
                     }
-                } header: {
-                    Text("Credit Balance")
                 }
-                
-                // Short usage stats
-                Section("Usage") {
-                    if usageViewModel.isLoading {
-                        HStack {
-                            Spacer()
-                            ProgressView()
-                                .scaleEffect(0.9)
-                            Spacer()
-                        }
-                        .padding(.vertical, 4)
-                    } else {
-                        StatisticsRow(
-                            title: "Total Attempts",
-                            value: "\(usageViewModel.totalAttempts)",
-                            icon: "number.circle.fill",
-                            color: .blue
-                        )
-                        if usageViewModel.totalAttempts > 0 {
-                            StatisticsRow(
-                                title: "Success Rate",
-                                value: String(format: "%.1f%%", usageViewModel.successRate),
-                                icon: "percent",
-                                color: .orange
+                HStack(spacing: 4) {
+                    Image(systemName: "checkmark.seal.fill")
+                        .font(.system(size: 12))
+                        .foregroundColor(.green)
+                    Text("Credits never expire")
+                        .font(.system(size: 12, weight: .medium, design: .rounded))
+                        .foregroundColor(.secondary)
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .padding()
+            .frame(maxWidth: .infinity)
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(Color(.secondarySystemBackground))
+            )
+            .padding(.horizontal, 24)
+
+            // Get more credits button (styled like PurchaseCreditsView)
+            Button {
+                showPurchaseCredits = true
+            } label: {
+                HStack(spacing: 8) {
+                    Spacer(minLength: 0)
+                    Image(systemName: "crown.fill")
+                        .font(.system(size: 14, weight: .semibold, design: .rounded))
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [.yellow, .orange],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
                             )
-                        }
-                        StatisticsRow(
-                            title: "Credits Added",
-                            value: "\(usageViewModel.creditsAddedCount)",
-                            icon: "plus.circle.fill",
-                            color: .green
                         )
-                    }
+                    Text("Get More Credits")
+                        .font(.system(size: 17, weight: .semibold, design: .rounded))
+                        .foregroundColor(.white)
+                    Spacer(minLength: 0)
                 }
-                
-                // View full usage
-                Section {
-                    NavigationLink {
-                        UsageView()
-                            .environmentObject(authViewModel)
-                    } label: {
-                        HStack {
-                            Image(systemName: "chart.bar.fill")
-                                .foregroundColor(.orange)
-                            Text("View Full Usage")
-                        }
-                    }
-                }
-                
-                // Get more credits CTA
-                Section {
-                    Button {
-                        showPurchaseCredits = true
-                    } label: {
-                        HStack {
-                            Image(systemName: "plus.circle.fill")
-                                .foregroundColor(.green)
-                            Text("Get More Credits")
-                                .fontWeight(.semibold)
-                        }
-                    }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 16)
+                .padding(.horizontal)
+                .background(
+                    LinearGradient(
+                        colors: [.purple, .pink],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+            }
+            .buttonStyle(.plain)
+            .padding(.horizontal, 24)
+            .padding(.bottom, 24)
+        }
+        .padding(.top, 8)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.black)
+        .preferredColorScheme(.dark)
+        .presentationDetents([.height(260), .large])
+        .presentationDragIndicator(.visible)
+        .onAppear {
+            if let userId = authViewModel.user?.id {
+                Task {
+                    await creditsViewModel.fetchBalance(userId: userId)
                 }
             }
-            .navigationTitle("Credits")
-            .navigationBarTitleDisplayMode(.inline)
-            .presentationDragIndicator(.visible)
-            .onAppear {
-                if let userId = authViewModel.user?.id {
-                    Task {
-                        await creditsViewModel.fetchBalance(userId: userId)
-                        await usageViewModel.fetchUsage(userId: authViewModel.user?.id.uuidString)
-                    }
-                }
-            }
-            .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("CreditsBalanceUpdated"))) { _ in
-                if let userId = authViewModel.user?.id {
-                    Task {
-                        await creditsViewModel.fetchBalance(userId: userId)
-                    }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("CreditsBalanceUpdated"))) { _ in
+            if let userId = authViewModel.user?.id {
+                Task {
+                    await creditsViewModel.fetchBalance(userId: userId)
                 }
             }
         }

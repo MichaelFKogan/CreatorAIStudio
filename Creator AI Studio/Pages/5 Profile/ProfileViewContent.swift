@@ -188,6 +188,21 @@ struct ProfileViewContent: View {
                 _, _ in
                 invalidateCaches()
             }
+            // Fetch playlists when gallery appears so Collections pill count shows
+            .onAppear {
+                if isSignedIn {
+                    Task {
+                        await viewModel.fetchPlaylists()
+                    }
+                }
+            }
+            .onChange(of: isSignedIn) { _, signedIn in
+                if signedIn {
+                    Task {
+                        await viewModel.fetchPlaylists()
+                    }
+                }
+            }
             // Update video metadata cache when userVideos change
             .onChange(of: viewModel.userVideos.count) {
                 _ in

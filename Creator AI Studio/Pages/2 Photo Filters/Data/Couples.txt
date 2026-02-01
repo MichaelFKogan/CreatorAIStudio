@@ -16,7 +16,7 @@ Create a JSON object with the prompt above in the following format for a Nano Ba
     "title": "{Insert Title Here}",
     "imageName": "{Insert Image Name Here}",
     "imageNameOriginal": "yourphoto",
-    "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+    "modelName": "Nano Banana"
   },
   "prompt": "{Insert your prompt here using \\n\\n for paragraph breaks.}\n\nRequirements for the prompt:\n\n1. Begin the prompt by referencing the uploaded image, e.g., 'Transform the subject of the uploaded photo...'\n2. Always preserve the subject’s facial identity, hair color, hairstyle, and body shape unless intentionally stylizing.\n3. Specify style, environment, lighting, composition, or mood as needed, but keep it concise.\n4. Use \\n\\n to separate logical sections (e.g., subject description, environment, artistic style).\n5. Include optional text, dialogue, or narrative directions in English if relevant.\n6. Keep it fully self-contained; do not include external instructions.\n\nExample placeholder for the prompt section:\n\nTransform the subject of the uploaded photo into a [style] scene. Preserve facial identity, hair, and body shape.\n\nDescribe the environment, lighting, and mood.\n\nApply [art style] with [color palette] and [composition notes].\n\nOptional: include text or dialogue if appropriate.\n\nOutput the full JSON object using the exact keys and structure above."
 }

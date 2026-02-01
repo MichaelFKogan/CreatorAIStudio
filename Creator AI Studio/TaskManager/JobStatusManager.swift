@@ -106,6 +106,28 @@ class JobStatusManager: ObservableObject {
     
     private init() {}
     
+    // #region agent log
+    private static func _debugLog(location: String, message: String, data: [String: Any], hypothesisId: String) {
+        let logPath = "/Users/mike/Desktop/Desktop/iOS Apps/Creator AI Studio/.cursor/debug.log"
+        var payload: [String: Any] = [
+            "sessionId": "debug-session", "runId": "run1", "hypothesisId": hypothesisId,
+            "location": location, "message": message, "timestamp": Int(Date().timeIntervalSince1970 * 1000)
+        ]
+        payload["data"] = data
+        guard let json = try? JSONSerialization.data(withJSONObject: payload),
+              var line = String(data: json, encoding: .utf8) else { return }
+        line += "\n"
+        guard let lineData = line.data(using: .utf8) else { return }
+        if !FileManager.default.fileExists(atPath: logPath) {
+            FileManager.default.createFile(atPath: logPath, contents: nil)
+        }
+        guard let handle = FileHandle(forUpdatingAtPath: logPath) else { return }
+        defer { try? handle.close() }
+        handle.seekToEndOfFile()
+        handle.write(lineData)
+    }
+    // #endregion
+    
     // MARK: - Public Methods
     
     /// Start listening for job updates for a specific user
@@ -571,7 +593,9 @@ class JobStatusManager: ObservableObject {
     private func handleUpdate(_ action: UpdateAction) async {
         do {
             let job = try action.decodeRecord(as: PendingJob.self, decoder: supabaseDecoder)
-            
+            // #region agent log
+            Self._debugLog(location: "JobStatusManager:handleUpdate", message: "Realtime UPDATE received", data: ["task_id": job.task_id, "status": job.status, "isComplete": job.isComplete], hypothesisId: "A")
+            // #endregion
             await MainActor.run {
                 // Update existing job in list
                 if let index = pendingJobs.firstIndex(where: { $0.task_id == job.task_id }) {
@@ -593,6 +617,9 @@ class JobStatusManager: ObservableObject {
             }
             
         } catch {
+            // #region agent log
+            Self._debugLog(location: "JobStatusManager:handleUpdate:catch", message: "decode failed", data: ["error": String(describing: error)], hypothesisId: "B")
+            // #endregion
             print("[JobStatusManager] ❌ Error decoding updated job: \(error)")
             if let decodingError = error as? DecodingError {
                 print("[JobStatusManager] Decoding error details: \(decodingError)")
@@ -763,6 +790,10 @@ class JobStatusManager: ObservableObject {
             return
         }
 
+        // #region agent log
+        let hasNotifId = taskNotificationMap[job.task_id] != nil
+        Self._debugLog(location: "JobStatusManager:processCompletedJob", message: "processCompletedJob entered", data: ["task_id": job.task_id, "hasNotificationId": hasNotifId], hypothesisId: "D")
+        // #endregion
         print("[JobStatusManager] 🚀 Processing completed job: \(job.task_id)")
         print("[JobStatusManager] 🔗 Result URL: \(resultUrl)")
 
@@ -837,6 +868,9 @@ class JobStatusManager: ObservableObject {
                     }
                     
                     if let notificationId = existingNotificationId {
+                        // #region agent log
+                        Self._debugLog(location: "JobStatusManager:beforeMarkAsCompleted:image", message: "calling markAsCompleted", data: ["task_id": job.task_id, "notificationId": notificationId.uuidString], hypothesisId: "D")
+                        // #endregion
                         // Update the existing notification to show completion
                         NotificationManager.shared.markAsCompleted(id: notificationId, message: "✅ \(title) ready!")
                         taskNotificationMap.removeValue(forKey: job.task_id)
@@ -953,6 +987,9 @@ class JobStatusManager: ObservableObject {
                 
                 // Post notification that image was saved (for Profile page refresh)
                 await MainActor.run {
+                    // #region agent log
+                    Self._debugLog(location: "JobStatusManager:postImageSavedToDatabase", message: "posting ImageSavedToDatabase", data: ["task_id": job.task_id, "userId": userId], hypothesisId: "C")
+                    // #endregion
                     var userInfo: [String: Any] = [
                         "userId": userId,
                         "imageUrl": supabaseImageURL
@@ -1170,6 +1207,9 @@ class JobStatusManager: ObservableObject {
             }
 
         } catch {
+            // #region agent log
+            Self._debugLog(location: "JobStatusManager:processCompletedJob:catch", message: "processCompletedJob threw", data: ["task_id": job.task_id, "error": String(describing: error)], hypothesisId: "C")
+            // #endregion
             print("[JobStatusManager] ❌ Error processing completed job: \(error)")
             print("[JobStatusManager] Error details: \(error.localizedDescription)")
             

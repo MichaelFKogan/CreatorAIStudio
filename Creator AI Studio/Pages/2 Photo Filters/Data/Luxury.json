@@ -4,7 +4,7 @@
       "title": "Luxury Lifestyle Influencer",
       "imageName": "luxurylifestyleinfluencer",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Convert the portrait into a luxury lifestyle influencer aesthetic. The subject is on a rooftop with an infinity pool at golden hour, overlooking a sprawling city skyline like Dubai or New York. They are wearing designer sunglasses and a fashionable outfit. A glass of champagne is in hand. The lighting is warm, golden, and dream-like, creating soft lens flare. The image should feel aspirational, stylish, and effortlessly cool."
   },
@@ -13,7 +13,7 @@
       "title": "Private Jet",
       "imageName": "privatejet1",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Place the subject from the uploaded photo sitting comfortably on a plush, cream-colored leather seat inside the luxurious cabin of a private jet.\n\nThe subject should look confident and relaxed, perhaps holding a glass of sparkling water or gazing out at a dramatic sunset.\n\nLighting should be cinematic and warm, emphasizing the opulent, high-end travel atmosphere."
   },
@@ -22,7 +22,7 @@
       "title": "Private Jet",
       "imageName": "privatejet2",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Place the subject from the uploaded photo sitting comfortably on a plush, cream-colored leather seat inside a private jet cabin.\n\nThe subject should appear relaxed and confident, possibly holding a glass of sparkling water or looking out at a dramatic sunset.\n\nEnsure the lighting is cinematic and luxurious, highlighting the high-end travel experience."
   },
@@ -31,7 +31,7 @@
       "title": "Yacht Deck",
       "imageName": "yacht",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Place the subject from the uploaded photo standing elegantly on the polished teak deck of a luxury yacht.\n\nThey should face the camera, with a stunning sun-drenched ocean horizon behind them, crystal-clear blue waters, and perhaps distant exotic islands.\n\nOn the deck, include plush couches and a table with champagne and a glass.\n\nThe scene should convey serene opulence, freedom, and gentle sea breezes under a clear sky."
   },
@@ -40,7 +40,7 @@
       "title": "Infinity Pool",
       "imageName": "infinitypool",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Place the subject from the uploaded photo relaxing in the shimmering waters of a luxurious infinity pool.\n\nThe pool should overlook a spectacular view, such as a sunset over a vibrant city skyline, majestic snow-capped mountains, or a pristine tropical beach.\n\nEmphasize a tranquil, exclusive atmosphere with soft ambient lighting and high-end resort architecture in the background."
   },
@@ -49,7 +49,7 @@
       "title": "GQ Cover",
       "imageName": "gqcover",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Convert the portrait into a GQ magazine cover portrait. Sharp tuxedo or tailored designer suit, crisp white shirt, luxury watch detail, dramatic three-point studio lighting, cinematic shadows, high-contrast color grading with a glossy finish. Add subtle background depth (smoky gradient or textured wall). Confident, charismatic expression with an editorial polish. Ultra-high resolution, fashion photography, magazine cover ready."
   },
@@ -58,7 +58,7 @@
       "title": "Grand Staircase",
       "imageName": "grandstaircase",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Place the subject from the uploaded photo walking down a grand gala staircase.\n\nThe subject should wear a sparkling red evening gown, posing elegantly with one hand on the railing.\n\nLighting should be bright and cinematic, highlighting the luxurious atmosphere. Ensure ultra-realistic detail suitable for 4K output."
   },
@@ -68,7 +68,7 @@
       "title": "Tech Founder",
       "imageName": "techfounder",
       "imageNameOriginal": "yourphoto",
-      "modelName": "Google Gemini Flash 2.5 (Nano Banana)"
+      "modelName": "Nano Banana"
     },
     "prompt": "Transform the subject into a visionary tech founder. Ultra-high-resolution portrait, minimalist office background with clean lines and subtle, out-of-focus product prototypes. The subject is wearing sleek, business-casual attire (a black cashmere turtleneck or a sharp blazer). Lighting should be soft, natural window light creating Rembrandt lighting on the face. Shot on a Sony a7 IV, 85mm f/1.4 lens, shallow depth of field. The mood is confident, innovative, and approachable. Clean color grading with a slightly desaturated, professional look."
   }

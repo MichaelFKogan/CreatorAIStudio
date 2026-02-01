@@ -2,7 +2,7 @@ import SwiftUI
 
 // MARK: - Allowed Runware Sizes (must be exact)
 
-// Google Gemini Flash 2.5 (Nano Banana)
+// Nano Banana
 private let googleNanoBananaSizes: [String: (Int, Int)] = [
     "1:1": (1024, 1024),
     "4:3": (1184, 864),
@@ -144,7 +144,7 @@ private let klingai25TurboProSizes: [String: (Int, Int)] = [
 /// Returns the appropriate allowed sizes dictionary for a given model identifier.
 /// The model parameter can be either:
 /// - The Runware model identifier (e.g., "google:4@1", "bfl:3@1")
-/// - The display model name (e.g., "Google Gemini Flash 2.5 (Nano Banana)", "FLUX.1 Kontext [pro]")
+/// - The display model name (e.g., "Nano Banana", "FLUX.1 Kontext [pro]")
 ///
 /// Falls back to Google Nano Banana sizes if model is not recognized.
 func getAllowedSizes(for model: String) -> [String: (Int, Int)] {
@@ -152,7 +152,7 @@ func getAllowedSizes(for model: String) -> [String: (Int, Int)] {
 
     // Check by Runware model identifier
 
-    // Google Gemini Flash 2.5 (Nano Banana)
+    // Nano Banana
     if modelLower.contains("google:4@1") { return googleNanoBananaSizes }
     // Google Gemini 3 Pro (Nano Banana 2)
     if modelLower.contains("google:4@2") { return googleNanoBanana2Sizes }

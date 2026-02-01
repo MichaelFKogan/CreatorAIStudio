@@ -586,7 +586,7 @@ private struct VideoModelGridItem: View {
                     price: item.resolvedCost,
                     showUnit: true,
                     font: .system(size: 12, weight: .semibold, design: .rounded),
-                    foregroundColor: .purple
+                    foregroundColor: .gray
                 )
             }
         }
