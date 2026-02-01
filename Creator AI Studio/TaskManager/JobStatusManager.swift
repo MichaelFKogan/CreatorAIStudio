@@ -133,6 +133,17 @@ class JobStatusManager: ObservableObject {
         await subscribeToRealtimeUpdates(userId: userId)
     }
     
+    /// Re-fetch pending jobs and process any completed ones. Call when app becomes active
+    /// so we pick up jobs that completed while the app was closed or in background.
+    /// - Parameter userId: If provided, use this user (e.g. from AuthViewModel). Use when app
+    ///   returns from background so we process completed jobs even if Realtime hasn't reconnected yet.
+    func refreshPendingJobsIfNeeded(userId: String? = nil) async {
+        let uid = userId ?? currentUserId
+        guard let uid else { return }
+        print("[JobStatusManager] Refreshing pending jobs (app became active)")
+        await fetchPendingJobs(userId: uid)
+    }
+    
     /// Clean up orphaned pending jobs that are stuck
     private func cleanupOrphanedJobs() async {
         do {
@@ -706,24 +717,25 @@ class JobStatusManager: ObservableObject {
     /// Handle a completed or failed job
     private func handleJobCompletion(_ job: PendingJob) async {
         print("[JobStatusManager] ✅ Job completed: \(job.task_id), status: \(job.status)")
-        
-        // Prevent processing the same job twice
-        guard !processingJobIds.contains(job.task_id) else {
+
+        // Atomically check and insert to prevent race condition
+        // Set.insert returns (inserted: Bool, memberAfterInsert: Element)
+        // If inserted is false, another call is already processing this job
+        guard processingJobIds.insert(job.task_id).inserted else {
             print("[JobStatusManager] ⏭️ Job already being processed, skipping: \(job.task_id)")
             return
         }
-        
+        defer { processingJobIds.remove(job.task_id) }
+
         // Call registered completion handler if any
         if let handler = completionHandlers[job.task_id] {
             handler(job)
             completionHandlers.removeValue(forKey: job.task_id)
         }
-        
+
         // If job completed successfully with a result URL, process it
         if job.jobStatus == .completed, let resultUrl = job.result_url, !resultUrl.isEmpty {
-            processingJobIds.insert(job.task_id)
             await processCompletedJob(job)
-            processingJobIds.remove(job.task_id)
         }
         
         // Post notification for UI updates
@@ -750,16 +762,29 @@ class JobStatusManager: ObservableObject {
             print("[JobStatusManager] ❌ No valid result URL for job: \(job.task_id)")
             return
         }
-        
+
         print("[JobStatusManager] 🚀 Processing completed job: \(job.task_id)")
         print("[JobStatusManager] 🔗 Result URL: \(resultUrl)")
-        
+
+        // IMPORTANT: Delete the pending job FIRST to prevent duplicate processing
+        // If app refreshes (e.g., push notification wakes app), it won't find this job
+        do {
+            try await SupabaseManager.shared.deletePendingJob(taskId: job.task_id)
+            print("[JobStatusManager] 🗑️ Pending job deleted early to prevent duplicates: \(job.task_id)")
+        } catch {
+            print("[JobStatusManager] ⚠️ Failed to delete pending job early: \(error)")
+            // Continue processing anyway - the duplicate check below will catch it
+        }
+
+        // Remove from local pendingJobs list
+        pendingJobs.removeAll { $0.task_id == job.task_id }
+
         // Update the notification to show we're almost done (this is the RIGHT time!)
         if let notificationId = taskNotificationMap[job.task_id] {
             NotificationManager.shared.updateMessage("Almost done! Saving your creation...", for: notificationId)
             NotificationManager.shared.updateProgress(0.85, for: notificationId)
         }
-        
+
         do {
             // Extract metadata
             let metadata = job.metadata
@@ -1141,11 +1166,7 @@ class JobStatusManager: ObservableObject {
                     )
                 }
             }
-            
-            // Clean up the pending job after successful processing
-            try? await SupabaseManager.shared.deletePendingJob(taskId: job.task_id)
-            print("[JobStatusManager] 🧹 Pending job cleaned up: \(job.task_id)")
-            
+
         } catch {
             print("[JobStatusManager] ❌ Error processing completed job: \(error)")
             print("[JobStatusManager] Error details: \(error.localizedDescription)")

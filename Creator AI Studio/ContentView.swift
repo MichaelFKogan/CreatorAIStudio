@@ -1,9 +1,11 @@
 import SwiftUI
+import UIKit
 
 struct ContentView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
     @StateObject private var notificationManager = NotificationManager.shared
     @Environment(\.colorScheme) var colorScheme
+    @Environment(\.scenePhase) private var scenePhase
 
     @State private var sortOrder = 0
     @State private var selectedTab = 0
@@ -135,6 +137,19 @@ struct ContentView: View {
             }
         }
         .ignoresSafeArea(.keyboard)
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
+            // Pass user from Auth so we process jobs that completed while app was closed,
+            // even if Realtime hasn't reconnected yet (currentUserId may be nil on cold start).
+            let uid = authViewModel.user?.id.uuidString
+            Task { await JobStatusManager.shared.refreshPendingJobsIfNeeded(userId: uid) }
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            // Also refresh when app becomes active (e.g. cold start); willEnterForeground only fires when returning from background.
+            if newPhase == .active {
+                let uid = authViewModel.user?.id.uuidString
+                Task { await JobStatusManager.shared.refreshPendingJobsIfNeeded(userId: uid) }
+            }
+        }
     }
 
     private var tabBarGradient: [Color] {

@@ -115,7 +115,7 @@ This is optional until you set up APNs:
 
 ### Push trigger (optional)
 
-The `push_notification_trigger.sql` only sets `notification_sent` on the row so job updates always commit. It does **not** call the Edge Function from the database (to avoid rollbacks). To actually send a push when a job completes, call `send-push-notification` from your **webhook-receiver** Edge Function after it updates `pending_jobs` to completed (using the job’s `device_token` from the row).
+The `push_notification_trigger.sql` only sets `notification_sent` on the row so job updates always commit. It does **not** call the Edge Function from the database (to avoid rollbacks). To actually send a push when a job completes, your **webhook-receiver** Edge Function must call `send-push-notification` after it updates `pending_jobs` to completed (using the job’s `device_token` from the row). The source in `Documentation/webhook-receiver.ts` includes this call; redeploy that version if your deployed webhook-receiver doesn’t send push. For a real push to appear on the device, you still need to add APNs secrets and implement the APNs HTTP request in `send-push-notification`.
 
 ### APNs Setup (For Future)
 

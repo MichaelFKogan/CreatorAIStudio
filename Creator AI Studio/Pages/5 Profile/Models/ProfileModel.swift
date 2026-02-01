@@ -1279,12 +1279,21 @@ class ProfileViewModel: ObservableObject {
             // Add new items to the list
             if !validItems.isEmpty {
                 print("✅ refreshLatest: Adding \(validItems.count) new image(s) to list")
-                // Add items to the array (they will be inserted at correct positions by addImage or we'll sort after)
-                // Instead of inserting at 0, add them and then sort the entire array to ensure correct order
+                // Add items to the array, but check for duplicates first
+                // This prevents race conditions with Realtime INSERT handler
                 await MainActor.run {
-                    userImages.append(contentsOf: validItems)
-                    // Re-sort entire array to maintain chronological order (handles any edge cases)
-                    sortUserImagesByDate()
+                    let existingIds = Set(userImages.map { $0.id })
+                    let trulyNewItems = validItems.filter { !existingIds.contains($0.id) }
+
+                    if trulyNewItems.count < validItems.count {
+                        print("⚠️ refreshLatest: Filtered out \(validItems.count - trulyNewItems.count) duplicate(s) already added by Realtime")
+                    }
+
+                    if !trulyNewItems.isEmpty {
+                        userImages.append(contentsOf: trulyNewItems)
+                        // Re-sort entire array to maintain chronological order
+                        sortUserImagesByDate()
+                    }
                 }
                 
                 // IMPORTANT: Do NOT increment counts here!
