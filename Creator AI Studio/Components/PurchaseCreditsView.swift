@@ -501,34 +501,11 @@ struct CreditPackageCard: View {
                 guard !isPurchasing else { return }
                 onPurchase(productId, baseCreditsValue)
             }) {
-                VStack(alignment: .leading, spacing: 6) {
-                    // Header: Title, Credits, and Price
+                VStack(alignment: .leading, spacing: 8) {
+                    // Header: Credits (dominant), Title, and Price
                     HStack(alignment: .top) {
-                        VStack(alignment: .leading, spacing: 6) {
-                            HStack(spacing: 8) {
-                                Image(systemName: titleIconName)
-                                    .font(.system(size: 16))
-                                    .foregroundColor(.secondary)
-                                Text(title)
-                                    .font(
-                                        .system(
-                                            size: 18, weight: .bold,
-                                            design: .rounded)
-                                    )
-                                    .foregroundColor(.primary)
-
-                                if let badge = badge {
-                                    Text(badge)
-                                        .font(.caption2)
-                                        .fontWeight(.semibold)
-                                        .foregroundColor(.white)
-                                        .padding(.horizontal, 6)
-                                        .padding(.vertical, 3)
-                                        .background(Color.blue)
-                                        .clipShape(Capsule())
-                                }
-                            }
-
+                        VStack(alignment: .leading, spacing: 8) {
+                            // Credits first — primary decision factor, large and scannable
                             HStack(spacing: 6) {
                                 Image(systemName: "diamond.fill")
                                     .font(.system(size: 10))
@@ -540,13 +517,39 @@ struct CreditPackageCard: View {
                                 )
                                 .font(
                                     .system(
-                                        size: 16, weight: .semibold,
+                                        size: 20, weight: .bold,
                                         design: .rounded)
                                 )
+                                .monospacedDigit()
                                 .foregroundColor(.primary)
                                 Text("credits")
-                                    .font(.system(size: 13, design: .rounded))
+                                    .font(.system(size: 13, weight: .medium, design: .rounded))
                                     .foregroundColor(.secondary)
+                            }
+
+                            // Pack name below — label size
+                            HStack(spacing: 8) {
+                                Image(systemName: titleIconName)
+                                    .font(.system(size: 10))
+                                    .foregroundColor(.secondary)
+                                Text(title)
+                                    .font(
+                                        .system(
+                                            size: 14, weight: .semibold,
+                                            design: .rounded)
+                                    )
+                                    .foregroundColor(.secondary)
+
+                                if let badge = badge {
+                                    Text(badge)
+                                        .font(.caption2)
+                                        .fontWeight(.semibold)
+                                        .foregroundColor(.white)
+                                        .padding(.horizontal, 6)
+                                        .padding(.vertical, 3)
+                                        .background(Color.blue)
+                                        .clipShape(Capsule())
+                                }
                             }
 
                             // Estimated generations summary
@@ -592,7 +595,7 @@ struct CreditPackageCard: View {
                                 Text(product.displayPrice)
                                     .font(
                                         .system(
-                                            size: 22, weight: .bold,
+                                            size: 20, weight: .bold,
                                             design: .rounded)
                                     )
                                     .foregroundColor(.primary)
@@ -601,7 +604,7 @@ struct CreditPackageCard: View {
                                 Text(formatPrice(totalPrice))
                                     .font(
                                         .system(
-                                            size: 22, weight: .bold,
+                                            size: 20, weight: .bold,
                                             design: .rounded)
                                     )
                                     .foregroundColor(.primary)

@@ -50,37 +50,37 @@ struct CreditsBalanceSheet: View {
                                 ProgressView()
                                     .scaleEffect(0.8)
                             } else {
-                                Text("Sign out")
-                                    .font(.system(size: 12, weight: .medium, design: .rounded))
-                                    .foregroundColor(.red)
+                                // Text("Sign out")
+                                //     .font(.system(size: 12, weight: .medium, design: .rounded))
+                                //     .foregroundColor(.red)
                             }
                         }
                         .buttonStyle(.plain)
                         .disabled(isSigningOut)
                     }
-                    if let userId = authViewModel.user?.id.uuidString {
-                        HStack(spacing: 6) {
-                            Text("User ID:")
-                                .font(.system(size: 11, weight: .medium, design: .rounded))
-                                .foregroundColor(.secondary)
-                            Text(userId)
-                                .font(.system(size: 11, weight: .regular, design: .monospaced))
-                                .foregroundColor(.secondary)
-                                .lineLimit(1)
-                                .truncationMode(.middle)
-                            Button {
-                                UIPasteboard.general.string = userId
-                                showCopiedAlert = true
-                                let generator = UINotificationFeedbackGenerator()
-                                generator.notificationOccurred(.success)
-                            } label: {
-                                Image(systemName: "doc.on.doc")
-                                    .font(.system(size: 12))
-                                    .foregroundColor(.secondary)
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
+                    // if let userId = authViewModel.user?.id.uuidString {
+                    //     HStack(spacing: 6) {
+                    //         Text("User ID:")
+                    //             .font(.system(size: 11, weight: .medium, design: .rounded))
+                    //             .foregroundColor(.secondary)
+                    //         Text(userId)
+                    //             .font(.system(size: 11, weight: .regular, design: .monospaced))
+                    //             .foregroundColor(.secondary)
+                    //             .lineLimit(1)
+                    //             .truncationMode(.middle)
+                    //         Button {
+                    //             UIPasteboard.general.string = userId
+                    //             showCopiedAlert = true
+                    //             let generator = UINotificationFeedbackGenerator()
+                    //             generator.notificationOccurred(.success)
+                    //         } label: {
+                    //             Image(systemName: "doc.on.doc")
+                    //                 .font(.system(size: 12))
+                    //                 .foregroundColor(.secondary)
+                    //         }
+                    //         .buttonStyle(.plain)
+                    //     }
+                    // }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, 24)
