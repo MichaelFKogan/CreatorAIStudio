@@ -108,7 +108,7 @@ struct CreditsBalanceSheet: View {
                     Image(systemName: "checkmark.seal.fill")
                         .font(.system(size: 12))
                         .foregroundColor(.green)
-                    Text("Credits never expire")
+                    Text("Credits expire after 90 days")
                         .font(.system(size: 12, weight: .medium, design: .rounded))
                         .foregroundColor(.secondary)
                 }

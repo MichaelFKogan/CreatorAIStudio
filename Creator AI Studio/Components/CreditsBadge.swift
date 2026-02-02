@@ -73,7 +73,7 @@ struct CreditsBadge: View {
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
                     .overlay(
-                        RoundedRectangle(cornerRadius: 12)
+                        RoundedRectangle(cornerRadius: 6)
                             .strokeBorder(borderColor, lineWidth: 1)
                     )
                 }

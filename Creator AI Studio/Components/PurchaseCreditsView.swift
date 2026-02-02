@@ -203,7 +203,7 @@ struct PurchaseCreditsView: View {
 
                     // Legal disclosures
                     VStack(spacing: 8) {
-                        Text("Payment will be charged to your Apple ID account at confirmation of purchase. Credits are consumable and non-refundable. Credits never expire.")
+                        Text("Payment will be charged to your Apple ID account at confirmation of purchase. Credits are consumable and non-refundable. Credits expire after 90 days.")
                             .font(.system(size: 11, design: .rounded))
                             .foregroundColor(.secondary)
                             .multilineTextAlignment(.center)

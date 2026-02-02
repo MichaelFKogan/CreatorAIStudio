@@ -1117,7 +1117,7 @@ struct EnhancedCostCard: View {
     
     private var disclaimerText: String {
         let requiredAmountText = String(format: "$%.2f", requiredAmount)
-        return "Insufficient credits."
+        return "Insufficient credits"
         // return "Insufficient credits. Your balance is \(balance)."
     }
     
