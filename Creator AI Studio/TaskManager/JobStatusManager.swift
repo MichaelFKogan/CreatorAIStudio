@@ -888,8 +888,9 @@ class JobStatusManager: ObservableObject {
                     }
                 }
                 
-                // Use canonical image price from PricingManager to avoid rounding from stored metadata (e.g. 0.005 → 0.01)
-                let imageCost = PricingManager.shared.priceForImageModel(modelName) ?? metadata?.cost
+                // Use stored cost when available (e.g. Nano Banana Pro resolution-based); else canonical price from PricingManager
+                let imageCost = metadata?.cost
+                    ?? PricingManager.shared.priceForImageModel(modelName, resolution: metadata?.resolution)
                 // Save metadata to user_media table
                 let imageMetadata = ImageMetadata(
                     userId: userId,

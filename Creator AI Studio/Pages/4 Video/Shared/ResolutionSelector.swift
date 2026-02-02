@@ -81,7 +81,7 @@ struct ResolutionSelectorSheet: View {
     @Binding var selectedIndex: Int
     let color: Color
     @Binding var isPresented: Bool
-    
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -89,13 +89,12 @@ struct ResolutionSelectorSheet: View {
                     ForEach(options.indices, id: \.self) { idx in
                         let option = options[idx]
                         let isSelected = idx == selectedIndex
-                        
+
                         Button {
                             selectedIndex = idx
                             isPresented = false
                         } label: {
                             HStack(spacing: 12) {
-                                // Resolution icon
                                 ZStack {
                                     RoundedRectangle(cornerRadius: 6)
                                         .fill(Color.gray.opacity(0.08))
@@ -104,29 +103,28 @@ struct ResolutionSelectorSheet: View {
                                         .foregroundColor(isSelected ? color : Color.gray.opacity(0.5))
                                 }
                                 .frame(width: 40, height: 40)
-                                
-                                // Label and description
+
                                 VStack(alignment: .leading, spacing: 2) {
                                     HStack(spacing: 6) {
                                         Text(option.label)
                                             .font(.subheadline)
                                             .fontWeight(.semibold)
                                             .foregroundColor(.primary)
-                                        
+
                                         if isSelected {
                                             Image(systemName: "checkmark.circle.fill")
                                                 .font(.caption)
                                                 .foregroundColor(color)
                                         }
                                     }
-                                    
+
                                     if let description = option.description {
                                         Text(description)
                                             .font(.caption2)
                                             .foregroundColor(.secondary)
                                     }
                                 }
-                                
+
                                 Spacer()
                             }
                             .contentShape(Rectangle())

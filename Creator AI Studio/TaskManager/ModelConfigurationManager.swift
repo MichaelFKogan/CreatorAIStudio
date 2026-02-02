@@ -51,7 +51,8 @@ class ModelConfigurationManager {
                     imageCompressionQuality: 0.9,
                     outputFormat: nil,
                     outputType: nil,
-                    outputQuality: nil
+                    outputQuality: nil,
+                    openaiQuality: "medium"
                 )
             ),
             "Wan2.5-Preview Image": APIConfiguration(
@@ -75,6 +76,23 @@ class ModelConfigurationManager {
                 provider: .runware,
                 endpoint: "https://api.runware.ai/v1",
                 runwareModel: "google:4@1",
+                aspectRatio: nil,
+                wavespeedConfig: nil,
+                runwareConfig: RunwareConfig(
+                    imageToImageMethod: "referenceImages",
+                    strength: nil,
+                    additionalTaskParams: nil,
+                    requiresDimensions: true,
+                    imageCompressionQuality: 0.9,
+                    outputFormat: nil,
+                    outputType: nil,
+                    outputQuality: nil
+                )
+            ),
+            "Nano Banana Pro": APIConfiguration(
+                provider: .runware,
+                endpoint: "https://api.runware.ai/v1",
+                runwareModel: "google:4@2",
                 aspectRatio: nil,
                 wavespeedConfig: nil,
                 runwareConfig: RunwareConfig(
@@ -353,6 +371,7 @@ class ModelConfigurationManager {
             "GPT Image 1.5": ["Text to Image", "Image to Image"],
             "Wan2.5-Preview Image": ["Text to Image"],
             "Nano Banana": ["Text to Image", "Image to Image"],
+            "Nano Banana Pro": ["Text to Image", "Image to Image"],
             "Seedream 4.5": ["Text to Image", "Image to Image"],
             "Seedream 4.0": ["Text to Image", "Image to Image"],
             "FLUX.2 [dev]": ["Text to Image", "Image to Image"],
@@ -410,6 +429,7 @@ class ModelConfigurationManager {
             "GPT Image 1.5": "gptimage15",
             "Wan2.5-Preview Image": "wan25previewimage",
             "Nano Banana": "geminiflashimage25",
+            "Nano Banana Pro": "geminiproimage3",
             "Seedream 4.5": "seedream45",
             "Seedream 4.0": "seedream40",
             "FLUX.2 [dev]": "flux2dev",
@@ -476,6 +496,13 @@ class ModelConfigurationManager {
                 AspectRatioOption(id: "4:3", label: "4:3", width: 4, height: 3, platforms: ["Landscape"]),
                 AspectRatioOption(id: "16:9", label: "16:9", width: 16, height: 9, platforms: ["YouTube"])
             ],
+            "Nano Banana Pro": [
+                AspectRatioOption(id: "1:1", label: "1:1", width: 1, height: 1, platforms: ["Square"]),
+                AspectRatioOption(id: "4:3", label: "4:3", width: 4, height: 3, platforms: ["Landscape"]),
+                AspectRatioOption(id: "3:4", label: "3:4", width: 3, height: 4, platforms: ["Portrait"]),
+                AspectRatioOption(id: "9:16", label: "9:16", width: 9, height: 16, platforms: ["TikTok", "Reels"]),
+                AspectRatioOption(id: "16:9", label: "16:9", width: 16, height: 9, platforms: ["YouTube"])
+            ],
             "Sora 2": [
                 AspectRatioOption(id: "9:16", label: "9:16", width: 9, height: 16, platforms: ["TikTok", "Reels"]),
                 AspectRatioOption(id: "16:9", label: "16:9", width: 16, height: 9, platforms: ["YouTube"])
@@ -533,6 +560,12 @@ class ModelConfigurationManager {
             "KlingAI 2.5 Turbo Pro": [
                 ResolutionOption(id: "720p", label: "720p", description: "High quality"),
                 ResolutionOption(id: "1080p", label: "1080p", description: "Full HD")
+            ],
+            // Nano Banana Pro (image model) - resolution tier 1K/2K/4K (pricing shown in credits in sheet)
+            "Nano Banana Pro": [
+                ResolutionOption(id: "1k", label: "1K", description: nil),
+                ResolutionOption(id: "2k", label: "2K", description: nil),
+                ResolutionOption(id: "4k", label: "4K", description: nil)
             ]
         ]
     }

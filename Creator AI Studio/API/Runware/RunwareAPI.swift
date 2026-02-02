@@ -413,6 +413,7 @@ func sendImageToRunware(
     prompt: String,
     model: String,
     aspectRatio: String? = nil,
+    resolution: String? = nil,
     isImageToImage: Bool = false,
     runwareConfig: RunwareConfig? = nil
 ) async throws -> RunwareResponse {
@@ -426,8 +427,8 @@ func sendImageToRunware(
 
     // MARK: - Determine width/height
 
-    // Get model-specific allowed sizes
-    let allowedSizes = getAllowedSizes(for: model)
+    // Get model-specific allowed sizes (resolution used for Nano Banana Pro 1k/2k/4k)
+    let allowedSizes = getAllowedSizes(for: model, resolution: resolution)
 
     var width = 1024
     var height = 1024
@@ -1265,6 +1266,7 @@ func submitImageToRunwareWithWebhook(
     prompt: String,
     model: String,
     aspectRatio: String? = nil,
+    resolution: String? = nil,
     isImageToImage: Bool = false,
     runwareConfig: RunwareConfig? = nil
 ) async throws -> RunwareWebhookSubmissionResponse {
@@ -1274,8 +1276,8 @@ func submitImageToRunwareWithWebhook(
     print("[Runware] Prompt: \(prompt)")
     print("[Runware] Mode: \(isImageToImage ? "Image-to-Image" : "Text-to-Image")")
     
-    // Get model-specific allowed sizes
-    let allowedSizes = getAllowedSizes(for: model)
+    // Get model-specific allowed sizes (resolution used for Nano Banana Pro 1k/2k/4k)
+    let allowedSizes = getAllowedSizes(for: model, resolution: resolution)
     
     var width = 1024
     var height = 1024
@@ -1361,11 +1363,11 @@ func submitImageToRunwareWithWebhook(
     if model.lowercased().contains("openai:4@1") {
         var providerSettings: [String: Any] = [:]
         var openaiSettings: [String: Any] = [:]
-        openaiSettings["quality"] = "auto"
+        openaiSettings["quality"] = runwareConfig?.openaiQuality ?? "auto"
         openaiSettings["background"] = "auto"
         providerSettings["openai"] = openaiSettings
         task["providerSettings"] = providerSettings
-        print("[Runware] Added OpenAI provider settings (webhook) - quality: auto, background: auto")
+        print("[Runware] Added OpenAI provider settings (webhook) - quality: \(runwareConfig?.openaiQuality ?? "auto"), background: auto")
     }
     
     // Wan2.5-Preview Image (runware:201@10) - no provider settings needed

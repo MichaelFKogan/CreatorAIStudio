@@ -58,6 +58,9 @@ struct InfoPacket: Codable, Identifiable, Hashable {
             if let storedAspectRatio = storedConfig.aspectRatio, !storedAspectRatio.isEmpty {
                 mergedConfig.aspectRatio = storedAspectRatio
             }
+            if let storedResolution = storedConfig.resolution, !storedResolution.isEmpty {
+                mergedConfig.resolution = storedResolution
+            }
             // Merge other stored values if they're set
             if storedConfig.provider != baseConfig.provider {
                 mergedConfig.provider = storedConfig.provider
@@ -138,6 +141,8 @@ struct APIConfiguration: Codable, Hashable {
     var endpoint: String
     var runwareModel: String?
     var aspectRatio: String?
+    /// Resolution tier for image models that support 1K/2K/4K (e.g. "1k", "2k", "4k"). Used by Nano Banana Pro.
+    var resolution: String? = nil
 
     var wavespeedConfig: WaveSpeedConfig?
     var runwareConfig: RunwareConfig?
@@ -167,6 +172,8 @@ struct RunwareConfig: Codable, Hashable {
     var outputType: String?
     // Output quality for JPEG images (0-100)
     var outputQuality: Int?
+    // OpenAI image model quality: "low", "medium", "high", or "auto" (GPT Image 1.5 only)
+    var openaiQuality: String?
 }
 
 struct FalConfig: Codable, Hashable {

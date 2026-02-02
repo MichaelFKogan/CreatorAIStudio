@@ -8,6 +8,13 @@
   },
   {
     "display": {
+      "title": "Nano Banana Pro",
+      "imageName": "geminiproimage3",
+      "modelName": "Nano Banana Pro"
+    }
+  },
+  {
+    "display": {
       "title": "GPT Image 1.5",
       "imageName": "gptimage15",
       "modelName": "GPT Image 1.5"

@@ -12,13 +12,33 @@ private let googleNanoBananaSizes: [String: (Int, Int)] = [
     "auto": (0, 0),
 ]
 
-// Google Gemini 3 Pro (Nano Banana 2)
-private let googleNanoBanana2Sizes: [String: (Int, Int)] = [
+// Nano Banana Pro (google:4@2) - 1K tier (Runware doc)
+private let nanoBananaPro1KSizes: [String: (Int, Int)] = [
+    "1:1": (1024, 1024),
+    "4:3": (1200, 896),
+    "3:4": (896, 1200),
+    "9:16": (768, 1376),
+    "16:9": (1376, 768),
+    "auto": (0, 0),
+]
+
+// Nano Banana Pro (google:4@2) - 2K tier
+private let nanoBananaPro2KSizes: [String: (Int, Int)] = [
     "1:1": (2048, 2048),
     "4:3": (2400, 1792),
     "3:4": (1792, 2400),
     "9:16": (1536, 2752),
     "16:9": (2752, 1536),
+    "auto": (0, 0),
+]
+
+// Nano Banana Pro (google:4@2) - 4K tier (Runware doc)
+private let nanoBananaPro4KSizes: [String: (Int, Int)] = [
+    "1:1": (4096, 4096),
+    "4:3": (4800, 3584),
+    "3:4": (3584, 4800),
+    "9:16": (3072, 5504),
+    "16:9": (5504, 3072),
     "auto": (0, 0),
 ]
 
@@ -145,17 +165,24 @@ private let klingai25TurboProSizes: [String: (Int, Int)] = [
 /// The model parameter can be either:
 /// - The Runware model identifier (e.g., "google:4@1", "bfl:3@1")
 /// - The display model name (e.g., "Nano Banana", "FLUX.1 Kontext [pro]")
+/// - Parameter resolution: For Nano Banana Pro (google:4@2), use "1k", "2k", or "4k" to get the corresponding dimensions; nil defaults to 2k.
 ///
 /// Falls back to Google Nano Banana sizes if model is not recognized.
-func getAllowedSizes(for model: String) -> [String: (Int, Int)] {
+func getAllowedSizes(for model: String, resolution: String? = nil) -> [String: (Int, Int)] {
     let modelLower = model.lowercased()
 
     // Check by Runware model identifier
 
     // Nano Banana
     if modelLower.contains("google:4@1") { return googleNanoBananaSizes }
-    // Google Gemini 3 Pro (Nano Banana 2)
-    if modelLower.contains("google:4@2") { return googleNanoBanana2Sizes }
+    // Nano Banana Pro (google:4@2) - resolution tier 1k, 2k, 4k
+    if modelLower.contains("google:4@2") {
+        switch (resolution ?? "2k").lowercased() {
+        case "1k": return nanoBananaPro1KSizes
+        case "4k": return nanoBananaPro4KSizes
+        default: return nanoBananaPro2KSizes
+        }
+    }
 
     // Midjourney V7
     if modelLower.contains("midjourney:3@1") { return midjourneyV7Sizes }

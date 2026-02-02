@@ -46,6 +46,12 @@ class PricingManager {
     /// Dictionary mapping model names to variable pricing configurations (for video models with variable pricing)
     private let variableVideoPricing: [String: VideoPricingConfiguration]
     
+    /// Image models with resolution-based pricing (1k, 2k, 4k). Key: model name, value: [resolution: price].
+    private let imageResolutionPricing: [String: [String: Decimal]]
+    
+    /// GPT Image 1.5 only: [aspectRatio][quality] -> price (e.g. "1:1", "2:3", "3:2" x "low", "medium", "high").
+    private let gptImage15Pricing: [String: [String: Decimal]]
+    
     /// Dictionary mapping model names to their default duration, aspect ratio, and resolution for display pricing
     /// Used to show the correct "starting from" price based on the model's default configuration
     private let defaultVideoConfigs: [String: (aspectRatio: String, resolution: String, duration: Double)] = [
@@ -61,10 +67,11 @@ class PricingManager {
 
         // MARK: IMAGE PRICES
         // Prices in dollars (same unit as balance). Display: 100 credits = $1.
+        // GPT Image 1.5 uses gptImage15Pricing (aspect + quality), not fixed price.
         prices = [
-            "GPT Image 1.5": 0.034,  // Medium quality 1024x1024 as default display price
             "Wan2.5-Preview Image": 0.027,
             "Nano Banana": 0.039,
+            "Nano Banana Pro": 0.138,
             "Seedream 4.5": 0.04,
             "Seedream 4.0": 0.03,
             "FLUX.2 [dev]": 0.0122,
@@ -181,20 +188,50 @@ class PricingManager {
                 ]
             ),
         ]
+        
+        // MARK: IMAGE RESOLUTION PRICING (Nano Banana Pro: 1K/2K $0.138, 4K $0.244)
+        imageResolutionPricing = [
+            "Nano Banana Pro": ["1k": 0.138, "2k": 0.138, "4k": 0.244]
+        ]
+        
+        // MARK: GPT IMAGE 1.5 QUALITY PRICING (Runware: aspect × quality)
+        // 1024×1024 (1:1), 1024×1536 (2:3), 1536×1024 (3:2) × low, medium, high
+        gptImage15Pricing = [
+            "1:1": ["low": 0.009, "medium": 0.034, "high": 0.133],
+            "2:3": ["low": 0.013, "medium": 0.051, "high": 0.20],
+            "3:2": ["low": 0.013, "medium": 0.05, "high": 0.199]
+        ]
     }
 
     // MARK: METHODS
 
-    /// Returns the fixed price for an image model by name (used at deduction time to avoid rounding from stored metadata).
-    /// - Parameter modelName: The display/model name (e.g. "Z-Image-Turbo")
+    /// Returns the price for an image model by name (used at deduction time and on detail page).
+    /// - Parameters:
+    ///   - modelName: The display/model name (e.g. "Z-Image-Turbo", "GPT Image 1.5")
+    ///   - resolution: Optional resolution tier for models with resolution-based pricing (e.g. "1k", "2k", "4k" for Nano Banana Pro)
+    ///   - aspectRatio: Optional aspect ratio for GPT Image 1.5 (e.g. "1:1", "2:3", "3:2")
+    ///   - quality: Optional quality for GPT Image 1.5 ("low", "medium", "high"; "auto" treated as "medium")
     /// - Returns: The price in dollars as Double, or nil if not found (use metadata cost as fallback)
-    func priceForImageModel(_ modelName: String) -> Double? {
+    func priceForImageModel(_ modelName: String, resolution: String? = nil, aspectRatio: String? = nil, quality: String? = nil) -> Double? {
+        // GPT Image 1.5: aspect + quality
+        if modelName == "GPT Image 1.5" {
+            let aspect = aspectRatio ?? "1:1"
+            let qualityNorm = (quality == "auto" || quality == nil) ? "medium" : quality!
+            guard let byQuality = gptImage15Pricing[aspect], let decimalPrice = byQuality[qualityNorm] else { return nil }
+            return NSDecimalNumber(decimal: decimalPrice).doubleValue
+        }
+        if let resolutionPrices = imageResolutionPricing[modelName] {
+            let res = (resolution ?? "2k").lowercased()
+            guard let decimalPrice = resolutionPrices[res] ?? resolutionPrices["2k"] ?? resolutionPrices["1k"] else { return nil }
+            return NSDecimalNumber(decimal: decimalPrice).doubleValue
+        }
         guard let decimalPrice = prices[modelName] else { return nil }
         return NSDecimalNumber(decimal: decimalPrice).doubleValue
     }
 
     /// Returns the price for a given InfoPacket based on its model name.
     /// For variable pricing models (video), returns the default configuration price.
+    /// For GPT Image 1.5, uses aspect ratio and quality from item's resolved config (defaults: 1:1, medium).
     ///
     /// - Parameter item: The InfoPacket to look up pricing for
     /// - Returns: The price as a Decimal, or nil if not found
@@ -202,7 +239,19 @@ class PricingManager {
         let modelName = item.display.modelName ?? ""
         guard !modelName.isEmpty else { return nil }
 
-        // First check fixed prices
+        // GPT Image 1.5: aspect + quality (default 1:1, medium for list/grid)
+        if modelName == "GPT Image 1.5" {
+            let aspect = item.resolvedAPIConfig.aspectRatio ?? "1:1"
+            let qualityRaw = item.resolvedAPIConfig.runwareConfig?.openaiQuality ?? "medium"
+            let quality = (qualityRaw == "auto" ? "medium" : qualityRaw)
+            if let byQuality = gptImage15Pricing[aspect], let price = byQuality[quality] {
+                return price
+            }
+            // Fallback: 1:1 medium
+            return gptImage15Pricing["1:1"]?["medium"]
+        }
+
+        // Fixed prices
         if let fixedPrice = prices[modelName] {
             return fixedPrice
         }

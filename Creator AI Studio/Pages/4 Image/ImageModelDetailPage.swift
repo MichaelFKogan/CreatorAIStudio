@@ -45,6 +45,12 @@ struct ImageModelDetailPage: View {
     @State private var ocrAlertMessage: String = ""
 
     @State private var selectedAspectIndex: Int = 0
+    /// Resolution tier for Nano Banana Pro (1K, 2K, 4K). Index into imageResolutionOptions; default 1 = 2K.
+    @State private var selectedResolutionIndex: Int = 1
+    @State private var showResolutionSheet: Bool = false
+    /// Quality for GPT Image 1.5 only: 0 = Low, 1 = Medium, 2 = High.
+    @State private var selectedQualityIndex: Int = 1
+    @State private var showQualitySheet: Bool = false
     @State private var selectedGenerationMode: Int = 0
     @State private var showSignInSheet: Bool = false
     @State private var showPurchaseCreditsView: Bool = false
@@ -151,11 +157,27 @@ struct ImageModelDetailPage: View {
     ]
 
     private var costString: String {
+        if isGPTImage15, selectedAspectIndex < imageAspectOptions.count, selectedQualityIndex < gptImage15QualityOptions.count,
+           let price = PricingManager.shared.priceForImageModel("GPT Image 1.5", aspectRatio: imageAspectOptions[selectedAspectIndex].id, quality: gptImage15QualityOptions[selectedQualityIndex]) {
+            return PricingManager.formatPrice(Decimal(price))
+        }
+        if isNanoBananaPro, let options = imageResolutionOptions, selectedResolutionIndex < options.count,
+           let price = PricingManager.shared.priceForImageModel("Nano Banana Pro", resolution: options[selectedResolutionIndex].id) {
+            return PricingManager.formatPrice(Decimal(price))
+        }
         return PricingManager.formatPrice(item.resolvedCost ?? 0)
     }
-    
-    // Calculate required credits as Double
+
+    // Calculate required credits as Double (GPT Image 1.5: aspect+quality; Nano Banana Pro: resolution; else fixed)
     private var requiredCredits: Double {
+        if isGPTImage15, selectedAspectIndex < imageAspectOptions.count, selectedQualityIndex < gptImage15QualityOptions.count,
+           let price = PricingManager.shared.priceForImageModel("GPT Image 1.5", aspectRatio: imageAspectOptions[selectedAspectIndex].id, quality: gptImage15QualityOptions[selectedQualityIndex]) {
+            return price
+        }
+        if isNanoBananaPro, let options = imageResolutionOptions, selectedResolutionIndex < options.count,
+           let price = PricingManager.shared.priceForImageModel("Nano Banana Pro", resolution: options[selectedResolutionIndex].id) {
+            return price
+        }
         let cost = item.resolvedCost ?? Decimal(0.04)  // Default image cost
         return NSDecimalNumber(decimal: cost).doubleValue
     }
@@ -181,318 +203,310 @@ struct ImageModelDetailPage: View {
         !isTextOnlyImageModel
     }
 
-    // MARK: BODY
+    /// True when the model is Nano Banana Pro (supports 1K/2K/4K resolution selection).
+    private var isNanoBananaPro: Bool {
+        item.display.modelName == "Nano Banana Pro"
+    }
 
-    var body: some View {
-        GeometryReader { _ in
-            ZStack(alignment: .bottom) {
-                ScrollView {
-                    VStack(spacing: 24) {
-                        LazyView(
-                            BannerSection(item: item, costString: costString))
+    /// Resolution options for Nano Banana Pro (1K, 2K, 4K). Nil for other models.
+    private var imageResolutionOptions: [ResolutionOption]? {
+        guard isNanoBananaPro else { return nil }
+        return ModelConfigurationManager.shared.allowedResolutions(for: item)
+    }
 
-                        Divider().padding(.horizontal)
+    /// True when the model is GPT Image 1.5 (supports quality: low, medium, high).
+    private var isGPTImage15: Bool {
+        item.display.modelName == "GPT Image 1.5"
+    }
 
-                        //                        LazyView(TabSwitcher(selectedMode: $selectedGenerationMode))
+    /// Quality option IDs for GPT Image 1.5 (Low, Medium, High).
+    private let gptImage15QualityOptions: [String] = ["low", "medium", "high"]
 
-                        LazyView(
-                            PromptSection(
-                                prompt: $prompt,
-                                isFocused: $isPromptFocused,
-                                isExamplePromptsPresented:
-                                    $isExamplePromptsPresented,
-                                examplePrompts: examplePrompts,
-                                examplePromptsTransform: transformPrompts,
-                                onCameraTap: {
-                                    showPromptCameraSheet = true
-                                },
-                                isProcessingOCR: $isProcessingOCR
-                            ))
-
-                        // Input mode: Text | Image (all image models except Z-Image-Turbo and Wan2.5-Preview Image)
-                        if showsTextImageInputModePicker {
-                            VStack(alignment: .leading, spacing: 12) {
-                                VStack(alignment: .leading, spacing: 8) {
-                                    Text("Input mode")
-                                        .font(.subheadline)
-                                        .fontWeight(.semibold)
-                                        .foregroundColor(.secondary)
-                                    Picker("Input mode", selection: $imageTextInputMode) {
-                                        ForEach(ImageTextInputMode.allCases, id: \.self) { mode in
-                                            Text(mode.rawValue).tag(mode)
-                                        }
-                                    }
-                                    .pickerStyle(.segmented)
-                                }
-                                ImageTextImageModeDescriptionBlock(mode: imageTextInputMode, color: .blue)
-                            }
-                            .padding(.horizontal)
-                        }
-
-                        // Reference images: only when Image segment is selected (never for text-only models)
-                        if showsTextImageInputModePicker && imageTextInputMode == .imageToImage {
-                            LazyView(
-                                ReferenceImagesSection(
-                                    referenceImages: $referenceImages,
-                                    selectedPhotoItems: $selectedPhotoItems,
-                                    showCameraSheet: $showCameraSheet,
-                                    color: .blue
-                                ))
-                        }
-
-                        if isMidjourney {
-                            HStack(spacing: 4) {
-                                Image(systemName: "info.circle")
-                                    .font(.caption)
-                                    .foregroundColor(.red)
-                                Text(
-                                    "Midjourney creates 4 images by default: Total cost: $0.10"
-                                )
-                                .font(.caption)
-                                .foregroundColor(.red)
-                                Spacer()
-                            }
-                            .padding(.horizontal)
-                            .padding(.bottom, -16)
-                        }
-
-                        LazyView(
-                            GenerateButton(
-                                prompt: prompt,
-                                isGenerating: $isGenerating,
-                                keyboardHeight: $keyboardHeight,
-                                costString: costString,
-                                isLoggedIn: authViewModel.user != nil,
-                                hasCredits: hasEnoughCredits,
-                                isConnected: networkMonitor.isConnected,
-                                onSignInTap: {
-                                    showSignInSheet = true
-                                },
-                                action: generate
-                            ))
-
-                        VStack(spacing: 12) {
-                            // Use the reusable AuthAwareCostCard component
-                            AuthAwareCostCard(
-                                price: item.resolvedCost ?? 0,
-                                requiredCredits: requiredCredits,
-                                primaryColor: .blue,
-                                secondaryColor: .cyan,
-                                loginMessage: "Log in to generate an image",
-                                isConnected: networkMonitor.isConnected,
-                                onSignIn: {
-                                    showSignInSheet = true
-                                },
-                                onBuyCredits: {
-                                    showPurchaseCreditsView = true
-                                }
-                            )
-                        }
-                        .padding(.horizontal)
-                        .padding(.top, -16)  // Bring closer to the button above
-
-                        //                        VStack {
-                        //                            Button {
-                        //                                //                            showActionSheet = true
-                        //                            } label: {
-                        //                                HStack(spacing: 8) {
-                        //                                    Image(systemName: "camera")
-                        //                                        .font(.system(size: 14))
-                        //                                        .foregroundColor(.blue)
-                        //                                    Text("Add Image")
-                        //                                        .font(.subheadline)
-                        //                                        .fontWeight(.semibold)
-                        //                                        .foregroundColor(.secondary)
-                        //                                    Text("(Optional)")
-                        //                                        .font(.caption)
-                        //                                        .foregroundColor(
-                        //                                            .secondary.opacity(0.7))
-                        //                                    Spacer()
-                        //                                    //                                Image(systemName: "chevron.right")
-                        //                                    //                                    .font(.system(size: 12))
-                        //                                    //                                    .foregroundColor(.secondary.opacity(0.6))
-                        //                                }
-                        //                                //                                .padding(.horizontal, 12)
-                        //                                //                                .padding(.vertical, 10)
-                        //                                .padding()
-                        //                                .background(Color.gray.opacity(0.06))
-                        //                                .clipShape(RoundedRectangle(cornerRadius: 8))
-                        //                                .overlay(
-                        //                                    RoundedRectangle(cornerRadius: 8)
-                        //                                        //                                         .stroke(Color.blue.opacity(0.3), lineWidth: 1)
-                        //                                        .strokeBorder(
-                        //                                            style: StrokeStyle(
-                        //                                                lineWidth: 3.5, dash: [6, 4]
-                        //                                            )
-                        //                                        )
-                        //                                        .foregroundColor(.gray.opacity(0.4))
-                        //                                )
-                        //                            }
-                        //                            .buttonStyle(PlainButtonStyle())
-                        //                            .padding(.horizontal)
-                        //                            //                        .confirmationDialog("Add Image", isPresented: $showActionSheet, titleVisibility: .visible) {
-                        //                            //                            Button {
-                        //                            //                                showCameraSheet = true
-                        //                            //                            } label: {
-                        //                            //                                Label("Take Photo", systemImage: "camera.fill")
-                        //                            //                            }
-                        //                            //
-                        //                            //                            Button {
-                        //                            //                                showPhotosPicker = true
-                        //                            //                            } label: {
-                        //                            //                                Label("Choose from Library", systemImage: "photo.on.rectangle")
-                        //                            //                            }
-                        //                            //
-                        //                            //                            Button("Cancel", role: .cancel) {}
-                        //                            //                        }
-                        //                            //                        .photosPicker(isPresented: $showPhotosPicker, selection: $selectedPhotoItems, maxSelectionCount: 10, matching: .images)
-                        //
-                        //                            // Text("Upload an image to transform it, or use as reference with your prompt")
-                        //                            //     .font(.caption)
-                        //                            //     .foregroundColor(.secondary.opacity(0.8))
-                        //                            //     .fixedSize(horizontal: false, vertical: true)
-                        //                            //     .padding(.bottom, 4)
-                        //                        }
-
-                        VStack{
-                            LazyView(
-                                AspectRatioSection(
-                                    options: imageAspectOptions,
-                                    selectedIndex: $selectedAspectIndex
-                                ))
-                        }
-                        .padding(.top, -16) 
-
-                        Divider().padding(.horizontal)
-
-                        // LazyView(CostCardSection(costString: costString))
-
-                        // Example Gallery Section - Only show if model name exists
-                        if let modelName = item.display.modelName,
-                            !modelName.isEmpty
-                        {
-                            LazyView(
-                                ModelGallerySection(
-                                    modelName: modelName,
-                                    userId: authViewModel.user?.id.uuidString
-                                        .lowercased()
-                                )
-                            )
-
-                            Divider().padding(.horizontal)
-                        }
-
-                        Color.clear.frame(height: 130)  // bottom padding for floating button
-                    }
-                }
-                .scrollDismissesKeyboard(.interactively)
-            }
+    /// Credit strings for GPT Image 1.5 quality options (Low, Medium, High) at current aspect ratio. Used in Select Quality sheet.
+    private var gptImage15QualityCredits: [String]? {
+        guard isGPTImage15, selectedAspectIndex < imageAspectOptions.count else { return nil }
+        let aspectId = imageAspectOptions[selectedAspectIndex].id
+        let credits = gptImage15QualityOptions.compactMap { quality -> String? in
+            guard let price = PricingManager.shared.priceForImageModel("GPT Image 1.5", aspectRatio: aspectId, quality: quality) else { return nil }
+            return "\(PricingManager.formatCredits(Decimal(price))) credits"
         }
-        .contentShape(Rectangle())
-        .onTapGesture { isPromptFocused = false }
-        .onAppear {
-            // Pre-populate reference images with captured image if provided
-            if let capturedImage = capturedImage, referenceImages.isEmpty {
-                referenceImages = [capturedImage]
-            }
-            // Note: Credit balance fetching is now handled by AuthAwareCostCard
-        }
-        .onChange(of: showSignInSheet) { isPresented in
-            // When sign-in sheet is dismissed, refresh credits if user signed in
-            if !isPresented, let userId = authViewModel.user?.id {
-                Task {
-                    await creditsViewModel.fetchBalance(userId: userId)
-                }
-            }
-        }
-        .alert("Insufficient Credits", isPresented: $showInsufficientCreditsAlert) {
-            Button("Purchase Credits") {
-                showPurchaseCreditsView = true
-            }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text("You need \(String(format: "$%.2f", requiredCredits)) to generate this. Your current balance is \(creditsViewModel.formattedBalance()).")
-        }
-        .sheet(isPresented: $isExamplePromptsPresented) {
-            ExamplePromptsSheet(
+        return credits.isEmpty ? nil : credits
+    }
+
+    // MARK: BODY (split into sections to reduce compiler type-checking load)
+
+    @ViewBuilder private var scrollBannerAndPrompt: some View {
+        LazyView(
+            BannerSection(item: item, costString: costString, displayPrice: isGPTImage15 ? Decimal(requiredCredits) : nil))
+        Divider().padding(.horizontal)
+        LazyView(
+            PromptSection(
+                prompt: $prompt,
+                isFocused: $isPromptFocused,
+                isExamplePromptsPresented: $isExamplePromptsPresented,
                 examplePrompts: examplePrompts,
                 examplePromptsTransform: transformPrompts,
-                selectedPrompt: $prompt,
-                isPresented: $isExamplePromptsPresented,
-                title: "Example Prompts"
+                onCameraTap: { showPromptCameraSheet = true },
+                isProcessingOCR: $isProcessingOCR
+            ))
+    }
+
+    @ViewBuilder private var scrollInputModeAndRefs: some View {
+        if showsTextImageInputModePicker {
+            VStack(alignment: .leading, spacing: 12) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Input mode")
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.secondary)
+                    Picker("Input mode", selection: $imageTextInputMode) {
+                        ForEach(ImageTextInputMode.allCases, id: \.self) { mode in
+                            Text(mode.rawValue).tag(mode)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                }
+                ImageTextImageModeDescriptionBlock(mode: imageTextInputMode, color: .blue)
+            }
+            .padding(.horizontal)
+        }
+        if showsTextImageInputModePicker && imageTextInputMode == .imageToImage {
+            LazyView(
+                ReferenceImagesSection(
+                    referenceImages: $referenceImages,
+                    selectedPhotoItems: $selectedPhotoItems,
+                    showCameraSheet: $showCameraSheet,
+                    color: .blue
+                ))
+        }
+    }
+
+    @ViewBuilder private var scrollGenerateAndCost: some View {
+        if isMidjourney {
+            HStack(spacing: 4) {
+                Image(systemName: "info.circle")
+                    .font(.caption)
+                    .foregroundColor(.red)
+                Text("Midjourney creates 4 images by default: Total cost: $0.10")
+                    .font(.caption)
+                    .foregroundColor(.red)
+                Spacer()
+            }
+            .padding(.horizontal)
+            .padding(.bottom, -16)
+        }
+        LazyView(
+            GenerateButton(
+                prompt: prompt,
+                isGenerating: $isGenerating,
+                keyboardHeight: $keyboardHeight,
+                costString: costString,
+                isLoggedIn: authViewModel.user != nil,
+                hasCredits: hasEnoughCredits,
+                isConnected: networkMonitor.isConnected,
+                onSignInTap: { showSignInSheet = true },
+                action: generate
+            ))
+        VStack(spacing: 12) {
+            AuthAwareCostCard(
+                price: isGPTImage15 ? Decimal(requiredCredits) : (item.resolvedCost ?? 0),
+                requiredCredits: requiredCredits,
+                primaryColor: .blue,
+                secondaryColor: .cyan,
+                loginMessage: "Log in to generate an image",
+                isConnected: networkMonitor.isConnected,
+                onSignIn: { showSignInSheet = true },
+                onBuyCredits: { showPurchaseCreditsView = true }
             )
         }
-        .navigationTitle("")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(Color(UIColor.systemBackground), for: .navigationBar)
-        .toolbarBackground(.visible, for: .navigationBar)
-        .toolbar {
-            // Leading title
-            ToolbarItem(placement: .navigationBarLeading) {
-                Text("Image Models")
-                    .font(.system(size: 28, weight: .bold, design: .rounded))
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [.blue, .cyan],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
+        .padding(.horizontal)
+        .padding(.top, -16)
+    }
+
+    private var scrollQualityAspectResolution: some View {
+        VStack(spacing: 12) {
+            LazyView(
+                AspectRatioSection(
+                    options: imageAspectOptions,
+                    selectedIndex: $selectedAspectIndex
+                ))
+            if isNanoBananaPro, let options = imageResolutionOptions, !options.isEmpty {
+                LazyView(
+                    ResolutionSection(
+                        options: options,
+                        selectedIndex: $selectedResolutionIndex,
+                        showSheet: $showResolutionSheet
+                    ))
+                .sheet(isPresented: $showResolutionSheet) {
+                    ResolutionSelectorSheet(
+                        options: options,
+                        selectedIndex: $selectedResolutionIndex,
+                        color: .blue,
+                        isPresented: $showResolutionSheet
                     )
+                }
             }
-            ToolbarItemGroup(placement: .keyboard) {
-                Spacer()
-                Button("Done") { isPromptFocused = false }
+            if isGPTImage15 {
+                LazyView(
+                    QualitySection(
+                        selectedQualityIndex: $selectedQualityIndex,
+                        qualityOptions: gptImage15QualityOptions,
+                        showSheet: $showQualitySheet
+                    ))
             }
-            ToolbarItem(placement: .navigationBarTrailing) {
-                CreditsToolbarView(
-                    diamondColor: .blue,
-                    borderColor: .blue,
-                    showSignInSheet: $showSignInSheet,
-                    showPurchaseCreditsView: $showPurchaseCreditsView
+        }
+        .padding(.top, -16)
+    }
+
+    @ViewBuilder private var scrollGallery: some View {
+        if let modelName = item.display.modelName, !modelName.isEmpty {
+            LazyView(
+                ModelGallerySection(
+                    modelName: modelName,
+                    userId: authViewModel.user?.id.uuidString.lowercased()
+                )
+            )
+            Divider().padding(.horizontal)
+        }
+    }
+
+    private var scrollContent: some View {
+        ScrollView {
+            VStack(spacing: 24) {
+                scrollBannerAndPrompt
+                scrollInputModeAndRefs
+                scrollGenerateAndCost
+                scrollQualityAspectResolution
+                if isGPTImage15 || isNanoBananaPro, let modelName = item.display.modelName {
+                    LazyView(PricingTableSectionImage(modelName: modelName))
+                    Divider().padding(.horizontal)
+                }
+                scrollGallery
+                Color.clear.frame(height: 130)
+            }
+        }
+        .scrollDismissesKeyboard(.interactively)
+    }
+
+    private var bodyContent: some View {
+        GeometryReader { _ in
+            ZStack(alignment: .bottom) {
+                scrollContent
+            }
+        }
+    }
+
+    /// First segment of modifiers (content through toolbar). Split to reduce type-checker load.
+    private var contentWithNavigation: some View {
+        bodyContent
+            .contentShape(Rectangle())
+            .onTapGesture { isPromptFocused = false }
+            .onAppear {
+                if let capturedImage = capturedImage, referenceImages.isEmpty {
+                    referenceImages = [capturedImage]
+                }
+            }
+            .onChange(of: showSignInSheet) { isPresented in
+                if !isPresented, let userId = authViewModel.user?.id {
+                    Task {
+                        await creditsViewModel.fetchBalance(userId: userId)
+                    }
+                }
+            }
+            .alert("Insufficient Credits", isPresented: $showInsufficientCreditsAlert) {
+                Button("Purchase Credits") {
+                    showPurchaseCreditsView = true
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("You need \(String(format: "$%.2f", requiredCredits)) to generate this. Your current balance is \(creditsViewModel.formattedBalance()).")
+            }
+            .sheet(isPresented: $isExamplePromptsPresented) {
+                ExamplePromptsSheet(
+                    examplePrompts: examplePrompts,
+                    examplePromptsTransform: transformPrompts,
+                    selectedPrompt: $prompt,
+                    isPresented: $isExamplePromptsPresented,
+                    title: "Example Prompts"
                 )
             }
-            ToolbarItem(placement: .navigationBarTrailing) {
-                OfflineToolbarIcon()
+            .navigationTitle("")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(Color(UIColor.systemBackground), for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Text("Image Models")
+                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [.blue, .cyan],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                }
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Done") { isPromptFocused = false }
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    CreditsToolbarView(
+                        diamondColor: .blue,
+                        borderColor: .blue,
+                        showSignInSheet: $showSignInSheet,
+                        showPurchaseCreditsView: $showPurchaseCreditsView
+                    )
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    OfflineToolbarIcon()
+                }
             }
-        }
-        .onReceive(
-            NotificationCenter.default.publisher(
-                for: UIResponder.keyboardWillShowNotification)
-        ) { notification in
-            if let keyboardFrame = notification.userInfo?[
-                UIResponder.keyboardFrameEndUserInfoKey
-            ] as? CGRect {
-                keyboardHeight = keyboardFrame.height
+    }
+
+    var body: some View {
+        bodyWithSheets
+    }
+
+    /// Second segment: keyboard, alerts, sheets. Split to reduce type-checker load.
+    private var bodyWithSheets: some View {
+        contentWithNavigation
+            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { notification in
+                if let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect {
+                    keyboardHeight = keyboardFrame.height
+                }
             }
-        }
-        .onReceive(
-            NotificationCenter.default.publisher(
-                for: UIResponder.keyboardWillHideNotification)
-        ) { _ in
-            keyboardHeight = 0
-        }
-        .alert("Prompt Required", isPresented: $showEmptyPromptAlert) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text("Please enter a prompt to generate an image.")
-        }
-        .sheet(isPresented: $showCameraSheet) {
-            SimpleCameraPicker(isPresented: $showCameraSheet) { capturedImage in
-                // Limit to 1 image - replace existing if any
-                referenceImages = [capturedImage]
+            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
+                keyboardHeight = 0
             }
-        }
-        .sheet(isPresented: $showPromptCameraSheet) {
-            SimpleCameraPicker(isPresented: $showPromptCameraSheet) {
-                capturedImage in
-                processOCR(from: capturedImage)
+            .alert("Prompt Required", isPresented: $showEmptyPromptAlert) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text("Please enter a prompt to generate an image.")
             }
-        }
-        .alert("Text Recognition", isPresented: $showOCRAlert) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(ocrAlertMessage)
-        }
+            .sheet(isPresented: $showCameraSheet) {
+                SimpleCameraPicker(isPresented: $showCameraSheet) { capturedImage in
+                    referenceImages = [capturedImage]
+                }
+            }
+            .sheet(isPresented: $showPromptCameraSheet) {
+                SimpleCameraPicker(isPresented: $showPromptCameraSheet) { capturedImage in
+                    processOCR(from: capturedImage)
+                }
+            }
+            .alert("Text Recognition", isPresented: $showOCRAlert) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(ocrAlertMessage)
+            }
+            .sheet(isPresented: $showQualitySheet) {
+                QualitySelectorSheet(
+                    selectedIndex: $selectedQualityIndex,
+                    optionLabels: ["Low", "Medium", "High"],
+                    color: .blue,
+                    isPresented: $showQualitySheet
+                )
+            }
     }
 
     // MARK: FUNCTION GENERATE
@@ -514,9 +528,27 @@ struct ImageModelDetailPage: View {
         let selectedAspectOption = imageAspectOptions[selectedAspectIndex]
         var modifiedItem = item
         modifiedItem.prompt = prompt
-        // Use resolvedAPIConfig as base, then modify aspectRatio
+        // Use resolvedAPIConfig as base, then modify aspectRatio and resolution (Nano Banana Pro)
         var config = modifiedItem.resolvedAPIConfig
         config.aspectRatio = selectedAspectOption.id
+        if isNanoBananaPro, let resolutionOptions = imageResolutionOptions, selectedResolutionIndex < resolutionOptions.count {
+            config.resolution = resolutionOptions[selectedResolutionIndex].id
+        }
+        if isGPTImage15, selectedQualityIndex < gptImage15QualityOptions.count {
+            var rw = config.runwareConfig ?? RunwareConfig(
+                imageToImageMethod: "referenceImages",
+                strength: nil,
+                additionalTaskParams: nil,
+                requiresDimensions: true,
+                imageCompressionQuality: 0.9,
+                outputFormat: nil,
+                outputType: nil,
+                outputQuality: nil,
+                openaiQuality: nil
+            )
+            rw.openaiQuality = gptImage15QualityOptions[selectedQualityIndex]
+            config.runwareConfig = rw
+        }
         modifiedItem.apiConfig = config
 
         // Pass reference image only when Image segment is selected; text-only models never use ref image.
@@ -641,6 +673,8 @@ private struct ImageTextImageModeDescriptionBlock: View {
 struct BannerSection: View {
     let item: InfoPacket
     let costString: String
+    /// When set (e.g. GPT Image 1.5 with selected quality/aspect), used instead of item.resolvedCost for the banner price.
+    var displayPrice: Decimal? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -670,7 +704,7 @@ struct BannerSection: View {
 
                     HStack(spacing: 4) {
                         PriceDisplayView(
-                            price: item.resolvedCost ?? 0,
+                            price: displayPrice ?? item.resolvedCost ?? 0,
                             showUnit: true,
                             font: .title3,
                             fontWeight: .bold,
@@ -822,6 +856,134 @@ struct PromptSection: View {
     }
 }
 
+// MARK: QUALITY (GPT Image 1.5)
+
+/// Button that shows current quality and opens a sheet to pick Low / Medium / High (like Size).
+struct QualitySection: View {
+    @Binding var selectedQualityIndex: Int
+    let qualityOptions: [String]
+    @Binding var showSheet: Bool
+
+    private var selectedLabel: String {
+        let idx = min(selectedQualityIndex, qualityOptions.count - 1)
+        guard idx >= 0 else { return "Medium" }
+        switch qualityOptions[idx] {
+        case "low": return "Low"
+        case "medium": return "Medium"
+        case "high": return "High"
+        default: return qualityOptions[idx].capitalized
+        }
+    }
+
+    var body: some View {
+        Button(action: { showSheet = true }) {
+            HStack(spacing: 12) {
+                Image(systemName: "sparkles")
+                    .font(.system(size: 18))
+                    .foregroundColor(.blue)
+                    .frame(width: 40, height: 40)
+                    .background(Color.blue.opacity(0.1))
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+
+                Text(selectedLabel)
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.primary)
+
+                Spacer()
+
+                Text("Quality")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+
+                Image(systemName: "chevron.right")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+            }
+            .padding(.vertical, 8)
+            .padding(.horizontal, 12)
+            .background(Color(UIColor.systemBackground))
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.blue.opacity(0.3), lineWidth: 1))
+        }
+        .buttonStyle(.plain)
+        .padding(.horizontal)
+    }
+}
+
+/// Sheet listing Quality options (Low, Medium, High). Row layout matches ResolutionSelectorSheet.
+struct QualitySelectorSheet: View {
+    @Binding var selectedIndex: Int
+    let optionLabels: [String]
+    let color: Color
+    @Binding var isPresented: Bool
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 12) {
+                    ForEach(optionLabels.indices, id: \.self) { idx in
+                        let label = optionLabels[idx]
+                        let isSelected = idx == selectedIndex
+                        Button {
+                            selectedIndex = idx
+                            isPresented = false
+                        } label: {
+                            HStack(spacing: 12) {
+                                ZStack {
+                                    RoundedRectangle(cornerRadius: 6)
+                                        .fill(Color.gray.opacity(0.08))
+                                    Image(systemName: "sparkles")
+                                        .font(.system(size: 16))
+                                        .foregroundColor(isSelected ? color : Color.gray.opacity(0.5))
+                                }
+                                .frame(width: 40, height: 40)
+
+                                VStack(alignment: .leading, spacing: 2) {
+                                    HStack(spacing: 6) {
+                                        Text(label)
+                                            .font(.subheadline)
+                                            .fontWeight(.semibold)
+                                            .foregroundColor(.primary)
+                                        if isSelected {
+                                            Image(systemName: "checkmark.circle.fill")
+                                                .font(.caption)
+                                                .foregroundColor(color)
+                                        }
+                                    }
+                                }
+
+                                Spacer()
+                            }
+                            .contentShape(Rectangle())
+                            .padding(.vertical, 8)
+                            .padding(.horizontal, 12)
+                            .frame(maxWidth: .infinity)
+                            .background(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(isSelected ? color : Color.gray.opacity(0.2), lineWidth: isSelected ? 2 : 1)
+                            )
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .padding(.horizontal)
+                }
+                .padding(.vertical)
+            }
+            .navigationTitle("Select Quality")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        isPresented = false
+                    }
+                }
+            }
+        }
+        .presentationDetents([.medium, .large])
+    }
+}
+
 // MARK: ASPECT RATIO
 
 struct AspectRatioSection: View {
@@ -834,6 +996,255 @@ struct AspectRatioSection: View {
             )
         }
         .padding(.horizontal)
+    }
+}
+
+// MARK: RESOLUTION (Nano Banana Pro: 1K, 2K, 4K)
+
+/// Tab row that shows selected resolution and opens a sheet to pick 1K / 2K / 4K (same style as Size tab).
+struct ResolutionSection: View {
+    let options: [ResolutionOption]
+    @Binding var selectedIndex: Int
+    @Binding var showSheet: Bool
+
+    private var selectedOption: ResolutionOption {
+        let idx = min(selectedIndex, options.count - 1)
+        guard idx >= 0, idx < options.count else { return options[0] }
+        return options[idx]
+    }
+
+    var body: some View {
+        Button(action: { showSheet = true }) {
+            HStack(spacing: 12) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 6)
+                        .fill(Color.gray.opacity(0.2))
+                    Image(systemName: "rectangle.on.rectangle")
+                        .font(.system(size: 16))
+                        .foregroundColor(.blue)
+                }
+                .frame(width: 40, height: 40)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(selectedOption.label)
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.primary)
+                    if let description = selectedOption.description {
+                        Text(description)
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
+                }
+
+                Spacer()
+
+                Text("Resolution")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+
+                Image(systemName: "chevron.right")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+            }
+            .padding(.vertical, 8)
+            .padding(.horizontal, 12)
+            .background(Color(UIColor.systemBackground))
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.blue.opacity(0.3), lineWidth: 1))
+        }
+        .buttonStyle(.plain)
+        .padding(.horizontal)
+    }
+}
+
+// MARK: PRICING TABLE (Image models with variable pricing: GPT Image 1.5, Nano Banana Pro)
+
+private struct PricingTableSectionImage: View {
+    let modelName: String
+    @State private var showPricingSheet: Bool = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Button(action: { showPricingSheet = true }) {
+                HStack {
+                    HStack(spacing: 6) {
+                        Image(systemName: "tablecells")
+                            .foregroundColor(.blue)
+                            .font(.system(size: 14))
+                        Text("Pricing Table")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundColor(.primary)
+                    }
+
+                    Spacer()
+
+                    HStack(spacing: 4) {
+                        Text("View")
+                            .font(.caption)
+                            .foregroundColor(.blue)
+                        Image(systemName: "chevron.down")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(.blue)
+                    }
+                }
+            }
+            .buttonStyle(PlainButtonStyle())
+        }
+        .padding(.horizontal, 32)
+        .sheet(isPresented: $showPricingSheet) {
+            ImagePricingTableSheetView(modelName: modelName)
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+        }
+    }
+}
+
+private struct ImagePricingTableSheetView: View {
+    let modelName: String
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: 20) {
+                    if modelName == "GPT Image 1.5" {
+                        GPTImage15PricingTable()
+                    } else if modelName == "Nano Banana Pro" {
+                        NanoBananaProPricingTable()
+                    }
+                }
+                .padding()
+            }
+            .navigationTitle("Pricing Table")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+}
+
+private struct GPTImage15PricingTable: View {
+    private let aspectRatios = ["1:1", "2:3", "3:2"]
+    private let qualities = ["Low", "Medium", "High"]
+    private let qualityIds = ["low", "medium", "high"]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 6) {
+                Image(systemName: "sparkles")
+                    .font(.system(size: 12))
+                    .foregroundColor(.blue)
+                Text("By size & quality")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.primary)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(Capsule().fill(Color.blue.opacity(0.12)))
+
+            HStack(spacing: 0) {
+                Text("Size")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundColor(.secondary)
+                    .frame(width: 44, alignment: .leading)
+                ForEach(qualities, id: \.self) { q in
+                    Text(q)
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundColor(.secondary)
+                        .frame(maxWidth: .infinity)
+                }
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 4)
+
+            VStack(spacing: 0) {
+                ForEach(Array(aspectRatios.enumerated()), id: \.element) { index, aspect in
+                    HStack(spacing: 0) {
+                        Text(aspect)
+                            .font(.system(size: 12, weight: .medium, design: .monospaced))
+                            .foregroundColor(.primary)
+                            .frame(width: 44, alignment: .leading)
+                        ForEach(qualityIds, id: \.self) { qualityId in
+                            let price = PricingManager.shared.priceForImageModel("GPT Image 1.5", aspectRatio: aspect, quality: qualityId)
+                            let text = price.map { "\(PricingManager.formatCredits(Decimal($0))) credits" } ?? "–"
+                            Text(text)
+                                .font(.system(size: 12, weight: .medium, design: .rounded))
+                                .foregroundColor(.primary)
+                                .frame(maxWidth: .infinity)
+                        }
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(index % 2 == 0 ? Color.clear : Color.blue.opacity(0.03))
+                }
+            }
+            .background(RoundedRectangle(cornerRadius: 10).fill(Color.gray.opacity(0.04)))
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.blue.opacity(0.15), lineWidth: 1))
+        }
+    }
+}
+
+private struct NanoBananaProPricingTable: View {
+    private let resolutions = [("1k", "1K"), ("2k", "2K"), ("4k", "4K")]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 6) {
+                Image(systemName: "rectangle.on.rectangle")
+                    .font(.system(size: 12))
+                    .foregroundColor(.blue)
+                Text("By resolution")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.primary)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(Capsule().fill(Color.blue.opacity(0.12)))
+
+            HStack(spacing: 0) {
+                Text("Resolution")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundColor(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                Text("Credits")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundColor(.secondary)
+                    .frame(width: 80, alignment: .trailing)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 4)
+
+            VStack(spacing: 0) {
+                ForEach(Array(resolutions.enumerated()), id: \.element.0) { index, res in
+                    let price = PricingManager.shared.priceForImageModel("Nano Banana Pro", resolution: res.0)
+                    let text = price.map { "\(PricingManager.formatCredits(Decimal($0))) credits" } ?? "–"
+                    HStack(spacing: 0) {
+                        Text(res.1)
+                            .font(.system(size: 12, weight: .medium, design: .monospaced))
+                            .foregroundColor(.primary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        Text(text)
+                            .font(.system(size: 12, weight: .medium, design: .rounded))
+                            .foregroundColor(.primary)
+                            .frame(width: 80, alignment: .trailing)
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(index % 2 == 0 ? Color.clear : Color.blue.opacity(0.03))
+                }
+            }
+            .background(RoundedRectangle(cornerRadius: 10).fill(Color.gray.opacity(0.04)))
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.blue.opacity(0.15), lineWidth: 1))
+        }
     }
 }
 

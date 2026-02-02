@@ -159,6 +159,7 @@ class ImageGenerationTask: MediaGenerationTask {
                         prompt: self.item.prompt ?? "",
                         model: apiConfig.runwareModel ?? "",
                         aspectRatio: apiConfig.aspectRatio,
+                        resolution: apiConfig.resolution,
                         isImageToImage: isImageToImage,
                         runwareConfig: apiConfig.runwareConfig
                     )
@@ -456,7 +457,7 @@ class ImageGenerationTask: MediaGenerationTask {
                 model: modelName,
                 title: item.display.title,
                 aspectRatio: apiConfig.aspectRatio,
-                resolution: nil,
+                resolution: apiConfig.resolution,
                 duration: nil,
                 cost: item.resolvedCost != nil ? NSDecimalNumber(decimal: item.resolvedCost!).doubleValue : nil,
                 type: item.type,
@@ -518,6 +519,7 @@ class ImageGenerationTask: MediaGenerationTask {
                     prompt: item.prompt ?? "",
                     model: apiConfig.runwareModel ?? "",
                     aspectRatio: apiConfig.aspectRatio,
+                    resolution: apiConfig.resolution,
                     isImageToImage: isImageToImage,
                     runwareConfig: apiConfig.runwareConfig
                 )
