@@ -497,10 +497,10 @@ class ModelConfigurationManager {
                 AspectRatioOption(id: "16:9", label: "16:9", width: 16, height: 9, platforms: ["YouTube"])
             ],
             "Nano Banana Pro": [
-                AspectRatioOption(id: "1:1", label: "1:1", width: 1, height: 1, platforms: ["Square"]),
-                AspectRatioOption(id: "4:3", label: "4:3", width: 4, height: 3, platforms: ["Landscape"]),
                 AspectRatioOption(id: "3:4", label: "3:4", width: 3, height: 4, platforms: ["Portrait"]),
                 AspectRatioOption(id: "9:16", label: "9:16", width: 9, height: 16, platforms: ["TikTok", "Reels"]),
+                AspectRatioOption(id: "1:1", label: "1:1", width: 1, height: 1, platforms: ["Square"]),
+                AspectRatioOption(id: "4:3", label: "4:3", width: 4, height: 3, platforms: ["Landscape"]),
                 AspectRatioOption(id: "16:9", label: "16:9", width: 16, height: 9, platforms: ["YouTube"])
             ],
             "Sora 2": [

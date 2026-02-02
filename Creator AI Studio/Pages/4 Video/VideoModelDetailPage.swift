@@ -254,66 +254,9 @@ struct VideoModelDetailPage: View {
         return name == "Sora 2" || name == "Seedance 1.0 Pro Fast" || name == "Wan2.6"
     }
 
-    private let examplePrompts: [String] = [
-        "A serene landscape with mountains at sunset, photorealistic, 8k quality",
-        "A futuristic cityscape with flying cars and neon lights at night",
-        "A cute fluffy kitten playing with yarn, studio lighting, professional photography",
-        "An astronaut riding a horse on the moon, cinematic lighting, detailed",
-        "A cozy coffee shop interior with warm lighting and plants, architectural photography",
-        "A majestic dragon soaring through clouds, fantasy art, highly detailed",
-        "A vintage sports car on an empty road, golden hour lighting, 4k",
-        "A magical forest with glowing mushrooms and fireflies, fantasy illustration",
-        "A modern minimalist living room with large windows, interior design photography",
-        "A colorful abstract painting with geometric shapes and vibrant colors",
-        "A medieval castle on a cliff overlooking the ocean, dramatic lighting",
-        "A cyberpunk street market with holographic signs, neon colors, ultra detailed",
-        "A peaceful zen garden with cherry blossoms and koi pond, soft focus",
-        "A powerful lion portrait with intense eyes, wildlife photography, 8k",
-        "A steampunk airship in the clouds, brass and copper details, concept art",
-        "A tropical beach at sunrise with palm trees, paradise scenery, HDR",
-        "An enchanted library with floating books and magical lights, fantasy art",
-        "A modern luxury yacht on crystal clear water, professional photography",
-        "A mysterious alien landscape with purple sky and twin moons, sci-fi art",
-        "A rustic farmhouse in autumn with falling leaves, warm colors, cozy atmosphere",
-        "A sleek modern kitchen with marble countertops, architectural digest style",
-        "A samurai warrior in traditional armor, dramatic pose, cinematic composition",
-        "A vibrant coral reef with tropical fish, underwater photography, vivid colors",
-        "A gothic cathedral interior with stained glass windows, divine lighting",
-        "A bustling Tokyo street at night with neon signs, street photography",
-        "A serene mountain lake reflection at dawn, mirror-like water, pristine nature",
-        "A futuristic robot with intricate mechanical details, sci-fi concept art",
-        "A cozy reading nook by a window on a rainy day, warm lighting",
-        "A majestic phoenix rising from flames, mythical creature, vibrant colors",
-        "A Victorian mansion in foggy weather, gothic atmosphere, haunting beauty",
-    ]
-
-    private let transformPrompts: [String] = [
-        "Transform to anime style",
-        "Transform to watercolor painting",
-        "Transform to oil painting",
-        "Transform to pencil sketch",
-        "Transform to cyberpunk style",
-        "Transform to vintage photograph",
-        "Transform to impressionist painting",
-        "Transform to pop art style",
-        "Transform to black and white",
-        "Transform to steampunk style",
-        "Transform to fantasy art style",
-        "Transform to minimalist design",
-        "Transform to 3D render",
-        "Transform to comic book style",
-        "Transform to surrealist art",
-        "Transform to abstract art",
-        "Transform to pixel art",
-        "Transform to neon art style",
-        "Transform to gothic style",
-        "Transform to kawaii style",
-        "Transform to retro 80s style",
-        "Transform to film noir style",
-        "Transform to Van Gogh painting style",
-        "Transform to Picasso cubist style",
-        "Transform to Monet impressionist style",
-    ]
+    // Prompt constants extracted to VideoPromptConstants.swift for build performance
+    private var examplePrompts: [String] { VideoPromptConstants.examplePrompts }
+    private var transformPrompts: [String] { VideoPromptConstants.transformPrompts }
 
     private var costString: String {
         NSDecimalNumber(decimal: currentPrice ?? item.resolvedCost ?? 0)
@@ -329,60 +272,46 @@ struct VideoModelDetailPage: View {
         priceString
     }
 
-    /// Computed property to get the current price based on selected aspect ratio, duration, and audio
-    /// Returns variable pricing if available, otherwise falls back to base price
-    /// This automatically updates the UI when aspect ratio, duration, or audio selections change
+    /// Computed property to get the current price based on selected aspect ratio, duration, and audio.
+    /// Returns variable pricing if available, otherwise falls back to base price.
     private var currentPrice: Decimal? {
-        guard let modelName = item.display.modelName else {
+        guard let modelName = item.display.modelName,
+              PricingManager.shared.hasVariablePricing(for: modelName) else {
             return item.resolvedCost
         }
+        return calculateVariablePrice(for: modelName) ?? item.resolvedCost
+    }
 
-        // Check if model has variable pricing
-        guard PricingManager.shared.hasVariablePricing(for: modelName) else {
-            return item.resolvedCost
-        }
-
-        // Ensure indices are valid
+    /// Calculates variable price for the given model based on current selections.
+    /// Extracted to reduce type-checker load in currentPrice computed property.
+    private func calculateVariablePrice(for modelName: String) -> Decimal? {
+        // Validate indices
         guard selectedAspectIndex < videoAspectOptions.count,
-            selectedDurationIndex < videoDurationOptions.count
-        else {
-            return item.resolvedCost
+              selectedDurationIndex < videoDurationOptions.count,
+              selectedResolutionIndex < videoResolutionOptions.count else {
+            return nil
         }
 
-        // Get selected options
-        let selectedAspectOption = videoAspectOptions[selectedAspectIndex]
-        let selectedDurationOption = videoDurationOptions[selectedDurationIndex]
+        let aspectId = videoAspectOptions[selectedAspectIndex].id
+        let duration = videoDurationOptions[selectedDurationIndex].duration
+        let resolution = videoResolutionOptions[selectedResolutionIndex].id
 
-        // Get selected resolution
-        guard selectedResolutionIndex < videoResolutionOptions.count else {
-            return item.resolvedCost
-        }
-        let selectedResolutionOption = videoResolutionOptions[
-            selectedResolutionIndex]
-        let resolution = selectedResolutionOption.id
-
-        // Get variable price for this combination
-        if var variablePrice = PricingManager.shared.variablePrice(
+        guard var price = PricingManager.shared.variablePrice(
             for: modelName,
-            aspectRatio: selectedAspectOption.id,
+            aspectRatio: aspectId,
             resolution: resolution,
-            duration: selectedDurationOption.duration
-        ) {
-            // Adjust audio pricing if applicable
-            // Base price includes audio (since audio is ON by default)
-            // Subtract audio addon when audio is turned OFF
-            if supportsAudio && !generateAudio {
-                if let audioAddon = PricingManager.shared.audioPriceAddon(
-                    for: modelName, duration: selectedDurationOption.duration)
-                {
-                    variablePrice -= audioAddon
-                }
-            }
-            return variablePrice
+            duration: duration
+        ) else {
+            return nil
         }
 
-        // Fallback to base price if variable pricing not found for this combination
-        return item.resolvedCost
+        // Subtract audio addon when audio is turned OFF (base price includes audio)
+        if supportsAudio && !generateAudio,
+           let audioAddon = PricingManager.shared.audioPriceAddon(for: modelName, duration: duration) {
+            price -= audioAddon
+        }
+
+        return price
     }
     
     // Calculate required credits as Double
@@ -849,6 +778,26 @@ struct VideoModelDetailPage: View {
         }
     }
 
+    // MARK: Helper Functions
+
+    /// Resolves which image to use for generation based on current model and input mode.
+    /// Extracted from generate() to reduce type-checker complexity from nested ternaries.
+    private func resolveImageToUse() -> UIImage? {
+        if isGoogleVeo31Fast {
+            return googleVeoInputMode == .imageToVideo ? referenceImages.first : nil
+        }
+        if isKlingAI25TurboPro {
+            return klingAI25InputMode == .imageToVideo ? referenceImages.first : nil
+        }
+        if isKlingVideo26Pro {
+            return klingVideo26InputMode == .imageToVideo ? referenceImages.first : nil
+        }
+        if showsTextImageInputModePicker {
+            return sora2InputMode == .imageToVideo ? referenceImages.first : nil
+        }
+        return referenceImages.first
+    }
+
     // MARK: FUNCTION GENERATE
 
     private func generate() {
@@ -877,13 +826,7 @@ struct VideoModelDetailPage: View {
         modifiedItem.apiConfig = config
 
         // Reference image: only in Image mode for models with segmented input; else use when available
-        let imageToUse: UIImage? = isGoogleVeo31Fast
-            ? (googleVeoInputMode == .imageToVideo ? referenceImages.first : nil)
-            : (isKlingAI25TurboPro
-                ? (klingAI25InputMode == .imageToVideo ? referenceImages.first : nil)
-                : (isKlingVideo26Pro
-                    ? (klingVideo26InputMode == .imageToVideo ? referenceImages.first : nil)
-                    : (showsTextImageInputModePicker ? (sora2InputMode == .imageToVideo ? referenceImages.first : nil) : referenceImages.first)))
+        let imageToUse = resolveImageToUse()
         let useFirstLastFrame: Bool = (isGoogleVeo31Fast && googleVeoInputMode == .frameImages)
             || (isKlingAI25TurboPro && klingAI25InputMode == .frameImages)
 

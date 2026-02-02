@@ -45,11 +45,11 @@ struct CreditsToolbarView: View {
     private var creditsButton: some View {
         Button(action: { showPurchaseBinding.wrappedValue = true }) {
             HStack(spacing: 6) {
-                Image(systemName: "diamond.fill")
-                    .font(.system(size: 10, weight: .semibold, design: .rounded))
-                    .foregroundColor(diamondColor)
+                // Image(systemName: "diamond.fill")
+                //     .font(.system(size: 10, weight: .semibold, design: .rounded))
+                //     .foregroundColor(diamondColor)
                 Text("Credits")
-                    .font(.system(size: 16, weight: .semibold, design: .rounded))
+                    .font(.system(size: 14, weight: .semibold, design: .rounded))
                     .foregroundColor(.primary)
             }
         }
@@ -58,7 +58,7 @@ struct CreditsToolbarView: View {
     var body: some View {
         Group {
             if authViewModel.user == nil {
-                creditsButton
+                // creditsButton
             } else {
                 CreditsBadge(diamondColor: diamondColor, borderColor: borderColor)
             }

@@ -137,38 +137,38 @@ struct UserImage: Codable, Identifiable {
     }
 
     // Custom decoder to handle id as either Int or String
+    // Uses helper methods from ProfileDecoderHelpers.swift to reduce type inference overhead
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
 
-        // Try to decode id as String first, then as Int
-        if let idString = try? container.decode(String.self, forKey: .id) {
-            id = idString
-        } else if let idInt = try? container.decode(Int.self, forKey: .id) {
-            id = String(idInt)
-        } else {
-            // Fallback to using image_url as id if id is missing
-            let url = try container.decode(String.self, forKey: .image_url)
-            id = url
-        }
+        // Flexible ID decoding (String or Int, fallback to image_url)
+        id = try container.decodeFlexibleId(forKey: .id, fallbackKey: .image_url)
 
+        // Required field
         image_url = try container.decode(String.self, forKey: .image_url)
-        model = try? container.decode(String.self, forKey: .model)
-        title = try? container.decode(String.self, forKey: .title)
-        cost = try? container.decode(Double.self, forKey: .cost)
-        type = try? container.decode(String.self, forKey: .type)
-        endpoint = try? container.decode(String.self, forKey: .endpoint)
-        created_at = try? container.decode(String.self, forKey: .created_at)
-        media_type = try? container.decode(String.self, forKey: .media_type)
-        file_extension = try? container.decode(String.self, forKey: .file_extension)
-        thumbnail_url = try? container.decode(String.self, forKey: .thumbnail_url)
-        prompt = try? container.decode(String.self, forKey: .prompt)
-        aspect_ratio = try? container.decode(String.self, forKey: .aspect_ratio)
-        provider = try? container.decode(String.self, forKey: .provider)
-        is_favorite = try? container.decode(Bool.self, forKey: .is_favorite) ?? false
-        status = try? container.decode(String.self, forKey: .status)
-        error_message = try? container.decode(String.self, forKey: .error_message)
-        duration = try? container.decode(Double.self, forKey: .duration)
-        resolution = try? container.decode(String.self, forKey: .resolution)
+
+        // Optional strings
+        model = container.decodeStringOrNil(forKey: .model)
+        title = container.decodeStringOrNil(forKey: .title)
+        type = container.decodeStringOrNil(forKey: .type)
+        endpoint = container.decodeStringOrNil(forKey: .endpoint)
+        created_at = container.decodeStringOrNil(forKey: .created_at)
+        media_type = container.decodeStringOrNil(forKey: .media_type)
+        file_extension = container.decodeStringOrNil(forKey: .file_extension)
+        thumbnail_url = container.decodeStringOrNil(forKey: .thumbnail_url)
+        prompt = container.decodeStringOrNil(forKey: .prompt)
+        aspect_ratio = container.decodeStringOrNil(forKey: .aspect_ratio)
+        provider = container.decodeStringOrNil(forKey: .provider)
+        status = container.decodeStringOrNil(forKey: .status)
+        error_message = container.decodeStringOrNil(forKey: .error_message)
+        resolution = container.decodeStringOrNil(forKey: .resolution)
+
+        // Optional numbers
+        cost = container.decodeDoubleOrNil(forKey: .cost)
+        duration = container.decodeDoubleOrNil(forKey: .duration)
+
+        // Optional bool with default
+        is_favorite = container.decodeBoolOrDefault(forKey: .is_favorite, default: false)
     }
 }
 
@@ -197,30 +197,28 @@ struct UserStats: Codable {
         case updated_at
     }
     
+    // Uses helper methods from ProfileDecoderHelpers.swift to reduce type inference overhead
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        
-        id = try? container.decode(String.self, forKey: .id)
+
+        // Optional string
+        id = container.decodeStringOrNil(forKey: .id)
+
+        // Required field
         user_id = try container.decode(String.self, forKey: .user_id)
         favorite_count = try container.decode(Int.self, forKey: .favorite_count)
-        // Handle image_count and video_count - default to 0 if not present (for backward compatibility)
-        image_count = (try? container.decode(Int.self, forKey: .image_count)) ?? 0
-        video_count = (try? container.decode(Int.self, forKey: .video_count)) ?? 0
-        created_at = try? container.decode(String.self, forKey: .created_at)
-        updated_at = try? container.decode(String.self, forKey: .updated_at)
-        
-        // Decode JSONB fields as dictionaries
-        if let modelCountsData = try? container.decode([String: Int].self, forKey: .model_counts) {
-            model_counts = modelCountsData
-        } else {
-            model_counts = [:]
-        }
-        
-        if let videoCountsData = try? container.decode([String: Int].self, forKey: .video_model_counts) {
-            video_model_counts = videoCountsData
-        } else {
-            video_model_counts = [:]
-        }
+
+        // Integers with defaults (backward compatibility)
+        image_count = container.decodeIntOrDefault(forKey: .image_count, default: 0)
+        video_count = container.decodeIntOrDefault(forKey: .video_count, default: 0)
+
+        // Optional timestamps
+        created_at = container.decodeStringOrNil(forKey: .created_at)
+        updated_at = container.decodeStringOrNil(forKey: .updated_at)
+
+        // JSONB dictionaries with empty fallback
+        model_counts = container.decodeDictionaryOrEmpty(forKey: .model_counts)
+        video_model_counts = container.decodeDictionaryOrEmpty(forKey: .video_model_counts)
     }
     
     // Encoding helper to convert dictionaries to JSONB
@@ -252,20 +250,20 @@ struct UserStats: Codable {
 // MARK: - MediaStats (lightweight struct for stats computation)
 
 /// Lightweight struct for computing stats - only includes fields needed for counting
-private struct MediaStats: Codable {
+private struct MediaStats: Codable, StatsComputable {
     let model: String?
     let media_type: String?
     let is_favorite: Bool?
     let status: String? // "success", "failed", or nil
-    
+
     var isImage: Bool {
         media_type == "image" || media_type == nil
     }
-    
+
     var isVideo: Bool {
         media_type == "video"
     }
-    
+
     /// Returns true if the media item is successful (not failed)
     /// Only count successful items in stats
     var isSuccess: Bool {
@@ -2081,76 +2079,39 @@ class ProfileViewModel: ObservableObject {
     /// Fallback method to compute stats directly from user_media when user_stats table doesn't exist
     private func computeStatsFromDatabase() async {
         guard let userId = userId else { return }
-        
+
         do {
             // Fetch only the fields we need for stats computation (lightweight query)
             let response: PostgrestResponse<[MediaStats]> = try await client.database
                 .from("user_media")
                 .select("model,media_type,is_favorite,status")
                 .eq("user_id", value: userId)
-                .limit(10000) // High limit to get all
+                .limit(10000)
                 .execute()
-            
+
             let allMedia = response.value ?? []
-            
-            // Compute counts (EXCLUDE failed items - only count successful ones)
-            var computedFavoriteCount = 0
-            var computedImageCount = 0
-            var computedVideoCount = 0
-            var computedModelCounts: [String: Int] = [:]
-            var computedVideoModelCounts: [String: Int] = [:]
-            var failedCount = 0 // Track failed items for logging
-            
             print("📊 Computing stats from \(allMedia.count) media items...")
-            for media in allMedia {
-                // Skip failed items - only count successful ones
-                guard media.isSuccess else {
-                    failedCount += 1
-                    continue
-                }
-                
-                // Count favorites (handle both true and nil as false)
-                if media.is_favorite == true {
-                    computedFavoriteCount += 1
-                }
-                
-                // Count images and videos
-                if media.isImage {
-                    computedImageCount += 1
-                } else if media.isVideo {
-                    computedVideoCount += 1
-                }
-                
-                // Count by model (exclude null/empty model names from model-specific counts)
-                // These are still counted in total counts, but not assigned to a model
-                if let model = media.model, !model.isEmpty, model != "(null)" {
-                    if media.isImage {
-                        computedModelCounts[model, default: 0] += 1
-                    } else if media.isVideo {
-                        computedVideoModelCounts[model, default: 0] += 1
-                    }
-                }
+
+            // Use consolidated helper function
+            let computed = computeStats(from: allMedia)
+
+            if computed.failedCount > 0 {
+                print("⚠️ Excluded \(computed.failedCount) failed item(s) from counts")
             }
-            
-            if failedCount > 0 {
-                print("⚠️ Excluded \(failedCount) failed item(s) from counts")
-            }
-            
+
             // Update published properties on main thread
             print("📊 Before update - favorites=\(self.favoriteCount), images=\(self.imageCount), videos=\(self.videoCount)")
-            print("📊 Computed - favorites=\(computedFavoriteCount), images=\(computedImageCount), videos=\(computedVideoCount)")
+            print("📊 Computed - favorites=\(computed.favoriteCount), images=\(computed.imageCount), videos=\(computed.videoCount)")
             await MainActor.run {
-                self.favoriteCount = computedFavoriteCount
-                self.imageCount = computedImageCount
-                self.videoCount = computedVideoCount
-                self.modelCounts = computedModelCounts
-                self.videoModelCounts = computedVideoModelCounts
+                self.favoriteCount = computed.favoriteCount
+                self.imageCount = computed.imageCount
+                self.videoCount = computed.videoCount
+                self.modelCounts = computed.modelCounts
+                self.videoModelCounts = computed.videoModelCounts
                 self.hasLoadedStats = true
-                
+
                 print("📊 After update - favorites=\(self.favoriteCount), images=\(self.imageCount), videos=\(self.videoCount)")
-                print("✅ Computed stats from database: \(computedFavoriteCount) favorites, \(computedImageCount) images, \(computedVideoCount) videos, \(computedModelCounts.count) image models, \(computedVideoModelCounts.count) video models")
-                print("✅ Model counts dictionary: \(computedModelCounts)")
-                print("✅ Video model counts dictionary: \(computedVideoModelCounts)")
+                print("✅ Computed stats from database: \(computed.favoriteCount) favorites, \(computed.imageCount) images, \(computed.videoCount) videos, \(computed.modelCounts.count) image models, \(computed.videoModelCounts.count) video models")
             }
         } catch {
             print("❌ Failed to compute stats from database: \(error)")
@@ -2161,9 +2122,9 @@ class ProfileViewModel: ObservableObject {
     /// This is the authoritative source of truth - use this to resync stats
     func initializeUserStats() async {
         guard let userId = userId else { return }
-        
+
         print("📊 Initializing user stats by computing counts from user_media...")
-        
+
         // Compute counts from user_media (one-time expensive operation)
         do {
             // Fetch only the fields we need for stats computation (lightweight query)
@@ -2171,70 +2132,34 @@ class ProfileViewModel: ObservableObject {
                 .from("user_media")
                 .select("model,media_type,is_favorite,status")
                 .eq("user_id", value: userId)
-                .limit(10000) // High limit to get all
+                .limit(10000)
                 .execute()
-            
+
             let allMedia = response.value ?? []
-            
             print("📊 Computing stats from \(allMedia.count) media items...")
-            
-            // Compute counts (EXCLUDE failed items - only count successful ones)
-            var favoriteCount = 0
-            var imageCount = 0
-            var videoCount = 0
-            var modelCounts: [String: Int] = [:]
-            var videoModelCounts: [String: Int] = [:]
-            var failedCount = 0 // Track failed items for logging
-            
-            for media in allMedia {
-                // Skip failed items - only count successful ones
-                guard media.isSuccess else {
-                    failedCount += 1
-                    continue
-                }
-                
-                // Count favorites (handle both true and nil as false)
-                if media.is_favorite == true {
-                    favoriteCount += 1
-                }
-                
-                // Count images and videos
-                if media.isImage {
-                    imageCount += 1
-                } else if media.isVideo {
-                    videoCount += 1
-                }
-                
-                // Count by model (exclude null/empty model names from model-specific counts)
-                // These are still counted in total image_count/video_count, but not assigned to a model
-                if let model = media.model, !model.isEmpty, model != "(null)" {
-                    if media.isImage {
-                        modelCounts[model, default: 0] += 1
-                    } else if media.isVideo {
-                        videoModelCounts[model, default: 0] += 1
-                    }
-                }
+
+            // Use consolidated helper function
+            let computed = computeStats(from: allMedia)
+
+            if computed.failedCount > 0 {
+                print("⚠️ Excluded \(computed.failedCount) failed item(s) from counts")
             }
-            
-            if failedCount > 0 {
-                print("⚠️ Excluded \(failedCount) failed item(s) from counts")
-            }
-            
-            // Create stats record (IMPORTANT: include image_count and video_count!)
+
+            // Create stats record
             let stats = UserStats(
                 id: nil,
                 user_id: userId,
-                favorite_count: favoriteCount,
-                image_count: imageCount,
-                video_count: videoCount,
-                model_counts: modelCounts,
-                video_model_counts: videoModelCounts,
+                favorite_count: computed.favoriteCount,
+                image_count: computed.imageCount,
+                video_count: computed.videoCount,
+                model_counts: computed.modelCounts,
+                video_model_counts: computed.videoModelCounts,
                 created_at: nil,
                 updated_at: nil
             )
             
-            print("📊 Stats to save: favorites=\(favoriteCount), images=\(imageCount), videos=\(videoCount)")
-            
+            print("📊 Stats to save: favorites=\(computed.favoriteCount), images=\(computed.imageCount), videos=\(computed.videoCount)")
+
             // Check if stats already exist (for re-sync)
             let existingResponse: PostgrestResponse<[UserStats]> = try await client.database
                 .from("user_stats")
@@ -2242,10 +2167,10 @@ class ProfileViewModel: ObservableObject {
                 .eq("user_id", value: userId)
                 .limit(1)
                 .execute()
-            
+
             if existingResponse.value.first != nil {
-                // Update existing stats using raw SQL via RPC to ensure it works
-                print("📊 Updating existing user stats with: favorites=\(favoriteCount), images=\(imageCount), videos=\(videoCount)")
+                // Update existing stats
+                print("📊 Updating existing user stats with: favorites=\(computed.favoriteCount), images=\(computed.imageCount), videos=\(computed.videoCount)")
                 
                 // First try using the Codable object
                 do {
@@ -2283,31 +2208,19 @@ class ProfileViewModel: ObservableObject {
             
             // Update published properties
             print("📊 Before update - favorites=\(self.favoriteCount), images=\(self.imageCount), videos=\(self.videoCount)")
-            print("📊 Computed - favorites=\(favoriteCount), images=\(imageCount), videos=\(videoCount)")
-            self.favoriteCount = favoriteCount
-            self.imageCount = imageCount
-            self.videoCount = videoCount
-            self.modelCounts = modelCounts
-            self.videoModelCounts = videoModelCounts
+            print("📊 Computed - favorites=\(computed.favoriteCount), images=\(computed.imageCount), videos=\(computed.videoCount)")
+            self.favoriteCount = computed.favoriteCount
+            self.imageCount = computed.imageCount
+            self.videoCount = computed.videoCount
+            self.modelCounts = computed.modelCounts
+            self.videoModelCounts = computed.videoModelCounts
             self.hasLoadedStats = true
-            
+
             // Cache stats for immediate availability on next load
-            let statsToCache = UserStats(
-                id: nil,
-                user_id: userId,
-                favorite_count: favoriteCount,
-                image_count: imageCount,
-                video_count: videoCount,
-                model_counts: modelCounts,
-                video_model_counts: videoModelCounts,
-                created_at: nil,
-                updated_at: nil
-            )
-            self.saveCachedStats(for: userId, stats: statsToCache)
-            
+            self.saveCachedStats(for: userId, stats: stats)
+
             print("📊 After update - favorites=\(self.favoriteCount), images=\(self.imageCount), videos=\(self.videoCount)")
-            
-            print("✅ Initialized user stats: \(favoriteCount) favorites, \(imageCount) images, \(videoCount) videos, \(modelCounts.count) image models, \(videoModelCounts.count) video models")
+            print("✅ Initialized user stats: \(computed.favoriteCount) favorites, \(computed.imageCount) images, \(computed.videoCount) videos, \(computed.modelCounts.count) image models, \(computed.videoModelCounts.count) video models")
         } catch {
             print("❌ Failed to initialize user stats: \(error)")
         }
