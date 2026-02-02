@@ -27,7 +27,7 @@ struct CreditsBalanceSheet: View {
                 } else {
                     HStack(spacing: 8) {
                         Image(systemName: "diamond.fill")
-                            .font(.system(size: 12))
+                            .font(.system(size: 10))
                             .foregroundColor(.purple)
                         Text(creditsViewModel.formattedBalance())
                             .font(.system(size: 20, weight: .bold, design: .rounded))

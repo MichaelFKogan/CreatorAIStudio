@@ -30,6 +30,9 @@ struct VideoModelsPage: View {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     CreditsToolbarView(diamondColor: .purple, borderColor: .purple)
                 }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    OfflineToolbarIcon()
+                }
             }
         }
     }
@@ -61,6 +64,9 @@ struct VideoModelsPageContent: View {
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     CreditsToolbarView(diamondColor: .purple, borderColor: .purple)
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    OfflineToolbarIcon()
                 }
             }
         }

@@ -412,7 +412,10 @@ struct PhotoFilters: View {
                 }
 
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    CreditsToolbarView(diamondColor: .teal, borderColor: .mint)
+                    CreditsToolbarView(diamondColor: .green, borderColor: .mint)
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    OfflineToolbarIcon()
                 }
             }
 

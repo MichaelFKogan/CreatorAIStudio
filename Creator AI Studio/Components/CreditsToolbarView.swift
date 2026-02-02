@@ -46,7 +46,7 @@ struct CreditsToolbarView: View {
         Button(action: { showPurchaseBinding.wrappedValue = true }) {
             HStack(spacing: 6) {
                 Image(systemName: "diamond.fill")
-                    .font(.system(size: 8, weight: .semibold, design: .rounded))
+                    .font(.system(size: 10, weight: .semibold, design: .rounded))
                     .foregroundColor(diamondColor)
                 Text("Credits")
                     .font(.system(size: 16, weight: .semibold, design: .rounded))
@@ -72,6 +72,21 @@ struct CreditsToolbarView: View {
             PurchaseCreditsView()
                 .environmentObject(authViewModel)
                 .presentationDragIndicator(.visible)
+        }
+    }
+}
+
+// MARK: - Offline toolbar icon (far right when no internet)
+
+/// Red wifi.slash icon for toolbar; show as the last trailing item when offline.
+struct OfflineToolbarIcon: View {
+    @ObservedObject private var networkMonitor = NetworkMonitor.shared
+
+    var body: some View {
+        if !networkMonitor.isConnected {
+            Image(systemName: "wifi.slash")
+                .font(.system(size: 12, weight: .medium))
+                .foregroundColor(.red)
         }
     }
 }

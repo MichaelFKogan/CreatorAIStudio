@@ -46,25 +46,8 @@ struct CreditsBadge: View {
                         .foregroundColor(.primary)
                 }
             } else if !networkMonitor.isConnected {
-                // Show red no-wifi icon when logged in but offline (instead of 0 credits)
-                Button(action: {
-                    showBalanceSheet = true
-                }) {
-                    Image(systemName: "wifi.slash")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(.red)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .background(
-                            RoundedRectangle(cornerRadius: 6)
-                                .fill(Color.secondary.opacity(0.3))
-                                .shadow(
-                                    color: Color.black.opacity(0.2), radius: 4,
-                                    x: 0, y: 2
-                                )
-                        )
-                }
-                .buttonStyle(PlainButtonStyle())
+                // Offline: show nothing here; wifi icon is shown in toolbar (OfflineToolbarIcon)
+                EmptyView()
             } else {
                 // Show credits badge when logged in and online
                 Button(action: {
@@ -72,8 +55,8 @@ struct CreditsBadge: View {
                 }) {
                     HStack(spacing: 6) {
                         Image(systemName: "diamond.fill")
-                            .font(.system(size: 10))
-                            .foregroundColor(.purple)
+                            .font(.system(size: 8))
+                            .foregroundColor(diamondColor)
                         
                         Text(
                             PricingManager.formatCredits(
@@ -89,13 +72,9 @@ struct CreditsBadge: View {
                     }
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
-                    .background(
-                        RoundedRectangle(cornerRadius: 6)
-                            .fill(Color.secondary.opacity(0.3))
-                            .shadow(
-                                color: Color.black.opacity(0.2), radius: 4,
-                                x: 0, y: 2
-                            )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .strokeBorder(borderColor, lineWidth: 1)
                     )
                 }
                 .buttonStyle(PlainButtonStyle())

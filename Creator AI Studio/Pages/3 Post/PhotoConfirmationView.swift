@@ -767,6 +767,9 @@ struct PhotoConfirmationView: View {
                 showPurchaseCreditsView: $showPurchaseCreditsView
             )
         }
+        ToolbarItem(placement: .navigationBarTrailing) {
+            OfflineToolbarIcon()
+        }
     }
 
     // MARK: - Actions

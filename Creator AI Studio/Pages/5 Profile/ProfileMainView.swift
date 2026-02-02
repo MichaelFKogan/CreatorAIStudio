@@ -90,6 +90,9 @@ struct Profile: View {
                             )
                     }
                 }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    OfflineToolbarIcon()
+                }
             }
         }
     }

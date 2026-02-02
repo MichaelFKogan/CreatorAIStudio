@@ -31,6 +31,9 @@ struct ImageModelsPage: View {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     CreditsToolbarView(diamondColor: .blue, borderColor: .blue)
                 }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    OfflineToolbarIcon()
+                }
             }
         }
     }
@@ -63,6 +66,9 @@ struct ImageModelsPageContent: View {
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     CreditsToolbarView(diamondColor: .blue, borderColor: .blue)
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    OfflineToolbarIcon()
                 }
             }
         }

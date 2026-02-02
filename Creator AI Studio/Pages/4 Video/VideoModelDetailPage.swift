@@ -729,6 +729,9 @@ struct VideoModelDetailPage: View {
                     showPurchaseCreditsView: $showPurchaseCreditsView
                 )
             }
+            ToolbarItem(placement: .navigationBarTrailing) {
+                OfflineToolbarIcon()
+            }
         }
         .onReceive(
             NotificationCenter.default.publisher(

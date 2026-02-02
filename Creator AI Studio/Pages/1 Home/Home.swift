@@ -28,9 +28,9 @@ struct Home: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 0) {
-                    // Banner Carousel
-                    BannerCarousel()
-                        .padding(.top, 8)
+                    // // Banner Carousel
+                    // BannerCarousel()
+                    //     .padding(.top, 8)
                     
                     // Rest of content can go here
                     VStack(spacing: 20) {
@@ -118,6 +118,7 @@ struct Home: View {
                         Color.clear.frame(height: 160)
                     }
                 }
+                .padding(.top, 16)
             }
             .navigationTitle("")
             .toolbar {
@@ -154,15 +155,24 @@ struct Home: View {
                                 .foregroundColor(.primary)
                             }
 
-                            NavigationLink(
-                                destination: Settings(profileViewModel: nil)
-                                    .environmentObject(authViewModel)
-                            ) {
-                                Image(systemName: "gearshape")
-                                    .font(.body)
-                                    .foregroundColor(.gray)
-                            }
+                            CreditsToolbarView(
+                                diamondColor: .purple,
+                                borderColor: .purple,
+                                showSignInSheet: $showSignInSheet
+                            )
+
+                            // NavigationLink(
+                            //     destination: Settings(profileViewModel: nil)
+                            //         .environmentObject(authViewModel)
+                            // ) {
+                            //     Image(systemName: "gearshape")
+                            //         .font(.body)
+                            //         .foregroundColor(.gray)
+                            // }
                         }
+                    }
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        OfflineToolbarIcon()
                     }
                 }
             .sheet(isPresented: $showSignInSheet) {

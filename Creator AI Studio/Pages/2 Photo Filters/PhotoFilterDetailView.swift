@@ -415,6 +415,9 @@ struct PhotoFilterDetailView: View {
                     showPurchaseCreditsView: $showPurchaseCreditsView
                 )
             }
+            ToolbarItem(placement: .navigationBarTrailing) {
+                OfflineToolbarIcon()
+            }
         }
         .sheet(isPresented: $showCamera) {
             ImagePicker(sourceType: .camera, selectedImages: $selectedImages)
