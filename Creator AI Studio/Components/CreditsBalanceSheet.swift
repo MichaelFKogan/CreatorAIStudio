@@ -10,12 +10,82 @@ import SwiftUI
 /// Small sheet presented when user taps the toolbar credit badge.
 /// Shows credit balance (available) and Get more credits button.
 struct CreditsBalanceSheet: View {
+    @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var authViewModel: AuthViewModel
     @ObservedObject private var creditsViewModel = CreditsViewModel.shared
     @State private var showPurchaseCredits: Bool = false
+    @State private var showCopiedAlert: Bool = false
+    @State private var isSigningOut: Bool = false
 
     var body: some View {
         VStack(spacing: 20) {
+            // Signed-in account (email + user ID)
+            if authViewModel.user != nil {
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack(alignment: .firstTextBaseline, spacing: 4) {
+                        HStack(alignment: .firstTextBaseline, spacing: 4) {
+                            Text("Signed in as")
+                                .font(.system(size: 12, weight: .medium, design: .rounded))
+                                .foregroundColor(.secondary)
+                            if let email = authViewModel.user?.email {
+                                Text(email)
+                                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+                                    .foregroundColor(.primary)
+                                    .lineLimit(1)
+                                    .truncationMode(.middle)
+                            }
+                        }
+                        Spacer(minLength: 8)
+                        Button {
+                            isSigningOut = true
+                            Task {
+                                await authViewModel.signOut()
+                                isSigningOut = false
+                                let generator = UINotificationFeedbackGenerator()
+                                generator.notificationOccurred(.success)
+                                dismiss()
+                            }
+                        } label: {
+                            if isSigningOut {
+                                ProgressView()
+                                    .scaleEffect(0.8)
+                            } else {
+                                Text("Sign out")
+                                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                                    .foregroundColor(.red)
+                            }
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(isSigningOut)
+                    }
+                    if let userId = authViewModel.user?.id.uuidString {
+                        HStack(spacing: 6) {
+                            Text("User ID:")
+                                .font(.system(size: 11, weight: .medium, design: .rounded))
+                                .foregroundColor(.secondary)
+                            Text(userId)
+                                .font(.system(size: 11, weight: .regular, design: .monospaced))
+                                .foregroundColor(.secondary)
+                                .lineLimit(1)
+                                .truncationMode(.middle)
+                            Button {
+                                UIPasteboard.general.string = userId
+                                showCopiedAlert = true
+                                let generator = UINotificationFeedbackGenerator()
+                                generator.notificationOccurred(.success)
+                            } label: {
+                                Image(systemName: "doc.on.doc")
+                                    .font(.system(size: 12))
+                                    .foregroundColor(.secondary)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 24)
+            }
+
             // Current Balance card
             VStack(spacing: 8) {
                 Text("Current Balance")
@@ -86,7 +156,7 @@ struct CreditsBalanceSheet: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.black)
         .preferredColorScheme(.dark)
-        .presentationDetents([.height(260), .large])
+        .presentationDetents([.height(320), .large])
         .presentationDragIndicator(.visible)
         .onAppear {
             if let userId = authViewModel.user?.id {
@@ -106,6 +176,11 @@ struct CreditsBalanceSheet: View {
             PurchaseCreditsView()
                 .environmentObject(authViewModel)
                 .presentationDragIndicator(.visible)
+        }
+        .alert("Copied", isPresented: $showCopiedAlert) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text("User ID copied to clipboard.")
         }
     }
 }

@@ -154,12 +154,13 @@ struct Home: View {
                                 .font(.system(size: 14, weight: .semibold, design: .rounded))
                                 .foregroundColor(.primary)
                             }
-
+                            else {
                             CreditsToolbarView(
                                 diamondColor: .purple,
                                 borderColor: .purple,
                                 showSignInSheet: $showSignInSheet
                             )
+                            }
 
                             // NavigationLink(
                             //     destination: Settings(profileViewModel: nil)

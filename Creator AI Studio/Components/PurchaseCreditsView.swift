@@ -31,6 +31,7 @@ struct PurchaseCreditsView: View {
     @State private var restoreMessage = ""
     @State private var showingSuccessAlert = false
     @State private var successMessage = ""
+    @State private var showSignInSheet = false
 
     var body: some View {
         NavigationStack {
@@ -55,6 +56,21 @@ struct PurchaseCreditsView: View {
                         Text("Choose a credit package")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
+
+                        if authViewModel.user == nil {
+                            HStack(spacing: 6) {
+                                Text("Log in to purchase credits")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                Button(action: { showSignInSheet = true }) {
+                                    Text("Sign In / Sign Up")
+                                        .font(.caption.weight(.semibold))
+                                        .foregroundColor(.purple)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                            .padding(.top, 2)
+                        }
                     }
                     .padding(.top, 12)
 
@@ -305,6 +321,11 @@ struct PurchaseCreditsView: View {
                     }
                 }
             }
+            .sheet(isPresented: $showSignInSheet) {
+                SignInView()
+                    .environmentObject(authViewModel)
+                    .presentationDragIndicator(.visible)
+            }
         }
     }
 
@@ -510,7 +531,7 @@ struct CreditPackageCard: View {
 
                             HStack(spacing: 6) {
                                 Image(systemName: "diamond.fill")
-                                    .font(.system(size: 12))
+                                    .font(.system(size: 10))
                                     .foregroundColor(.purple)
                                 Text(
                                     PricingManager.formatCredits(
