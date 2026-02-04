@@ -19,14 +19,7 @@ struct ReferenceImagesSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             if referenceImages.isEmpty {
-                // Square button with dashed border when no images
-                // Calculate square size to match grid items (3 columns with spacing)
-                let screenWidth = UIScreen.main.bounds.width
-                let horizontalPadding: CGFloat = 16
-                let gridSpacing: CGFloat = 12
-                let availableWidth = screenWidth - (horizontalPadding * 2)
-                let squareSize = (availableWidth - (gridSpacing * 2)) / 3
-                
+                // Square button with dashed border when no images (uses referenceImageSlotSize for a comfortable tap target)
                 HStack(alignment: .top, spacing: 12) {
                     // Add Image button on the left
                     Button {
@@ -44,7 +37,7 @@ struct ReferenceImagesSection: View {
                                 .font(.caption2)
                                 .foregroundColor(.secondary.opacity(0.8))
                         }
-                        .frame(width: squareSize, height: squareSize)
+                        .frame(width: DesignConstants.referenceImageSlotSize, height: DesignConstants.referenceImageSlotSize)
                         .background(color.opacity(0.06))
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                         .overlay(
@@ -118,8 +111,8 @@ struct ReferenceImagesSection: View {
                                 Button(action: { referenceImages.remove(at: index) }) {
                                     Image(systemName: "xmark.circle.fill")
                                         .font(.title3)
-                                        .foregroundColor(.white)
-                                        .background(Circle().fill(Color.red))
+                                        .foregroundStyle(.black)
+                                        .background(Circle().fill(.white))
                                 }
                                 .padding(6)
                             }

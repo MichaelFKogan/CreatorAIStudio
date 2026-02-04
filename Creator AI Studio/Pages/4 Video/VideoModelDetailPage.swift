@@ -2238,7 +2238,7 @@ private struct MotionControlSlotCard: View {
                     .font(.caption)
                 }
                 .frame(maxWidth: .infinity)
-                .frame(minHeight: 100)
+                .frame(minHeight: DesignConstants.mediaSlotSize)
                 .background(Color.gray.opacity(0.08))
                 .clipShape(RoundedRectangle(cornerRadius: 12))
             } else {
@@ -2259,7 +2259,7 @@ private struct MotionControlSlotCard: View {
                             .foregroundColor(.secondary.opacity(0.8))
                     }
                     .frame(maxWidth: .infinity)
-                    .frame(minHeight: 100)
+                    .frame(minHeight: DesignConstants.mediaSlotSize)
                     .background(Color.gray.opacity(0.06))
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                     .overlay(
@@ -2297,7 +2297,7 @@ private struct MotionControlImageSlotCard: View {
                 Image(uiImage: img)
                     .resizable()
                     .scaledToFill()
-                    .frame(minHeight: 100)
+                    .frame(minHeight: DesignConstants.mediaSlotSize)
                     .clipped()
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                     .overlay(alignment: .topTrailing) {
@@ -2307,8 +2307,8 @@ private struct MotionControlImageSlotCard: View {
                         } label: {
                             Image(systemName: "xmark.circle.fill")
                                 .font(.title3)
-                                .foregroundStyle(.white)
-                                .shadow(radius: 2)
+                                .foregroundStyle(.black)
+                                .background(Circle().fill(.white))
                         }
                         .padding(6)
                     }
@@ -2330,7 +2330,7 @@ private struct MotionControlImageSlotCard: View {
                             .foregroundColor(.secondary.opacity(0.8))
                     }
                     .frame(maxWidth: .infinity)
-                    .frame(minHeight: 100)
+                    .frame(minHeight: DesignConstants.mediaSlotSize)
                     .background(Color.gray.opacity(0.06))
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                     .overlay(
@@ -2549,14 +2549,15 @@ private struct FrameImageCard: View {
     @Binding var selectedPhotoItem: PhotosPickerItem?
     let color: Color
     
-    private var squareSize: CGFloat {
-        // Calculate size based on available width (50% minus padding and icon space)
+    /// 50% of row width (like Motion Control); height is a bit taller (min 120pt).
+    private var slotWidth: CGFloat {
         let screenWidth = UIScreen.main.bounds.width
         let horizontalPadding: CGFloat = 16
-        let iconWidth: CGFloat = 44 // Icon + padding on both sides
+        let iconWidth: CGFloat = 44
         let availableWidth = screenWidth - (horizontalPadding * 2) - iconWidth
         return availableWidth / 2
     }
+    private var slotHeight: CGFloat { max(slotWidth, DesignConstants.frameMinHeight) }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -2571,7 +2572,7 @@ private struct FrameImageCard: View {
                     Image(uiImage: image)
                         .resizable()
                         .aspectRatio(contentMode: .fill)
-                        .frame(width: squareSize, height: squareSize)
+                        .frame(width: slotWidth, height: slotHeight)
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                         .overlay(
                             RoundedRectangle(cornerRadius: 12)
@@ -2581,8 +2582,8 @@ private struct FrameImageCard: View {
                     Button(action: { self.image = nil }) {
                         Image(systemName: "xmark.circle.fill")
                             .font(.title3)
-                            .foregroundColor(.white)
-                            .background(Circle().fill(Color.red))
+                            .foregroundStyle(.white)
+                            .background(Circle().fill(Color.gray))
                     }
                     .padding(6)
                 }
@@ -2603,7 +2604,7 @@ private struct FrameImageCard: View {
                             .font(.caption2)
                             .foregroundColor(.secondary.opacity(0.8))
                     }
-                    .frame(width: squareSize, height: squareSize)
+                    .frame(width: slotWidth, height: slotHeight)
                     .background(color.opacity(0.06))
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                     .overlay(
