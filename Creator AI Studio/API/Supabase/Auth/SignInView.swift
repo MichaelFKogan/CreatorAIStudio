@@ -12,6 +12,8 @@ import GoogleSignIn
 
 struct SignInView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
+    @Environment(\.dismiss) private var dismiss
+    @ObservedObject private var creditsViewModel = CreditsViewModel.shared
     @State private var navigateToSignUp = false
     @State private var navigateToEmail = false
     @State private var isGoogleSigningIn = false
@@ -19,6 +21,142 @@ struct SignInView: View {
     @State private var appleSignInError: String?
 
     var body: some View {
+        Group {
+            if authViewModel.isSignedIn {
+                signInSuccessView
+            } else {
+                loginFormView
+            }
+        }
+        .alert("Sign In Error", isPresented: Binding(
+            get: { googleSignInError != nil },
+            set: { if !$0 { googleSignInError = nil } }
+        )) {
+            Button("OK", role: .cancel) {
+                googleSignInError = nil
+            }
+            if googleSignInError == "USER_NOT_FOUND" {
+                Button("Create Account") {
+                    googleSignInError = nil
+                    navigateToSignUp = true
+                }
+            }
+        } message: {
+            if googleSignInError == "NONCE_ERROR" {
+                Text("There was an authentication configuration error. Please try again or contact support if the issue persists.")
+            } else if googleSignInError == "USER_NOT_FOUND" {
+                Text("No account found with this Google email. Please create an account first.")
+            } else if let error = googleSignInError {
+                Text(error)
+            }
+        }
+        .alert("Apple Sign In Error", isPresented: Binding(
+            get: { appleSignInError != nil },
+            set: { if !$0 { appleSignInError = nil } }
+        )) {
+            Button("OK", role: .cancel) {
+                appleSignInError = nil
+            }
+        } message: {
+            if let error = appleSignInError {
+                Text(error)
+            }
+        }
+    }
+
+    // MARK: - Sign In Success View
+
+    private var signInSuccessView: some View {
+        ZStack {
+            Color.black
+                .ignoresSafeArea()
+
+            VStack(spacing: 28) {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: 64))
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [.green, .mint],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .padding(.top, 40)
+
+                Text("Signed In")
+                    .font(.system(size: 26, weight: .bold, design: .rounded))
+                    .foregroundColor(.white)
+
+                if let email = authViewModel.user?.email {
+                    Text(email)
+                        .font(.system(size: 16, weight: .medium, design: .rounded))
+                        .foregroundColor(.white.opacity(0.9))
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                        .padding(.horizontal, 32)
+                }
+
+                // Credit balance
+                VStack(spacing: 8) {
+                    Text("Credit Balance")
+                        .font(.system(size: 14, weight: .semibold, design: .rounded))
+                        .foregroundColor(.white.opacity(0.8))
+                    if creditsViewModel.isLoading {
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                            .scaleEffect(0.9)
+                    } else {
+                        Text(creditsViewModel.formattedBalance())
+                            .font(.system(size: 22, weight: .bold, design: .rounded))
+                            .foregroundColor(.white)
+                    }
+                }
+                .padding(.vertical, 16)
+                .padding(.horizontal, 24)
+                .background(
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(Color.white.opacity(0.12))
+                )
+                .padding(.horizontal, 32)
+
+                Spacer(minLength: 20)
+
+                Button(action: {
+                    let generator = UINotificationFeedbackGenerator()
+                    generator.notificationOccurred(.success)
+                    dismiss()
+                }) {
+                    Text("Continue")
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundColor(.black)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                        .background(Color.white)
+                        .cornerRadius(12)
+                }
+                .padding(.horizontal, 32)
+                .padding(.bottom, 40)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .onAppear {
+            let generator = UINotificationFeedbackGenerator()
+            generator.notificationOccurred(.success)
+            if let userId = authViewModel.user?.id {
+                Task {
+                    await creditsViewModel.fetchBalance(userId: userId)
+                }
+            }
+            // Auto-dismiss after 2.5 seconds so user can read the info
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+                dismiss()
+            }
+        }
+    }
+
+    // MARK: - Login Form View
+
+    private var loginFormView: some View {
         NavigationStack {
             ZStack {
                 // 🔹 Black background
@@ -178,40 +316,6 @@ struct SignInView: View {
                         Spacer(minLength: 100)
                     }
                 }
-            }
-        }
-        .alert("Sign In Error", isPresented: Binding(
-            get: { googleSignInError != nil },
-            set: { if !$0 { googleSignInError = nil } }
-        )) {
-            Button("OK", role: .cancel) {
-                googleSignInError = nil
-            }
-            if googleSignInError == "USER_NOT_FOUND" {
-                Button("Create Account") {
-                    googleSignInError = nil
-                    navigateToSignUp = true
-                }
-            }
-        } message: {
-            if googleSignInError == "NONCE_ERROR" {
-                Text("There was an authentication configuration error. Please try again or contact support if the issue persists.")
-            } else if googleSignInError == "USER_NOT_FOUND" {
-                Text("No account found with this Google email. Please create an account first.")
-            } else if let error = googleSignInError {
-                Text(error)
-            }
-        }
-        .alert("Apple Sign In Error", isPresented: Binding(
-            get: { appleSignInError != nil },
-            set: { if !$0 { appleSignInError = nil } }
-        )) {
-            Button("OK", role: .cancel) {
-                appleSignInError = nil
-            }
-        } message: {
-            if let error = appleSignInError {
-                Text(error)
             }
         }
     }

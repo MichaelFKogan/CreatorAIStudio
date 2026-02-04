@@ -456,11 +456,6 @@ class PricingManager {
         // Only supports 16:9, 9:16, 1:1 aspect ratios
         if let model = model, model.lowercased().contains("klingai:6@1") {
             let kling25TurboProDimensions: [String: [String: (Int, Int)]] = [
-                "720p": [
-                    "16:9": (1280, 720),
-                    "9:16": (720, 1280),
-                    "1:1": (720, 720),
-                ],
                 "1080p": [
                     "16:9": (1920, 1080),
                     "9:16": (1080, 1920),

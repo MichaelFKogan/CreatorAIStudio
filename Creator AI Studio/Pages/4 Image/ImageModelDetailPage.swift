@@ -196,19 +196,23 @@ struct ImageModelDetailPage: View {
 
     @ViewBuilder private var scrollInputModeAndRefs: some View {
         if showsTextImageInputModePicker {
-            VStack(alignment: .leading, spacing: 12) {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Input mode")
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.secondary)
-                    Picker("Input mode", selection: $imageTextInputMode) {
-                        ForEach(ImageTextInputMode.allCases, id: \.self) { mode in
-                            Text(mode.rawValue).tag(mode)
+            InputModeCard(color: .blue) {
+                ChipOptionPicker(
+                    options: [
+                        ("Text", "doc.text"),
+                        ("Image", "photo")
+                    ],
+                    selection: Binding(
+                        get: { ImageTextInputMode.allCases.firstIndex(of: imageTextInputMode) ?? 0 },
+                        set: { idx in
+                            if idx < ImageTextInputMode.allCases.count {
+                                imageTextInputMode = ImageTextInputMode.allCases[idx]
+                            }
                         }
-                    }
-                    .pickerStyle(.segmented)
-                }
+                    ),
+                    color: .blue
+                )
+            } description: {
                 ImageTextImageModeDescriptionBlock(mode: imageTextInputMode, color: .blue)
             }
             .padding(.horizontal)
@@ -573,6 +577,126 @@ struct ImageModelDetailPage: View {
 // MARK: TEXT / IMAGE MODE DESCRIPTION BLOCK (IMAGE MODELS)
 
 /// Title + icon + short instructions for image models with Text | Image input mode.
+// MARK: INPUT MODE CARD (Reusable container)
+
+/// Card container for Input mode: header with icon, chip picker, and description in a styled box.
+private struct InputModeCard<ControlContent: View, DescriptionContent: View>: View {
+    let color: Color
+    @ViewBuilder let control: () -> ControlContent
+    @ViewBuilder let description: () -> DescriptionContent
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(spacing: 8) {
+                Image(systemName: "square.stack.3d.up")
+                    .font(.system(size: 14))
+                    .foregroundColor(color)
+                Text("Input mode")
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.primary)
+            }
+
+            control()
+
+            InputModeDescriptionBox(color: color) {
+                description()
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(color.opacity(0.06))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(color.opacity(0.2), lineWidth: 1)
+        )
+    }
+}
+
+// MARK: INPUT MODE DESCRIPTION BOX
+
+/// Wraps description content in a subtle inset with left accent border.
+private struct InputModeDescriptionBox<Content: View>: View {
+    let color: Color
+    @ViewBuilder let content: () -> Content
+
+    var body: some View {
+        content()
+            .padding(.leading, 18)
+            .padding(.trailing, 12)
+            .padding(.vertical, 12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(color.opacity(0.06))
+            )
+            .overlay(alignment: .leading) {
+                RoundedRectangle(cornerRadius: 2)
+                    .fill(color.opacity(0.5))
+                    .frame(width: 3)
+                    .padding(.vertical, 10)
+                    .padding(.leading, 12)
+            }
+    }
+}
+
+// MARK: CHIP OPTION PICKER
+
+/// Horizontal row of selectable chips (label + icon). Selected chip uses filled gradient; unselected uses outline.
+private struct ChipOptionPicker: View {
+    let options: [(label: String, icon: String)]
+    @Binding var selection: Int
+    let color: Color
+
+    var body: some View {
+        HStack(spacing: 8) {
+            ForEach(Array(options.enumerated()), id: \.offset) { index, option in
+                let isSelected = selection == index
+                Button {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        selection = index
+                    }
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: option.icon)
+                            .font(.system(size: 12, weight: .medium))
+                        Text(option.label)
+                            .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    }
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 10)
+                    .background(
+                        Capsule()
+                            .fill(isSelected
+                                ? LinearGradient(
+                                    colors: [color.opacity(0.85), color.opacity(0.7)],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                                : LinearGradient(
+                                    colors: [Color.clear, Color.clear],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                    )
+                    .foregroundColor(isSelected ? .white : .primary)
+                    .overlay(
+                        Capsule()
+                            .stroke(isSelected ? Color.clear : color.opacity(0.35), lineWidth: 1.5)
+                    )
+                }
+                .buttonStyle(PlainButtonStyle())
+            }
+        }
+    }
+}
+
+// MARK: IMAGE TEXT IMAGE MODE DESCRIPTION BLOCK
+
 private struct ImageTextImageModeDescriptionBlock: View {
     let mode: ImageTextInputMode
     let color: Color

@@ -13,7 +13,7 @@ import SwiftUI
 /// Automatically fetches and updates credit balance.
 struct CreditsBadge: View {
     @EnvironmentObject var authViewModel: AuthViewModel
-    @StateObject private var creditsViewModel = CreditsViewModel()
+    @ObservedObject private var creditsViewModel = CreditsViewModel.shared
     @ObservedObject private var networkMonitor = NetworkMonitor.shared
     @State private var showSignInSheet: Bool = false
     @State private var showBalanceSheet: Bool = false
