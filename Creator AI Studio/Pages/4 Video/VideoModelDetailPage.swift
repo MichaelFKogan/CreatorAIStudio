@@ -2587,31 +2587,29 @@ private struct FrameImageCard: View {
                     .padding(6)
                 }
             } else {
-                // Show add button
+                // Show add button (styled to match Motion Control: colored dashed border, icon, Tap to add)
                 Button {
                     showActionSheet = true
                 } label: {
                     VStack(spacing: 8) {
-                        Image(systemName: "camera")
-                            .font(.system(size: 24))
-                            .foregroundColor(.gray.opacity(0.5))
-                        Text("Add Image")
+                        Image(systemName: "photo")
+                            .font(.system(size: 28))
+                            .foregroundColor(color.opacity(0.7))
+                        Text(title)
                             .font(.caption)
                             .fontWeight(.medium)
-                            .foregroundColor(.gray)
-                        // Text("(Optional)")
-                        //     .font(.caption2)
-                        //     .foregroundColor(.gray.opacity(0.7))
+                            .foregroundColor(.secondary)
+                        Text("Tap to add")
+                            .font(.caption2)
+                            .foregroundColor(.secondary.opacity(0.8))
                     }
                     .frame(width: squareSize, height: squareSize)
-                    .background(Color.gray.opacity(0.03))
+                    .background(color.opacity(0.06))
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                     .overlay(
                         RoundedRectangle(cornerRadius: 12)
-                            .strokeBorder(
-                                style: StrokeStyle(lineWidth: 3.5, dash: [6, 4])
-                            )
-                            .foregroundColor(.gray.opacity(0.4))
+                            .strokeBorder(style: StrokeStyle(lineWidth: 2, dash: [6, 4]))
+                            .foregroundColor(color.opacity(0.3))
                     )
                 }
                 .buttonStyle(PlainButtonStyle())
