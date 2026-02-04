@@ -56,7 +56,8 @@ struct CreditsBadge: View {
                     HStack(spacing: 6) {
                         Image(systemName: "diamond.fill")
                             .font(.system(size: 8))
-                            .foregroundColor(diamondColor)
+                            // .foregroundColor(diamondColor)
+                            .foregroundColor(.white)
                         
                         Text(
                             PricingManager.formatCredits(
@@ -74,7 +75,8 @@ struct CreditsBadge: View {
                     .padding(.vertical, 6)
                     .overlay(
                         RoundedRectangle(cornerRadius: 6)
-                            .strokeBorder(borderColor, lineWidth: 1)
+                            // .strokeBorder(borderColor, lineWidth: 1)
+                            .strokeBorder(.white, lineWidth: 1)
                     )
                 }
                 .buttonStyle(PlainButtonStyle())

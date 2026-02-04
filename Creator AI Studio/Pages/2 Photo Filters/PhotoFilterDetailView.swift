@@ -419,6 +419,11 @@ struct PhotoFilterDetailView: View {
                 OfflineToolbarIcon()
             }
         }
+        .sheet(isPresented: $showSignInSheet) {
+            SignInView()
+                .environmentObject(authViewModel)
+                .presentationDragIndicator(.visible)
+        }
         .sheet(isPresented: $showCamera) {
             ImagePicker(sourceType: .camera, selectedImages: $selectedImages)
         }
@@ -1132,6 +1137,12 @@ struct EnhancedCostCard: View {
                     .font(.caption)
                     .foregroundColor(.red)
                 Spacer()
+                Button(action: onBuyCredits) {
+                    Text("Buy Credit")
+                        .font(.caption)
+                        .foregroundColor(.blue)
+                }
+                .buttonStyle(.plain)
             }
         }
     }

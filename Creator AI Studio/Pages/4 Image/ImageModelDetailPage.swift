@@ -427,6 +427,11 @@ struct ImageModelDetailPage: View {
             } message: {
                 Text("Please enter a prompt to generate an image.")
             }
+            .sheet(isPresented: $showSignInSheet) {
+                SignInView()
+                    .environmentObject(authViewModel)
+                    .presentationDragIndicator(.visible)
+            }
             .sheet(isPresented: $showCameraSheet) {
                 SimpleCameraPicker(isPresented: $showCameraSheet) { capturedImage in
                     referenceImages = [capturedImage]

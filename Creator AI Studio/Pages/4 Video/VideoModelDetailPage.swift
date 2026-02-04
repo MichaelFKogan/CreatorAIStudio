@@ -683,6 +683,11 @@ struct VideoModelDetailPage: View {
         } message: {
             Text("Please enter a prompt to generate a video.")
         }
+        .sheet(isPresented: $showSignInSheet) {
+            SignInView()
+                .environmentObject(authViewModel)
+                .presentationDragIndicator(.visible)
+        }
         .sheet(isPresented: $showCameraSheet) {
             SimpleCameraPicker(isPresented: $showCameraSheet) { capturedImage in
                 // Limit to 1 image - replace existing if any

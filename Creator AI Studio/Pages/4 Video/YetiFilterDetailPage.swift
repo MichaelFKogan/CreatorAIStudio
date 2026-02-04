@@ -377,6 +377,11 @@ struct YetiFilterDetailPage: View {
         } message: {
             Text("Please enter a prompt to generate a video.")
         }
+        .sheet(isPresented: $showSignInSheet) {
+            SignInView()
+                .environmentObject(authViewModel)
+                .presentationDragIndicator(.visible)
+        }
         .alert("Insufficient Credits", isPresented: $showInsufficientCreditsAlert) {
             Button("Purchase Credits") {
                 showPurchaseCreditsView = true

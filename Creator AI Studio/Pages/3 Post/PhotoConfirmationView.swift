@@ -138,6 +138,11 @@ struct PhotoConfirmationView: View {
         }
         .background(Color(.systemBackground))
         .toolbar { toolbarContent }
+        .sheet(isPresented: $showSignInSheet) {
+            SignInView()
+                .environmentObject(authViewModel)
+                .presentationDragIndicator(.visible)
+        }
         .onAppear {
             // Note: Credit balance fetching is now handled by AuthAwareCostCard
         }

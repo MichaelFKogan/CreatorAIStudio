@@ -40,9 +40,9 @@ struct PurchaseCreditsView: View {
                     // Header
                     VStack(spacing: 12) {
                         HStack(spacing: 8) {
-                            Image(systemName: "cart.fill")
-                                .font(.system(size: 24))
-                                .foregroundColor(.purple)
+                            // Image(systemName: "star.fill")
+                            //     .font(.system(size: 24))
+                            //     .foregroundColor(.purple)
 
                             Text("Buy Credits")
                                 .font(

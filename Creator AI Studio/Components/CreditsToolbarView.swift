@@ -63,15 +63,53 @@ struct CreditsToolbarView: View {
                 CreditsBadge(diamondColor: diamondColor, borderColor: borderColor)
             }
         }
-        .sheet(isPresented: showSignInBinding) {
-            SignInView()
-                .environmentObject(authViewModel)
-                .presentationDragIndicator(.visible)
-        }
-        .sheet(isPresented: showPurchaseBinding) {
-            PurchaseCreditsView()
-                .environmentObject(authViewModel)
-                .presentationDragIndicator(.visible)
+        .modifier(CreditsToolbarSheets(
+            useExternalSignIn: externalShowSignIn != nil,
+            showSignInBinding: showSignInBinding,
+            showPurchaseBinding: showPurchaseBinding,
+            authViewModel: authViewModel
+        ))
+    }
+}
+
+// MARK: - Conditional sheets (sign-in only when no external binding; parent presents when binding provided)
+private struct CreditsToolbarSheets: ViewModifier {
+    let useExternalSignIn: Bool
+    let showSignInBinding: Binding<Bool>
+    let showPurchaseBinding: Binding<Bool>
+    let authViewModel: AuthViewModel
+
+    func body(content: Content) -> some View {
+        content
+            .sheet(isPresented: showPurchaseBinding) {
+                PurchaseCreditsView()
+                    .environmentObject(authViewModel)
+                    .presentationDragIndicator(.visible)
+            }
+            .modifier(ConditionalSignInSheet(
+                presentSignIn: !useExternalSignIn,
+                showSignInBinding: showSignInBinding,
+                authViewModel: authViewModel
+            ))
+    }
+}
+
+private struct ConditionalSignInSheet: ViewModifier {
+    let presentSignIn: Bool
+    let showSignInBinding: Binding<Bool>
+    let authViewModel: AuthViewModel
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        if presentSignIn {
+            content
+                .sheet(isPresented: showSignInBinding) {
+                    SignInView()
+                        .environmentObject(authViewModel)
+                        .presentationDragIndicator(.visible)
+                }
+        } else {
+            content
         }
     }
 }

@@ -128,7 +128,7 @@ struct CreditsBalanceSheet: View {
             } label: {
                 HStack(spacing: 8) {
                     Spacer(minLength: 0)
-                    Image(systemName: "cart.fill")
+                    Image(systemName: "star.fill")
                         .font(.system(size: 14, weight: .semibold, design: .rounded))
                         .foregroundColor(.white)
                     Text("Get More Credits")

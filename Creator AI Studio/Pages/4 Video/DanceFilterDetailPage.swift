@@ -229,6 +229,11 @@ struct DanceFilterDetailPage: View {
         } message: {
             Text("Please upload an image to transform into a dancing video.")
         }
+        .sheet(isPresented: $showSignInSheet) {
+            SignInView()
+                .environmentObject(authViewModel)
+                .presentationDragIndicator(.visible)
+        }
         .sheet(isPresented: $showCameraSheet) {
             SimpleCameraPicker(isPresented: $showCameraSheet) { capturedImage in
                 referenceImage = capturedImage
