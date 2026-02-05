@@ -366,6 +366,345 @@ struct VideoModelDetailPage: View {
         item.display.title.lowercased().contains("midjourney")
     }
 
+    // MARK: - Extracted View Builders
+
+    /// Input mode picker for Google Veo 3.1 Fast
+    @ViewBuilder
+    private var googleVeoInputModePicker: some View {
+        if isGoogleVeo31Fast {
+            InputModeCard(color: .purple) {
+                ChipOptionPicker(
+                    options: [
+                        ("Text", "doc.text"),
+                        ("Image", "photo"),
+                        ("Frames", "photo.on.rectangle.angled")
+                    ],
+                    selection: Binding(
+                        get: { GoogleVeoInputMode.allCases.firstIndex(of: googleVeoInputMode) ?? 0 },
+                        set: { idx in
+                            if idx < GoogleVeoInputMode.allCases.count {
+                                googleVeoInputMode = GoogleVeoInputMode.allCases[idx]
+                            }
+                        }
+                    ),
+                    color: .purple
+                )
+            } description: {
+                VeoModeDescriptionBlock(mode: googleVeoInputMode, color: .purple)
+            }
+            .padding(.horizontal)
+        }
+    }
+
+    /// Input mode picker for KlingAI 2.5 Turbo Pro
+    @ViewBuilder
+    private var klingAI25InputModePicker: some View {
+        if isKlingAI25TurboPro {
+            InputModeCard(color: .purple) {
+                ChipOptionPicker(
+                    options: [
+                        ("Text", "doc.text"),
+                        ("Image", "photo"),
+                        ("Frames", "photo.on.rectangle.angled")
+                    ],
+                    selection: Binding(
+                        get: { KlingAI25TurboProInputMode.allCases.firstIndex(of: klingAI25InputMode) ?? 0 },
+                        set: { idx in
+                            if idx < KlingAI25TurboProInputMode.allCases.count {
+                                klingAI25InputMode = KlingAI25TurboProInputMode.allCases[idx]
+                            }
+                        }
+                    ),
+                    color: .purple
+                )
+            } description: {
+                KlingAI25ModeDescriptionBlock(mode: klingAI25InputMode, color: .purple)
+            }
+            .padding(.horizontal)
+        }
+    }
+
+    /// Input mode picker for Kling VIDEO 2.6 Pro
+    @ViewBuilder
+    private var klingVideo26InputModePicker: some View {
+        if isKlingVideo26Pro {
+            InputModeCard(color: .purple) {
+                ChipOptionPicker(
+                    options: [
+                        ("Text", "doc.text"),
+                        ("Image", "photo"),
+                        ("Motion Control", "video.badge.waveform")
+                    ],
+                    selection: Binding(
+                        get: { KlingVideo26ProInputMode.allCases.firstIndex(of: klingVideo26InputMode) ?? 0 },
+                        set: { idx in
+                            if idx < KlingVideo26ProInputMode.allCases.count {
+                                klingVideo26InputMode = KlingVideo26ProInputMode.allCases[idx]
+                            }
+                        }
+                    ),
+                    color: .purple
+                )
+            } description: {
+                KlingVideo26ModeDescriptionBlock(mode: klingVideo26InputMode, color: .purple)
+            }
+            .padding(.horizontal)
+        }
+    }
+
+    /// Input mode picker for Sora 2, Seedance 1.0 Pro Fast, Wan2.6
+    @ViewBuilder
+    private var textImageInputModePicker: some View {
+        if showsTextImageInputModePicker {
+            InputModeCard(color: .purple) {
+                ChipOptionPicker(
+                    options: [
+                        ("Text", "doc.text"),
+                        ("Image", "photo")
+                    ],
+                    selection: Binding(
+                        get: { Sora2InputMode.allCases.firstIndex(of: sora2InputMode) ?? 0 },
+                        set: { idx in
+                            if idx < Sora2InputMode.allCases.count {
+                                sora2InputMode = Sora2InputMode.allCases[idx]
+                            }
+                        }
+                    ),
+                    color: .purple
+                )
+            } description: {
+                TextImageModeDescriptionBlock(mode: sora2InputMode, color: .purple)
+            }
+            .padding(.horizontal)
+        }
+    }
+
+    /// Whether to show reference images section based on current model and mode
+    private var shouldShowReferenceImages: Bool {
+        let isBasicImageToVideo = ModelConfigurationManager.shared.capabilities(for: item)?.contains("Image to Video") == true
+            && !supportsFrameImages
+            && !showsTextImageInputModePicker
+            && !isKlingAI25TurboPro
+            && !isKlingVideo26Pro
+
+        let isPickerModeImageToVideo = (showsTextImageInputModePicker && sora2InputMode == .imageToVideo)
+            || (isGoogleVeo31Fast && googleVeoInputMode == .imageToVideo)
+            || (isKlingAI25TurboPro && klingAI25InputMode == .imageToVideo)
+            || (isKlingVideo26Pro && klingVideo26InputMode == .imageToVideo)
+
+        return isBasicImageToVideo || isPickerModeImageToVideo
+    }
+
+    /// Whether to show frame images section
+    private var shouldShowFrameImages: Bool {
+        (isKlingAI25TurboPro && klingAI25InputMode == .frameImages)
+            || (isGoogleVeo31Fast && googleVeoInputMode == .frameImages)
+    }
+
+    /// Reference images section
+    @ViewBuilder
+    private var referenceImagesSection: some View {
+        if shouldShowReferenceImages {
+            LazyView(
+                ReferenceImagesSection(
+                    referenceImages: $referenceImages,
+                    selectedPhotoItems: $selectedPhotoItems,
+                    showCameraSheet: $showCameraSheet,
+                    color: .purple,
+                    disclaimer: item.display.modelName == "Sora 2"
+                        ? "Sora 2 does not allow reference images with people - these will be rejected. Images of cartoons, animated figures, or landscapes are allowed."
+                        : nil
+                ))
+        }
+    }
+
+    /// Frame images section for KlingAI 2.5 / Google Veo in Frames mode
+    @ViewBuilder
+    private var frameImagesSection: some View {
+        if shouldShowFrameImages {
+            LazyView(
+                FrameImagesSection(
+                    firstFrameImage: $firstFrameImage,
+                    lastFrameImage: $lastFrameImage,
+                    showFirstFrameCameraSheet: $showFirstFrameCameraSheet,
+                    showLastFrameCameraSheet: $showLastFrameCameraSheet,
+                    color: .purple,
+                    showTitleAndDescription: false
+                ))
+        }
+    }
+
+    /// Motion control section for Kling VIDEO 2.6 Pro
+    @ViewBuilder
+    private var motionControlSectionView: some View {
+        if isKlingVideo26Pro && klingVideo26InputMode == .motionControl {
+            LazyView(
+                MotionControlSection(
+                    videoItem: $motionControlVideoItem,
+                    videoURL: $motionControlVideoURL,
+                    characterImage: $motionControlCharacterImage,
+                    characterPhotoItem: $motionControlCharacterPhotoItem,
+                    videoDuration: $motionControlVideoDuration,
+                    showDurationAlert: $showVideoDurationAlert,
+                    color: .purple,
+                    showTitleAndDescription: false
+                ))
+
+            motionControlHints
+        }
+    }
+
+    /// Pricing and duration hints for motion control
+    @ViewBuilder
+    private var motionControlHints: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 4) {
+                Image(systemName: "centsign.circle")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                Text("12 credits per second of video")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                Spacer()
+            }
+            HStack(spacing: 4) {
+                Image(systemName: "info.circle")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                Text("Maximum reference video length: 30 seconds")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                Spacer()
+            }
+        }
+        .padding(.horizontal)
+        .padding(.top, -8)
+    }
+
+    /// Midjourney cost warning
+    @ViewBuilder
+    private var midjourneyWarning: some View {
+        if isMidjourney {
+            HStack(spacing: 4) {
+                Image(systemName: "info.circle")
+                    .font(.caption)
+                    .foregroundColor(.red)
+                Text("Midjourney creates 4 videos by default: Total cost: \(item.resolvedCost.credits * 4) credits")
+                    .font(.caption)
+                    .foregroundColor(.red)
+                Spacer()
+            }
+            .padding(.horizontal)
+            .padding(.bottom, -16)
+        }
+    }
+
+    /// Generate button view
+    @ViewBuilder
+    private var generateButtonView: some View {
+        LazyView(
+            GenerateButtonVideo(
+                prompt: prompt,
+                isGenerating: $isGenerating,
+                keyboardHeight: $keyboardHeight,
+                price: currentPrice,
+                selectedSize: videoAspectOptions[selectedAspectIndex].id,
+                selectedResolution: hasVariableResolution
+                    ? videoResolutionOptions[selectedResolutionIndex].id : nil,
+                selectedDuration: "\(Int(videoDurationOptions[selectedDurationIndex].duration))s",
+                isLoggedIn: authViewModel.user != nil,
+                hasCredits: hasEnoughCredits,
+                isConnected: networkMonitor.isConnected,
+                onSignInTap: { showSignInSheet = true },
+                action: generate
+            ))
+    }
+
+    /// Auth-aware cost card view
+    @ViewBuilder
+    private var costCardView: some View {
+        VStack(spacing: 12) {
+            AuthAwareCostCard(
+                price: currentPrice ?? item.resolvedCost ?? 0,
+                requiredCredits: requiredCredits,
+                primaryColor: .purple,
+                secondaryColor: .pink,
+                loginMessage: "Log in to generate a video",
+                isConnected: networkMonitor.isConnected,
+                onSignIn: { showSignInSheet = true },
+                onBuyCredits: { showPurchaseCreditsView = true }
+            )
+        }
+        .padding(.horizontal)
+        .padding(.top, -16)
+    }
+
+    /// Settings section (aspect ratio, resolution, duration)
+    @ViewBuilder
+    private var settingsSection: some View {
+        VStack {
+            LazyView(
+                AspectRatioSectionVideo(
+                    options: videoAspectOptions,
+                    selectedIndex: $selectedAspectIndex
+                ))
+
+            if hasVariableResolution {
+                LazyView(
+                    ResolutionSectionVideo(
+                        options: videoResolutionOptions,
+                        selectedIndex: $selectedResolutionIndex
+                    ))
+            }
+
+            if !isMotionControlMode {
+                LazyView(
+                    DurationSectionVideo(
+                        options: videoDurationOptions,
+                        selectedIndex: $selectedDurationIndex
+                    ))
+            }
+        }
+        .padding(.top, -16)
+    }
+
+    /// Audio toggle section
+    @ViewBuilder
+    private var audioToggleSection: some View {
+        if supportsAudio && !isMotionControlMode {
+            AudioToggleSectionVideo(
+                generateAudio: $generateAudio,
+                isRequired: audioRequired
+            )
+        }
+    }
+
+    /// Pricing table section
+    @ViewBuilder
+    private var pricingTableSection: some View {
+        if let modelName = item.display.modelName,
+           PricingManager.shared.hasVariablePricing(for: modelName) {
+            LazyView(
+                PricingTableSectionVideo(modelName: modelName)
+            )
+            Divider().padding(.horizontal)
+        }
+    }
+
+    /// Example gallery section
+    @ViewBuilder
+    private var exampleGallerySection: some View {
+        if let modelName = item.display.modelName, !modelName.isEmpty {
+            LazyView(
+                ModelGallerySection(
+                    modelName: modelName,
+                    userId: authViewModel.user?.id.uuidString.lowercased()
+                )
+            )
+            Divider().padding(.horizontal)
+        }
+    }
+
     // MARK: BODY
 
     var body: some View {
@@ -394,306 +733,31 @@ struct VideoModelDetailPage: View {
                                 isProcessingOCR: $isProcessingOCR
                             ))
 
-                        // Google Veo 3.1 Fast: mode picker (Text | Image | Frames)
-                        if isGoogleVeo31Fast {
-                            InputModeCard(color: .purple) {
-                                ChipOptionPicker(
-                                    options: [
-                                        ("Text", "doc.text"),
-                                        ("Image", "photo"),
-                                        ("Frames", "photo.on.rectangle.angled")
-                                    ],
-                                    selection: Binding(
-                                        get: { GoogleVeoInputMode.allCases.firstIndex(of: googleVeoInputMode) ?? 0 },
-                                        set: { idx in
-                                            if idx < GoogleVeoInputMode.allCases.count {
-                                                googleVeoInputMode = GoogleVeoInputMode.allCases[idx]
-                                            }
-                                        }
-                                    ),
-                                    color: .purple
-                                )
-                            } description: {
-                                VeoModeDescriptionBlock(mode: googleVeoInputMode, color: .purple)
-                            }
-                            .padding(.horizontal)
-                        }
+                        // Input mode pickers (extracted to reduce type-checker load)
+                        googleVeoInputModePicker
+                        klingAI25InputModePicker
+                        klingVideo26InputModePicker
+                        textImageInputModePicker
 
-                        // KlingAI 2.5 Turbo Pro: mode picker (Text | Image | Frames)
-                        if isKlingAI25TurboPro {
-                            InputModeCard(color: .purple) {
-                                ChipOptionPicker(
-                                    options: [
-                                        ("Text", "doc.text"),
-                                        ("Image", "photo"),
-                                        ("Frames", "photo.on.rectangle.angled")
-                                    ],
-                                    selection: Binding(
-                                        get: { KlingAI25TurboProInputMode.allCases.firstIndex(of: klingAI25InputMode) ?? 0 },
-                                        set: { idx in
-                                            if idx < KlingAI25TurboProInputMode.allCases.count {
-                                                klingAI25InputMode = KlingAI25TurboProInputMode.allCases[idx]
-                                            }
-                                        }
-                                    ),
-                                    color: .purple
-                                )
-                            } description: {
-                                KlingAI25ModeDescriptionBlock(mode: klingAI25InputMode, color: .purple)
-                            }
-                            .padding(.horizontal)
-                        }
+                        // Reference media sections (extracted to reduce type-checker load)
+                        referenceImagesSection
+                        frameImagesSection
+                        motionControlSectionView
 
-                        // Kling VIDEO 2.6 Pro: mode picker (Text | Image | Motion Control)
-                        if isKlingVideo26Pro {
-                            InputModeCard(color: .purple) {
-                                ChipOptionPicker(
-                                    options: [
-                                        ("Text", "doc.text"),
-                                        ("Image", "photo"),
-                                        ("Motion Control", "video.badge.waveform")
-                                    ],
-                                    selection: Binding(
-                                        get: { KlingVideo26ProInputMode.allCases.firstIndex(of: klingVideo26InputMode) ?? 0 },
-                                        set: { idx in
-                                            if idx < KlingVideo26ProInputMode.allCases.count {
-                                                klingVideo26InputMode = KlingVideo26ProInputMode.allCases[idx]
-                                            }
-                                        }
-                                    ),
-                                    color: .purple
-                                )
-                            } description: {
-                                KlingVideo26ModeDescriptionBlock(mode: klingVideo26InputMode, color: .purple)
-                            }
-                            .padding(.horizontal)
-                        }
+                        // Midjourney warning
+                        midjourneyWarning
 
-                        // Sora 2, Seedance 1.0 Pro Fast, Wan2.6: mode picker (Text | Image)
-                        if showsTextImageInputModePicker {
-                            InputModeCard(color: .purple) {
-                                ChipOptionPicker(
-                                    options: [
-                                        ("Text", "doc.text"),
-                                        ("Image", "photo")
-                                    ],
-                                    selection: Binding(
-                                        get: { Sora2InputMode.allCases.firstIndex(of: sora2InputMode) ?? 0 },
-                                        set: { idx in
-                                            if idx < Sora2InputMode.allCases.count {
-                                                sora2InputMode = Sora2InputMode.allCases[idx]
-                                            }
-                                        }
-                                    ),
-                                    color: .purple
-                                )
-                            } description: {
-                                TextImageModeDescriptionBlock(mode: sora2InputMode, color: .purple)
-                            }
-                            .padding(.horizontal)
-                        }
+                        // Generate button and cost card (extracted)
+                        generateButtonView
+                        costCardView
 
-                        // Reference images: Image-to-Video (not picker models) OR any picker model in Image mode only
-                        if (ModelConfigurationManager.shared.capabilities(
-                            for: item)?.contains("Image to Video") == true
-                            && !supportsFrameImages
-                            && !showsTextImageInputModePicker
-                            && !isKlingAI25TurboPro
-                            && !isKlingVideo26Pro)
-                            || (showsTextImageInputModePicker && sora2InputMode == .imageToVideo)
-                            || (isGoogleVeo31Fast && googleVeoInputMode == .imageToVideo)
-                            || (isKlingAI25TurboPro && klingAI25InputMode == .imageToVideo)
-                            || (isKlingVideo26Pro && klingVideo26InputMode == .imageToVideo)
-                        {
-                            LazyView(
-                                ReferenceImagesSection(
-                                    referenceImages: $referenceImages,
-                                    selectedPhotoItems: $selectedPhotoItems,
-                                    showCameraSheet: $showCameraSheet,
-                                    color: .purple,
-                                    disclaimer: item.display.modelName == "Sora 2"
-                                        ? "Sora 2 does not allow reference images with people - these will be rejected. Images of cartoons, animated figures, or landscapes are allowed."
-                                        : nil
-                                ))
-                        }
+                        // Settings (extracted)
+                        settingsSection
+                        audioToggleSection
 
-                        // Frame images: KlingAI 2.5 Turbo Pro or Google Veo 3.1 Fast in Frames mode
-                        if (isKlingAI25TurboPro && klingAI25InputMode == .frameImages)
-                            || (isGoogleVeo31Fast && googleVeoInputMode == .frameImages)
-                        {
-                            LazyView(
-                                FrameImagesSection(
-                                    firstFrameImage: $firstFrameImage,
-                                    lastFrameImage: $lastFrameImage,
-                                    showFirstFrameCameraSheet: $showFirstFrameCameraSheet,
-                                    showLastFrameCameraSheet: $showLastFrameCameraSheet,
-                                    color: .purple,
-                                    showTitleAndDescription: false
-                                ))
-                        }
-
-                        // Motion Control (Kling VIDEO 2.6 Pro only): character image (left) + reference video (right)
-                        if isKlingVideo26Pro && klingVideo26InputMode == .motionControl {
-                            LazyView(
-                                MotionControlSection(
-                                    videoItem: $motionControlVideoItem,
-                                    videoURL: $motionControlVideoURL,
-                                    characterImage: $motionControlCharacterImage,
-                                    characterPhotoItem: $motionControlCharacterPhotoItem,
-                                    videoDuration: $motionControlVideoDuration,
-                                    showDurationAlert: $showVideoDurationAlert,
-                                    color: .purple,
-                                    showTitleAndDescription: false
-                                ))
-
-                            // 30-second limit and pricing hint
-                            VStack(alignment: .leading, spacing: 4) {
-                                HStack(spacing: 4) {
-                                    Image(systemName: "centsign.circle")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                    Text("12 credits per second of video")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                    Spacer()
-                                }
-                                HStack(spacing: 4) {
-                                    Image(systemName: "info.circle")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                    Text("Maximum reference video length: 30 seconds")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                    Spacer()
-                                }
-                            }
-                            .padding(.horizontal)
-                            .padding(.top, -8)
-                        }
-
-                        if isMidjourney {
-                            HStack(spacing: 4) {
-                                Image(systemName: "info.circle")
-                                    .font(.caption)
-                                    .foregroundColor(.red)
-                                Text(
-                                    "Midjourney creates 4 videos by default: Total cost: \(item.resolvedCost.credits * 4) credits"
-                                )
-                                .font(.caption)
-                                .foregroundColor(.red)
-                                Spacer()
-                            }
-                            .padding(.horizontal)
-                            .padding(.bottom, -16)
-                        }
-
-                        LazyView(
-                            GenerateButtonVideo(
-                                prompt: prompt,
-                                isGenerating: $isGenerating,
-                                keyboardHeight: $keyboardHeight,
-                                price: currentPrice,
-                                selectedSize: videoAspectOptions[
-                                    selectedAspectIndex
-                                ].id,
-                                selectedResolution: hasVariableResolution
-                                    ? videoResolutionOptions[
-                                        selectedResolutionIndex
-                                    ].id : nil,
-                                selectedDuration:
-                                    "\(Int(videoDurationOptions[selectedDurationIndex].duration))s",
-                                isLoggedIn: authViewModel.user != nil,
-                                hasCredits: hasEnoughCredits,
-                                isConnected: networkMonitor.isConnected,
-                                onSignInTap: {
-                                    showSignInSheet = true
-                                },
-                                action: generate
-                            ))
-
-                        VStack(spacing: 12) {
-                            // Use the reusable AuthAwareCostCard component
-                            AuthAwareCostCard(
-                                price: currentPrice ?? item.resolvedCost ?? 0,
-                                requiredCredits: requiredCredits,
-                                primaryColor: .purple,
-                                secondaryColor: .pink,
-                                loginMessage: "Log in to generate a video",
-                                isConnected: networkMonitor.isConnected,
-                                onSignIn: {
-                                    showSignInSheet = true
-                                },
-                                onBuyCredits: {
-                                    showPurchaseCreditsView = true
-                                }
-                            )
-                        }
-                        .padding(.horizontal)
-                        .padding(.top, -16)  // Bring closer to the button above
-
-                        VStack{
-                            LazyView(
-                                AspectRatioSectionVideo(
-                                    options: videoAspectOptions,
-                                    selectedIndex: $selectedAspectIndex
-                                ))
-
-                            // Only show resolution selector for models with variable pricing
-                            if hasVariableResolution {
-                                LazyView(
-                                    ResolutionSectionVideo(
-                                        options: videoResolutionOptions,
-                                        selectedIndex: $selectedResolutionIndex
-                                    ))
-                            }
-
-                            // Hide duration selector in Motion Control mode (duration = video length)
-                            if !isMotionControlMode {
-                                LazyView(
-                                    DurationSectionVideo(
-                                        options: videoDurationOptions,
-                                        selectedIndex: $selectedDurationIndex
-                                    ))
-                            }
-                        }
-                        .padding(.top, -16)  // Bring closer to the button above
-
-                        // Divider().padding(.horizontal)
-
-                        // Audio toggle - only show for models that support audio generation (hidden in Motion Control mode)
-                        if supportsAudio && !isMotionControlMode {
-                            AudioToggleSectionVideo(
-                                generateAudio: $generateAudio,
-                                isRequired: audioRequired
-                            )
-                        }
-
-                        // Pricing Table - Only show for models with variable pricing
-                        if let modelName = item.display.modelName,
-                            PricingManager.shared.hasVariablePricing(
-                                for: modelName)
-                        {
-                            LazyView(
-                                PricingTableSectionVideo(modelName: modelName)
-                            )
-
-                            Divider().padding(.horizontal)
-                        }
-
-                        // Example Gallery Section - Only show if model name exists
-                        if let modelName = item.display.modelName,
-                            !modelName.isEmpty
-                        {
-                            LazyView(
-                                ModelGallerySection(
-                                    modelName: modelName,
-                                    userId: authViewModel.user?.id.uuidString
-                                        .lowercased()
-                                )
-                            )
-
-                            Divider().padding(.horizontal)
-                        }
+                        // Pricing and gallery (extracted)
+                        pricingTableSection
+                        exampleGallerySection
 
                         Color.clear.frame(height: 130)  // bottom padding for floating button
                     }

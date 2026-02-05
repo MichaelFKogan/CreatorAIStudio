@@ -123,29 +123,29 @@ struct CreditsBalanceSheet: View {
             .padding(.horizontal, 24)
 
             // Get more credits button (styled like PurchaseCreditsView)
+            // ZStack keeps gradient and label in one layer to avoid background "jump" during sheet present/dismiss
             Button {
                 showPurchaseCredits = true
             } label: {
-                HStack(spacing: 8) {
-                    Spacer(minLength: 0)
-                    Image(systemName: "star.fill")
-                        .font(.system(size: 14, weight: .semibold, design: .rounded))
-                        .foregroundColor(.white)
-                    Text("Get More Credits")
-                        .font(.system(size: 17, weight: .semibold, design: .rounded))
-                        .foregroundColor(.white)
-                    Spacer(minLength: 0)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 16)
-                .padding(.horizontal)
-                .background(
+                ZStack {
                     LinearGradient(
                         colors: [.purple, .pink],
                         startPoint: .leading,
                         endPoint: .trailing
                     )
-                )
+                    HStack(spacing: 8) {
+                        Spacer(minLength: 0)
+                        Image(systemName: "star.fill")
+                            .font(.system(size: 14, weight: .semibold, design: .rounded))
+                            .foregroundColor(.white)
+                        Text("Get More Credits")
+                            .font(.system(size: 17, weight: .semibold, design: .rounded))
+                            .foregroundColor(.white)
+                        Spacer(minLength: 0)
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .frame(height: 52)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
             }
             .buttonStyle(.plain)
