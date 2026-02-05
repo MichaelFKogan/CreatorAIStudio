@@ -660,8 +660,8 @@ struct VideoModelDetailPage: View {
 
                         // Divider().padding(.horizontal)
 
-                        // Audio toggle - only show for models that support audio generation
-                        if supportsAudio {
+                        // Audio toggle - only show for models that support audio generation (hidden in Motion Control mode)
+                        if supportsAudio && !isMotionControlMode {
                             AudioToggleSectionVideo(
                                 generateAudio: $generateAudio,
                                 isRequired: audioRequired
