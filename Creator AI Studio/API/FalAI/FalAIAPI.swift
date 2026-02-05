@@ -82,6 +82,8 @@ struct FalAIWebhookSubmissionResponse {
     let submitted: Bool
     /// Supabase Storage path (bucket-relative) for the uploaded reference image; store in job metadata for deletion when job completes.
     let referenceImageStoragePath: String?
+    /// Supabase Storage path (bucket-relative) for the uploaded reference video; store in job metadata for deletion when job completes.
+    let referenceVideoStoragePath: String?
 }
 
 // MARK: - Submit Video to Fal.ai with Webhook
@@ -117,13 +119,14 @@ func submitVideoToFalAIWithWebhook(
     // Extract storage path from public URL for later deletion when job completes
     let referenceImageStoragePath = storagePathFromPublicURL(imageURL, bucket: "user-generated-images")
     
-    // MARK: Step 2 - Use reference video URL directly (already in Supabase)
-    // The reference videos are already uploaded to Supabase, so we can use the URL directly
+    // MARK: Step 2 - Handle reference video URL
+    // Upload local files to Supabase; remote URLs are used directly
     let videoPublicURL: String
-    
+    var referenceVideoStoragePath: String? = nil
+
     if videoURL.scheme == "file" || videoURL.isFileURL {
-        // This shouldn't happen for reference videos, but handle it just in case
-        print("[Fal.ai] Warning: Reference video is a local file, uploading to Supabase...")
+        // Local file: upload to Supabase and track storage path for cleanup
+        print("[Fal.ai] Reference video is a local file, uploading to Supabase...")
         let videoData = try Data(contentsOf: videoURL)
         let fileExtension = videoURL.pathExtension.isEmpty ? "mp4" : videoURL.pathExtension
         videoPublicURL = try await SupabaseManager.shared.uploadVideo(
@@ -134,10 +137,13 @@ func submitVideoToFalAIWithWebhook(
             maxRetries: 2
         )
         print("[Fal.ai] Video uploaded, URL: \(videoPublicURL)")
+        // Extract storage path for later deletion when job completes
+        referenceVideoStoragePath = storagePathFromPublicURL(videoPublicURL, bucket: "user-generated-videos")
     } else {
-        // Already a remote URL (Supabase URL) - use directly
+        // Already a remote URL (e.g. Dance Filter pre-hosted asset) - use directly; do not delete on completion
         videoPublicURL = videoURL.absoluteString
         print("[Fal.ai] Using existing reference video URL: \(videoPublicURL)")
+        // referenceVideoStoragePath stays nil so we never delete shared/pre-hosted reference videos
     }
     
     // MARK: Step 3 - Build request body (without webhook - it goes in query parameter)
@@ -244,7 +250,7 @@ func submitVideoToFalAIWithWebhook(
     }
     
     print("[Fal.ai] Motion control request submitted successfully, requestId: \(extractedRequestId)")
-    return FalAIWebhookSubmissionResponse(requestId: extractedRequestId, submitted: true, referenceImageStoragePath: referenceImageStoragePath)
+    return FalAIWebhookSubmissionResponse(requestId: extractedRequestId, submitted: true, referenceImageStoragePath: referenceImageStoragePath, referenceVideoStoragePath: referenceVideoStoragePath)
 }
 
 // MARK: - Helper: Extract storage path from Supabase public URL
@@ -537,5 +543,5 @@ func submitImageToFalAIWithWebhook(
     }
     
     print("[Fal.ai] Image generation request submitted successfully, requestId: \(extractedRequestId)")
-    return FalAIWebhookSubmissionResponse(requestId: extractedRequestId, submitted: true, referenceImageStoragePath: nil)
+    return FalAIWebhookSubmissionResponse(requestId: extractedRequestId, submitted: true, referenceImageStoragePath: nil, referenceVideoStoragePath: nil)
 }

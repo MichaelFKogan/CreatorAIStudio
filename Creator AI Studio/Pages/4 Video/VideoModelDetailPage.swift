@@ -110,6 +110,8 @@ struct VideoModelDetailPage: View {
     @State private var showSignInSheet: Bool = false
     @State private var showPurchaseCreditsView: Bool = false
     @State private var showInsufficientCreditsAlert: Bool = false
+    @State private var showMotionControlMissingAlert: Bool = false
+    @State private var motionControlMissingAlertMessage: String = ""
     @ObservedObject private var creditsViewModel = CreditsViewModel.shared
     @ObservedObject private var networkMonitor = NetworkMonitor.shared
 
@@ -790,6 +792,11 @@ struct VideoModelDetailPage: View {
         } message: {
             Text("You need \(String(format: "$%.2f", requiredCredits)) to generate this. Your current balance is \(creditsViewModel.formattedBalance()).")
         }
+        .alert("Motion Control Required", isPresented: $showMotionControlMissingAlert) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(motionControlMissingAlertMessage)
+        }
         .onChange(of: item.display.modelName) { newModelName in
             // Reset indices when model changes (if item changes)
             selectedAspectIndex = 0
@@ -823,6 +830,10 @@ struct VideoModelDetailPage: View {
             return klingAI25InputMode == .imageToVideo ? referenceImages.first : nil
         }
         if isKlingVideo26Pro {
+            // Motion Control uses motionControlCharacterImage, Image mode uses referenceImages
+            if klingVideo26InputMode == .motionControl {
+                return motionControlCharacterImage
+            }
             return klingVideo26InputMode == .imageToVideo ? referenceImages.first : nil
         }
         if showsTextImageInputModePicker {
@@ -839,7 +850,24 @@ struct VideoModelDetailPage: View {
             return
         }
         guard !isGenerating else { return }
-        
+
+        // Check Motion Control validation for Kling VIDEO 2.6 Pro
+        if isKlingVideo26Pro && klingVideo26InputMode == .motionControl {
+            if motionControlCharacterImage == nil && motionControlVideoURL == nil {
+                motionControlMissingAlertMessage = "Please add both a character image and a reference video for Motion Control."
+                showMotionControlMissingAlert = true
+                return
+            } else if motionControlCharacterImage == nil {
+                motionControlMissingAlertMessage = "Please add a character image for Motion Control."
+                showMotionControlMissingAlert = true
+                return
+            } else if motionControlVideoURL == nil {
+                motionControlMissingAlertMessage = "Please add a reference video for Motion Control."
+                showMotionControlMissingAlert = true
+                return
+            }
+        }
+
         // Check credits before generating
         if !hasEnoughCredits {
             showInsufficientCreditsAlert = true
@@ -862,6 +890,10 @@ struct VideoModelDetailPage: View {
         let imageToUse = resolveImageToUse()
         let useFirstLastFrame: Bool = (isGoogleVeo31Fast && googleVeoInputMode == .frameImages)
             || (isKlingAI25TurboPro && klingAI25InputMode == .frameImages)
+
+        // Motion Control: determine if we need to pass a reference video URL
+        let isMotionControlMode = isKlingVideo26Pro && klingVideo26InputMode == .motionControl
+        let referenceVideoForGeneration: URL? = isMotionControlMode ? motionControlVideoURL : nil
 
         guard let userId = authViewModel.user?.id.uuidString.lowercased(),
             !userId.isEmpty
@@ -886,6 +918,7 @@ struct VideoModelDetailPage: View {
                 generateAudio: supportsAudio ? generateAudio : nil,
                 firstFrameImage: useFirstLastFrame ? firstFrameImage : nil,
                 lastFrameImage: useFirstLastFrame ? lastFrameImage : nil,
+                referenceVideoURL: referenceVideoForGeneration,
                 onVideoGenerated: { _ in
                     isGenerating = false
                 },
@@ -896,7 +929,7 @@ struct VideoModelDetailPage: View {
                     )
                 }
             )
-            
+
             // Refresh pending credits after starting generation
             if let userIdUUID = authViewModel.user?.id {
                 await creditsViewModel.fetchBalance(userId: userIdUUID)
@@ -1097,7 +1130,7 @@ private struct PromptSectionVideo: View {
                                     .scaleEffect(0.8)
                             } else {
                                 Image(systemName: "viewfinder")
-                                    .font(.system(size: 22))
+                                    .font(.system(size: 18))
                                     .foregroundColor(.purple)
                             }
                         }

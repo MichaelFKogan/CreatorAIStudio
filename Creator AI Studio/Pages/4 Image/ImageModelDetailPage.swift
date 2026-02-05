@@ -910,7 +910,7 @@ struct PromptSection: View {
                                     .scaleEffect(0.8)
                             } else {
                                 Image(systemName: "viewfinder")
-                                    .font(.system(size: 22))
+                                    .font(.system(size: 18))
                                     .foregroundColor(.blue)
                             }
                         }
@@ -979,7 +979,7 @@ struct FullPromptSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Close") {
+                    Button("Done") {
                         dismissKeyboard()
                         isPresented = false
                     }

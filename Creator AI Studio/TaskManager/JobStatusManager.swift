@@ -686,16 +686,26 @@ class JobStatusManager: ObservableObject {
     private func handleJobFailure(_ job: PendingJob) async {
         print("[JobStatusManager] ❌ Job failed: \(job.task_id), status: \(job.status)")
         
-        // Delete Fal.ai motion control reference image from storage (one-time input, no longer needed)
-        if job.jobProvider == .falai, let path = job.metadata?.referenceImageStoragePath, !path.isEmpty {
-            do {
-                try await SupabaseManager.shared.deleteStorageFile(bucket: "user-generated-images", path: path)
-                print("[JobStatusManager] 🗑️ Deleted Fal.ai motion control reference image (failed job): \(path)")
-            } catch {
-                print("[JobStatusManager] ⚠️ Failed to delete reference image (non-fatal): \(error)")
+        // Delete Fal.ai motion control reference files from storage (one-time inputs, no longer needed)
+        if job.jobProvider == .falai {
+            if let path = job.metadata?.referenceImageStoragePath, !path.isEmpty {
+                do {
+                    try await SupabaseManager.shared.deleteStorageFile(bucket: "user-generated-images", path: path)
+                    print("[JobStatusManager] 🗑️ Deleted Fal.ai motion control reference image (failed job): \(path)")
+                } catch {
+                    print("[JobStatusManager] ⚠️ Failed to delete reference image (non-fatal): \(error)")
+                }
+            }
+            if let path = job.metadata?.referenceVideoStoragePath, !path.isEmpty {
+                do {
+                    try await SupabaseManager.shared.deleteStorageFile(bucket: "user-generated-videos", path: path)
+                    print("[JobStatusManager] 🗑️ Deleted Fal.ai motion control reference video (failed job): \(path)")
+                } catch {
+                    print("[JobStatusManager] ⚠️ Failed to delete reference video (non-fatal): \(error)")
+                }
             }
         }
-        
+
         // Get error message from job or use default
         let errorMessage = job.error_message ?? "Generation failed"
         
@@ -807,8 +817,9 @@ class JobStatusManager: ObservableObject {
         print("[JobStatusManager] 🚀 Processing completed job: \(job.task_id)")
         print("[JobStatusManager] 🔗 Result URL: \(resultUrl)")
 
-        // Capture Fal.ai motion control reference image path before we delete the job (so we can delete the temp file)
+        // Capture Fal.ai motion control reference paths before we delete the job (so we can delete the temp files)
         let falaiReferenceImagePath = job.metadata?.referenceImageStoragePath
+        let falaiReferenceVideoPath = job.metadata?.referenceVideoStoragePath
         let isFalaiJob = job.jobProvider == .falai
 
         // IMPORTANT: Delete the pending job FIRST to prevent duplicate processing
@@ -824,13 +835,23 @@ class JobStatusManager: ObservableObject {
         // Remove from local pendingJobs list
         pendingJobs.removeAll { $0.task_id == job.task_id }
 
-        // Delete Fal.ai motion control reference image from storage (one-time input, no longer needed)
-        if isFalaiJob, let path = falaiReferenceImagePath, !path.isEmpty {
-            do {
-                try await SupabaseManager.shared.deleteStorageFile(bucket: "user-generated-images", path: path)
-                print("[JobStatusManager] 🗑️ Deleted Fal.ai motion control reference image: \(path)")
-            } catch {
-                print("[JobStatusManager] ⚠️ Failed to delete reference image (non-fatal): \(error)")
+        // Delete Fal.ai motion control reference files from storage (one-time inputs, no longer needed)
+        if isFalaiJob {
+            if let path = falaiReferenceImagePath, !path.isEmpty {
+                do {
+                    try await SupabaseManager.shared.deleteStorageFile(bucket: "user-generated-images", path: path)
+                    print("[JobStatusManager] 🗑️ Deleted Fal.ai motion control reference image: \(path)")
+                } catch {
+                    print("[JobStatusManager] ⚠️ Failed to delete reference image (non-fatal): \(error)")
+                }
+            }
+            if let path = falaiReferenceVideoPath, !path.isEmpty {
+                do {
+                    try await SupabaseManager.shared.deleteStorageFile(bucket: "user-generated-videos", path: path)
+                    print("[JobStatusManager] 🗑️ Deleted Fal.ai motion control reference video: \(path)")
+                } catch {
+                    print("[JobStatusManager] ⚠️ Failed to delete reference video (non-fatal): \(error)")
+                }
             }
         }
 

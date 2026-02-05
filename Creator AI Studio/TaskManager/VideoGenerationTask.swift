@@ -467,15 +467,18 @@ class VideoGenerationTask: MediaGenerationTask {
             // Generate a unique task ID
             let taskId = UUID().uuidString
             
-            // Check if this is a motion control request for Video Filters (use fal.ai)
+            // Check if this is a motion control request (Video Filters or Kling VIDEO 2.6 Pro)
             let hasReferenceVideo = referenceVideoURL != nil
             let isVideoFilter = item.type == "Video Filter"
-            let isMotionControl = hasReferenceVideo && isVideoFilter
-            
+            let isKlingVideo26Pro = item.display.modelName == "Kling VIDEO 2.6 Pro"
+            let isMotionControl = hasReferenceVideo && (isVideoFilter || isKlingVideo26Pro)
+
             print("[VideoGenerationTask] 🔍 Motion Control Detection:")
             print("[VideoGenerationTask]   - hasReferenceVideo: \(hasReferenceVideo)")
             print("[VideoGenerationTask]   - item.type: '\(item.type ?? "nil")'")
+            print("[VideoGenerationTask]   - modelName: '\(item.display.modelName ?? "nil")'")
             print("[VideoGenerationTask]   - isVideoFilter: \(isVideoFilter)")
+            print("[VideoGenerationTask]   - isKlingVideo26Pro: \(isKlingVideo26Pro)")
             print("[VideoGenerationTask]   - isMotionControl: \(isMotionControl)")
             if let refURL = referenceVideoURL {
                 print("[VideoGenerationTask]   - referenceVideoURL: \(refURL.absoluteString)")
@@ -534,8 +537,8 @@ class VideoGenerationTask: MediaGenerationTask {
                 )
                 print("✅ Fal.ai motion control request submitted")
                 
-                // Store reference image storage path in job metadata so we can delete it when job completes
-                if let path = falResponse.referenceImageStoragePath {
+                // Store reference image and video storage paths in job metadata so we can delete them when job completes
+                if falResponse.referenceImageStoragePath != nil || falResponse.referenceVideoStoragePath != nil {
                     let updatedMetadata = PendingJobMetadata(
                         prompt: jobMetadata.prompt,
                         model: jobMetadata.model,
@@ -547,7 +550,8 @@ class VideoGenerationTask: MediaGenerationTask {
                         type: jobMetadata.type,
                         endpoint: jobMetadata.endpoint,
                         falRequestId: jobMetadata.falRequestId,
-                        referenceImageStoragePath: path
+                        referenceImageStoragePath: falResponse.referenceImageStoragePath,
+                        referenceVideoStoragePath: falResponse.referenceVideoStoragePath
                     )
                     try? await SupabaseManager.shared.updatePendingJobMetadata(taskId: taskId, metadata: updatedMetadata)
                 }

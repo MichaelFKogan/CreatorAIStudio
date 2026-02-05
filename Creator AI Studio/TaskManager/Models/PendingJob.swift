@@ -144,7 +144,9 @@ struct PendingJobMetadata: Codable {
     let falRequestId: String?  // Fal.ai request_id (different from our task_id)
     /// Supabase Storage path (bucket-relative) for Fal.ai motion control reference image; deleted when job completes.
     let referenceImageStoragePath: String?
-    
+    /// Supabase Storage path (bucket-relative) for Fal.ai motion control reference video; deleted when job completes.
+    let referenceVideoStoragePath: String?
+
     enum CodingKeys: String, CodingKey {
         case prompt
         case model
@@ -157,8 +159,9 @@ struct PendingJobMetadata: Codable {
         case endpoint
         case falRequestId = "fal_request_id"
         case referenceImageStoragePath = "reference_image_storage_path"
+        case referenceVideoStoragePath = "reference_video_storage_path"
     }
-    
+
     init(
         prompt: String? = nil,
         model: String? = nil,
@@ -170,7 +173,8 @@ struct PendingJobMetadata: Codable {
         type: String? = nil,
         endpoint: String? = nil,
         falRequestId: String? = nil,
-        referenceImageStoragePath: String? = nil
+        referenceImageStoragePath: String? = nil,
+        referenceVideoStoragePath: String? = nil
     ) {
         self.prompt = prompt
         self.model = model
@@ -183,6 +187,7 @@ struct PendingJobMetadata: Codable {
         self.endpoint = endpoint
         self.falRequestId = falRequestId
         self.referenceImageStoragePath = referenceImageStoragePath
+        self.referenceVideoStoragePath = referenceVideoStoragePath
     }
 }
 
