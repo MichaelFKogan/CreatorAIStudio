@@ -37,8 +37,7 @@ struct ReferenceImagesSection: View {
                                 .font(.caption2)
                                 .foregroundColor(.secondary.opacity(0.8))
                         }
-                        .frame(maxWidth: .infinity)
-                        .frame(minHeight: DesignConstants.frameStyleSlotHeight)
+                        .frame(width: DesignConstants.frameStyleSlotWidth, height: DesignConstants.frameStyleSlotHeight)
                         .background(color.opacity(0.06))
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                         .overlay(

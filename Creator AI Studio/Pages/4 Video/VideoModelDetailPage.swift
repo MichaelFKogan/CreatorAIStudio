@@ -97,6 +97,7 @@ struct VideoModelDetailPage: View {
     @State private var showEmptyPromptAlert: Bool = false
     @State private var showCameraSheet: Bool = false
     @State private var showPromptCameraSheet: Bool = false
+    @State private var showFullPromptSheet: Bool = false
     @State private var isProcessingOCR: Bool = false
     @State private var showOCRAlert: Bool = false
     @State private var ocrAlertMessage: String = ""
@@ -354,6 +355,7 @@ struct VideoModelDetailPage: View {
                                 onCameraTap: {
                                     showPromptCameraSheet = true
                                 },
+                                onExpandTap: { showFullPromptSheet = true },
                                 isProcessingOCR: $isProcessingOCR
                             ))
 
@@ -727,6 +729,15 @@ struct VideoModelDetailPage: View {
                 processOCR(from: capturedImage)
             }
         }
+        .sheet(isPresented: $showFullPromptSheet) {
+            FullPromptSheet(
+                prompt: $prompt,
+                isPresented: $showFullPromptSheet,
+                placeholder: "Describe the video you want to generate...",
+                accentColor: .purple
+            )
+            .presentationDragIndicator(.visible)
+        }
         .alert("Text Recognition", isPresented: $showOCRAlert) {
             Button("OK", role: .cancel) {}
         } message: {
@@ -1018,6 +1029,7 @@ private struct PromptSectionVideo: View {
     let examplePrompts: [String]
     let examplePromptsTransform: [String]
     let onCameraTap: () -> Void
+    let onExpandTap: () -> Void
     @Binding var isProcessingOCR: Bool
 
     var body: some View {
@@ -1027,38 +1039,12 @@ private struct PromptSectionVideo: View {
                 Text("Prompt").font(.subheadline).fontWeight(.semibold)
                     .foregroundColor(.secondary)
                 Spacer()
-
-                HStack(spacing: 8) {
-                    VStack(alignment: .leading) {
-                        Text("Take a photo of a prompt")
-                            .font(.caption2)
-                            .foregroundColor(.secondary.opacity(0.7))
-                            .multilineTextAlignment(.trailing)
-                            .fixedSize(horizontal: false, vertical: true)
-                        Text("to add it to the box below")
-                            .font(.caption2)
-                            .foregroundColor(.secondary.opacity(0.7))
-                            .multilineTextAlignment(.trailing)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-
-                    Button(action: onCameraTap) {
-                        Group {
-                            if isProcessingOCR {
-                                ProgressView()
-                                    .progressViewStyle(
-                                        CircularProgressViewStyle(tint: .purple)
-                                    )
-                                    .scaleEffect(0.8)
-                            } else {
-                                Image(systemName: "viewfinder")
-                                    .font(.system(size: 22))
-                                    .foregroundColor(.purple)
-                            }
-                        }
-                    }
-                    .buttonStyle(PlainButtonStyle())
+                Button(action: onExpandTap) {
+                    Image(systemName: "arrow.up.left.and.arrow.down.right")
+                        .font(.system(size: 20))
+                        .foregroundColor(.purple)
                 }
+                .buttonStyle(PlainButtonStyle())
             }
 
             TextEditor(text: $prompt)
@@ -1089,6 +1075,36 @@ private struct PromptSectionVideo: View {
                 }
                 .animation(.easeInOut(duration: 0.2), value: isFocused)
                 .focused($isFocused)
+
+            HStack {
+                Spacer(minLength: 0)
+                HStack(spacing: 6) {
+                    VStack(alignment: .trailing, spacing: 2) {
+                        Text("Take a photo of a prompt")
+                            .font(.caption2)
+                            .foregroundColor(.secondary.opacity(0.7))
+                        Text("to add it to the box above")
+                            .font(.caption2)
+                            .foregroundColor(.secondary.opacity(0.7))
+                    }
+                    Button(action: onCameraTap) {
+                        Group {
+                            if isProcessingOCR {
+                                ProgressView()
+                                    .progressViewStyle(
+                                        CircularProgressViewStyle(tint: .purple)
+                                    )
+                                    .scaleEffect(0.8)
+                            } else {
+                                Image(systemName: "viewfinder")
+                                    .font(.system(size: 22))
+                                    .foregroundColor(.purple)
+                            }
+                        }
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                }
+            }
 
             // Button(action: { isExamplePromptsPresented = true }) {
             //     HStack {
@@ -2296,8 +2312,8 @@ private struct MotionControlImageSlotCard: View {
             if let img = image {
                 Image(uiImage: img)
                     .resizable()
-                    .scaledToFill()
-                    .frame(minHeight: DesignConstants.frameStyleSlotHeight)
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: DesignConstants.frameStyleSlotWidth, height: DesignConstants.frameStyleSlotHeight)
                     .clipped()
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                     .overlay(alignment: .topTrailing) {
@@ -2329,8 +2345,7 @@ private struct MotionControlImageSlotCard: View {
                             .font(.caption2)
                             .foregroundColor(.secondary.opacity(0.8))
                     }
-                    .frame(maxWidth: .infinity)
-                    .frame(minHeight: DesignConstants.frameStyleSlotHeight)
+                    .frame(width: DesignConstants.frameStyleSlotWidth, height: DesignConstants.frameStyleSlotHeight)
                     .background(Color.gray.opacity(0.06))
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                     .overlay(

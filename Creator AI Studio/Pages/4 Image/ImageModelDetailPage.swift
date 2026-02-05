@@ -40,6 +40,7 @@ struct ImageModelDetailPage: View {
     @State private var showEmptyPromptAlert: Bool = false
     @State private var showCameraSheet: Bool = false
     @State private var showPromptCameraSheet: Bool = false
+    @State private var showFullPromptSheet: Bool = false
     @State private var isProcessingOCR: Bool = false
     @State private var showOCRAlert: Bool = false
     @State private var ocrAlertMessage: String = ""
@@ -190,6 +191,7 @@ struct ImageModelDetailPage: View {
                 examplePrompts: examplePrompts,
                 examplePromptsTransform: transformPrompts,
                 onCameraTap: { showPromptCameraSheet = true },
+                onExpandTap: { showFullPromptSheet = true },
                 isProcessingOCR: $isProcessingOCR
             ))
     }
@@ -445,6 +447,15 @@ struct ImageModelDetailPage: View {
                 SimpleCameraPicker(isPresented: $showPromptCameraSheet) { capturedImage in
                     processOCR(from: capturedImage)
                 }
+            }
+            .sheet(isPresented: $showFullPromptSheet) {
+                FullPromptSheet(
+                    prompt: $prompt,
+                    isPresented: $showFullPromptSheet,
+                    placeholder: "Describe the image you want to generate...",
+                    accentColor: .blue
+                )
+                .presentationDragIndicator(.visible)
             }
             .alert("Text Recognition", isPresented: $showOCRAlert) {
                 Button("OK", role: .cancel) {}
@@ -831,6 +842,7 @@ struct PromptSection: View {
     let examplePrompts: [String]
     let examplePromptsTransform: [String]
     let onCameraTap: () -> Void
+    let onExpandTap: () -> Void
     @Binding var isProcessingOCR: Bool
 
     var body: some View {
@@ -840,38 +852,12 @@ struct PromptSection: View {
                 Text("Prompt").font(.subheadline).fontWeight(.semibold)
                     .foregroundColor(.secondary)
                 Spacer()
-
-                HStack(spacing: 8) {
-                    VStack(alignment: .leading) {
-                        Text("Take a photo of a prompt")
-                            .font(.caption2)
-                            .foregroundColor(.secondary.opacity(0.7))
-                            .multilineTextAlignment(.trailing)
-                            .fixedSize(horizontal: false, vertical: true)
-                        Text("to add it to the box below")
-                            .font(.caption2)
-                            .foregroundColor(.secondary.opacity(0.7))
-                            .multilineTextAlignment(.trailing)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-
-                    Button(action: onCameraTap) {
-                        Group {
-                            if isProcessingOCR {
-                                ProgressView()
-                                    .progressViewStyle(
-                                        CircularProgressViewStyle(tint: .blue)
-                                    )
-                                    .scaleEffect(0.8)
-                            } else {
-                                Image(systemName: "viewfinder")
-                                    .font(.system(size: 22))
-                                    .foregroundColor(.blue)
-                            }
-                        }
-                    }
-                    .buttonStyle(PlainButtonStyle())
+                Button(action: onExpandTap) {
+                    Image(systemName: "arrow.up.left.and.arrow.down.right")
+                        .font(.system(size: 20))
+                        .foregroundColor(.blue)
                 }
+                .buttonStyle(PlainButtonStyle())
             }
 
             TextEditor(text: $prompt)
@@ -903,6 +889,36 @@ struct PromptSection: View {
                 .animation(.easeInOut(duration: 0.2), value: isFocused)
                 .focused($isFocused)
 
+            HStack {
+                Spacer(minLength: 0)
+                HStack(spacing: 6) {
+                    VStack(alignment: .trailing, spacing: 2) {
+                        Text("Take a photo of a prompt")
+                            .font(.caption2)
+                            .foregroundColor(.secondary.opacity(0.7))
+                        Text("to add it to the box above")
+                            .font(.caption2)
+                            .foregroundColor(.secondary.opacity(0.7))
+                    }
+                    Button(action: onCameraTap) {
+                        Group {
+                            if isProcessingOCR {
+                                ProgressView()
+                                    .progressViewStyle(
+                                        CircularProgressViewStyle(tint: .blue)
+                                    )
+                                    .scaleEffect(0.8)
+                            } else {
+                                Image(systemName: "viewfinder")
+                                    .font(.system(size: 22))
+                                    .foregroundColor(.blue)
+                            }
+                        }
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                }
+            }
+
             Button(action: { isExamplePromptsPresented = true }) {
                 HStack {
                     Image(systemName: "lightbulb.fill").foregroundColor(.blue)
@@ -925,6 +941,57 @@ struct PromptSection: View {
             .buttonStyle(PlainButtonStyle())
         }
         .padding(.horizontal)
+    }
+}
+
+// MARK: FULL PROMPT SHEET (shared with VideoModelDetailPage)
+
+struct FullPromptSheet: View {
+    @Binding var prompt: String
+    @Binding var isPresented: Bool
+    let placeholder: String
+    let accentColor: Color
+    @FocusState private var isFocused: Bool
+
+    var body: some View {
+        NavigationStack {
+            TextEditor(text: $prompt)
+                .font(.system(size: 17))
+                .padding()
+                .scrollContentBackground(.hidden)
+                .background(Color.gray.opacity(0.08))
+                .overlay(alignment: .topLeading) {
+                    if prompt.isEmpty {
+                        Text(placeholder)
+                            .font(.system(size: 17))
+                            .foregroundColor(.gray.opacity(0.5))
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 24)
+                            .allowsHitTesting(false)
+                    }
+                }
+                .focused($isFocused)
+            .navigationTitle("Prompt")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") {
+                        isFocused = false
+                        isPresented = false
+                    }
+                    .fontWeight(.semibold)
+                    .foregroundColor(accentColor)
+                }
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Done") {
+                        isFocused = false
+                    }
+                    .fontWeight(.semibold)
+                    .foregroundColor(accentColor)
+                }
+            }
+        }
     }
 }
 
