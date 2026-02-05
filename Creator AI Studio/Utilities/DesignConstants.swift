@@ -4,6 +4,7 @@
 //
 
 import SwiftUI
+import UIKit
 
 /// Shared layout constants for consistent media input UI (reference image, frame, motion control slots).
 enum DesignConstants {
@@ -13,4 +14,14 @@ enum DesignConstants {
     static let frameMinHeight: CGFloat = 120
     /// Size for the reference image "Add Image" square (Video and Image detail pages).
     static let referenceImageSlotSize: CGFloat = 130
+
+    /// Width of one slot when two slots share a row (Frames, Motion Control). Same formula as FrameImageCard.
+    static var frameStyleSlotWidth: CGFloat {
+        let w = UIScreen.main.bounds.width
+        return (w - 32 - 44) / 2
+    }
+    /// Height for frame-style and motion-control slots; matches Frames boxes so all input-mode image boxes are consistent.
+    static var frameStyleSlotHeight: CGFloat {
+        max(frameStyleSlotWidth, frameMinHeight)
+    }
 }

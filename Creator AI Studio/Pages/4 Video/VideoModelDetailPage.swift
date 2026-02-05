@@ -2081,7 +2081,7 @@ private struct InputModeDescriptionBox<Content: View>: View {
 
     var body: some View {
         content()
-            .padding(.leading, 18)
+            .padding(.leading, 22)
             .padding(.trailing, 12)
             .padding(.vertical, 12)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -2238,7 +2238,7 @@ private struct MotionControlSlotCard: View {
                     .font(.caption)
                 }
                 .frame(maxWidth: .infinity)
-                .frame(minHeight: DesignConstants.mediaSlotSize)
+                .frame(minHeight: DesignConstants.frameStyleSlotHeight)
                 .background(Color.gray.opacity(0.08))
                 .clipShape(RoundedRectangle(cornerRadius: 12))
             } else {
@@ -2259,7 +2259,7 @@ private struct MotionControlSlotCard: View {
                             .foregroundColor(.secondary.opacity(0.8))
                     }
                     .frame(maxWidth: .infinity)
-                    .frame(minHeight: DesignConstants.mediaSlotSize)
+                    .frame(minHeight: DesignConstants.frameStyleSlotHeight)
                     .background(Color.gray.opacity(0.06))
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                     .overlay(
@@ -2297,7 +2297,7 @@ private struct MotionControlImageSlotCard: View {
                 Image(uiImage: img)
                     .resizable()
                     .scaledToFill()
-                    .frame(minHeight: DesignConstants.mediaSlotSize)
+                    .frame(minHeight: DesignConstants.frameStyleSlotHeight)
                     .clipped()
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                     .overlay(alignment: .topTrailing) {
@@ -2330,7 +2330,7 @@ private struct MotionControlImageSlotCard: View {
                             .foregroundColor(.secondary.opacity(0.8))
                     }
                     .frame(maxWidth: .infinity)
-                    .frame(minHeight: DesignConstants.mediaSlotSize)
+                    .frame(minHeight: DesignConstants.frameStyleSlotHeight)
                     .background(Color.gray.opacity(0.06))
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                     .overlay(
@@ -2549,16 +2549,6 @@ private struct FrameImageCard: View {
     @Binding var selectedPhotoItem: PhotosPickerItem?
     let color: Color
     
-    /// 50% of row width (like Motion Control); height is a bit taller (min 120pt).
-    private var slotWidth: CGFloat {
-        let screenWidth = UIScreen.main.bounds.width
-        let horizontalPadding: CGFloat = 16
-        let iconWidth: CGFloat = 44
-        let availableWidth = screenWidth - (horizontalPadding * 2) - iconWidth
-        return availableWidth / 2
-    }
-    private var slotHeight: CGFloat { max(slotWidth, DesignConstants.frameMinHeight) }
-    
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
@@ -2572,7 +2562,7 @@ private struct FrameImageCard: View {
                     Image(uiImage: image)
                         .resizable()
                         .aspectRatio(contentMode: .fill)
-                        .frame(width: slotWidth, height: slotHeight)
+                        .frame(width: DesignConstants.frameStyleSlotWidth, height: DesignConstants.frameStyleSlotHeight)
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                         .overlay(
                             RoundedRectangle(cornerRadius: 12)
@@ -2604,7 +2594,7 @@ private struct FrameImageCard: View {
                             .font(.caption2)
                             .foregroundColor(.secondary.opacity(0.8))
                     }
-                    .frame(width: slotWidth, height: slotHeight)
+                    .frame(width: DesignConstants.frameStyleSlotWidth, height: DesignConstants.frameStyleSlotHeight)
                     .background(color.opacity(0.06))
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                     .overlay(

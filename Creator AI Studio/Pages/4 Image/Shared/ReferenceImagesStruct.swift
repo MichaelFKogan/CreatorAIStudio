@@ -19,7 +19,7 @@ struct ReferenceImagesSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             if referenceImages.isEmpty {
-                // Square button with dashed border when no images (uses referenceImageSlotSize for a comfortable tap target)
+                // Dashed-border box sized to match Frames / Motion Control slots (same as KlingAI 2.5 Turbo Pro Frames)
                 HStack(alignment: .top, spacing: 12) {
                     // Add Image button on the left
                     Button {
@@ -37,7 +37,8 @@ struct ReferenceImagesSection: View {
                                 .font(.caption2)
                                 .foregroundColor(.secondary.opacity(0.8))
                         }
-                        .frame(width: DesignConstants.referenceImageSlotSize, height: DesignConstants.referenceImageSlotSize)
+                        .frame(maxWidth: .infinity)
+                        .frame(minHeight: DesignConstants.frameStyleSlotHeight)
                         .background(color.opacity(0.06))
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                         .overlay(

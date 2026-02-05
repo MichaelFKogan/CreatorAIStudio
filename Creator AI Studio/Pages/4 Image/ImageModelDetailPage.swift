@@ -625,7 +625,7 @@ private struct InputModeDescriptionBox<Content: View>: View {
 
     var body: some View {
         content()
-            .padding(.leading, 18)
+            .padding(.leading, 22)
             .padding(.trailing, 12)
             .padding(.vertical, 12)
             .frame(maxWidth: .infinity, alignment: .leading)
