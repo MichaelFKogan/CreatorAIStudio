@@ -233,6 +233,20 @@ class SupabaseManager {
         throw lastError ?? NSError(domain: "StorageError", code: -1, userInfo: [NSLocalizedDescriptionKey: "Video upload failed"])
     }
 
+    // MARK: DELETE STORAGE FILE
+
+    /// Deletes a file from Supabase Storage by bucket and path.
+    /// Used to remove temporary reference images (e.g. Fal.ai motion control) after job completion.
+    /// - Parameters:
+    ///   - bucket: Storage bucket name (e.g. "user-generated-images")
+    ///   - path: Bucket-relative path (e.g. "userId/timestamp_falai-motion-control.jpg")
+    func deleteStorageFile(bucket: String, path: String) async throws {
+        _ = try await client.storage
+            .from(bucket)
+            .remove(paths: [path])
+        print("[Storage] Deleted \(bucket)/\(path)")
+    }
+
     // // MARK: DOWN/UPLOAD VIDEO
 
     // /// Downloads a video from a URL and uploads it to Supabase Storage

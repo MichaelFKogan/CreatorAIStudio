@@ -1041,7 +1041,7 @@ private struct PromptSectionVideo: View {
                 Spacer()
                 Button(action: onExpandTap) {
                     Image(systemName: "arrow.up.left.and.arrow.down.right")
-                        .font(.system(size: 20))
+                        .font(.system(size: 16))
                         .foregroundColor(.purple)
                 }
                 .buttonStyle(PlainButtonStyle())
@@ -1050,7 +1050,7 @@ private struct PromptSectionVideo: View {
             TextEditor(text: $prompt)
                 .font(.system(size: 15))
                 .opacity(0.9)
-                .frame(minHeight: 140)
+                .frame(height: 140)
                 .padding(8)
                 .background(Color.gray.opacity(0.1))
                 .clipShape(RoundedRectangle(cornerRadius: 12))

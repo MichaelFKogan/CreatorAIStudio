@@ -523,7 +523,7 @@ class VideoGenerationTask: MediaGenerationTask {
                 // Use fal.ai for motion control
                 print("[VideoGenerationTask] Using fal.ai for motion control")
                 
-                let _ = try await submitVideoToFalAIWithWebhook(
+                let falResponse = try await submitVideoToFalAIWithWebhook(
                     requestId: taskId,
                     image: image,
                     videoURL: refVideoURL,
@@ -533,6 +533,24 @@ class VideoGenerationTask: MediaGenerationTask {
                     userId: userId
                 )
                 print("✅ Fal.ai motion control request submitted")
+                
+                // Store reference image storage path in job metadata so we can delete it when job completes
+                if let path = falResponse.referenceImageStoragePath {
+                    let updatedMetadata = PendingJobMetadata(
+                        prompt: jobMetadata.prompt,
+                        model: jobMetadata.model,
+                        title: jobMetadata.title,
+                        aspectRatio: jobMetadata.aspectRatio,
+                        resolution: jobMetadata.resolution,
+                        duration: jobMetadata.duration,
+                        cost: jobMetadata.cost,
+                        type: jobMetadata.type,
+                        endpoint: jobMetadata.endpoint,
+                        falRequestId: jobMetadata.falRequestId,
+                        referenceImageStoragePath: path
+                    )
+                    try? await SupabaseManager.shared.updatePendingJobMetadata(taskId: taskId, metadata: updatedMetadata)
+                }
             } else {
                 // Use Runware for standard video generation
                 guard let runwareModel = apiConfig.runwareModel else {

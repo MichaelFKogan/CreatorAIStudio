@@ -80,6 +80,8 @@ struct FalAIQueueResponse: Decodable {
 struct FalAIWebhookSubmissionResponse {
     let requestId: String
     let submitted: Bool
+    /// Supabase Storage path (bucket-relative) for the uploaded reference image; store in job metadata for deletion when job completes.
+    let referenceImageStoragePath: String?
 }
 
 // MARK: - Submit Video to Fal.ai with Webhook
@@ -111,6 +113,9 @@ func submitVideoToFalAIWithWebhook(
         maxRetries: 2
     )
     print("[Fal.ai] Image uploaded, URL: \(imageURL)")
+    
+    // Extract storage path from public URL for later deletion when job completes
+    let referenceImageStoragePath = storagePathFromPublicURL(imageURL, bucket: "user-generated-images")
     
     // MARK: Step 2 - Use reference video URL directly (already in Supabase)
     // The reference videos are already uploaded to Supabase, so we can use the URL directly
@@ -239,7 +244,27 @@ func submitVideoToFalAIWithWebhook(
     }
     
     print("[Fal.ai] Motion control request submitted successfully, requestId: \(extractedRequestId)")
-    return FalAIWebhookSubmissionResponse(requestId: extractedRequestId, submitted: true)
+    return FalAIWebhookSubmissionResponse(requestId: extractedRequestId, submitted: true, referenceImageStoragePath: referenceImageStoragePath)
+}
+
+// MARK: - Helper: Extract storage path from Supabase public URL
+
+/// Extracts the bucket-relative storage path from a Supabase Storage public URL.
+/// Used to delete temporary reference images after Fal.ai motion control job completes.
+private func storagePathFromPublicURL(_ publicURL: String, bucket: String) -> String? {
+    let bucketPath = "/\(bucket)/"
+    if let range = publicURL.range(of: bucketPath) {
+        var path = String(publicURL[range.upperBound...])
+        if let decoded = path.removingPercentEncoding { path = decoded }
+        return path.isEmpty ? nil : path
+    }
+    if let url = URL(string: publicURL),
+       let idx = url.pathComponents.firstIndex(of: bucket),
+       idx + 1 < url.pathComponents.count {
+        let pathComponents = url.pathComponents.dropFirst(idx + 1)
+        return pathComponents.joined(separator: "/").removingPercentEncoding
+    }
+    return nil
 }
 
 // MARK: - Helper: Convert Aspect Ratio to Fal.ai Image Size
@@ -512,5 +537,5 @@ func submitImageToFalAIWithWebhook(
     }
     
     print("[Fal.ai] Image generation request submitted successfully, requestId: \(extractedRequestId)")
-    return FalAIWebhookSubmissionResponse(requestId: extractedRequestId, submitted: true)
+    return FalAIWebhookSubmissionResponse(requestId: extractedRequestId, submitted: true, referenceImageStoragePath: nil)
 }

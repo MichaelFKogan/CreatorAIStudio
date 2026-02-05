@@ -18,8 +18,8 @@ struct ImageGridView: View {
     var selectedVideoModel: String? = nil
 
     @State private var favoritedImageIds: Set<String> = []
-    @State private var showAddToCollectionSheet = false
-    @State private var imageIdForCollectionSheet: String? = nil
+    /// Use Identifiable item so sheet content is built with a valid id (avoids empty sheet on first open).
+    @State private var collectionSheetItem: CollectionSheetItem? = nil
 
     private var gridColumns: [GridItem] {
         Array(repeating: GridItem(.flexible(), spacing: spacing), count: 3)
@@ -60,15 +60,16 @@ struct ImageGridView: View {
             .padding(.horizontal, 4)
         }
         .frame(height: calculateHeight(for: placeholders.count + validUserImages.count))
-        .sheet(isPresented: $showAddToCollectionSheet, onDismiss: { imageIdForCollectionSheet = nil }) {
-            Group {
-                if let vm = viewModel, let id = imageIdForCollectionSheet {
-                    AddToPlaylistSheet(
-                        viewModel: vm,
-                        imageIds: [id],
-                        isPresented: $showAddToCollectionSheet
+        .sheet(item: $collectionSheetItem, onDismiss: { collectionSheetItem = nil }) { item in
+            if let vm = viewModel {
+                AddToPlaylistSheet(
+                    viewModel: vm,
+                    imageIds: [item.imageId],
+                    isPresented: Binding(
+                        get: { collectionSheetItem != nil },
+                        set: { if !$0 { collectionSheetItem = nil } }
                     )
-                }
+                )
             }
         }
     }
@@ -314,8 +315,7 @@ struct ImageGridView: View {
                         .frame(width: 32, height: 32)
                         .contentShape(Rectangle())
                         .onTapGesture {
-                            imageIdForCollectionSheet = userImage.id
-                            showAddToCollectionSheet = true
+                            collectionSheetItem = CollectionSheetItem(imageId: userImage.id)
                         }
                     
                     Image(systemName: "rectangle.stack.badge.plus")
@@ -388,5 +388,11 @@ struct ImageGridView: View {
         let itemWidth = (UIScreen.main.bounds.width - 16) / 3
         return CGFloat(rows) * (itemWidth * 1.4 + spacing)
     }
+}
+
+// MARK: - Add to Collection sheet item (Identifiable for sheet(item:))
+private struct CollectionSheetItem: Identifiable {
+    let imageId: String
+    var id: String { imageId }
 }
 

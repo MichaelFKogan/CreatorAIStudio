@@ -854,7 +854,7 @@ struct PromptSection: View {
                 Spacer()
                 Button(action: onExpandTap) {
                     Image(systemName: "arrow.up.left.and.arrow.down.right")
-                        .font(.system(size: 20))
+                        .font(.system(size: 16))
                         .foregroundColor(.blue)
                 }
                 .buttonStyle(PlainButtonStyle())
@@ -863,7 +863,7 @@ struct PromptSection: View {
             TextEditor(text: $prompt)
                 .font(.system(size: 15))
                 .opacity(0.9)
-                .frame(minHeight: 140)
+                .frame(height: 140)
                 .padding(8)
                 .background(Color.gray.opacity(0.1))
                 .clipShape(RoundedRectangle(cornerRadius: 12))
@@ -953,6 +953,10 @@ struct FullPromptSheet: View {
     let accentColor: Color
     @FocusState private var isFocused: Bool
 
+    private func dismissKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+    }
+
     var body: some View {
         NavigationStack {
             TextEditor(text: $prompt)
@@ -975,17 +979,9 @@ struct FullPromptSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") {
-                        isFocused = false
+                    Button("Close") {
+                        dismissKeyboard()
                         isPresented = false
-                    }
-                    .fontWeight(.semibold)
-                    .foregroundColor(accentColor)
-                }
-                ToolbarItemGroup(placement: .keyboard) {
-                    Spacer()
-                    Button("Done") {
-                        isFocused = false
                     }
                     .fontWeight(.semibold)
                     .foregroundColor(accentColor)
