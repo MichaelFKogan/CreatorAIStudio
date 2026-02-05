@@ -150,7 +150,7 @@ private let wan25PreviewImageSizes: [String: (Int, Int)] = [
 ]
 
 // KlingAI 2.5 Turbo Pro (klingai:6@1) - Video model dimensions
-// Supported: 1920x1080, 1080x1920, 1080x1080 (1080p) or 1280x720, 720x1280, 720x720 (720p)
+// Supported: 1920x1080, 1080x1920, 1080x1080 (1080p only; no 720p)
 // Only supports 16:9, 9:16, 1:1 aspect ratios
 private let klingai25TurboProSizes: [String: (Int, Int)] = [
     "16:9": (1920, 1080),    // 1080p landscape

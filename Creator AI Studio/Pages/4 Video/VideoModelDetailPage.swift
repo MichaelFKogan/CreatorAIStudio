@@ -5,6 +5,7 @@
 //  Created by Mike K on 11/25/25.
 //
 
+import AVFoundation
 import Kingfisher
 import PhotosUI
 import SwiftUI
@@ -91,6 +92,8 @@ struct VideoModelDetailPage: View {
     @State fileprivate var motionControlVideoURL: URL? = nil
     @State fileprivate var motionControlCharacterImage: UIImage? = nil
     @State fileprivate var motionControlCharacterPhotoItem: PhotosPickerItem? = nil
+    @State fileprivate var motionControlVideoDuration: Double? = nil
+    @State private var showVideoDurationAlert: Bool = false
 
     @State private var isGenerating: Bool = false
     @State private var keyboardHeight: CGFloat = 0
@@ -112,6 +115,7 @@ struct VideoModelDetailPage: View {
     @State private var showInsufficientCreditsAlert: Bool = false
     @State private var showMotionControlMissingAlert: Bool = false
     @State private var motionControlMissingAlertMessage: String = ""
+    @State private var showImageRequiredAlert: Bool = false
     @ObservedObject private var creditsViewModel = CreditsViewModel.shared
     @ObservedObject private var networkMonitor = NetworkMonitor.shared
 
@@ -246,6 +250,19 @@ struct VideoModelDetailPage: View {
         item.display.modelName == "Kling VIDEO 2.6 Pro"
     }
 
+    /// True when in Motion Control mode for Kling VIDEO 2.6 Pro
+    private var isMotionControlMode: Bool {
+        isKlingVideo26Pro && klingVideo26InputMode == .motionControl
+    }
+
+    /// True when the user has selected Image-to-Video mode (any model that offers Text | Image or Text | Image | Motion).
+    private var isInImageToVideoMode: Bool {
+        (showsTextImageInputModePicker && sora2InputMode == .imageToVideo)
+            || (isGoogleVeo31Fast && googleVeoInputMode == .imageToVideo)
+            || (isKlingAI25TurboPro && klingAI25InputMode == .imageToVideo)
+            || (isKlingVideo26Pro && klingVideo26InputMode == .imageToVideo)
+    }
+
     /// True when the current model is Sora 2 (used for disclaimer and duration default).
     private var isSora2: Bool {
         item.display.modelName == "Sora 2"
@@ -267,7 +284,11 @@ struct VideoModelDetailPage: View {
     }
 
     private var priceString: String {
-        PricingManager.formatPrice(currentPrice ?? item.resolvedCost ?? 0)
+        // Motion Control mode: show per-second rate when no video selected
+        if isMotionControlMode && motionControlVideoDuration == nil {
+            return "12 credits/sec"
+        }
+        return PricingManager.formatPrice(currentPrice ?? item.resolvedCost ?? 0)
     }
 
     private var creditsString: String {
@@ -277,9 +298,21 @@ struct VideoModelDetailPage: View {
 
     /// Computed property to get the current price based on selected aspect ratio, duration, and audio.
     /// Returns variable pricing if available, otherwise falls back to base price.
+    /// For Motion Control mode, uses per-second pricing based on reference video duration.
     private var currentPrice: Decimal? {
-        guard let modelName = item.display.modelName,
-              PricingManager.shared.hasVariablePricing(for: modelName) else {
+        guard let modelName = item.display.modelName else {
+            return item.resolvedCost
+        }
+
+        // Motion Control mode uses per-second pricing based on video duration
+        if isMotionControlMode {
+            if let videoDuration = motionControlVideoDuration {
+                return PricingManager.shared.motionControlPrice(for: modelName, durationSeconds: videoDuration)
+            }
+            return nil  // No video selected - triggers placeholder display
+        }
+
+        guard PricingManager.shared.hasVariablePricing(for: modelName) else {
             return item.resolvedCost
         }
         return calculateVariablePrice(for: modelName) ?? item.resolvedCost
@@ -507,9 +540,35 @@ struct VideoModelDetailPage: View {
                                     videoURL: $motionControlVideoURL,
                                     characterImage: $motionControlCharacterImage,
                                     characterPhotoItem: $motionControlCharacterPhotoItem,
+                                    videoDuration: $motionControlVideoDuration,
+                                    showDurationAlert: $showVideoDurationAlert,
                                     color: .purple,
                                     showTitleAndDescription: false
                                 ))
+
+                            // 30-second limit and pricing hint
+                            VStack(alignment: .leading, spacing: 4) {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "centsign.circle")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                    Text("12 credits per second of video")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                    Spacer()
+                                }
+                                HStack(spacing: 4) {
+                                    Image(systemName: "info.circle")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                    Text("Maximum reference video length: 30 seconds")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                    Spacer()
+                                }
+                            }
+                            .padding(.horizontal)
+                            .padding(.top, -8)
                         }
 
                         if isMidjourney {
@@ -588,11 +647,14 @@ struct VideoModelDetailPage: View {
                                     ))
                             }
 
-                            LazyView(
-                                DurationSectionVideo(
-                                    options: videoDurationOptions,
-                                    selectedIndex: $selectedDurationIndex
-                                ))
+                            // Hide duration selector in Motion Control mode (duration = video length)
+                            if !isMotionControlMode {
+                                LazyView(
+                                    DurationSectionVideo(
+                                        options: videoDurationOptions,
+                                        selectedIndex: $selectedDurationIndex
+                                    ))
+                            }
                         }
                         .padding(.top, -16)  // Bring closer to the button above
 
@@ -797,6 +859,16 @@ struct VideoModelDetailPage: View {
         } message: {
             Text(motionControlMissingAlertMessage)
         }
+        .alert("Image Required", isPresented: $showImageRequiredAlert) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Please add a reference image for Image to Video.")
+        }
+        .alert("Video Too Long", isPresented: $showVideoDurationAlert) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Reference videos must be 30 seconds or less. Please select a shorter video.")
+        }
         .onChange(of: item.display.modelName) { newModelName in
             // Reset indices when model changes (if item changes)
             selectedAspectIndex = 0
@@ -866,6 +938,18 @@ struct VideoModelDetailPage: View {
                 showMotionControlMissingAlert = true
                 return
             }
+            // Validate video duration exists for Motion Control
+            guard motionControlVideoDuration != nil else {
+                motionControlMissingAlertMessage = "Could not determine reference video duration. Please try selecting the video again."
+                showMotionControlMissingAlert = true
+                return
+            }
+        }
+
+        // Check Image-to-Video: require a reference image when that mode is selected
+        if isInImageToVideoMode && resolveImageToUse() == nil {
+            showImageRequiredAlert = true
+            return
         }
 
         // Check credits before generating
@@ -886,13 +970,26 @@ struct VideoModelDetailPage: View {
         config.aspectRatio = selectedAspectOption.id
         modifiedItem.apiConfig = config
 
+        // Calculate duration and cost for the task
+        // Motion Control uses reference video duration and per-second pricing
+        let taskDuration: Double
+        if isMotionControlMode, let videoDuration = motionControlVideoDuration {
+            taskDuration = videoDuration
+            // Set motion control price on the item
+            modifiedItem.cost = PricingManager.shared.motionControlPrice(
+                for: item.display.modelName ?? "",
+                durationSeconds: videoDuration
+            )
+        } else {
+            taskDuration = selectedDurationOption.duration
+        }
+
         // Reference image: only in Image mode for models with segmented input; else use when available
         let imageToUse = resolveImageToUse()
         let useFirstLastFrame: Bool = (isGoogleVeo31Fast && googleVeoInputMode == .frameImages)
             || (isKlingAI25TurboPro && klingAI25InputMode == .frameImages)
 
         // Motion Control: determine if we need to pass a reference video URL
-        let isMotionControlMode = isKlingVideo26Pro && klingVideo26InputMode == .motionControl
         let referenceVideoForGeneration: URL? = isMotionControlMode ? motionControlVideoURL : nil
 
         guard let userId = authViewModel.user?.id.uuidString.lowercased(),
@@ -911,7 +1008,7 @@ struct VideoModelDetailPage: View {
                 item: modifiedItem,
                 image: imageToUse,
                 userId: userId,
-                duration: selectedDurationOption.duration,
+                duration: taskDuration,
                 aspectRatio: selectedAspectOption.id,
                 resolution: hasVariableResolution
                     ? selectedResolutionOption.id : nil,
@@ -1276,10 +1373,20 @@ private struct PricingTableSheetView: View {
         return audioRequiredModels.contains(modelName)
     }
 
+    /// Check if this model has motion control pricing (per-second of reference video)
+    private var hasMotionControlPricing: Bool {
+        PricingManager.shared.hasMotionControlPricing(for: modelName)
+    }
+
     var body: some View {
         NavigationView {
             ScrollView {
                 VStack(spacing: 20) {
+                    // Motion Control pricing (e.g. Kling VIDEO 2.6 Pro)
+                    if hasMotionControlPricing {
+                        MotionControlPricingCard(modelName: modelName)
+                    }
+
                     if let config = pricingConfig {
                         if hasAudioPricing {
                             // Show separate tables for audio/no-audio pricing
@@ -1306,6 +1413,80 @@ private struct PricingTableSheetView: View {
                         dismiss()
                     }
                 }
+            }
+        }
+    }
+}
+
+// MARK: MOTION CONTROL PRICING CARD
+
+private struct MotionControlPricingCard: View {
+    let modelName: String
+
+    private var pricePerSecond: Decimal? {
+        PricingManager.shared.motionControlPricePerSecond(for: modelName)
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            // Motion Control pill
+            HStack(spacing: 6) {
+                Image(systemName: "video.badge.waveform")
+                    .font(.system(size: 12))
+                    .foregroundColor(.purple)
+                Text("Motion Control")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.primary)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(
+                Capsule().fill(Color.purple.opacity(0.12))
+            )
+
+            // Table: one row for per-second rate
+            if let rate = pricePerSecond {
+                VStack(spacing: 0) {
+                    // Header
+                    HStack(spacing: 0) {
+                        Text("Rate")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundColor(.secondary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        Text("Price")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundColor(.secondary)
+                            .frame(maxWidth: .infinity, alignment: .trailing)
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 4)
+
+                    // Data row
+                    HStack(spacing: 0) {
+                        Text("Per second of video")
+                            .font(.system(size: 12, weight: .medium, design: .rounded))
+                            .foregroundColor(.primary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        PriceDisplayView(
+                            price: rate,
+                            font: .system(size: 12, weight: .medium, design: .rounded),
+                            foregroundColor: .white
+                        )
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(Color.purple.opacity(0.03))
+                }
+                .background(
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(Color.gray.opacity(0.04))
+                )
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(Color.purple.opacity(0.15), lineWidth: 1)
+                )
             }
         }
     }
@@ -2202,12 +2383,14 @@ private struct ChipOptionPicker: View {
 
 // MARK: MOTION CONTROL SECTION
 
-/// Motion Control (Kling VIDEO 2.6 Pro): character image + reference video. UI only; logic to be connected later.
+/// Motion Control (Kling VIDEO 2.6 Pro): character image + reference video.
 private struct MotionControlSection: View {
     @Binding var videoItem: PhotosPickerItem?
     @Binding var videoURL: URL?
     @Binding var characterImage: UIImage?
     @Binding var characterPhotoItem: PhotosPickerItem?
+    @Binding var videoDuration: Double?
+    @Binding var showDurationAlert: Bool
     let color: Color
     /// When false (Kling VIDEO 2.6 Pro), title and description are hidden; caller shows them via KlingVideo26ModeDescriptionBlock.
     var showTitleAndDescription: Bool = true
@@ -2251,6 +2434,8 @@ private struct MotionControlSection: View {
                     iconName: "video.fill",
                     videoItem: $videoItem,
                     videoURL: $videoURL,
+                    videoDuration: $videoDuration,
+                    showDurationAlert: $showDurationAlert,
                     color: color
                 )
                 .frame(maxWidth: .infinity)
@@ -2267,6 +2452,8 @@ private struct MotionControlSlotCard: View {
     let iconName: String
     @Binding var videoItem: PhotosPickerItem?
     @Binding var videoURL: URL?
+    @Binding var videoDuration: Double?
+    @Binding var showDurationAlert: Bool
     let color: Color
 
     var body: some View {
@@ -2283,6 +2470,7 @@ private struct MotionControlSlotCard: View {
                     Button("Change") {
                         videoItem = nil
                         videoURL = nil
+                        videoDuration = nil
                     }
                     .font(.caption)
                 }
@@ -2321,9 +2509,37 @@ private struct MotionControlSlotCard: View {
                     Task {
                         if let item = newItem,
                            let video = try? await item.loadTransferable(type: VideoTransferable.self) {
-                            await MainActor.run { videoURL = video.url }
+                            // Check video duration using AVURLAsset
+                            let asset = AVURLAsset(url: video.url)
+                            if let duration = try? await asset.load(.duration) {
+                                let durationSeconds = CMTimeGetSeconds(duration)
+
+                                if durationSeconds > 30 {
+                                    // Video too long - reject and show alert
+                                    await MainActor.run {
+                                        videoURL = nil
+                                        videoItem = nil
+                                        videoDuration = nil
+                                        showDurationAlert = true
+                                    }
+                                } else {
+                                    await MainActor.run {
+                                        videoURL = video.url
+                                        videoDuration = durationSeconds
+                                    }
+                                }
+                            } else {
+                                // Could not determine duration - allow but set nil
+                                await MainActor.run {
+                                    videoURL = video.url
+                                    videoDuration = nil
+                                }
+                            }
                         } else {
-                            await MainActor.run { videoURL = nil }
+                            await MainActor.run {
+                                videoURL = nil
+                                videoDuration = nil
+                            }
                         }
                     }
                 }

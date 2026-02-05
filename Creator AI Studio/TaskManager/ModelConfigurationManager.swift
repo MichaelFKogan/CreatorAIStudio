@@ -558,7 +558,6 @@ class ModelConfigurationManager {
                 ResolutionOption(id: "1080p", label: "1080p", description: "Full HD")
             ],
             "KlingAI 2.5 Turbo Pro": [
-                ResolutionOption(id: "720p", label: "720p", description: "High quality"),
                 ResolutionOption(id: "1080p", label: "1080p", description: "Full HD")
             ],
             // Nano Banana Pro (image model) - resolution tier 1K/2K/4K (pricing shown in credits in sheet)

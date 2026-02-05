@@ -390,6 +390,45 @@ class PricingManager {
                PricingManager.audioPricePerSecond[modelName] != nil
     }
 
+    // MARK: MOTION CONTROL PRICING
+
+    /// Motion control pricing per second (different from standard video pricing)
+    /// Motion control transfers movements from a reference video to a character image
+    private static let motionControlPricePerSecond: [String: Decimal] = [
+        // Kling VIDEO 2.6 Pro: $0.12/second = 12 credits/second for motion control
+        "Kling VIDEO 2.6 Pro": 0.12
+    ]
+
+    /// Returns the motion control price per second for a given model
+    ///
+    /// - Parameter modelName: The name of the video model
+    /// - Returns: The per-second price as a Decimal, or nil if model doesn't support motion control pricing
+    func motionControlPricePerSecond(for modelName: String) -> Decimal? {
+        return PricingManager.motionControlPricePerSecond[modelName]
+    }
+
+    /// Returns the total motion control price for a given model and duration
+    /// Motion control pricing is based on the reference video duration
+    ///
+    /// - Parameters:
+    ///   - modelName: The name of the video model
+    ///   - durationSeconds: The reference video duration in seconds
+    /// - Returns: The total price as a Decimal, or nil if model doesn't support motion control pricing
+    func motionControlPrice(for modelName: String, durationSeconds: Double) -> Decimal? {
+        guard let perSecondRate = PricingManager.motionControlPricePerSecond[modelName] else {
+            return nil
+        }
+        return perSecondRate * Decimal(durationSeconds)
+    }
+
+    /// Checks if a model supports motion control pricing
+    ///
+    /// - Parameter modelName: The name of the video model
+    /// - Returns: True if the model has motion control pricing
+    func hasMotionControlPricing(for modelName: String) -> Bool {
+        return PricingManager.motionControlPricePerSecond[modelName] != nil
+    }
+
     // MARK: DIMENSIONS??? WHY?
 
     /// Determines resolution string from width and height dimensions
