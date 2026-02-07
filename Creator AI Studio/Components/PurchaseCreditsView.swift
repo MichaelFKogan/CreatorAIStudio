@@ -483,17 +483,6 @@ struct CreditPackageCard: View {
         return Int(baseCreditsValue / avgVideoPrice)
     }
 
-    /// SF Symbol name for the pack title (distinct icon per pack)
-    private var titleIconName: String {
-        switch productId {
-        case .testPack: return "flask.fill"
-        case .starterPack: return "star.fill"
-        case .proPack: return "crown.fill"
-        case .megaPack: return "flame.fill"
-        case .ultraPack: return "sparkles"
-        }
-    }
-
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // Main card content - full card tappable for purchase; Details button stays separate
@@ -527,29 +516,16 @@ struct CreditPackageCard: View {
                                     .foregroundColor(.secondary)
                             }
 
-                            // Pack name below — label size
-                            HStack(spacing: 8) {
-                                Image(systemName: titleIconName)
-                                    .font(.system(size: 10))
-                                    .foregroundColor(.secondary)
-                                Text(title)
-                                    .font(
-                                        .system(
-                                            size: 14, weight: .semibold,
-                                            design: .rounded)
-                                    )
-                                    .foregroundColor(.secondary)
-
-                                if let badge = badge {
-                                    Text(badge)
-                                        .font(.caption2)
-                                        .fontWeight(.semibold)
-                                        .foregroundColor(.white)
-                                        .padding(.horizontal, 6)
-                                        .padding(.vertical, 3)
-                                        .background(Color.blue)
-                                        .clipShape(Capsule())
-                                }
+                            // Optional badge only (e.g. "Best Value")
+                            if let badge = badge {
+                                Text(badge)
+                                    .font(.caption2)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 3)
+                                    .background(Color.blue)
+                                    .clipShape(Capsule())
                             }
 
                             // Estimated generations summary
@@ -612,9 +588,6 @@ struct CreditPackageCard: View {
                             Text("Total Price")
                                 .font(.system(size: 11, design: .rounded))
                                 .foregroundColor(.secondary)
-                            Text("Tap to purchase")
-                                .font(.system(size: 10, weight: .medium, design: .rounded))
-                                .foregroundColor(.secondary.opacity(0.8))
                         }
                     }
 
