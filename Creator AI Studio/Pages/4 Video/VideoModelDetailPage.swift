@@ -752,9 +752,10 @@ struct VideoModelDetailPage: View {
         }
     }
 
-    // MARK: BODY
+    // MARK: BODY (split into 3 computed properties to reduce type-checker load)
 
-    var body: some View {
+    /// Core scroll content — GeometryReader + ScrollView
+    private var scrollContent: some View {
         GeometryReader { _ in
             ZStack(alignment: .bottom) {
                 ScrollView {
@@ -812,193 +813,203 @@ struct VideoModelDetailPage: View {
                 .scrollDismissesKeyboard(.interactively)
             }
         }
-        .contentShape(Rectangle())
-        .onTapGesture { isPromptFocused = false }
-        .sheet(isPresented: $isExamplePromptsPresented) {
-            ExamplePromptsSheet(
-                examplePrompts: examplePrompts,
-                examplePromptsTransform: transformPrompts,
-                selectedPrompt: $prompt,
-                isPresented: $isExamplePromptsPresented,
-                title: "Example Prompts"
-            )
-        }
-        .navigationTitle("")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(Color(UIColor.systemBackground), for: .navigationBar)
-        .toolbarBackground(.visible, for: .navigationBar)
-        .toolbar {
-            // Leading title
-            ToolbarItem(placement: .navigationBarLeading) {
-                Text("Video Models")
-                    .font(.system(size: 28, weight: .bold, design: .rounded))
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [.purple, .pink],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
-            }
-            ToolbarItemGroup(placement: .keyboard) {
-                Spacer()
-                Button("Done") { isPromptFocused = false }
-            }
-            ToolbarItem(placement: .navigationBarTrailing) {
-                CreditsToolbarView(
-                    diamondColor: .purple,
-                    borderColor: .purple,
-                    showSignInSheet: $showSignInSheet,
-                    showPurchaseCreditsView: $showPurchaseCreditsView
+    }
+
+    /// Navigation chrome — toolbar, nav title, keyboard handlers
+    private var bodyWithNavigation: some View {
+        scrollContent
+            .contentShape(Rectangle())
+            .onTapGesture { isPromptFocused = false }
+            .sheet(isPresented: $isExamplePromptsPresented) {
+                ExamplePromptsSheet(
+                    examplePrompts: examplePrompts,
+                    examplePromptsTransform: transformPrompts,
+                    selectedPrompt: $prompt,
+                    isPresented: $isExamplePromptsPresented,
+                    title: "Example Prompts"
                 )
             }
-            ToolbarItem(placement: .navigationBarTrailing) {
-                OfflineToolbarIcon()
+            .navigationTitle("")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(Color(UIColor.systemBackground), for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
+            .toolbar {
+                // Leading title
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Text("Video Models")
+                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [.purple, .pink],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                }
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Done") { isPromptFocused = false }
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    CreditsToolbarView(
+                        diamondColor: .purple,
+                        borderColor: .purple,
+                        showSignInSheet: $showSignInSheet,
+                        showPurchaseCreditsView: $showPurchaseCreditsView
+                    )
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    OfflineToolbarIcon()
+                }
             }
-        }
-        .onReceive(
-            NotificationCenter.default.publisher(
-                for: UIResponder.keyboardWillShowNotification)
-        ) { notification in
-            if let keyboardFrame = notification.userInfo?[
-                UIResponder.keyboardFrameEndUserInfoKey
-            ] as? CGRect {
-                keyboardHeight = keyboardFrame.height
+            .onReceive(
+                NotificationCenter.default.publisher(
+                    for: UIResponder.keyboardWillShowNotification)
+            ) { notification in
+                if let keyboardFrame = notification.userInfo?[
+                    UIResponder.keyboardFrameEndUserInfoKey
+                ] as? CGRect {
+                    keyboardHeight = keyboardFrame.height
+                }
             }
-        }
-        .onReceive(
-            NotificationCenter.default.publisher(
-                for: UIResponder.keyboardWillHideNotification)
-        ) { _ in
-            keyboardHeight = 0
-        }
-        .alert("Prompt Required", isPresented: $showEmptyPromptAlert) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text("Please enter a prompt to generate a video.")
-        }
-        .sheet(isPresented: $showSignInSheet) {
-            SignInView()
-                .environmentObject(authViewModel)
+            .onReceive(
+                NotificationCenter.default.publisher(
+                    for: UIResponder.keyboardWillHideNotification)
+            ) { _ in
+                keyboardHeight = 0
+            }
+    }
+
+    /// Full body — sheets, alerts, lifecycle modifiers
+    var body: some View {
+        bodyWithNavigation
+            .alert("Prompt Required", isPresented: $showEmptyPromptAlert) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text("Please enter a prompt to generate a video.")
+            }
+            .sheet(isPresented: $showSignInSheet) {
+                SignInView()
+                    .environmentObject(authViewModel)
+                    .presentationDragIndicator(.visible)
+            }
+            .sheet(isPresented: $showCameraSheet) {
+                SimpleCameraPicker(isPresented: $showCameraSheet) { capturedImage in
+                    // Limit to 1 image - replace existing if any
+                    referenceImages = [capturedImage]
+                }
+            }
+            .sheet(isPresented: $showFirstFrameCameraSheet) {
+                SimpleCameraPicker(isPresented: $showFirstFrameCameraSheet) { capturedImage in
+                    firstFrameImage = capturedImage
+                }
+            }
+            .sheet(isPresented: $showLastFrameCameraSheet) {
+                SimpleCameraPicker(isPresented: $showLastFrameCameraSheet) { capturedImage in
+                    lastFrameImage = capturedImage
+                }
+            }
+            .sheet(isPresented: $showPromptCameraSheet) {
+                SimpleCameraPicker(isPresented: $showPromptCameraSheet) {
+                    capturedImage in
+                    processOCR(from: capturedImage)
+                }
+            }
+            .sheet(isPresented: $showFullPromptSheet) {
+                FullPromptSheet(
+                    prompt: $prompt,
+                    isPresented: $showFullPromptSheet,
+                    placeholder: "Describe the video you want to generate...",
+                    accentColor: .purple
+                )
                 .presentationDragIndicator(.visible)
-        }
-        .sheet(isPresented: $showCameraSheet) {
-            SimpleCameraPicker(isPresented: $showCameraSheet) { capturedImage in
-                // Limit to 1 image - replace existing if any
-                referenceImages = [capturedImage]
             }
-        }
-        .sheet(isPresented: $showFirstFrameCameraSheet) {
-            SimpleCameraPicker(isPresented: $showFirstFrameCameraSheet) { capturedImage in
-                firstFrameImage = capturedImage
+            .alert("Text Recognition", isPresented: $showOCRAlert) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(ocrAlertMessage)
             }
-        }
-        .sheet(isPresented: $showLastFrameCameraSheet) {
-            SimpleCameraPicker(isPresented: $showLastFrameCameraSheet) { capturedImage in
-                lastFrameImage = capturedImage
+            .onAppear {
+                // Validate and reset indices if they're out of bounds for model-specific options
+                if selectedAspectIndex >= videoAspectOptions.count {
+                    selectedAspectIndex = 0
+                }
+                if selectedDurationIndex >= videoDurationOptions.count {
+                    selectedDurationIndex = 0
+                }
+                if selectedResolutionIndex >= videoResolutionOptions.count {
+                    selectedResolutionIndex = 0
+                }
+
+                // Set model-specific default duration
+                // Sora 2 defaults to 8 seconds (index 1)
+                if let modelName = item.display.modelName, modelName == "Sora 2" {
+                    if let defaultIndex = videoDurationOptions.firstIndex(where: {
+                        $0.duration == 8.0
+                    }) {
+                        selectedDurationIndex = defaultIndex
+                    }
+                }
+                // Note: Credit balance fetching is now handled by AuthAwareCostCard
             }
-        }
-        .sheet(isPresented: $showPromptCameraSheet) {
-            SimpleCameraPicker(isPresented: $showPromptCameraSheet) {
-                capturedImage in
-                processOCR(from: capturedImage)
+            .onChange(of: showSignInSheet) { isPresented in
+                // When sign-in sheet is dismissed, refresh credits if user signed in
+                if !isPresented, let userId = authViewModel.user?.id {
+                    Task {
+                        await creditsViewModel.fetchBalance(userId: userId)
+                    }
+                }
             }
-        }
-        .sheet(isPresented: $showFullPromptSheet) {
-            FullPromptSheet(
-                prompt: $prompt,
-                isPresented: $showFullPromptSheet,
-                placeholder: "Describe the video you want to generate...",
-                accentColor: .purple
-            )
-            .presentationDragIndicator(.visible)
-        }
-        .alert("Text Recognition", isPresented: $showOCRAlert) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(ocrAlertMessage)
-        }
-        .onAppear {
-            // Validate and reset indices if they're out of bounds for model-specific options
-            if selectedAspectIndex >= videoAspectOptions.count {
+            .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("CreditsBalanceUpdated"))) { notification in
+                // Refresh credits when balance is updated (e.g., after purchase)
+                if let userId = authViewModel.user?.id {
+                    Task {
+                        await creditsViewModel.fetchBalance(userId: userId)
+                    }
+                }
+            }
+            .alert("Insufficient Credits", isPresented: $showInsufficientCreditsAlert) {
+                Button("Purchase Credits") {
+                    showPurchaseCreditsView = true
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("You need \(String(format: "$%.2f", requiredCredits)) to generate this. Your current balance is \(creditsViewModel.formattedBalance()).")
+            }
+            .alert("Motion Control Required", isPresented: $showMotionControlMissingAlert) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(motionControlMissingAlertMessage)
+            }
+            .alert("Image Required", isPresented: $showImageRequiredAlert) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text("Please add a reference image for Image to Video.")
+            }
+            .alert("Video Too Long", isPresented: $showVideoDurationAlert) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text("Reference videos must be 30 seconds or less. Please select a shorter video.")
+            }
+            .onChange(of: item.display.modelName) { newModelName in
+                // Reset indices when model changes (if item changes)
                 selectedAspectIndex = 0
-            }
-            if selectedDurationIndex >= videoDurationOptions.count {
-                selectedDurationIndex = 0
-            }
-            if selectedResolutionIndex >= videoResolutionOptions.count {
                 selectedResolutionIndex = 0
-            }
 
-            // Set model-specific default duration
-            // Sora 2 defaults to 8 seconds (index 1)
-            if let modelName = item.display.modelName, modelName == "Sora 2" {
-                if let defaultIndex = videoDurationOptions.firstIndex(where: {
-                    $0.duration == 8.0
-                }) {
-                    selectedDurationIndex = defaultIndex
-                }
-            }
-            // Note: Credit balance fetching is now handled by AuthAwareCostCard
-        }
-        .onChange(of: showSignInSheet) { isPresented in
-            // When sign-in sheet is dismissed, refresh credits if user signed in
-            if !isPresented, let userId = authViewModel.user?.id {
-                Task {
-                    await creditsViewModel.fetchBalance(userId: userId)
-                }
-            }
-        }
-        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("CreditsBalanceUpdated"))) { notification in
-            // Refresh credits when balance is updated (e.g., after purchase)
-            if let userId = authViewModel.user?.id {
-                Task {
-                    await creditsViewModel.fetchBalance(userId: userId)
-                }
-            }
-        }
-        .alert("Insufficient Credits", isPresented: $showInsufficientCreditsAlert) {
-            Button("Purchase Credits") {
-                showPurchaseCreditsView = true
-            }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text("You need \(String(format: "$%.2f", requiredCredits)) to generate this. Your current balance is \(creditsViewModel.formattedBalance()).")
-        }
-        .alert("Motion Control Required", isPresented: $showMotionControlMissingAlert) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(motionControlMissingAlertMessage)
-        }
-        .alert("Image Required", isPresented: $showImageRequiredAlert) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text("Please add a reference image for Image to Video.")
-        }
-        .alert("Video Too Long", isPresented: $showVideoDurationAlert) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text("Reference videos must be 30 seconds or less. Please select a shorter video.")
-        }
-        .onChange(of: item.display.modelName) { newModelName in
-            // Reset indices when model changes (if item changes)
-            selectedAspectIndex = 0
-            selectedResolutionIndex = 0
-
-            // Set model-specific default duration
-            // Sora 2 defaults to 8 seconds
-            if let modelName = newModelName, modelName == "Sora 2" {
-                if let defaultIndex = videoDurationOptions.firstIndex(where: {
-                    $0.duration == 8.0
-                }) {
-                    selectedDurationIndex = defaultIndex
+                // Set model-specific default duration
+                // Sora 2 defaults to 8 seconds
+                if let modelName = newModelName, modelName == "Sora 2" {
+                    if let defaultIndex = videoDurationOptions.firstIndex(where: {
+                        $0.duration == 8.0
+                    }) {
+                        selectedDurationIndex = defaultIndex
+                    } else {
+                        selectedDurationIndex = 0
+                    }
                 } else {
                     selectedDurationIndex = 0
                 }
-            } else {
-                selectedDurationIndex = 0
             }
-        }
     }
 
     // MARK: Helper Functions
@@ -2377,124 +2388,6 @@ private struct KlingVideo26ModeDescriptionBlock: View {
             Text(instructions)
                 .font(.caption)
                 .foregroundColor(.secondary.opacity(0.8))
-        }
-    }
-}
-
-// MARK: INPUT MODE CARD (Reusable container)
-
-/// Card container for Input mode: header with icon, chip picker, and description in a styled box.
-private struct InputModeCard<ControlContent: View, DescriptionContent: View>: View {
-    let color: Color
-    @ViewBuilder let control: () -> ControlContent
-    @ViewBuilder let description: () -> DescriptionContent
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack(spacing: 8) {
-                Image(systemName: "square.stack.3d.up")
-                    .font(.system(size: 14))
-                    .foregroundColor(color)
-                Text("Input mode")
-                    .font(.subheadline)
-                    .fontWeight(.semibold)
-                    .foregroundColor(.primary)
-            }
-
-            control()
-
-            InputModeDescriptionBox(color: color) {
-                description()
-            }
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 14)
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(color.opacity(0.06))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(color.opacity(0.2), lineWidth: 1)
-        )
-    }
-}
-
-// MARK: INPUT MODE DESCRIPTION BOX
-
-/// Wraps description content in a subtle inset with left accent border.
-private struct InputModeDescriptionBox<Content: View>: View {
-    let color: Color
-    @ViewBuilder let content: () -> Content
-
-    var body: some View {
-        content()
-            .padding(.leading, 22)
-            .padding(.trailing, 12)
-            .padding(.vertical, 12)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(color.opacity(0.06))
-            )
-            .overlay(alignment: .leading) {
-                RoundedRectangle(cornerRadius: 2)
-                    .fill(color.opacity(0.5))
-                    .frame(width: 3)
-                    .padding(.vertical, 10)
-                    .padding(.leading, 12)
-            }
-    }
-}
-
-// MARK: CHIP OPTION PICKER
-
-/// Horizontal row of selectable chips (label + icon). Selected chip uses filled gradient; unselected uses outline.
-private struct ChipOptionPicker: View {
-    let options: [(label: String, icon: String)]
-    @Binding var selection: Int
-    let color: Color
-
-    var body: some View {
-        HStack(spacing: 8) {
-            ForEach(Array(options.enumerated()), id: \.offset) { index, option in
-                let isSelected = selection == index
-                Button {
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        selection = index
-                    }
-                } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: option.icon)
-                            .font(.system(size: 12, weight: .medium))
-                        Text(option.label)
-                            .font(.system(size: 13, weight: .semibold, design: .rounded))
-                    }
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 10)
-                    .background(
-                        Capsule()
-                            .fill(isSelected
-                                ? LinearGradient(
-                                    colors: [color.opacity(0.85), color.opacity(0.7)],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
-                                : LinearGradient(
-                                    colors: [Color.clear, Color.clear],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
-                            )
-                    )
-                    .foregroundColor(isSelected ? .white : .primary)
-                    .overlay(
-                        Capsule()
-                            .stroke(isSelected ? Color.clear : color.opacity(0.35), lineWidth: 1.5)
-                    )
-                }
-                .buttonStyle(PlainButtonStyle())
-            }
         }
     }
 }

@@ -64,11 +64,22 @@ class PricingManager {
     ]
 
     private init() {
+        // Each pricing config is built separately with explicit types so the
+        // Swift type checker handles them independently (avoids exponential
+        // inference on deeply nested collection literals).
+        prices = Self.makeImagePrices()
+        variableVideoPricing = Self.makeVariableVideoPricing()
+        imageResolutionPricing = Self.makeImageResolutionPricing()
+        gptImage15Pricing = Self.makeGPTImage15Pricing()
+    }
 
-        // MARK: IMAGE PRICES
-        // Prices in dollars (same unit as balance). Display: 100 credits = $1.
-        // GPT Image 1.5 uses gptImage15Pricing (aspect + quality), not fixed price.
-        prices = [
+    // MARK: - Factory Methods (split to reduce type-checker load)
+
+    // MARK: IMAGE PRICES
+    // Prices in dollars (same unit as balance). Display: 100 credits = $1.
+    // GPT Image 1.5 uses gptImage15Pricing (aspect + quality), not fixed price.
+    private static func makeImagePrices() -> [String: Decimal] {
+        return [
             "Wan2.5-Preview Image": 0.027,
             "Nano Banana": 0.039,
             "Nano Banana Pro": 0.138,
@@ -80,126 +91,125 @@ class PricingManager {
             "Z-Image-Turbo": 0.005,  // $0.005 (displays as 0.5 credits; 100 credits = $1)
             "Wavespeed Ghibli": 0.005,
         ]
+    }
 
-        // MARK: VIDEO PRICES
-        // Initialize variable pricing for video models
-        variableVideoPricing = [
-            // Sora 2 pricing: 4s ($0.4), 8s ($0.8), 12s ($1.2) - only supports 720p
-            "Sora 2": VideoPricingConfiguration(
-                pricing: [
-                    "16:9": [
-                        "720p": [4.0: 0.4, 8.0: 0.8, 12.0: 1.2]
-                    ],
-                    "9:16": [
-                        "720p": [4.0: 0.4, 8.0: 0.8, 12.0: 1.2]
-                    ],
-                ]
-            ),
-            // Google Veo 3.1 Fast pricing: Only supports 1080p at 8 seconds
-            // Without audio: $0.80, With audio: $1.20
-            // Base price is $1.20 (with audio) since audio is ON by default
-            // Audio addon is negative (-$0.40) when audio is turned OFF
-            "Google Veo 3.1 Fast": VideoPricingConfiguration(
-                pricing: [
-                    "16:9": [
-                        "1080p": [8.0: 1.20]
-                    ],
-                    "9:16": [
-                        "1080p": [8.0: 1.20]
-                    ]
-                ]
-            ),
-            // Seedance 1.0 Pro Fast pricing from Runware pricing page
-            "Seedance 1.0 Pro Fast": VideoPricingConfiguration(
-                pricing: [
-                    "3:4": [
-                        "480p": [5.0: 0.0304, 10.0: 0.0609],
-                        "720p": [5.0: 0.0709, 10.0: 0.1417],
-                        "1080p": [5.0: 0.1579, 10.0: 0.3159],
-                    ],
-                    "9:16": [
-                        "480p": [5.0: 0.0315, 10.0: 0.0629],
-                        "720p": [5.0: 0.0668, 10.0: 0.1336],
-                        "1080p": [5.0: 0.1589, 10.0: 0.3177],
-                    ],
-                    "1:1": [
-                        "480p": [5.0: 0.0311, 10.0: 0.0623],
-                        "720p": [5.0: 0.0701, 10.0: 0.1402],
-                        "1080p": [5.0: 0.1577, 10.0: 0.3154],
-                    ],
-                    "4:3": [
-                        "480p": [5.0: 0.0304, 10.0: 0.0609],
-                        "720p": [5.0: 0.0709, 10.0: 0.1417],
-                        "1080p": [5.0: 0.1579, 10.0: 0.3159],
-                    ],
-                    "16:9": [
-                        "480p": [5.0: 0.0315, 10.0: 0.0629],
-                        "720p": [5.0: 0.0668, 10.0: 0.1336],
-                        "1080p": [5.0: 0.1589, 10.0: 0.3177],
-                    ],
-                ]
-            ),
-            // Kling VIDEO 2.6 Pro pricing from Runware pricing page
-            // Base prices include audio (audio ON by default): $0.14/s
-            // Without audio: $0.07/s
-            "Kling VIDEO 2.6 Pro": VideoPricingConfiguration(
-                pricing: [
-                    "16:9": [
-                        "1080p": [5.0: 0.70, 10.0: 1.40]
-                    ],
-                    "9:16": [
-                        "1080p": [5.0: 0.70, 10.0: 1.40]
-                    ],
-                    "1:1": [
-                        "1080p": [5.0: 0.70, 10.0: 1.40]
-                    ]
-                ]
-            ),
-            // Wan2.6 pricing from Runware pricing page
-            "Wan2.6": VideoPricingConfiguration(
-                pricing: [
-                    "16:9": [
-                        "720p": [5.0: 0.5, 10.0: 1.0, 15.0: 1.5],
-                        "1080p": [5.0: 0.75, 10.0: 1.5, 15.0: 2.25]
-                    ],
-                    "9:16": [
-                        "720p": [5.0: 0.5, 10.0: 1.0, 15.0: 1.5],
-                        "1080p": [5.0: 0.75, 10.0: 1.5, 15.0: 2.25]
-                    ],
-                    "1:1": [
-                        "720p": [5.0: 0.5, 10.0: 1.0, 15.0: 1.5],
-                        "1080p": [5.0: 0.75, 10.0: 1.5, 15.0: 2.25]
-                    ]
-                ]
-            ),
-            // KlingAI 2.5 Turbo Pro pricing from Runware pricing page
-            // 1080p: 5s = $0.35, 10s = $0.70
-            "KlingAI 2.5 Turbo Pro": VideoPricingConfiguration(
-                pricing: [
-                    "16:9": [
-                        "1080p": [5.0: 0.35, 10.0: 0.70]
-                    ],
-                    "9:16": [
-                        "1080p": [5.0: 0.35, 10.0: 0.70]
-                    ],
-                    "1:1": [
-                        "1080p": [5.0: 0.35, 10.0: 0.70]
-                    ]
-                ]
-            ),
+    // MARK: VIDEO PRICES
+    // Each VideoPricingConfiguration is built as a separate variable to avoid
+    // a single massive nested dictionary literal.
+    private static func makeVariableVideoPricing() -> [String: VideoPricingConfiguration] {
+        // Sora 2 pricing: 4s ($0.4), 8s ($0.8), 12s ($1.2) - only supports 720p
+        let sora2: VideoPricingConfiguration = VideoPricingConfiguration(
+            pricing: [
+                "16:9": ["720p": [4.0: 0.4, 8.0: 0.8, 12.0: 1.2]],
+                "9:16": ["720p": [4.0: 0.4, 8.0: 0.8, 12.0: 1.2]],
+            ]
+        )
+
+        // Google Veo 3.1 Fast pricing: Only supports 1080p at 8 seconds
+        // Without audio: $0.80, With audio: $1.20
+        // Base price is $1.20 (with audio) since audio is ON by default
+        // Audio addon is negative (-$0.40) when audio is turned OFF
+        let veo31Fast: VideoPricingConfiguration = VideoPricingConfiguration(
+            pricing: [
+                "16:9": ["1080p": [8.0: 1.20]],
+                "9:16": ["1080p": [8.0: 1.20]],
+            ]
+        )
+
+        // Seedance 1.0 Pro Fast pricing from Runware pricing page
+        let seedance: VideoPricingConfiguration = VideoPricingConfiguration(
+            pricing: [
+                "3:4": [
+                    "480p": [5.0: 0.0304, 10.0: 0.0609],
+                    "720p": [5.0: 0.0709, 10.0: 0.1417],
+                    "1080p": [5.0: 0.1579, 10.0: 0.3159],
+                ],
+                "9:16": [
+                    "480p": [5.0: 0.0315, 10.0: 0.0629],
+                    "720p": [5.0: 0.0668, 10.0: 0.1336],
+                    "1080p": [5.0: 0.1589, 10.0: 0.3177],
+                ],
+                "1:1": [
+                    "480p": [5.0: 0.0311, 10.0: 0.0623],
+                    "720p": [5.0: 0.0701, 10.0: 0.1402],
+                    "1080p": [5.0: 0.1577, 10.0: 0.3154],
+                ],
+                "4:3": [
+                    "480p": [5.0: 0.0304, 10.0: 0.0609],
+                    "720p": [5.0: 0.0709, 10.0: 0.1417],
+                    "1080p": [5.0: 0.1579, 10.0: 0.3159],
+                ],
+                "16:9": [
+                    "480p": [5.0: 0.0315, 10.0: 0.0629],
+                    "720p": [5.0: 0.0668, 10.0: 0.1336],
+                    "1080p": [5.0: 0.1589, 10.0: 0.3177],
+                ],
+            ]
+        )
+
+        // Kling VIDEO 2.6 Pro pricing from Runware pricing page
+        // Base prices include audio (audio ON by default): $0.14/s
+        // Without audio: $0.07/s
+        let kling26Pro: VideoPricingConfiguration = VideoPricingConfiguration(
+            pricing: [
+                "16:9": ["1080p": [5.0: 0.70, 10.0: 1.40]],
+                "9:16": ["1080p": [5.0: 0.70, 10.0: 1.40]],
+                "1:1": ["1080p": [5.0: 0.70, 10.0: 1.40]],
+            ]
+        )
+
+        // Wan2.6 pricing from Runware pricing page
+        let wan26: VideoPricingConfiguration = VideoPricingConfiguration(
+            pricing: [
+                "16:9": [
+                    "720p": [5.0: 0.5, 10.0: 1.0, 15.0: 1.5],
+                    "1080p": [5.0: 0.75, 10.0: 1.5, 15.0: 2.25],
+                ],
+                "9:16": [
+                    "720p": [5.0: 0.5, 10.0: 1.0, 15.0: 1.5],
+                    "1080p": [5.0: 0.75, 10.0: 1.5, 15.0: 2.25],
+                ],
+                "1:1": [
+                    "720p": [5.0: 0.5, 10.0: 1.0, 15.0: 1.5],
+                    "1080p": [5.0: 0.75, 10.0: 1.5, 15.0: 2.25],
+                ],
+            ]
+        )
+
+        // KlingAI 2.5 Turbo Pro pricing from Runware pricing page
+        // 1080p: 5s = $0.35, 10s = $0.70
+        let kling25TurboPro: VideoPricingConfiguration = VideoPricingConfiguration(
+            pricing: [
+                "16:9": ["1080p": [5.0: 0.35, 10.0: 0.70]],
+                "9:16": ["1080p": [5.0: 0.35, 10.0: 0.70]],
+                "1:1": ["1080p": [5.0: 0.35, 10.0: 0.70]],
+            ]
+        )
+
+        return [
+            "Sora 2": sora2,
+            "Google Veo 3.1 Fast": veo31Fast,
+            "Seedance 1.0 Pro Fast": seedance,
+            "Kling VIDEO 2.6 Pro": kling26Pro,
+            "Wan2.6": wan26,
+            "KlingAI 2.5 Turbo Pro": kling25TurboPro,
         ]
-        
-        // MARK: IMAGE RESOLUTION PRICING (Nano Banana Pro: 1K/2K $0.138, 4K $0.244)
-        imageResolutionPricing = [
-            "Nano Banana Pro": ["1k": 0.138, "2k": 0.138, "4k": 0.244]
+    }
+
+    // MARK: IMAGE RESOLUTION PRICING (Nano Banana Pro: 1K/2K $0.138, 4K $0.244)
+    private static func makeImageResolutionPricing() -> [String: [String: Decimal]] {
+        return [
+            "Nano Banana Pro": ["1k": 0.138, "2k": 0.138, "4k": 0.244],
         ]
-        
-        // MARK: GPT IMAGE 1.5 QUALITY PRICING (Runware: aspect × quality)
-        // 1024×1024 (1:1), 1024×1536 (2:3), 1536×1024 (3:2) × low, medium, high
-        gptImage15Pricing = [
+    }
+
+    // MARK: GPT IMAGE 1.5 QUALITY PRICING (Runware: aspect × quality)
+    // 1024×1024 (1:1), 1024×1536 (2:3), 1536×1024 (3:2) × low, medium, high
+    private static func makeGPTImage15Pricing() -> [String: [String: Decimal]] {
+        return [
             "1:1": ["low": 0.009, "medium": 0.034, "high": 0.133],
             "2:3": ["low": 0.013, "medium": 0.051, "high": 0.20],
-            "3:2": ["low": 0.013, "medium": 0.05, "high": 0.199]
+            "3:2": ["low": 0.013, "medium": 0.05, "high": 0.199],
         ]
     }
 
@@ -477,83 +487,63 @@ class PricingManager {
     ///   - resolution: Resolution string (e.g., "480p", "720p", "1080p")
     ///   - model: Optional model identifier (e.g., "google:3@3") for model-specific dimensions
     /// - Returns: Tuple of (width, height) or nil if not found
+    // Dimension lookup tables extracted as static lets so they are built once
+    // and don't trigger nested-literal type inference on every call.
+
+    private static let veoDimensions: [String: [String: (Int, Int)]] = [
+        "720p": ["16:9": (1280, 720), "9:16": (720, 1280)],
+        "1080p": ["16:9": (1920, 1080), "9:16": (1080, 1920)],
+    ]
+
+    private static let kling26ProDimensions: [String: [String: (Int, Int)]] = [
+        "1080p": ["16:9": (1920, 1080), "9:16": (1080, 1920), "1:1": (1440, 1440)],
+    ]
+
+    private static let kling25TurboProDimensions: [String: [String: (Int, Int)]] = [
+        "1080p": ["16:9": (1920, 1080), "9:16": (1080, 1920), "1:1": (1080, 1080)],
+    ]
+
+    private static let defaultDimensions: [String: [String: (Int, Int)]] = [
+        "480p": [
+            "16:9": (864, 480), "9:16": (480, 864),
+            "4:3": (736, 544), "3:4": (544, 736),
+            "1:1": (640, 640),
+            "21:9": (960, 416), "9:21": (416, 960),
+        ],
+        "720p": [
+            "16:9": (1280, 720), "9:16": (720, 1280),
+            "4:3": (960, 720), "3:4": (720, 960),
+            "1:1": (1024, 1024),
+            "21:9": (1680, 720), "9:21": (720, 1680),
+        ],
+        "1080p": [
+            "16:9": (1920, 1088), "9:16": (1088, 1920),
+            "4:3": (1664, 1248), "3:4": (1248, 1664),
+            "1:1": (1440, 1440),
+            "21:9": (2176, 928), "9:21": (928, 2176),
+        ],
+    ]
+
     static func dimensionsForAspectRatioAndResolution(
         aspectRatio: String, resolution: String, model: String? = nil
     ) -> (width: Int, height: Int)? {
         // Google Veo 3.1 Fast (google:3@3) - requires exact dimensions
         if let model = model, model.lowercased().contains("google:3@3") {
-            let veoDimensions: [String: [String: (Int, Int)]] = [
-                "720p": [
-                    "16:9": (1280, 720),
-                    "9:16": (720, 1280),
-                ],
-                "1080p": [
-                    "16:9": (1920, 1080),
-                    "9:16": (1080, 1920),
-                ],
-            ]
             return veoDimensions[resolution]?[aspectRatio]
         }
-        
+
         // Kling VIDEO 2.6 Pro (klingai:kling-video@2.6-pro) - requires exact dimensions
-        // Supported: 1920x1080 (16:9), 1080x1920 (9:16), 1440x1440 (1:1)
         if let model = model, model.lowercased().contains("kling-video@2.6-pro") || model.lowercased().contains("klingai:kling-video@2.6-pro") {
-            let klingDimensions: [String: [String: (Int, Int)]] = [
-                "1080p": [
-                    "16:9": (1920, 1080),
-                    "9:16": (1080, 1920),
-                    "1:1": (1440, 1440),
-                ],
-            ]
-            return klingDimensions[resolution]?[aspectRatio]
+            return kling26ProDimensions[resolution]?[aspectRatio]
         }
-        
+
         // KlingAI 2.5 Turbo Pro (klingai:6@1) - requires exact dimensions
-        // Supported: 1920x1080, 1080x1920, 1080x1080 (1080p) or 1280x720, 720x1280, 720x720 (720p)
-        // Only supports 16:9, 9:16, 1:1 aspect ratios
         if let model = model, model.lowercased().contains("klingai:6@1") {
-            let kling25TurboProDimensions: [String: [String: (Int, Int)]] = [
-                "1080p": [
-                    "16:9": (1920, 1080),
-                    "9:16": (1080, 1920),
-                    "1:1": (1080, 1080),
-                ],
-            ]
             return kling25TurboProDimensions[resolution]?[aspectRatio]
         }
-        
-        // Default: Seedance 1.0 Pro Fast dimensions from documentation
-        let dimensions: [String: [String: (Int, Int)]] = [
-            "480p": [
-                "16:9": (864, 480),
-                "9:16": (480, 864),
-                "4:3": (736, 544),
-                "3:4": (544, 736),
-                "1:1": (640, 640),
-                "21:9": (960, 416),
-                "9:21": (416, 960),
-            ],
-            "720p": [
-                "16:9": (1280, 720),
-                "9:16": (720, 1280),
-                "4:3": (960, 720),
-                "3:4": (720, 960),
-                "1:1": (1024, 1024),
-                "21:9": (1680, 720),
-                "9:21": (720, 1680),
-            ],
-            "1080p": [
-                "16:9": (1920, 1088),
-                "9:16": (1088, 1920),
-                "4:3": (1664, 1248),
-                "3:4": (1248, 1664),
-                "1:1": (1440, 1440),
-                "21:9": (2176, 928),
-                "9:21": (928, 2176),
-            ],
-        ]
 
-        return dimensions[resolution]?[aspectRatio]
+        // Default: Seedance 1.0 Pro Fast dimensions from documentation
+        return defaultDimensions[resolution]?[aspectRatio]
     }
 }
 

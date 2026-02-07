@@ -33,10 +33,25 @@ class ModelConfigurationManager {
     
     
     private init() {
-// MARK: IMAGE MODELS API
-        
-        // Initialize API configurations for all models
-        apiConfigurations = [
+        // Each dictionary is built in a separate static method so the Swift
+        // type checker handles them independently (avoids exponential inference
+        // on large nested collection literals).
+        apiConfigurations = Self.makeImageModelAPIConfigs()
+            .merging(Self.makeVideoModelAPIConfigs()) { _, new in new }
+        capabilitiesMap = Self.makeCapabilitiesMap()
+        modelDescriptions = Self.makeModelDescriptions()
+        modelImageNames = Self.makeModelImageNames()
+        allowedDurationsMap = Self.makeAllowedDurationsMap()
+        allowedAspectRatiosMap = Self.makeAllowedAspectRatiosMap()
+        allowedResolutionsMap = Self.makeAllowedResolutionsMap()
+    }
+
+    // MARK: - Factory Methods (split to reduce type-checker load)
+
+    // MARK: IMAGE MODELS API
+
+    private static func makeImageModelAPIConfigs() -> [String: APIConfiguration] {
+        return [
             "GPT Image 1.5": APIConfiguration(
                 provider: .runware,
                 endpoint: "https://api.runware.ai/v1",
@@ -208,26 +223,6 @@ class ModelConfigurationManager {
                     outputQuality: nil
                 )
             ),
-            // "Z-Image-Turbo": APIConfiguration(
-            //     provider: .fal,
-            //     endpoint: "https://queue.fal.run/fal-ai/z-image/turbo",
-            //     runwareModel: nil,
-            //     aspectRatio: nil,
-            //     wavespeedConfig: nil,
-            //     runwareConfig: nil,
-            //     falConfig: FalConfig(
-            //         modelId: "fal-ai/z-image/turbo",
-            //         numInferenceSteps: 8,
-            //         seed: nil,
-            //         numImages: 1,
-            //         enableSafetyChecker: true,
-            //         enablePromptExpansion: false,
-            //         outputFormat: "png",
-            //         acceleration: "none",
-            //         requiresDimensions: true,
-            //         imageCompressionQuality: 0.85
-            //     )
-            // ),
             "Wavespeed Ghibli": APIConfiguration(
                 provider: .wavespeed,
                 endpoint: "https://api.wavespeed.ai/api/v3/wavespeed-ai/ghibli",
@@ -240,8 +235,13 @@ class ModelConfigurationManager {
                 ),
                 runwareConfig: nil
             ),
+        ]
+    }
 
-// MARK: VIDEO MODELS API
+    // MARK: VIDEO MODELS API
+
+    private static func makeVideoModelAPIConfigs() -> [String: APIConfiguration] {
+        return [
             "Sora 2": APIConfiguration(
                 provider: .runware,
                 endpoint: "https://api.runware.ai/v1",
@@ -361,13 +361,14 @@ class ModelConfigurationManager {
                     outputType: "URL",
                     outputQuality: nil
                 )
-            )
+            ),
         ]
-        
-// MARK: CAPABILITIES PILLS
-        
-        // Initialize capabilities mapping
-        capabilitiesMap = [
+    }
+
+    // MARK: CAPABILITIES PILLS
+
+    private static func makeCapabilitiesMap() -> [String: [String]] {
+        return [
             "GPT Image 1.5": ["Text to Image", "Image to Image"],
             "Wan2.5-Preview Image": ["Text to Image"],
             "Nano Banana": ["Text to Image", "Image to Image"],
@@ -379,7 +380,7 @@ class ModelConfigurationManager {
             "FLUX.1 Kontext [max]": ["Text to Image", "Image to Image"],
             "Z-Image-Turbo": ["Text to Image"],
             "Wavespeed Ghibli": ["Image to Image"],
-            
+
             // Video Models
             "Sora 2": ["Text to Video", "Image to Video", "Audio"],
             "Google Veo 3": ["Text to Video", "Image to Video", "Audio"],
@@ -388,16 +389,16 @@ class ModelConfigurationManager {
             "Seedance 1.0 Pro Fast": ["Text to Video", "Image to Video"],
             "Kling VIDEO 2.6 Pro": ["Text to Video", "Image to Video", "Audio"],
             "Wan2.6": ["Text to Video", "Image to Video", "Audio"],
-            "KlingAI 2.5 Turbo Pro": ["Text to Video", "Image to Video"]
+            "KlingAI 2.5 Turbo Pro": ["Text to Video", "Image to Video"],
         ]
-        
-// MARK: DESCRIPTIONS
-        
-        // Initialize model descriptions mapping
-        modelDescriptions = [
+    }
 
+    // MARK: DESCRIPTIONS
+
+    private static func makeModelDescriptions() -> [String: String] {
+        return [
             "GPT Image 1.5": "OpenAI's GPT Image 1.5 is the flagship image model powering ChatGPT Images, delivering significantly faster generation with enhanced instruction following and precise edits that preserve original details. Excels at believable transformations, dense text rendering, and detailed design tasks—ideal for practical creative workflows and production use cases.",
-            
+
             "Wan2.5-Preview Image": "Alibaba's Wan2.5-Preview Image delivers high-fidelity single frame generation built from the Wan2.5 video architecture. This model focuses on detailed depth structure, strong prompt following, multilingual text rendering, and video-grade visual quality for production-ready stills.",
 
             "Nano Banana": "Google's lightweight and extremely fast image model optimized for speed-driven creativity. Perfect for quick edits, simple transformations, and fast turnarounds while still producing sharp, balanced results. Ideal for social content and rapid experimentation.",
@@ -419,13 +420,14 @@ class ModelConfigurationManager {
             "Seedance 1.0 Pro Fast": "Seedance 1.0 Pro Fast delivers accelerated video generation while maintaining the high visual quality and cinematic capabilities of Seedance 1.0 Pro. Optimized for faster iteration and production workflows, it supports dynamic camera movements, multiple aspect ratios, and resolutions up to 1080p. Perfect for rapid prototyping, quick content creation, and efficient video production.",
             "Kling VIDEO 2.6 Pro": "Kling VIDEO 2.6 Pro is a next-generation video-and-audio AI model that delivers cinematic-quality visuals and native synchronized audio including dialogue, sound effects, and ambience. This model combines strong prompt fidelity with scene consistency and flexible artistic control for professional video production workflows.",
             "Wan2.6": "Alibaba's Wan2.6 model delivers multimodal video generation with native audio support and multi-shot sequencing capabilities. This model emphasizes temporal stability, consistent visual structure across shots, and reliable alignment between visuals and audio for short-form narrative video production.",
-            "KlingAI 2.5 Turbo Pro": "KlingAI's 2.5 Turbo Pro model delivers next-level creativity with turbocharged motion and cinematic visuals. Featuring precise prompt adherence for both text-to-video and image-to-video workflows, this model combines enhanced motion fluidity with professional-grade cinematic capabilities at 30 FPS."
+            "KlingAI 2.5 Turbo Pro": "KlingAI's 2.5 Turbo Pro model delivers next-level creativity with turbocharged motion and cinematic visuals. Featuring precise prompt adherence for both text-to-video and image-to-video workflows, this model combines enhanced motion fluidity with professional-grade cinematic capabilities at 30 FPS.",
         ]
-        
-// MARK: IMAGE NAMES
-        
-        // Initialize model image names mapping
-        modelImageNames = [
+    }
+
+    // MARK: IMAGE NAMES
+
+    private static func makeModelImageNames() -> [String: String] {
+        return [
             "GPT Image 1.5": "gptimage15",
             "Wan2.5-Preview Image": "wan25previewimage",
             "Nano Banana": "geminiflashimage25",
@@ -436,7 +438,7 @@ class ModelConfigurationManager {
             "FLUX.1 Kontext [pro]": "fluxkontextpro",
             "FLUX.1 Kontext [max]": "fluxkontextmax",
             "Z-Image-Turbo": "zimageturbo",
-            
+
             // Video Models
             "Sora 2": "sora2",
             "Google Veo 3": "veo3",
@@ -445,20 +447,21 @@ class ModelConfigurationManager {
             "Seedance 1.0 Pro Fast": "seedance10profast",
             "Kling VIDEO 2.6 Pro": "klingvideo26pro",
             "Wan2.6": "wan26",
-            "KlingAI 2.5 Turbo Pro": "klingai25turbopro"
+            "KlingAI 2.5 Turbo Pro": "klingai25turbopro",
         ]
-        
-// MARK: DURATIONS
-        
-        // Initialize allowed durations mapping for video models
-        allowedDurationsMap = [
+    }
+
+    // MARK: DURATIONS
+
+    private static func makeAllowedDurationsMap() -> [String: [DurationOption]] {
+        return [
             "Sora 2": [
                 DurationOption(id: "4", label: "4 seconds", duration: 4.0, description: "Short duration"),
                 DurationOption(id: "8", label: "8 seconds", duration: 8.0, description: "Standard duration"),
-                DurationOption(id: "12", label: "12 seconds", duration: 12.0, description: "Maximum duration")
+                DurationOption(id: "12", label: "12 seconds", duration: 12.0, description: "Maximum duration"),
             ],
             "Google Veo 3.1 Fast": [
-                DurationOption(id: "8", label: "8 seconds", duration: 8.0, description: "Extended duration")
+                DurationOption(id: "8", label: "8 seconds", duration: 8.0, description: "Extended duration"),
             ],
             "Seedance 1.0 Pro Fast": [
                 DurationOption(id: "5", label: "5 seconds", duration: 5.0, description: "Standard duration"),
@@ -466,106 +469,107 @@ class ModelConfigurationManager {
             ],
             "Kling VIDEO 2.6 Pro": [
                 DurationOption(id: "5", label: "5 seconds", duration: 5.0, description: "Standard duration"),
-                DurationOption(id: "10", label: "10 seconds", duration: 10.0, description: "Extended duration")
+                DurationOption(id: "10", label: "10 seconds", duration: 10.0, description: "Extended duration"),
             ],
             "Wan2.6": [
                 DurationOption(id: "5", label: "5 seconds", duration: 5.0, description: "Standard duration"),
                 DurationOption(id: "10", label: "10 seconds", duration: 10.0, description: "Extended duration"),
-                DurationOption(id: "15", label: "15 seconds", duration: 15.0, description: "Maximum duration")
+                DurationOption(id: "15", label: "15 seconds", duration: 15.0, description: "Maximum duration"),
             ],
             "KlingAI 2.5 Turbo Pro": [
                 DurationOption(id: "5", label: "5 seconds", duration: 5.0, description: "Standard duration"),
-                DurationOption(id: "10", label: "10 seconds", duration: 10.0, description: "Extended duration")
-            ]
+                DurationOption(id: "10", label: "10 seconds", duration: 10.0, description: "Extended duration"),
+            ],
         ]
-        
-// MARK: ALLOWED SIZES
-        
-        // Initialize allowed aspect ratios mapping for video models
-        allowedAspectRatiosMap = [
-            // Add to allowedAspectRatiosMap initialization:
+    }
+
+    // MARK: ALLOWED SIZES
+
+    private static func makeAllowedAspectRatiosMap() -> [String: [AspectRatioOption]] {
+        return [
             "GPT Image 1.5": [
                 AspectRatioOption(id: "2:3", label: "2:3", width: 2, height: 3, platforms: ["Portrait"]),
                 AspectRatioOption(id: "1:1", label: "1:1", width: 1, height: 1, platforms: ["Square"]),
-                AspectRatioOption(id: "3:2", label: "3:2", width: 3, height: 2, platforms: ["Landscape"])
+                AspectRatioOption(id: "3:2", label: "3:2", width: 3, height: 2, platforms: ["Landscape"]),
             ],
             "Wan2.5-Preview Image": [
                 AspectRatioOption(id: "3:4", label: "3:4", width: 3, height: 4, platforms: ["Portrait"]),
                 AspectRatioOption(id: "9:16", label: "9:16", width: 9, height: 16, platforms: ["TikTok", "Reels"]),
                 AspectRatioOption(id: "1:1", label: "1:1", width: 1, height: 1, platforms: ["Square"]),
                 AspectRatioOption(id: "4:3", label: "4:3", width: 4, height: 3, platforms: ["Landscape"]),
-                AspectRatioOption(id: "16:9", label: "16:9", width: 16, height: 9, platforms: ["YouTube"])
+                AspectRatioOption(id: "16:9", label: "16:9", width: 16, height: 9, platforms: ["YouTube"]),
             ],
             "Nano Banana Pro": [
                 AspectRatioOption(id: "3:4", label: "3:4", width: 3, height: 4, platforms: ["Portrait"]),
                 AspectRatioOption(id: "9:16", label: "9:16", width: 9, height: 16, platforms: ["TikTok", "Reels"]),
                 AspectRatioOption(id: "1:1", label: "1:1", width: 1, height: 1, platforms: ["Square"]),
                 AspectRatioOption(id: "4:3", label: "4:3", width: 4, height: 3, platforms: ["Landscape"]),
-                AspectRatioOption(id: "16:9", label: "16:9", width: 16, height: 9, platforms: ["YouTube"])
+                AspectRatioOption(id: "16:9", label: "16:9", width: 16, height: 9, platforms: ["YouTube"]),
             ],
             "Sora 2": [
                 AspectRatioOption(id: "9:16", label: "9:16", width: 9, height: 16, platforms: ["TikTok", "Reels"]),
-                AspectRatioOption(id: "16:9", label: "16:9", width: 16, height: 9, platforms: ["YouTube"])
-                ],
+                AspectRatioOption(id: "16:9", label: "16:9", width: 16, height: 9, platforms: ["YouTube"]),
+            ],
             "Google Veo 3.1 Fast": [
                 AspectRatioOption(id: "9:16", label: "9:16", width: 9, height: 16, platforms: ["TikTok", "Reels"]),
-                AspectRatioOption(id: "16:9", label: "16:9", width: 16, height: 9, platforms: ["YouTube"])
+                AspectRatioOption(id: "16:9", label: "16:9", width: 16, height: 9, platforms: ["YouTube"]),
             ],
             "Seedance 1.0 Pro Fast": [
                 AspectRatioOption(id: "3:4", label: "3:4", width: 3, height: 4, platforms: ["Portrait"]),
                 AspectRatioOption(id: "9:16", label: "9:16", width: 9, height: 16, platforms: ["TikTok", "Reels"]),
                 AspectRatioOption(id: "1:1", label: "1:1", width: 1, height: 1, platforms: ["Instagram"]),
                 AspectRatioOption(id: "4:3", label: "4:3", width: 4, height: 3, platforms: ["Landscape"]),
-                AspectRatioOption(id: "16:9", label: "16:9", width: 16, height: 9, platforms: ["YouTube"])
+                AspectRatioOption(id: "16:9", label: "16:9", width: 16, height: 9, platforms: ["YouTube"]),
             ],
             "Kling VIDEO 2.6 Pro": [
                 AspectRatioOption(id: "9:16", label: "9:16", width: 9, height: 16, platforms: ["TikTok", "Reels"]),
                 AspectRatioOption(id: "1:1", label: "1:1", width: 1, height: 1, platforms: ["Instagram"]),
-                AspectRatioOption(id: "16:9", label: "16:9", width: 16, height: 9, platforms: ["YouTube"])
+                AspectRatioOption(id: "16:9", label: "16:9", width: 16, height: 9, platforms: ["YouTube"]),
             ],
             "Wan2.6": [
                 AspectRatioOption(id: "9:16", label: "9:16", width: 9, height: 16, platforms: ["TikTok", "Reels"]),
                 AspectRatioOption(id: "1:1", label: "1:1", width: 1, height: 1, platforms: ["Instagram"]),
-                AspectRatioOption(id: "16:9", label: "16:9", width: 16, height: 9, platforms: ["YouTube"])
+                AspectRatioOption(id: "16:9", label: "16:9", width: 16, height: 9, platforms: ["YouTube"]),
             ],
             "KlingAI 2.5 Turbo Pro": [
                 AspectRatioOption(id: "9:16", label: "9:16", width: 9, height: 16, platforms: ["TikTok", "Reels"]),
                 AspectRatioOption(id: "1:1", label: "1:1", width: 1, height: 1, platforms: ["Instagram"]),
-                AspectRatioOption(id: "16:9", label: "16:9", width: 16, height: 9, platforms: ["YouTube"])
-            ]
+                AspectRatioOption(id: "16:9", label: "16:9", width: 16, height: 9, platforms: ["YouTube"]),
+            ],
         ]
-        
-// MARK: ALLOWED RESOLUTIONS
-        
-        // Initialize allowed resolutions mapping for video models
-        allowedResolutionsMap = [
+    }
+
+    // MARK: ALLOWED RESOLUTIONS
+
+    private static func makeAllowedResolutionsMap() -> [String: [ResolutionOption]] {
+        return [
             "Sora 2": [
                 ResolutionOption(id: "720p", label: "720p", description: "High quality"),
             ],
             "Google Veo 3.1 Fast": [
-                ResolutionOption(id: "1080p", label: "1080p", description: "Full HD")
+                ResolutionOption(id: "1080p", label: "1080p", description: "Full HD"),
             ],
             "Seedance 1.0 Pro Fast": [
                 ResolutionOption(id: "480p", label: "480p", description: "Standard quality"),
                 ResolutionOption(id: "720p", label: "720p", description: "High quality"),
-                ResolutionOption(id: "1080p", label: "1080p", description: "Full HD")
+                ResolutionOption(id: "1080p", label: "1080p", description: "Full HD"),
             ],
             "Kling VIDEO 2.6 Pro": [
-                ResolutionOption(id: "1080p", label: "1080p", description: "Full HD")
+                ResolutionOption(id: "1080p", label: "1080p", description: "Full HD"),
             ],
             "Wan2.6": [
                 ResolutionOption(id: "720p", label: "720p", description: "High quality"),
-                ResolutionOption(id: "1080p", label: "1080p", description: "Full HD")
+                ResolutionOption(id: "1080p", label: "1080p", description: "Full HD"),
             ],
             "KlingAI 2.5 Turbo Pro": [
-                ResolutionOption(id: "1080p", label: "1080p", description: "Full HD")
+                ResolutionOption(id: "1080p", label: "1080p", description: "Full HD"),
             ],
             // Nano Banana Pro (image model) - resolution tier 1K/2K/4K (pricing shown in credits in sheet)
             "Nano Banana Pro": [
                 ResolutionOption(id: "1k", label: "1K", description: nil),
                 ResolutionOption(id: "2k", label: "2K", description: nil),
-                ResolutionOption(id: "4k", label: "4K", description: nil)
-            ]
+                ResolutionOption(id: "4k", label: "4K", description: nil),
+            ],
         ]
     }
     
