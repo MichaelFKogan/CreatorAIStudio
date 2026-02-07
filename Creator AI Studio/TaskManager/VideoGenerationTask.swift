@@ -41,10 +41,13 @@ class VideoGenerationTask: MediaGenerationTask {
     // Reference video URL for motion control (e.g., Kling VIDEO 2.6 Pro)
     let referenceVideoURL: URL?
     
+    /// Motion control tier: "standard" (Fal.ai) or "pro" (Runware). Nil defaults to "standard" for backward compatibility.
+    let motionControlTier: String?
+    
     // Whether to use webhook mode (returns immediately) or polling mode (waits for result)
     let useWebhook: Bool
 
-    init(item: InfoPacket, image: UIImage?, userId: String, duration: Double, aspectRatio: String, resolution: String? = nil, storedDuration: Double? = nil, generateAudio: Bool? = nil, firstFrameImage: UIImage? = nil, lastFrameImage: UIImage? = nil, referenceVideoURL: URL? = nil, useWebhook: Bool = false) {
+    init(item: InfoPacket, image: UIImage?, userId: String, duration: Double, aspectRatio: String, resolution: String? = nil, storedDuration: Double? = nil, generateAudio: Bool? = nil, firstFrameImage: UIImage? = nil, lastFrameImage: UIImage? = nil, referenceVideoURL: URL? = nil, motionControlTier: String? = nil, useWebhook: Bool = false) {
         self.item = item
         self.image = image
         self.userId = userId
@@ -56,6 +59,7 @@ class VideoGenerationTask: MediaGenerationTask {
         self.firstFrameImage = firstFrameImage
         self.lastFrameImage = lastFrameImage
         self.referenceVideoURL = referenceVideoURL
+        self.motionControlTier = motionControlTier
         self.useWebhook = useWebhook && WebhookConfig.useWebhooks
     }
     
@@ -501,8 +505,9 @@ class VideoGenerationTask: MediaGenerationTask {
                 endpoint: apiConfig.endpoint
             )
             
-            // Determine provider based on request type
-            let provider: JobProvider = isMotionControl ? .falai : .runware
+            // Motion control "standard" → Fal.ai; "pro" or nil (e.g. Video Filter) → Runware for Pro, Fal.ai for others
+            let useFalForMotionControl = isMotionControl && (motionControlTier == nil || motionControlTier == "standard")
+            let provider: JobProvider = useFalForMotionControl ? .falai : .runware
             
             let deviceToken = await MainActor.run { PushNotificationManager.shared.deviceToken }
             let pendingJob = PendingJob(
@@ -522,9 +527,9 @@ class VideoGenerationTask: MediaGenerationTask {
             // MARK: Step 2 - Submit to API with webhook
             await onProgress(TaskProgress(progress: 0.4, message: generateProgressMessage()))
             
-            if isMotionControl, let image = image, let refVideoURL = referenceVideoURL {
-                // Use fal.ai for motion control
-                print("[VideoGenerationTask] Using fal.ai for motion control")
+            if useFalForMotionControl, let image = image, let refVideoURL = referenceVideoURL {
+                // Use Fal.ai for motion control (Standard tier)
+                print("[VideoGenerationTask] Using Fal.ai for motion control (Standard)")
                 
                 let falResponse = try await submitVideoToFalAIWithWebhook(
                     requestId: taskId,
@@ -556,7 +561,7 @@ class VideoGenerationTask: MediaGenerationTask {
                     try? await SupabaseManager.shared.updatePendingJobMetadata(taskId: taskId, metadata: updatedMetadata)
                 }
             } else {
-                // Use Runware for standard video generation
+                // Use Runware for video generation (including Motion Control Pro when referenceVideoURL is set)
                 guard let runwareModel = apiConfig.runwareModel else {
                     throw NSError(
                         domain: "APIError",

@@ -35,6 +35,7 @@ class VideoGenerationCoordinator: ObservableObject {
         firstFrameImage: UIImage? = nil,
         lastFrameImage: UIImage? = nil,
         referenceVideoURL: URL? = nil,
+        motionControlTier: String? = nil,
         onVideoGenerated: @escaping (String) -> Void = { _ in },
         onError: @escaping (Error) -> Void = { _ in }
     ) -> UUID {
@@ -84,6 +85,7 @@ class VideoGenerationCoordinator: ObservableObject {
             firstFrameImage: firstFrameImage,
             lastFrameImage: lastFrameImage,
             referenceVideoURL: referenceVideoURL,
+            motionControlTier: motionControlTier,
             useWebhook: true
         )
 

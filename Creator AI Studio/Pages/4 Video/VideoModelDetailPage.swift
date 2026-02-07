@@ -53,6 +53,13 @@ private enum KlingVideo26ProInputMode: String, CaseIterable {
     case motionControl = "Motion"
 }
 
+/// Motion control tier for Kling VIDEO 2.6 Pro: Standard (Fal.ai) or Pro (Runware).
+private enum MotionControlTier: String, CaseIterable {
+    case standard = "standard"
+    case pro = "pro"
+    var displayName: String { rawValue == "standard" ? "Standard" : "Pro" }
+}
+
 /// Input mode for Sora 2, Seedance 1.0 Pro Fast, Wan2.6: Text to Video or Image to Video.
 private enum Sora2InputMode: String, CaseIterable {
     case textToVideo = "Text"
@@ -83,6 +90,9 @@ struct VideoModelDetailPage: View {
 
     /// Kling VIDEO 2.6 Pro only: Text | Image | Motion Control
     @State private var klingVideo26InputMode: KlingVideo26ProInputMode = .imageToVideo
+
+    /// Kling VIDEO 2.6 Pro Motion Control only: Standard (Fal.ai) or Pro (Runware)
+    @State private var motionControlTier: MotionControlTier = .standard
 
     /// Sora 2, Seedance 1.0 Pro Fast, Wan2.6: Text to Video | Image to Video
     @State private var sora2InputMode: Sora2InputMode = .imageToVideo
@@ -284,9 +294,10 @@ struct VideoModelDetailPage: View {
     }
 
     private var priceString: String {
-        // Motion Control mode: show per-second rate when no video selected
-        if isMotionControlMode && motionControlVideoDuration == nil {
-            return "12 credits/sec"
+        // Motion Control mode: show per-second rate when no video selected (rate is in dollars; convert to credits)
+        if isMotionControlMode && motionControlVideoDuration == nil, let modelName = item.display.modelName,
+           let rate = PricingManager.shared.motionControlPricePerSecond(for: modelName, tier: motionControlTier.rawValue) {
+            return "\(PricingManager.formatCredits(rate)) credits/sec"
         }
         return PricingManager.formatPrice(currentPrice ?? item.resolvedCost ?? 0)
     }
@@ -304,10 +315,10 @@ struct VideoModelDetailPage: View {
             return item.resolvedCost
         }
 
-        // Motion Control mode uses per-second pricing based on video duration
+        // Motion Control mode uses per-second pricing based on video duration and tier
         if isMotionControlMode {
             if let videoDuration = motionControlVideoDuration {
-                return PricingManager.shared.motionControlPrice(for: modelName, durationSeconds: videoDuration)
+                return PricingManager.shared.motionControlPrice(for: modelName, tier: motionControlTier.rawValue, durationSeconds: videoDuration)
             }
             return nil  // No video selected - triggers placeholder display
         }
@@ -538,31 +549,67 @@ struct VideoModelDetailPage: View {
     @ViewBuilder
     private var motionControlSectionView: some View {
         if isKlingVideo26Pro && klingVideo26InputMode == .motionControl {
-            LazyView(
-                MotionControlSection(
-                    videoItem: $motionControlVideoItem,
-                    videoURL: $motionControlVideoURL,
-                    characterImage: $motionControlCharacterImage,
-                    characterPhotoItem: $motionControlCharacterPhotoItem,
-                    videoDuration: $motionControlVideoDuration,
-                    showDurationAlert: $showVideoDurationAlert,
-                    color: .purple,
-                    showTitleAndDescription: false
-                ))
-
+            VStack(alignment: .leading, spacing: 12) {
+                motionControlTierPicker
+                LazyView(
+                    MotionControlSection(
+                        videoItem: $motionControlVideoItem,
+                        videoURL: $motionControlVideoURL,
+                        characterImage: $motionControlCharacterImage,
+                        characterPhotoItem: $motionControlCharacterPhotoItem,
+                        videoDuration: $motionControlVideoDuration,
+                        showDurationAlert: $showVideoDurationAlert,
+                        color: .purple,
+                        showTitleAndDescription: false
+                    ))
+            }
             motionControlHints
+        }
+    }
+
+    /// Standard vs Pro tier picker when Motion Control has multiple tiers
+    @ViewBuilder
+    private var motionControlTierPicker: some View {
+        let modelName = item.display.modelName ?? ""
+        let orderedTiers = PricingManager.shared.motionControlTiers(for: modelName)
+        if orderedTiers.count > 1 {
+            let options: [(String, String)] = orderedTiers.map { tier in
+                (tier == "standard" ? "Standard" : "Pro", tier == "standard" ? "film" : "sparkles")
+            }
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Motion Control option")
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.primary)
+                ChipOptionPicker(
+                    options: options,
+                    selection: Binding(
+                        get: { orderedTiers.firstIndex(of: motionControlTier.rawValue) ?? 0 },
+                        set: { idx in
+                            if idx >= 0 && idx < orderedTiers.count {
+                                motionControlTier = MotionControlTier(rawValue: orderedTiers[idx]) ?? .standard
+                            }
+                        }
+                    ),
+                    color: .purple
+                )
+            }
+            .padding(.horizontal)
         }
     }
 
     /// Pricing and duration hints for motion control
     @ViewBuilder
     private var motionControlHints: some View {
+        let modelName = item.display.modelName ?? ""
+        let rate = PricingManager.shared.motionControlPricePerSecond(for: modelName, tier: motionControlTier.rawValue)
+        let rateStr = rate.map { "\(PricingManager.formatCredits($0)) credits per second of video" } ?? "Per-second pricing"
         VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 4) {
                 Image(systemName: "centsign.circle")
                     .font(.caption)
                     .foregroundColor(.secondary)
-                Text("12 credits per second of video")
+                Text(rateStr)
                     .font(.caption)
                     .foregroundColor(.secondary)
                 Spacer()
@@ -1039,9 +1086,10 @@ struct VideoModelDetailPage: View {
         let taskDuration: Double
         if isMotionControlMode, let videoDuration = motionControlVideoDuration {
             taskDuration = videoDuration
-            // Set motion control price on the item
+            // Set motion control price on the item (by tier)
             modifiedItem.cost = PricingManager.shared.motionControlPrice(
                 for: item.display.modelName ?? "",
+                tier: motionControlTier.rawValue,
                 durationSeconds: videoDuration
             )
         } else {
@@ -1080,6 +1128,7 @@ struct VideoModelDetailPage: View {
                 firstFrameImage: useFirstLastFrame ? firstFrameImage : nil,
                 lastFrameImage: useFirstLastFrame ? lastFrameImage : nil,
                 referenceVideoURL: referenceVideoForGeneration,
+                motionControlTier: isMotionControlMode ? motionControlTier.rawValue : nil,
                 onVideoGenerated: { _ in
                     isGenerating = false
                 },
@@ -1487,8 +1536,8 @@ private struct PricingTableSheetView: View {
 private struct MotionControlPricingCard: View {
     let modelName: String
 
-    private var pricePerSecond: Decimal? {
-        PricingManager.shared.motionControlPricePerSecond(for: modelName)
+    private var tiers: [String] {
+        PricingManager.shared.motionControlTiers(for: modelName)
     }
 
     var body: some View {
@@ -1508,12 +1557,12 @@ private struct MotionControlPricingCard: View {
                 Capsule().fill(Color.purple.opacity(0.12))
             )
 
-            // Table: one row for per-second rate
-            if let rate = pricePerSecond {
+            // Table: one row per tier (Standard, Pro) or single row if one tier
+            if !tiers.isEmpty {
                 VStack(spacing: 0) {
                     // Header
                     HStack(spacing: 0) {
-                        Text("Rate")
+                        Text("Option")
                             .font(.system(size: 11, weight: .medium))
                             .foregroundColor(.secondary)
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -1525,22 +1574,27 @@ private struct MotionControlPricingCard: View {
                     .padding(.horizontal, 12)
                     .padding(.vertical, 4)
 
-                    // Data row
-                    HStack(spacing: 0) {
-                        Text("Per second of video")
-                            .font(.system(size: 12, weight: .medium, design: .rounded))
-                            .foregroundColor(.primary)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                        PriceDisplayView(
-                            price: rate,
-                            font: .system(size: 12, weight: .medium, design: .rounded),
-                            foregroundColor: .white
-                        )
-                        .frame(maxWidth: .infinity, alignment: .trailing)
+                    ForEach(Array(tiers.enumerated()), id: \.offset) { _, tier in
+                        let rate = PricingManager.shared.motionControlPricePerSecond(for: modelName, tier: tier)
+                        let label = tier == "standard" ? "Standard (per sec)" : "Pro (per sec)"
+                        if let rate = rate {
+                            HStack(spacing: 0) {
+                                Text(label)
+                                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                                    .foregroundColor(.primary)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                PriceDisplayView(
+                                    price: rate,
+                                    font: .system(size: 12, weight: .medium, design: .rounded),
+                                    foregroundColor: .white
+                                )
+                                .frame(maxWidth: .infinity, alignment: .trailing)
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(Color.purple.opacity(0.03))
+                        }
                     }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
-                    .background(Color.purple.opacity(0.03))
                 }
                 .background(
                     RoundedRectangle(cornerRadius: 10)

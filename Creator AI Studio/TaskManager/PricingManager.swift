@@ -392,41 +392,59 @@ class PricingManager {
 
     // MARK: MOTION CONTROL PRICING
 
-    /// Motion control pricing per second (different from standard video pricing)
-    /// Motion control transfers movements from a reference video to a character image
-    private static let motionControlPricePerSecond: [String: Decimal] = [
-        // Kling VIDEO 2.6 Pro: $0.12/second = 12 credits/second for motion control
-        "Kling VIDEO 2.6 Pro": 0.12
+    /// Motion control pricing per second by model and tier.
+    /// Tier: "standard" (e.g. Fal.ai) or "pro" (e.g. Runware Kling 2.6 Pro).
+    /// Motion control transfers movements from a reference video to a character image.
+    private static let motionControlPricePerSecondByTier: [String: [String: Decimal]] = [
+        "Kling VIDEO 2.6 Pro": [
+            "standard": 0.08,  // Fal.ai v2.6/standard/motion-control — 8 credits/sec
+            "pro": 0.12        // Runware Kling 2.6 Pro motion control — 12 credits/sec
+        ]
     ]
 
-    /// Returns the motion control price per second for a given model
-    ///
-    /// - Parameter modelName: The name of the video model
-    /// - Returns: The per-second price as a Decimal, or nil if model doesn't support motion control pricing
-    func motionControlPricePerSecond(for modelName: String) -> Decimal? {
-        return PricingManager.motionControlPricePerSecond[modelName]
-    }
-
-    /// Returns the total motion control price for a given model and duration
-    /// Motion control pricing is based on the reference video duration
-    ///
+    /// Returns the motion control price per second for a given model and tier.
     /// - Parameters:
     ///   - modelName: The name of the video model
-    ///   - durationSeconds: The reference video duration in seconds
-    /// - Returns: The total price as a Decimal, or nil if model doesn't support motion control pricing
-    func motionControlPrice(for modelName: String, durationSeconds: Double) -> Decimal? {
-        guard let perSecondRate = PricingManager.motionControlPricePerSecond[modelName] else {
+    ///   - tier: "standard" or "pro"
+    /// - Returns: The per-second price as a Decimal, or nil if not configured
+    func motionControlPricePerSecond(for modelName: String, tier: String) -> Decimal? {
+        return PricingManager.motionControlPricePerSecondByTier[modelName]?[tier]
+    }
+
+    /// Returns the motion control price per second for a given model (first available tier, for backward compatibility).
+    func motionControlPricePerSecond(for modelName: String) -> Decimal? {
+        let tiers = PricingManager.motionControlPricePerSecondByTier[modelName]
+        return tiers?["pro"] ?? tiers?["standard"]
+    }
+
+    /// Returns the total motion control price for a given model, tier, and duration.
+    func motionControlPrice(for modelName: String, tier: String, durationSeconds: Double) -> Decimal? {
+        guard let perSecondRate = motionControlPricePerSecond(for: modelName, tier: tier) else {
             return nil
         }
         return perSecondRate * Decimal(durationSeconds)
     }
 
-    /// Checks if a model supports motion control pricing
-    ///
-    /// - Parameter modelName: The name of the video model
-    /// - Returns: True if the model has motion control pricing
+    /// Returns the total motion control price for a given model and duration (uses first available tier).
+    func motionControlPrice(for modelName: String, durationSeconds: Double) -> Decimal? {
+        guard let perSecondRate = motionControlPricePerSecond(for: modelName) else {
+            return nil
+        }
+        return perSecondRate * Decimal(durationSeconds)
+    }
+
+    /// Checks if a model supports motion control pricing (any tier).
     func hasMotionControlPricing(for modelName: String) -> Bool {
-        return PricingManager.motionControlPricePerSecond[modelName] != nil
+        return PricingManager.motionControlPricePerSecondByTier[modelName] != nil
+    }
+
+    /// Returns supported motion control tiers for a model in display order (e.g. ["standard", "pro"]).
+    func motionControlTiers(for modelName: String) -> [String] {
+        guard let tiers = PricingManager.motionControlPricePerSecondByTier[modelName] else {
+            return []
+        }
+        let order = ["standard", "pro"]
+        return order.filter { tiers[$0] != nil }
     }
 
     // MARK: DIMENSIONS??? WHY?
