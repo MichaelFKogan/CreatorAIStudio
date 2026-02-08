@@ -88,7 +88,7 @@ class PricingManager {
             "FLUX.2 [dev]": 0.0122,
             "FLUX.1 Kontext [pro]": 0.04,
             "FLUX.1 Kontext [max]": 0.08,
-            "Z-Image-Turbo": 0.005,  // $0.005 (displays as 0.5 credits; 100 credits = $1)
+            "Z-Image-Turbo": 0.005,  // $0.005 (half a cent = 0.5 credits; 1 cent = 1 credit)
             "Wavespeed Ghibli": 0.005,
         ]
     }
@@ -606,7 +606,7 @@ extension PricingManager {
         let credits = dollarsToCredits(price)
         let formatter = NumberFormatter()
         formatter.numberStyle = .decimal
-        formatter.maximumFractionDigits = 0
+        formatter.maximumFractionDigits = 2
         formatter.minimumFractionDigits = 0
         formatter.roundingMode = .halfUp
         return formatter.string(from: NSDecimalNumber(decimal: credits))
