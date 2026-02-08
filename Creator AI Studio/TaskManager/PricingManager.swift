@@ -429,19 +429,30 @@ class PricingManager {
     }
 
     /// Returns the total motion control price for a given model, tier, and duration.
+    /// Price is rounded up to whole credits (e.g. 15.3 sec at 8 credits/sec → 123 credits, not 122.4).
     func motionControlPrice(for modelName: String, tier: String, durationSeconds: Double) -> Decimal? {
         guard let perSecondRate = motionControlPricePerSecond(for: modelName, tier: tier) else {
             return nil
         }
-        return perSecondRate * Decimal(durationSeconds)
+        let rawDollars = perSecondRate * Decimal(durationSeconds)
+        var creditsDCopy = rawDollars * PriceDisplayMode.creditsPerDollar
+        var rounded = Decimal()
+        NSDecimalRound(&rounded, &creditsDCopy, 0, .up)
+        return rounded / PriceDisplayMode.creditsPerDollar
     }
 
     /// Returns the total motion control price for a given model and duration (uses first available tier).
+    /// Price is rounded up to whole credits.
     func motionControlPrice(for modelName: String, durationSeconds: Double) -> Decimal? {
         guard let perSecondRate = motionControlPricePerSecond(for: modelName) else {
             return nil
         }
-        return perSecondRate * Decimal(durationSeconds)
+        let rawDollars = perSecondRate * Decimal(durationSeconds)
+        let creditsD = rawDollars * PriceDisplayMode.creditsPerDollar
+        var creditsDCopy = creditsD
+        var rounded = Decimal()
+        NSDecimalRound(&rounded, &creditsDCopy, 0, .up)
+        return rounded / PriceDisplayMode.creditsPerDollar
     }
 
     /// Checks if a model supports motion control pricing (any tier).

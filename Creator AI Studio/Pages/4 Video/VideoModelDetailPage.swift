@@ -302,6 +302,14 @@ struct VideoModelDetailPage: View {
         return PricingManager.formatPrice(currentPrice ?? item.resolvedCost ?? 0)
     }
 
+    /// Per-second rate string for banner when Motion Control is selected but no reference video yet (e.g. "8/s Credits").
+    private var motionControlBannerPlaceholder: String? {
+        guard isMotionControlMode, motionControlVideoDuration == nil,
+              let modelName = item.display.modelName,
+              let rate = PricingManager.shared.motionControlPricePerSecond(for: modelName, tier: motionControlTier.rawValue) else { return nil }
+        return "\(PricingManager.formatCredits(rate))/s Credits"
+    }
+
     private var creditsString: String {
         // Keep for backward compatibility, but use new formatter
         priceString
@@ -769,7 +777,9 @@ struct VideoModelDetailPage: View {
                     VStack(spacing: 24) {
                         LazyView(
                             BannerSectionVideo(
-                                item: item, price: currentPrice))
+                                item: item,
+                                price: currentPrice,
+                                pricePlaceholder: motionControlBannerPlaceholder))
 
                         Divider().padding(.horizontal)
 
@@ -1206,6 +1216,8 @@ struct VideoModelDetailPage: View {
 private struct BannerSectionVideo: View {
     let item: InfoPacket
     let price: Decimal?
+    /// When set and price is nil (e.g. Motion Control before reference video), show this instead of base price and use "per second of reference video" as suffix.
+    var pricePlaceholder: String? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -1236,15 +1248,23 @@ private struct BannerSectionVideo: View {
                         .background(Capsule().fill(Color.purple.opacity(0.8)))
 
                         HStack(spacing: 4) {
-                            PriceDisplayView(
-                                price: price ?? item.resolvedCost ?? 0,
-                                showUnit: true,
-                                font: .title3,
-                                fontWeight: .bold,
-                                foregroundColor: .white
-                            )
-                            Text("per video").font(.caption).foregroundColor(
-                                .secondary)
+                            if let placeholder = pricePlaceholder, price == nil {
+                                Text(placeholder)
+                                    .font(.title3)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.white)
+                            } else {
+                                PriceDisplayView(
+                                    price: price ?? item.resolvedCost ?? 0,
+                                    showUnit: true,
+                                    font: .title3,
+                                    fontWeight: .bold,
+                                    foregroundColor: .white
+                                )
+                                Text("per video")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
                         }
 
                         if let capabilities = ModelConfigurationManager.shared
@@ -2531,7 +2551,39 @@ private struct MotionControlSlotCard: View {
 
     var body: some View {
         VStack(spacing: 8) {
-            if let url = videoURL {
+            // Loading state: user picked a video but loadTransferable is still in progress
+            if videoItem != nil, videoURL == nil {
+                ZStack(alignment: .topTrailing) {
+                    VStack(spacing: 12) {
+                        ProgressView()
+                            .scaleEffect(1.4)
+                            .tint(color)
+                        Text("Loading video…")
+                            .font(.caption)
+                            .fontWeight(.medium)
+                            .foregroundColor(.secondary)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .frame(minHeight: DesignConstants.frameStyleSlotHeight)
+                    .background(Color.gray.opacity(0.06))
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .strokeBorder(style: StrokeStyle(lineWidth: 2, dash: [6, 4]))
+                            .foregroundColor(color.opacity(0.3))
+                    )
+                    Button {
+                        videoItem = nil
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.title3)
+                            .foregroundStyle(.black)
+                            .background(Circle().fill(.white))
+                    }
+                    .padding(6)
+                }
+                .frame(maxWidth: .infinity)
+            } else if let url = videoURL {
                 ZStack(alignment: .topTrailing) {
                     if let thumb = thumbnailImage {
                         // Show thumbnail (same style as Character Image slot)
@@ -2542,7 +2594,7 @@ private struct MotionControlSlotCard: View {
                             .clipped()
                             .clipShape(RoundedRectangle(cornerRadius: 12))
                     } else {
-                        // Loading or fallback: subtle background + icon
+                        // Thumbnail generating: subtle background + spinner
                         RoundedRectangle(cornerRadius: 12)
                             .fill(Color.gray.opacity(0.08))
                             .frame(width: DesignConstants.frameStyleSlotWidth, height: DesignConstants.frameStyleSlotHeight)
@@ -2555,18 +2607,27 @@ private struct MotionControlSlotCard: View {
                                 }
                             }
                     }
-                    // Duration badge (bottom-left) when we have duration
+                    // Duration overlay at bottom (keeps same card size as Character Image)
                     if let duration = videoDuration, duration > 0 {
-                        Text(formatVideoDuration(duration))
-                            .font(.caption2)
-                            .fontWeight(.medium)
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 3)
-                            .background(Color.black.opacity(0.6))
-                            .clipShape(RoundedRectangle(cornerRadius: 6))
-                            .padding(8)
-                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+                        let secondsStr: String = {
+                            let oneDecimal = String(format: "%.1f", duration)
+                            if oneDecimal.hasSuffix(".0") { return String(Int(duration)) }
+                            return oneDecimal
+                        }()
+                        VStack {
+                            Spacer()
+                            Text("\(formatVideoDuration(duration)) (\(secondsStr) sec)")
+                                .font(.caption2)
+                                .fontWeight(.medium)
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 3)
+                                .background(Color.black.opacity(0.6))
+                                .clipShape(RoundedRectangle(cornerRadius: 6))
+                                .padding(8)
+                        }
+                        .frame(width: DesignConstants.frameStyleSlotWidth, height: DesignConstants.frameStyleSlotHeight)
+                        .allowsHitTesting(false)
                     }
                     // Change button (top-right, like character image remove)
                     Button {
@@ -2582,6 +2643,7 @@ private struct MotionControlSlotCard: View {
                     }
                     .padding(6)
                 }
+                .frame(width: DesignConstants.frameStyleSlotWidth, height: DesignConstants.frameStyleSlotHeight)
                 .frame(maxWidth: .infinity)
                 .task(id: url) {
                     thumbnailImage = await generateVideoThumbnail(from: url)
@@ -2613,42 +2675,42 @@ private struct MotionControlSlotCard: View {
                             .foregroundColor(color.opacity(0.3))
                     )
                 }
-                .onChange(of: videoItem) { _, newItem in
-                    Task {
-                        if let item = newItem,
-                           let video = try? await item.loadTransferable(type: VideoTransferable.self) {
-                            // Check video duration using AVURLAsset
-                            let asset = AVURLAsset(url: video.url)
-                            if let duration = try? await asset.load(.duration) {
-                                let durationSeconds = CMTimeGetSeconds(duration)
+            }
+        }
+        .onChange(of: videoItem) { _, newItem in
+            Task {
+                if let item = newItem,
+                   let video = try? await item.loadTransferable(type: VideoTransferable.self) {
+                    // Check video duration using AVURLAsset
+                    let asset = AVURLAsset(url: video.url)
+                    if let duration = try? await asset.load(.duration) {
+                        let durationSeconds = CMTimeGetSeconds(duration)
 
-                                if durationSeconds > 30 {
-                                    // Video too long - reject and show alert
-                                    await MainActor.run {
-                                        videoURL = nil
-                                        videoItem = nil
-                                        videoDuration = nil
-                                        showDurationAlert = true
-                                    }
-                                } else {
-                                    await MainActor.run {
-                                        videoURL = video.url
-                                        videoDuration = durationSeconds
-                                    }
-                                }
-                            } else {
-                                // Could not determine duration - allow but set nil
-                                await MainActor.run {
-                                    videoURL = video.url
-                                    videoDuration = nil
-                                }
+                        if durationSeconds > 30 {
+                            // Video too long - reject and show alert
+                            await MainActor.run {
+                                videoURL = nil
+                                videoItem = nil
+                                videoDuration = nil
+                                showDurationAlert = true
                             }
                         } else {
                             await MainActor.run {
-                                videoURL = nil
-                                videoDuration = nil
+                                videoURL = video.url
+                                videoDuration = durationSeconds
                             }
                         }
+                    } else {
+                        // Could not determine duration - allow but set nil
+                        await MainActor.run {
+                            videoURL = video.url
+                            videoDuration = nil
+                        }
+                    }
+                } else {
+                    await MainActor.run {
+                        videoURL = nil
+                        videoDuration = nil
                     }
                 }
             }
