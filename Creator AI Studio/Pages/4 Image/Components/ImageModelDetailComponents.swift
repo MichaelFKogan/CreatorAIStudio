@@ -400,14 +400,15 @@ struct FullPromptSheet: View {
         NavigationStack {
             TextEditor(text: $prompt)
                 .font(.system(size: 17))
-                .padding()
+                .foregroundStyle(.white)
                 .scrollContentBackground(.hidden)
-                .background(Color.gray.opacity(0.08))
+                .padding()
+                .background(Color.black)
                 .overlay(alignment: .topLeading) {
                     if prompt.isEmpty {
                         Text(placeholder)
                             .font(.system(size: 17))
-                            .foregroundColor(.gray.opacity(0.5))
+                            .foregroundColor(.gray)
                             .padding(.horizontal, 20)
                             .padding(.vertical, 24)
                             .allowsHitTesting(false)
@@ -416,6 +417,9 @@ struct FullPromptSheet: View {
                 .focused($isFocused)
             .navigationTitle("Prompt")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(.black, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
+            .toolbarColorScheme(.dark, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") {
@@ -427,6 +431,7 @@ struct FullPromptSheet: View {
                 }
             }
         }
+        .background(Color.black)
     }
 }
 

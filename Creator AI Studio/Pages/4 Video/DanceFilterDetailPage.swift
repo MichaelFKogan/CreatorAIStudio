@@ -83,8 +83,11 @@ struct DanceFilterDetailPage: View {
             ?? defaultAspectOptions
     }
     
+    /// Price for this dance filter: Standard Motion Control (8 credits/sec × selected duration).
     private var currentPrice: Decimal? {
-        return item.resolvedCost
+        let duration = videoDurationOptions[selectedDurationIndex].duration
+        return PricingManager.shared.motionControlPrice(for: "Kling VIDEO 2.6 Pro", tier: "standard", durationSeconds: duration)
+            ?? item.resolvedCost
     }
     
     // Calculate required credits as Double
@@ -325,7 +328,7 @@ struct DanceFilterDetailPage: View {
         
         var modifiedItem = item
         
-        // Set the model to Kling VIDEO 2.6 Pro for motion control
+        // Use Kling VIDEO 2.6 Standard Motion Control (Fal.ai standard tier — cheaper than Pro)
         modifiedItem.display.modelName = "Kling VIDEO 2.6 Pro"
         
         // Set the prompt for transformation
@@ -335,9 +338,15 @@ struct DanceFilterDetailPage: View {
         // Use resolvedAPIConfig as base, then modify aspectRatio and model
         var config = modifiedItem.resolvedAPIConfig
         config.aspectRatio = imageAspectRatio
-        // Set the Runware model to Kling VIDEO 2.6 Pro
+        // Motion control uses Fal.ai (standard endpoint); Runware model kept for compatibility
         config.runwareModel = "klingai:kling-video@2.6-pro"
         modifiedItem.apiConfig = config
+        
+        // Standard motion control pricing (per second of reference video)
+        let durationForPricing = videoDurationOptions[selectedDurationIndex].duration
+        if let standardCost = PricingManager.shared.motionControlPrice(for: "Kling VIDEO 2.6 Pro", tier: "standard", durationSeconds: durationForPricing) {
+            modifiedItem.cost = standardCost
+        }
         
         // Get the reference video URL from the bundle (separate from UI preview video)
         let referenceVideoURL = getReferenceVideoURL()
@@ -373,6 +382,7 @@ struct DanceFilterDetailPage: View {
                 firstFrameImage: nil,
                 lastFrameImage: nil,
                 referenceVideoURL: refVideoURL, // Pass the reference video for motion control
+                motionControlTier: "standard",   // Use Fal.ai standard motion control (cheaper)
                 onVideoGenerated: { _ in
                     isGenerating = false
                 },
@@ -865,12 +875,12 @@ private struct BannerSectionFilter: View {
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                     
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Kling VIDEO 2.6 Pro")
+                        Text("Kling VIDEO 2.6")
                             .font(.title2).fontWeight(.bold).foregroundColor(.primary)
                             .lineLimit(1)
                             .minimumScaleFactor(0.8)
 
-                        Text("With Motion Control")
+                        Text("Standard Motion Control")
                             .font(.headline).fontWeight(.semibold).foregroundColor(.primary)
                             .lineLimit(1)
                             .minimumScaleFactor(0.8)                        
