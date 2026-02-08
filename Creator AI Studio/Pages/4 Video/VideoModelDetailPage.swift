@@ -551,6 +551,7 @@ struct VideoModelDetailPage: View {
         if isKlingVideo26Pro && klingVideo26InputMode == .motionControl {
             VStack(alignment: .leading, spacing: 12) {
                 motionControlTierPicker
+                motionControlHints
                 LazyView(
                     MotionControlSection(
                         videoItem: $motionControlVideoItem,
@@ -563,7 +564,6 @@ struct VideoModelDetailPage: View {
                         showTitleAndDescription: false
                     ))
             }
-            motionControlHints
         }
     }
 
@@ -649,12 +649,19 @@ struct VideoModelDetailPage: View {
     /// Generate button view
     @ViewBuilder
     private var generateButtonView: some View {
+        let motionControlNoVideoPlaceholder: String? = {
+            guard isMotionControlMode, motionControlVideoDuration == nil,
+                  let modelName = item.display.modelName,
+                  let rate = PricingManager.shared.motionControlPricePerSecond(for: modelName, tier: motionControlTier.rawValue) else { return nil }
+            return "\(PricingManager.formatCredits(rate)) credits/sec"
+        }()
         LazyView(
             GenerateButtonVideo(
                 prompt: prompt,
                 isGenerating: $isGenerating,
                 keyboardHeight: $keyboardHeight,
                 price: currentPrice,
+                pricePlaceholder: motionControlNoVideoPlaceholder,
                 selectedSize: videoAspectOptions[selectedAspectIndex].id,
                 selectedResolution: hasVariableResolution
                     ? videoResolutionOptions[selectedResolutionIndex].id : nil,
@@ -1997,6 +2004,8 @@ private struct GenerateButtonVideo: View {
     @Binding var isGenerating: Bool
     @Binding var keyboardHeight: CGFloat
     let price: Decimal?
+    /// When set and price is nil, show this instead of "0 credits" (e.g. motion control before video: "8 credits/sec")
+    let pricePlaceholder: String?
     let selectedSize: String
     let selectedResolution: String?
     let selectedDuration: String
@@ -2008,6 +2017,12 @@ private struct GenerateButtonVideo: View {
 
     private var canGenerate: Bool {
         isLoggedIn && hasCredits && isConnected
+    }
+
+    private var priceText: String {
+        if let p = price { return PricingManager.formatPrice(p) }
+        if let placeholder = pricePlaceholder { return placeholder }
+        return PricingManager.formatPrice(0)
     }
 
     var body: some View {
@@ -2035,7 +2050,7 @@ private struct GenerateButtonVideo: View {
                             .fontWeight(.semibold)
                         Image(systemName: "sparkle")
                             .font(.system(size: 14))
-                        Text(PricingManager.formatPrice(price ?? 0))
+                        Text(priceText)
                             .fontWeight(.semibold)
                     }
                 }
