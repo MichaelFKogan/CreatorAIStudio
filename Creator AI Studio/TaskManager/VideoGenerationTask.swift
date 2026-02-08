@@ -41,13 +41,16 @@ class VideoGenerationTask: MediaGenerationTask {
     // Reference video URL for motion control (e.g., Kling VIDEO 2.6 Pro)
     let referenceVideoURL: URL?
     
+    // Reference style image URL for Kling O1 reference-to-video (e.g., Spooky Video Filters)
+    let referenceStyleImageURL: URL?
+    
     /// Motion control tier: "standard" (Fal.ai) or "pro" (Runware). Nil defaults to "standard" for backward compatibility.
     let motionControlTier: String?
     
     // Whether to use webhook mode (returns immediately) or polling mode (waits for result)
     let useWebhook: Bool
 
-    init(item: InfoPacket, image: UIImage?, userId: String, duration: Double, aspectRatio: String, resolution: String? = nil, storedDuration: Double? = nil, generateAudio: Bool? = nil, firstFrameImage: UIImage? = nil, lastFrameImage: UIImage? = nil, referenceVideoURL: URL? = nil, motionControlTier: String? = nil, useWebhook: Bool = false) {
+    init(item: InfoPacket, image: UIImage?, userId: String, duration: Double, aspectRatio: String, resolution: String? = nil, storedDuration: Double? = nil, generateAudio: Bool? = nil, firstFrameImage: UIImage? = nil, lastFrameImage: UIImage? = nil, referenceVideoURL: URL? = nil, referenceStyleImageURL: URL? = nil, motionControlTier: String? = nil, useWebhook: Bool = false) {
         self.item = item
         self.image = image
         self.userId = userId
@@ -59,6 +62,7 @@ class VideoGenerationTask: MediaGenerationTask {
         self.firstFrameImage = firstFrameImage
         self.lastFrameImage = lastFrameImage
         self.referenceVideoURL = referenceVideoURL
+        self.referenceStyleImageURL = referenceStyleImageURL
         self.motionControlTier = motionControlTier
         self.useWebhook = useWebhook && WebhookConfig.useWebhooks
     }
@@ -471,22 +475,15 @@ class VideoGenerationTask: MediaGenerationTask {
             // Generate a unique task ID
             let taskId = UUID().uuidString
             
-            // Check if this is a motion control request (Video Filters or Kling VIDEO 2.6 Pro)
+            // Check if this is O1 reference-to-video (Spooky Video Filters) or motion control (Dance / Kling 2.6 Pro)
             let hasReferenceVideo = referenceVideoURL != nil
+            let hasReferenceStyleImage = referenceStyleImageURL != nil
             let isVideoFilter = item.type == "Video Filter"
             let isKlingVideo26Pro = item.display.modelName == "Kling VIDEO 2.6 Pro"
             let isMotionControl = hasReferenceVideo && (isVideoFilter || isKlingVideo26Pro)
+            let isO1ReferenceToVideo = hasReferenceStyleImage && image != nil && !hasReferenceVideo
 
-            print("[VideoGenerationTask] 🔍 Motion Control Detection:")
-            print("[VideoGenerationTask]   - hasReferenceVideo: \(hasReferenceVideo)")
-            print("[VideoGenerationTask]   - item.type: '\(item.type ?? "nil")'")
-            print("[VideoGenerationTask]   - modelName: '\(item.display.modelName ?? "nil")'")
-            print("[VideoGenerationTask]   - isVideoFilter: \(isVideoFilter)")
-            print("[VideoGenerationTask]   - isKlingVideo26Pro: \(isKlingVideo26Pro)")
-            print("[VideoGenerationTask]   - isMotionControl: \(isMotionControl)")
-            if let refURL = referenceVideoURL {
-                print("[VideoGenerationTask]   - referenceVideoURL: \(refURL.absoluteString)")
-            }
+            print("[VideoGenerationTask] 🔍 Detection: hasReferenceVideo=\(hasReferenceVideo), hasReferenceStyleImage=\(hasReferenceStyleImage), isMotionControl=\(isMotionControl), isO1ReferenceToVideo=\(isO1ReferenceToVideo)")
             
             let modelName = item.display.modelName ?? "unknown"
             
@@ -505,9 +502,8 @@ class VideoGenerationTask: MediaGenerationTask {
                 endpoint: apiConfig.endpoint
             )
             
-            // Motion control: both "standard" and "pro" use Fal.ai (different endpoints). nil = e.g. DanceFilterDetailPage → Fal.ai standard.
             let useFalForMotionControl = isMotionControl && (motionControlTier == nil || motionControlTier == "standard" || motionControlTier == "pro")
-            let provider: JobProvider = useFalForMotionControl ? .falai : .runware
+            let provider: JobProvider = isO1ReferenceToVideo ? .falai : (useFalForMotionControl ? .falai : .runware)
             
             let deviceToken = await MainActor.run { PushNotificationManager.shared.deviceToken }
             let pendingJob = PendingJob(
@@ -527,7 +523,54 @@ class VideoGenerationTask: MediaGenerationTask {
             // MARK: Step 2 - Submit to API with webhook
             await onProgress(TaskProgress(progress: 0.4, message: generateProgressMessage()))
             
-            if useFalForMotionControl, let image = image, let refVideoURL = referenceVideoURL {
+            if isO1ReferenceToVideo, let image = image, let refStyleURL = referenceStyleImageURL {
+                print("[VideoGenerationTask] Using Fal.ai Kling O1 reference-to-video")
+                let durationStr = String(min(10, max(3, Int(duration))))
+                let falResponse = try await submitKlingO1ReferenceToVideoWithWebhook(
+                    requestId: taskId,
+                    image: image,
+                    referenceStyleImageURL: refStyleURL,
+                    prompt: item.prompt,
+                    duration: durationStr,
+                    aspectRatio: aspectRatio,
+                    userId: userId
+                )
+                print("✅ Fal.ai Kling O1 reference-to-video request submitted")
+                if let path = falResponse.referenceImageStoragePath {
+                    let updatedMetadata = PendingJobMetadata(
+                        prompt: jobMetadata.prompt,
+                        model: jobMetadata.model,
+                        title: jobMetadata.title,
+                        aspectRatio: jobMetadata.aspectRatio,
+                        resolution: jobMetadata.resolution,
+                        duration: jobMetadata.duration,
+                        cost: jobMetadata.cost,
+                        type: jobMetadata.type,
+                        endpoint: jobMetadata.endpoint,
+                        falRequestId: falResponse.requestId,
+                        referenceImageStoragePath: path,
+                        referenceVideoStoragePath: nil
+                    )
+                    try? await SupabaseManager.shared.updatePendingJobMetadata(taskId: taskId, metadata: updatedMetadata)
+                } else {
+                    // Still store Fal request_id so webhook can match callback to this job
+                    let updatedMetadata = PendingJobMetadata(
+                        prompt: jobMetadata.prompt,
+                        model: jobMetadata.model,
+                        title: jobMetadata.title,
+                        aspectRatio: jobMetadata.aspectRatio,
+                        resolution: jobMetadata.resolution,
+                        duration: jobMetadata.duration,
+                        cost: jobMetadata.cost,
+                        type: jobMetadata.type,
+                        endpoint: jobMetadata.endpoint,
+                        falRequestId: falResponse.requestId,
+                        referenceImageStoragePath: nil,
+                        referenceVideoStoragePath: nil
+                    )
+                    try? await SupabaseManager.shared.updatePendingJobMetadata(taskId: taskId, metadata: updatedMetadata)
+                }
+            } else if useFalForMotionControl, let image = image, let refVideoURL = referenceVideoURL {
                 let falTier = motionControlTier ?? "standard"  // VideoModelDetailPage passes standard/pro; DanceFilterDetailPage omits → standard
                 print("[VideoGenerationTask] Using Fal.ai for motion control (\(falTier))")
                 
@@ -555,9 +598,26 @@ class VideoGenerationTask: MediaGenerationTask {
                         cost: jobMetadata.cost,
                         type: jobMetadata.type,
                         endpoint: jobMetadata.endpoint,
-                        falRequestId: jobMetadata.falRequestId,
+                        falRequestId: falResponse.requestId,
                         referenceImageStoragePath: falResponse.referenceImageStoragePath,
                         referenceVideoStoragePath: falResponse.referenceVideoStoragePath
+                    )
+                    try? await SupabaseManager.shared.updatePendingJobMetadata(taskId: taskId, metadata: updatedMetadata)
+                } else {
+                    // Still store Fal request_id so webhook can match callback to this job
+                    let updatedMetadata = PendingJobMetadata(
+                        prompt: jobMetadata.prompt,
+                        model: jobMetadata.model,
+                        title: jobMetadata.title,
+                        aspectRatio: jobMetadata.aspectRatio,
+                        resolution: jobMetadata.resolution,
+                        duration: jobMetadata.duration,
+                        cost: jobMetadata.cost,
+                        type: jobMetadata.type,
+                        endpoint: jobMetadata.endpoint,
+                        falRequestId: falResponse.requestId,
+                        referenceImageStoragePath: nil,
+                        referenceVideoStoragePath: nil
                     )
                     try? await SupabaseManager.shared.updatePendingJobMetadata(taskId: taskId, metadata: updatedMetadata)
                 }

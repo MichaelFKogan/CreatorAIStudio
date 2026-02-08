@@ -23,6 +23,11 @@ struct Home: View {
     private var videoFilters: [InfoPacket] {
         videoFiltersViewModel.allVideoFilters
     }
+    
+    // Spooky Video Filters (Kling O1 reference-to-video)
+    private var spookyVideoFilters: [InfoPacket] {
+        videoFiltersViewModel.spookyVideoFilters
+    }
 
     var body: some View {
         NavigationStack {
@@ -95,6 +100,13 @@ struct Home: View {
                         }
                         if hasCategoryItems("Spooky") {
                             CategoryRow(categoryName: "Spooky", animationType: nil)
+                        }
+                        if !spookyVideoFilters.isEmpty {
+                            VideoRow(
+                                title: "Spooky Video Filters",
+                                items: spookyVideoFilters,
+                                seeAllDestination: nil
+                            )
                         }
                         if hasCategoryItems("Luxury") {
                             CategoryRowGrid(categoryName: "Luxury", animationType: nil)

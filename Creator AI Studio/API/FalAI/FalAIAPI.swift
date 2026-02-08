@@ -259,6 +259,85 @@ func submitVideoToFalAIWithWebhook(
     return FalAIWebhookSubmissionResponse(requestId: extractedRequestId, submitted: true, referenceImageStoragePath: referenceImageStoragePath, referenceVideoStoragePath: referenceVideoStoragePath)
 }
 
+// MARK: - Submit Kling O1 Reference-to-Video to Fal.ai with Webhook
+
+/// Submits a Kling O1 reference-to-video request (start frame + style reference image).
+/// Used by Spooky Video Filters. Result delivered via webhook.
+func submitKlingO1ReferenceToVideoWithWebhook(
+    requestId: String,
+    image: UIImage,
+    referenceStyleImageURL: URL,
+    prompt: String?,
+    duration: String,
+    aspectRatio: String,
+    userId: String
+) async throws -> FalAIWebhookSubmissionResponse {
+    print("[Fal.ai] Preparing Kling O1 reference-to-video request, requestId: \(requestId)")
+    
+    // Upload user's image to Supabase to get public URL
+    print("[Fal.ai] Uploading user image to Supabase...")
+    let imageURL = try await SupabaseManager.shared.uploadImage(
+        image: image,
+        userId: userId,
+        modelName: "falai-kling-o1-reference",
+        maxRetries: 2
+    )
+    print("[Fal.ai] Image uploaded, URL: \(imageURL)")
+    
+    let referenceImageStoragePath = storagePathFromPublicURL(imageURL, bucket: "user-generated-images")
+    
+    // image_urls: [@Image1 = start frame (user), @Image2 = style reference]
+    let imageUrls = [imageURL, referenceStyleImageURL.absoluteString]
+    var requestBody: [String: Any] = [
+        "image_urls": imageUrls,
+        "duration": duration,
+        "aspect_ratio": aspectRatio
+    ]
+    if let prompt = prompt, !prompt.isEmpty {
+        requestBody["prompt"] = prompt
+    } else {
+        requestBody["prompt"] = "Take @Image1 as the start frame. Keep the style of @Image2."
+    }
+    
+    let webhookURL = WebhookConfig.webhookURL(for: "falai")
+    var allowedCharacters = CharacterSet.urlQueryAllowed
+    allowedCharacters.remove(charactersIn: "?&")
+    let encodedWebhookURL = webhookURL.addingPercentEncoding(withAllowedCharacters: allowedCharacters) ?? webhookURL
+    let path = "fal-ai/kling-video/o1/standard/reference-to-video"
+    let endpoint = "https://queue.fal.run/\(path)?fal_webhook=\(encodedWebhookURL)"
+    
+    let session = try await SupabaseManager.shared.client.auth.session
+    let supabaseAuthToken = session.accessToken
+    let proxyRequestBody: [String: Any] = [
+        "endpoint": endpoint,
+        "body": requestBody
+    ]
+    let url = URL(string: WebhookConfig.falaiProxyURL)!
+    var request = URLRequest(url: url)
+    request.httpMethod = "POST"
+    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+    request.setValue("Bearer \(supabaseAuthToken)", forHTTPHeaderField: "Authorization")
+    request.httpBody = try JSONSerialization.data(withJSONObject: proxyRequestBody)
+    
+    let (data, response) = try await URLSession.shared.data(for: request)
+    let statusCode = (response as? HTTPURLResponse)?.statusCode ?? -1
+    guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
+        if let errorString = String(data: data, encoding: .utf8) {
+            print("[Fal.ai] O1 Error response: \(errorString)")
+        }
+        throw NSError(domain: "FalAIAPI", code: statusCode, userInfo: [NSLocalizedDescriptionKey: "Fal.ai O1 returned HTTP \(statusCode)"])
+    }
+    
+    var extractedRequestId = requestId
+    if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+        if let id = json["request_id"] as? String { extractedRequestId = id }
+        else if let id = json["gateway_request_id"] as? String { extractedRequestId = id }
+        else if let id = json["requestId"] as? String { extractedRequestId = id }
+    }
+    print("[Fal.ai] Kling O1 reference-to-video submitted, requestId: \(extractedRequestId)")
+    return FalAIWebhookSubmissionResponse(requestId: extractedRequestId, submitted: true, referenceImageStoragePath: referenceImageStoragePath, referenceVideoStoragePath: nil)
+}
+
 // MARK: - Helper: Extract storage path from Supabase public URL
 
 /// Extracts the bucket-relative storage path from a Supabase Storage public URL.

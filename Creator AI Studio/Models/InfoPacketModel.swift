@@ -16,10 +16,11 @@ struct InfoPacket: Codable, Identifiable, Hashable {
     var capabilities: [String]?
     var category: String?
     var referenceVideoName: String?  // Reference video name for motion control (used by dance filters)
+    var referenceImageName: String?   // Reference image name for style (used by Spooky video filters, O1 reference-to-video)
 
     // Tell the decoder to ignore 'id'
     enum CodingKeys: String, CodingKey {
-        case display, apiConfig, prompt, cost, type, capabilities, category, referenceVideoName
+        case display, apiConfig, prompt, cost, type, capabilities, category, referenceVideoName, referenceImageName
         // Notice: 'id' is NOT listed here
     }
     

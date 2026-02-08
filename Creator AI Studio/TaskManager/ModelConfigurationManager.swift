@@ -362,6 +362,15 @@ class ModelConfigurationManager {
                     outputQuality: nil
                 )
             ),
+            "Kling VIDEO O1 Standard": APIConfiguration(
+                provider: .fal,
+                endpoint: "https://queue.fal.run",
+                runwareModel: nil,
+                aspectRatio: nil,
+                wavespeedConfig: nil,
+                runwareConfig: nil,
+                falConfig: nil
+            ),
         ]
     }
 
@@ -481,6 +490,16 @@ class ModelConfigurationManager {
                 DurationOption(id: "5", label: "5 seconds", duration: 5.0, description: "Standard duration"),
                 DurationOption(id: "10", label: "10 seconds", duration: 10.0, description: "Extended duration"),
             ],
+            "Kling VIDEO O1 Standard": [
+                DurationOption(id: "3", label: "3 seconds", duration: 3.0, description: "Short"),
+                DurationOption(id: "4", label: "4 seconds", duration: 4.0, description: nil),
+                DurationOption(id: "5", label: "5 seconds", duration: 5.0, description: "Standard duration"),
+                DurationOption(id: "6", label: "6 seconds", duration: 6.0, description: nil),
+                DurationOption(id: "7", label: "7 seconds", duration: 7.0, description: nil),
+                DurationOption(id: "8", label: "8 seconds", duration: 8.0, description: nil),
+                DurationOption(id: "9", label: "9 seconds", duration: 9.0, description: nil),
+                DurationOption(id: "10", label: "10 seconds", duration: 10.0, description: "Maximum duration"),
+            ],
         ]
     }
 
@@ -536,6 +555,11 @@ class ModelConfigurationManager {
                 AspectRatioOption(id: "9:16", label: "9:16", width: 9, height: 16, platforms: ["TikTok", "Reels"]),
                 AspectRatioOption(id: "1:1", label: "1:1", width: 1, height: 1, platforms: ["Instagram"]),
                 AspectRatioOption(id: "16:9", label: "16:9", width: 16, height: 9, platforms: ["YouTube"]),
+            ],
+            "Kling VIDEO O1 Standard": [
+                AspectRatioOption(id: "16:9", label: "16:9", width: 16, height: 9, platforms: ["YouTube"]),
+                AspectRatioOption(id: "9:16", label: "9:16", width: 9, height: 16, platforms: ["TikTok", "Reels"]),
+                AspectRatioOption(id: "1:1", label: "1:1", width: 1, height: 1, platforms: ["Instagram"]),
             ],
         ]
     }

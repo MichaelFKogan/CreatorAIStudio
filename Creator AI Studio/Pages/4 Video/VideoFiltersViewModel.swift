@@ -3,6 +3,7 @@ import SwiftUI
 @MainActor
 class VideoFiltersViewModel: ObservableObject {
     @Published var filters: [InfoPacket] = []
+    @Published var spookyVideoFilters: [InfoPacket] = []
     @Published private var categorizedFiltersDict: [String: [InfoPacket]] = [:]
     
     // Use centralized category configuration manager
@@ -61,9 +62,16 @@ class VideoFiltersViewModel: ObservableObject {
         
         loadFromFile(url: url, categoryName: "Video Filters", allFilters: &allFilters, categorized: &categorized)
         
+        // Load Spooky Video Filters (Kling O1 reference-to-video)
+        var spooky: [InfoPacket] = []
+        if let spookyURL = Bundle.main.url(forResource: "SpookyVideoFilters", withExtension: "json") {
+            loadFromFile(url: spookyURL, categoryName: "Spooky Video", allFilters: &spooky, categorized: &categorized)
+        }
+        
         // Update published properties
         categorizedFiltersDict = categorized
         filters = allFilters
+        spookyVideoFilters = spooky
     }
     
     private func loadFromFile(url: URL, categoryName: String, allFilters: inout [InfoPacket], categorized: inout [String: [InfoPacket]]) {
@@ -79,7 +87,7 @@ class VideoFiltersViewModel: ObservableObject {
             categorized[categoryName] = decoded
             allFilters.append(contentsOf: decoded)
         } catch {
-            print("Failed to decode VideoFilters.json: \(error)")
+            print("Failed to decode \(url.lastPathComponent): \(error)")
         }
     }
 }

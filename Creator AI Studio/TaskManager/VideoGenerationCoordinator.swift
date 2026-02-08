@@ -35,6 +35,7 @@ class VideoGenerationCoordinator: ObservableObject {
         firstFrameImage: UIImage? = nil,
         lastFrameImage: UIImage? = nil,
         referenceVideoURL: URL? = nil,
+        referenceStyleImageURL: URL? = nil,
         motionControlTier: String? = nil,
         onVideoGenerated: @escaping (String) -> Void = { _ in },
         onError: @escaping (Error) -> Void = { _ in }
@@ -85,6 +86,7 @@ class VideoGenerationCoordinator: ObservableObject {
             firstFrameImage: firstFrameImage,
             lastFrameImage: lastFrameImage,
             referenceVideoURL: referenceVideoURL,
+            referenceStyleImageURL: referenceStyleImageURL,
             motionControlTier: motionControlTier,
             useWebhook: true
         )

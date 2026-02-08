@@ -90,6 +90,7 @@ class PricingManager {
             "FLUX.1 Kontext [max]": 0.08,
             "Z-Image-Turbo": 0.005,  // $0.005 (half a cent = 0.5 credits; 1 cent = 1 credit)
             "Wavespeed Ghibli": 0.005,
+            "Kling VIDEO O1 Standard": 0.50,  // Spooky Video Filters (40 credits per video)
         ]
     }
 
