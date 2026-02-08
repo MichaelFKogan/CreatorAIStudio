@@ -90,7 +90,7 @@ struct FalAIWebhookSubmissionResponse {
 
 /// Submits a motion control video generation request to fal.ai with a webhook URL
 /// The result will be delivered via the webhook callback
-/// 
+/// - Parameter motionControlTier: "standard" (fal-ai/kling-video/v2.6/standard/motion-control) or "pro" (fal-ai/kling-video/v2.6/pro/motion-control). Used by VideoModelDetailPage; DanceFilterDetailPage omits and gets standard.
 /// Note: Reference videos are expected to already be uploaded to Supabase with public URLs
 func submitVideoToFalAIWithWebhook(
     requestId: String,
@@ -99,9 +99,11 @@ func submitVideoToFalAIWithWebhook(
     prompt: String? = nil,
     characterOrientation: String = "video",
     keepOriginalSound: Bool = true,
-    userId: String
+    userId: String,
+    motionControlTier: String = "standard"
 ) async throws -> FalAIWebhookSubmissionResponse {
-    print("[Fal.ai] Preparing motion control request…")
+    let tier = motionControlTier.lowercased() == "pro" ? "pro" : "standard"
+    print("[Fal.ai] Preparing motion control request… tier: \(tier)")
     print("[Fal.ai] Request ID: \(requestId)")
     print("[Fal.ai] Character orientation: \(characterOrientation)")
     print("[Fal.ai] Keep original sound: \(keepOriginalSound)")
@@ -170,7 +172,11 @@ func submitVideoToFalAIWithWebhook(
     allowedCharacters.remove(charactersIn: "?&") // Remove ? and & from allowed set so they get encoded
     let encodedWebhookURL = webhookURL.addingPercentEncoding(withAllowedCharacters: allowedCharacters) ?? webhookURL
     
-    let endpoint = "https://queue.fal.run/fal-ai/kling-video/v2.6/standard/motion-control?fal_webhook=\(encodedWebhookURL)"
+    // fal.ai endpoints: standard = cost-effective, pro = higher quality (same request schema)
+    let path = tier == "pro"
+        ? "fal-ai/kling-video/v2.6/pro/motion-control"
+        : "fal-ai/kling-video/v2.6/standard/motion-control"
+    let endpoint = "https://queue.fal.run/\(path)?fal_webhook=\(encodedWebhookURL)"
     print("[Fal.ai] Full endpoint URL: \(endpoint)")
     
     // Use falai-proxy Edge Function instead of direct API call

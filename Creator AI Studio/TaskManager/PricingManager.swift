@@ -403,12 +403,12 @@ class PricingManager {
     // MARK: MOTION CONTROL PRICING
 
     /// Motion control pricing per second by model and tier.
-    /// Tier: "standard" (e.g. Fal.ai) or "pro" (e.g. Runware Kling 2.6 Pro).
+    /// Tier: "standard" (Fal.ai standard) or "pro" (Fal.ai pro); both are Fal.ai motion control.
     /// Motion control transfers movements from a reference video to a character image.
     private static let motionControlPricePerSecondByTier: [String: [String: Decimal]] = [
         "Kling VIDEO 2.6 Pro": [
             "standard": 0.08,  // Fal.ai v2.6/standard/motion-control — 8 credits/sec
-            "pro": 0.12        // Runware Kling 2.6 Pro motion control — 12 credits/sec
+            "pro": 0.12        // Fal.ai v2.6/pro/motion-control — 12 credits/sec
         ]
     ]
 

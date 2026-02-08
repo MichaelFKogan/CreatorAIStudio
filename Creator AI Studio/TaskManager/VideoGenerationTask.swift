@@ -505,8 +505,8 @@ class VideoGenerationTask: MediaGenerationTask {
                 endpoint: apiConfig.endpoint
             )
             
-            // Motion control "standard" → Fal.ai; "pro" or nil (e.g. Video Filter) → Runware for Pro, Fal.ai for others
-            let useFalForMotionControl = isMotionControl && (motionControlTier == nil || motionControlTier == "standard")
+            // Motion control: both "standard" and "pro" use Fal.ai (different endpoints). nil = e.g. DanceFilterDetailPage → Fal.ai standard.
+            let useFalForMotionControl = isMotionControl && (motionControlTier == nil || motionControlTier == "standard" || motionControlTier == "pro")
             let provider: JobProvider = useFalForMotionControl ? .falai : .runware
             
             let deviceToken = await MainActor.run { PushNotificationManager.shared.deviceToken }
@@ -528,8 +528,8 @@ class VideoGenerationTask: MediaGenerationTask {
             await onProgress(TaskProgress(progress: 0.4, message: generateProgressMessage()))
             
             if useFalForMotionControl, let image = image, let refVideoURL = referenceVideoURL {
-                // Use Fal.ai for motion control (Standard tier)
-                print("[VideoGenerationTask] Using Fal.ai for motion control (Standard)")
+                let falTier = motionControlTier ?? "standard"  // VideoModelDetailPage passes standard/pro; DanceFilterDetailPage omits → standard
+                print("[VideoGenerationTask] Using Fal.ai for motion control (\(falTier))")
                 
                 let falResponse = try await submitVideoToFalAIWithWebhook(
                     requestId: taskId,
@@ -538,7 +538,8 @@ class VideoGenerationTask: MediaGenerationTask {
                     prompt: item.prompt,
                     characterOrientation: "video",
                     keepOriginalSound: true,
-                    userId: userId
+                    userId: userId,
+                    motionControlTier: falTier
                 )
                 print("✅ Fal.ai motion control request submitted")
                 
