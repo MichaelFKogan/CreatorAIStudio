@@ -181,73 +181,91 @@ struct BannerSection: View {
     var displayPrice: Decimal? = nil
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(alignment: .top, spacing: 16) {
-                Image(item.resolvedModelImageName ?? "")
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(width: 120, height: 120)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
+        VStack(alignment: .leading, spacing: 0) {
+            // Model identity card: image + title + pill + price + description
+            VStack(alignment: .leading, spacing: 0) {
+                HStack(alignment: .top, spacing: 16) {
+                    Image(item.resolvedModelImageName ?? "")
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: 120, height: 120)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
 
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(item.display.title)
-                        .font(.title2).fontWeight(.bold).foregroundColor(
-                            .primary
-                        )
-                        .fixedSize(horizontal: false, vertical: true)
-
-                    HStack(spacing: 6) {
-                        Image(systemName: "photo.on.rectangle").font(
-                            .caption)
-                        Text("Image Generation Model").font(.caption)
-                    }
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 5)
-                    .background(Capsule().fill(Color.blue.opacity(0.8)))
-
-                    HStack(spacing: 4) {
-                        PriceDisplayView(
-                            price: displayPrice ?? item.resolvedCost ?? 0,
-                            showUnit: true,
-                            font: .title3,
-                            fontWeight: .bold,
-                            foregroundColor: .white
-                        )
-                        Text("per image").font(.caption).foregroundColor(
-                            .secondary)
-                    }
-
-                    if let capabilities = ModelConfigurationManager.shared
-                        .capabilities(for: item),
-                        !capabilities.isEmpty
-                    {
-                        Text(capabilities.joined(separator: " • "))
-                            .font(
-                                .system(
-                                    size: 12, weight: .medium, design: .rounded
-                                )
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(item.display.title)
+                            .font(.title2).fontWeight(.bold).foregroundColor(
+                                .primary
                             )
-                            .foregroundColor(.blue)
+                            .fixedSize(horizontal: false, vertical: true)
+
+                        HStack(spacing: 6) {
+                            Image(systemName: "photo.on.rectangle").font(
+                                .caption)
+                            Text("Image Generation Model").font(.caption)
+                        }
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                        .background(Capsule().fill(Color.blue.opacity(0.8)))
+
+                        HStack(spacing: 4) {
+                            PriceDisplayView(
+                                price: displayPrice ?? item.resolvedCost ?? 0,
+                                showUnit: true,
+                                font: .title3,
+                                fontWeight: .bold,
+                                foregroundColor: .white
+                            )
+                            Text("per image").font(.caption).foregroundColor(
+                                .secondary)
+                        }
+
+                        if let capabilities = ModelConfigurationManager.shared
+                            .capabilities(for: item),
+                            !capabilities.isEmpty
+                        {
+                            Text(capabilities.joined(separator: " • "))
+                                .font(
+                                    .system(
+                                        size: 12, weight: .medium, design: .rounded
+                                    )
+                                )
+                                .foregroundColor(.blue)
+                        }
+
+                        Spacer()
                     }
-
-                    Spacer()
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-            }
-            .frame(height: 120)
+                .frame(height: 120)
+                .padding(.horizontal, 16)
+                .padding(.top, 16)
 
-            // Model Description
-            if let description = item.resolvedModelDescription,
-                !description.isEmpty
-            {
-                Text(description)
-                    .font(.system(size: 14))
-                    .foregroundColor(.secondary)
-                    .lineSpacing(4)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(.top, 4)
+                // Model description at bottom of card
+                if let description = item.resolvedModelDescription,
+                    !description.isEmpty
+                {
+                    Text(description)
+                        .font(.system(size: 14))
+                        .foregroundColor(.secondary)
+                        .lineSpacing(4)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.horizontal, 16)
+                        .padding(.top, 12)
+                        .padding(.bottom, 16)
+                } else {
+                    Color.clear.frame(height: 16)
+                }
             }
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(Color(UIColor.secondarySystemBackground))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(Color.blue.opacity(0.2), lineWidth: 1)
+            )
+            .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 2)
         }
         .padding(.horizontal)
         .padding(.top, 16)

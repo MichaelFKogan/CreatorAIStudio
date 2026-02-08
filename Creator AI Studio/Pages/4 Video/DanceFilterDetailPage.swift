@@ -855,69 +855,79 @@ private struct BannerSectionFilter: View {
             )
             .padding(.bottom, 8)
             
-            // Horizontal row with model image, title, pill, pricing, model info
-            HStack(alignment: .top, spacing: 16) {
-                Image("klingvideo26pro")
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(width: 120, height: 120)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Kling VIDEO 2.6 Pro")
-                        .font(.title2).fontWeight(.bold).foregroundColor(.primary)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.8)
+            // Model info card: image, title, pill, pricing, description
+            VStack(alignment: .leading, spacing: 0) {
+                HStack(alignment: .top, spacing: 16) {
+                    Image("klingvideo26pro")
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: 120, height: 120)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                    
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Kling VIDEO 2.6 Pro")
+                            .font(.title2).fontWeight(.bold).foregroundColor(.primary)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
 
-                    Text("With Motion Control")
-                        .font(.headline).fontWeight(.semibold).foregroundColor(.primary)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.8)                        
-                    
-                    HStack(spacing: 6) {
-                        Image(systemName: "wand.and.stars").font(.caption)
-                        Text("Video Filter").font(.caption)
+                        Text("With Motion Control")
+                            .font(.headline).fontWeight(.semibold).foregroundColor(.primary)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)                        
+                        
+                        HStack(spacing: 6) {
+                            Image(systemName: "wand.and.stars").font(.caption)
+                            Text("Video Filter").font(.caption)
+                        }
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                        .background(Capsule().fill(Color.purple.opacity(0.8)))
+                        
+                        HStack(spacing: 4) {
+                            PriceDisplayView(
+                                price: price ?? item.resolvedCost ?? 0,
+                                showUnit: true,
+                                font: .title3,
+                                fontWeight: .bold,
+                                foregroundColor: .white
+                            )
+                            Text("per video").font(.caption).foregroundColor(.secondary)
+                        }
+                        
+                        Spacer()
                     }
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 5)
-                    .background(Capsule().fill(Color.purple.opacity(0.8)))
-                    
-                    HStack(spacing: 4) {
-                        PriceDisplayView(
-                            price: price ?? item.resolvedCost ?? 0,
-                            showUnit: true,
-                            font: .title3,
-                            fontWeight: .bold,
-                            foregroundColor: .white
-                        )
-                        Text("per video").font(.caption).foregroundColor(.secondary)
-                    }
-                    
-                    // HStack(spacing: 6) {
-                    //     Image(systemName: "video.fill").font(.caption)
-                    //     Text("Video Generation Model").font(.caption)
-                    // }
-                    // .foregroundColor(.purple)
-                    
-                    Spacer()
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .frame(height: 128)
+                .padding(.horizontal, 16)
+                .padding(.top, 16)
+                
+                // Filter Description
+                if let description = item.resolvedModelDescription ?? item.display.description,
+                    !description.isEmpty
+                {
+                    Text(description)
+                        .font(.system(size: 14))
+                        .foregroundColor(.secondary)
+                        .lineSpacing(4)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.horizontal, 16)
+                        .padding(.top, 12)
+                        .padding(.bottom, 16)
+                } else {
+                    Color.clear.frame(height: 16)
+                }
             }
-            .padding(.horizontal)
-            .frame(height: 128)
-            
-            // Filter Description
-            if let description = item.resolvedModelDescription ?? item.display.description,
-                !description.isEmpty
-            {
-                Text(description)
-                    .font(.system(size: 14))
-                    .foregroundColor(.secondary)
-                    .lineSpacing(4)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(.top, 4)
-            }
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(Color(UIColor.secondarySystemBackground))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(Color.purple.opacity(0.2), lineWidth: 1)
+            )
+            .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 2)
         }
         .padding(.horizontal)
     }

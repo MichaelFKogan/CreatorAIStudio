@@ -397,30 +397,31 @@ class ModelConfigurationManager {
 
     private static func makeModelDescriptions() -> [String: String] {
         return [
-            "GPT Image 1.5": "OpenAI's GPT Image 1.5 is the flagship image model powering ChatGPT Images, delivering significantly faster generation with enhanced instruction following and precise edits that preserve original details. Excels at believable transformations, dense text rendering, and detailed design tasks—ideal for practical creative workflows and production use cases.",
+            "GPT Image 1.5": "OpenAI's flagship image model with fast generation and strong instruction following. Great for transformations, text rendering, and production workflows.",
 
-            "Wan2.5-Preview Image": "Alibaba's Wan2.5-Preview Image delivers high-fidelity single frame generation built from the Wan2.5 video architecture. This model focuses on detailed depth structure, strong prompt following, multilingual text rendering, and video-grade visual quality for production-ready stills.",
+            "Wan2.5-Preview Image": "Alibaba's high-fidelity single-frame model from the Wan2.5 video architecture. Strong prompt following and video-grade quality for production stills.",
 
-            "Nano Banana": "Google's lightweight and extremely fast image model optimized for speed-driven creativity. Perfect for quick edits, simple transformations, and fast turnarounds while still producing sharp, balanced results. Ideal for social content and rapid experimentation.",
+            "Nano Banana": "Google's lightweight, fast image model for speed-driven creativity. Ideal for quick edits, social content, and rapid experimentation.",
+            "Nano Banana Pro": "Google's step-up image model with higher quality and stronger detail than Nano Banana. Great for polished social content, product shots, and when you need better fidelity without sacrificing speed.",
 
-            "Seedream 4.5": "Seedream is a Bytedance-built aesthetic image model known for dreamy lighting, smooth gradients, and magazine-like visual polish. Version 4.5 produces vibrant lifestyle imagery, cinematic outdoor scenes, stylized portraits, and soft artistic effects.",
-            "Seedream 4.0": "An earlier but still beautiful version of Bytedance's Seedream model, focusing on gentle realism, pastel tones, and atmospheric lighting. Great for travel-style photos, creative illustration, and soft artistic transformations.",
+            "Seedream 4.5": "Bytedance's aesthetic model with dreamy lighting and magazine-like polish. Produces vibrant lifestyle imagery, cinematic scenes, and soft artistic effects.",
+            "Seedream 4.0": "An earlier Seedream version with gentle realism and pastel tones. Great for travel-style photos and soft artistic transformations.",
 
-            "FLUX.2 [dev]": "A fully open and developer-focused model from Black Forest Labs, designed for anyone who wants deeper control over sampling, composition, and custom pipelines. Ideal for creators who want flexibility, experimentation, and advanced workflows with consistent high quality.",
+            "FLUX.2 [dev]": "Black Forest Labs' open, developer-focused model for deeper control over sampling and pipelines. Ideal for flexibility and advanced workflows.",
 
-            "FLUX.1 Kontext [pro]": "A professional-grade model from Black Forest Labs built for sharp detail, consistent anatomy, accurate lighting, and clean visual structure. Excellent for portraits, branding images, product photography, and polished commercial-quality artwork.",
-            "FLUX.1 Kontext [max]": "The highest-performing model in the Kontext family—built for complex scenes, rich textures, dramatic lighting, and maximum realism. Ideal for cinematic artwork, large compositions, and high-impact creative visuals.",
+            "FLUX.1 Kontext [pro]": "Professional-grade model for sharp detail, consistent anatomy, and clean structure. Excellent for portraits, product photography, and commercial artwork.",
+            "FLUX.1 Kontext [max]": "Top of the Kontext family for complex scenes and maximum realism. Ideal for cinematic artwork and high-impact visuals.",
 
-            "Z-Image-Turbo": "Z-Image-Turbo is an ultra-fast image generation model developed by Tongyi-MAI, Alibaba's advanced AI research division. Built using modern distillation techniques, it's designed to deliver high-quality results at exceptional speed and low cost. Ideal for quick creative iterations, high-volume workflows, and fast drafts without sacrificing clarity.",
+            "Z-Image-Turbo": "Alibaba's ultra-fast image model built for speed and low cost. Delivers high-quality results for quick iterations and high-volume workflows.",
             // Video Models
-            "Sora 2": "Sora 2 is designed for cinematic-quality video generation with extremely stable motion, improved physics accuracy, expressive character animation, and rich scene detail. Perfect for storytelling, ads, and high-impact creative content.",
-            "Google Veo 3": "Veo 3 focuses on clarity, smooth motion, and natural lighting. It excels at dynamic environments, realistic textures, and clean camera transitions—ideal for lifestyle clips, outdoor scenes, product demos, and fast-paced creative content.",
-            "Google Veo 3.1 Fast": "Google Veo 3.1 Fast is optimized for rapid video generation with minimal latency, ideal for quick creative iterations. It supports native audio generation including dialogue, ambient sounds, and sound effects. Perfect for short-form content, rapid prototyping, and responsive creative workflows.",
-            "Kling AI": "Kling AI specializes in hyper-realistic motion and high-speed action scenes. With sharp detail and stable, precise frame-to-frame movement, it's a strong choice for sports, sci-fi shots, fast motion, and large sweeping environments.",
-            "Seedance 1.0 Pro Fast": "Seedance 1.0 Pro Fast delivers accelerated video generation while maintaining the high visual quality and cinematic capabilities of Seedance 1.0 Pro. Optimized for faster iteration and production workflows, it supports dynamic camera movements, multiple aspect ratios, and resolutions up to 1080p. Perfect for rapid prototyping, quick content creation, and efficient video production.",
-            "Kling VIDEO 2.6 Pro": "Kling VIDEO 2.6 Pro is a next-generation video-and-audio AI model that delivers cinematic-quality visuals and native synchronized audio including dialogue, sound effects, and ambience. This model combines strong prompt fidelity with scene consistency and flexible artistic control for professional video production workflows.",
-            "Wan2.6": "Alibaba's Wan2.6 model delivers multimodal video generation with native audio support and multi-shot sequencing capabilities. This model emphasizes temporal stability, consistent visual structure across shots, and reliable alignment between visuals and audio for short-form narrative video production.",
-            "KlingAI 2.5 Turbo Pro": "KlingAI's 2.5 Turbo Pro model delivers next-level creativity with turbocharged motion and cinematic visuals. Featuring precise prompt adherence for both text-to-video and image-to-video workflows, this model combines enhanced motion fluidity with professional-grade cinematic capabilities at 30 FPS.",
+            "Sora 2": "Cinematic video with stable motion, improved physics, and rich detail. Perfect for storytelling, ads, and high-impact content.",
+            "Google Veo 3": "Focuses on clarity, smooth motion, and natural lighting. Great for lifestyle clips, outdoor scenes, and product demos.",
+            "Google Veo 3.1 Fast": "Optimized for rapid generation with minimal latency and native audio. Perfect for short-form content and rapid prototyping.",
+            "Kling AI": "Hyper-realistic motion and high-speed action with sharp detail. Strong for sports, sci-fi, and sweeping environments.",
+            "Seedance 1.0 Pro Fast": "Accelerated video with high visual quality and cinematic capabilities. Supports dynamic camera, multiple aspect ratios, and up to 1080p.",
+            "Kling VIDEO 2.6 Pro": "Next-gen video-and-audio model with cinematic visuals and synced audio. Strong prompt fidelity and artistic control for pro workflows.",
+            "Wan2.6": "Alibaba's multimodal video with native audio and multi-shot sequencing. Emphasizes temporal stability for short-form narrative.",
+            "KlingAI 2.5 Turbo Pro": "Turbocharged motion and cinematic visuals with precise prompt adherence. Pro-grade quality at 30 FPS for text and image-to-video.",
         ]
     }
 
