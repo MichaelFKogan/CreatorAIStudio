@@ -599,15 +599,16 @@ extension PricingManager {
         return formatter.string(from: NSDecimalNumber(decimal: price)) ?? "$\(NSDecimalNumber(decimal: price).stringValue)"
     }
     
-    /// Formats a price as credits (without "credits" label)
+    /// Formats a price as credits (without "credits" label), rounded to whole numbers for display.
     /// - Parameter price: The price as Decimal (in dollars)
-    /// - Returns: Formatted credits string (e.g., "50", "1.22")
+    /// - Returns: Formatted credits string (e.g., "50", "122")
     static func formatCredits(_ price: Decimal) -> String {
         let credits = dollarsToCredits(price)
         let formatter = NumberFormatter()
         formatter.numberStyle = .decimal
-        formatter.maximumFractionDigits = 4
+        formatter.maximumFractionDigits = 0
         formatter.minimumFractionDigits = 0
+        formatter.roundingMode = .halfUp
         return formatter.string(from: NSDecimalNumber(decimal: credits))
             ?? NSDecimalNumber(decimal: credits).stringValue
     }

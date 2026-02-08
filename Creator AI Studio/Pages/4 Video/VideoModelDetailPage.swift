@@ -2471,6 +2471,33 @@ private struct MotionControlSection: View {
     }
 }
 
+// MARK: - Video thumbnail helper (Motion Control reference video)
+
+/// Formats duration in seconds as "M:SS" (e.g. 15.3 → "0:15").
+private func formatVideoDuration(_ seconds: Double) -> String {
+    let m = Int(seconds) / 60
+    let s = Int(seconds) % 60
+    return "\(m):\(s < 10 ? "0" : "")\(s)"
+}
+
+/// Generates a thumbnail image from a local video URL (e.g. from PhotosPicker).
+private func generateVideoThumbnail(from url: URL) async -> UIImage? {
+    let asset = AVURLAsset(url: url)
+    let generator = AVAssetImageGenerator(asset: asset)
+    generator.appliesPreferredTrackTransform = true
+    generator.maximumSize = CGSize(width: 400, height: 400)
+    let time = CMTime(seconds: 0.5, preferredTimescale: 60)
+    return await withCheckedContinuation { continuation in
+        generator.generateCGImageAsynchronously(for: time) { cgImage, _, error in
+            if let cgImage = cgImage {
+                continuation.resume(returning: UIImage(cgImage: cgImage))
+            } else {
+                continuation.resume(returning: nil)
+            }
+        }
+    }
+}
+
 // MARK: MOTION CONTROL SLOT CARD (VIDEO)
 
 private struct MotionControlSlotCard: View {
@@ -2481,29 +2508,66 @@ private struct MotionControlSlotCard: View {
     @Binding var videoDuration: Double?
     @Binding var showDurationAlert: Bool
     let color: Color
+    /// Thumbnail for the selected video; generated when videoURL is set.
+    @State private var thumbnailImage: UIImage?
 
     var body: some View {
         VStack(spacing: 8) {
             if let url = videoURL {
-                // Placeholder: show "Video selected" (actual thumbnail/player can be added later)
-                VStack(spacing: 6) {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 28))
-                        .foregroundColor(color)
-                    Text("Video selected")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    Button("Change") {
+                ZStack(alignment: .topTrailing) {
+                    if let thumb = thumbnailImage {
+                        // Show thumbnail (same style as Character Image slot)
+                        Image(uiImage: thumb)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: DesignConstants.frameStyleSlotWidth, height: DesignConstants.frameStyleSlotHeight)
+                            .clipped()
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                    } else {
+                        // Loading or fallback: subtle background + icon
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color.gray.opacity(0.08))
+                            .frame(width: DesignConstants.frameStyleSlotWidth, height: DesignConstants.frameStyleSlotHeight)
+                            .overlay {
+                                VStack(spacing: 6) {
+                                    ProgressView()
+                                    Text("Video selected")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                    }
+                    // Duration badge (bottom-left) when we have duration
+                    if let duration = videoDuration, duration > 0 {
+                        Text(formatVideoDuration(duration))
+                            .font(.caption2)
+                            .fontWeight(.medium)
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 3)
+                            .background(Color.black.opacity(0.6))
+                            .clipShape(RoundedRectangle(cornerRadius: 6))
+                            .padding(8)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+                    }
+                    // Change button (top-right, like character image remove)
+                    Button {
                         videoItem = nil
                         videoURL = nil
                         videoDuration = nil
+                        thumbnailImage = nil
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.title3)
+                            .foregroundStyle(.black)
+                            .background(Circle().fill(.white))
                     }
-                    .font(.caption)
+                    .padding(6)
                 }
                 .frame(maxWidth: .infinity)
-                .frame(minHeight: DesignConstants.frameStyleSlotHeight)
-                .background(Color.gray.opacity(0.08))
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .task(id: url) {
+                    thumbnailImage = await generateVideoThumbnail(from: url)
+                }
             } else {
                 PhotosPicker(
                     selection: $videoItem,
