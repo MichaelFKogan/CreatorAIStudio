@@ -723,7 +723,7 @@ struct DiagonalOverlappingVideoImages: View {
                 if isVideoLoading {
                     // Loading: circular progress + "Loading..." until video is ready
                     RoundedRectangle(cornerRadius: 16)
-                        .fill(Color(UIColor.tertiarySystemFill))
+                        .fill(Color.black)
                         .frame(width: rightVideoWidth, height: rightVideoHeight)
                         .overlay(
                             RoundedRectangle(cornerRadius: 16)
@@ -738,12 +738,12 @@ struct DiagonalOverlappingVideoImages: View {
                         .overlay(
                             VStack(spacing: 12) {
                                 ProgressView()
-                                    .progressViewStyle(CircularProgressViewStyle(tint: .primary))
+                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
                                     .scaleEffect(1.2)
                                 Text("Loading...")
                                     .font(.subheadline)
                                     .fontWeight(.medium)
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(.white)
                             }
                         )
                         .shadow(

@@ -80,12 +80,11 @@ struct VideoRow: View {
                 feedback = UISelectionFeedbackGenerator()
                 feedback?.prepare()
             }
-            // Setup video players for items
             setupVideoPlayers()
+            resumeVideoPlayers()
         }
         .onDisappear {
-            // Clean up video players
-            cleanupVideoPlayers()
+            pauseVideoPlayers()
         }
     }
     
@@ -136,20 +135,21 @@ struct VideoRow: View {
     }
     
     private func setupVideoPlayers() {
-        // Players are now created lazily in VideoPlayerView.onAppear
-        // This method is kept for potential future pre-loading optimizations
+        // Players are created lazily in VideoRowPlayerView.onAppear
     }
-    
-    private func cleanupVideoPlayers() {
+
+    /// Pause all players when the row disappears (e.g. tab switch or scroll). Keeps players so they can resume.
+    private func pauseVideoPlayers() {
         for (_, player) in playingVideos {
             player.pause()
-            NotificationCenter.default.removeObserver(
-                self,
-                name: .AVPlayerItemDidPlayToEndTime,
-                object: player.currentItem
-            )
         }
-        playingVideos.removeAll()
+    }
+
+    /// Resume playback when the row appears again so videos play continuously when returning to Home.
+    private func resumeVideoPlayers() {
+        for (_, player) in playingVideos {
+            player.play()
+        }
     }
     
     @ViewBuilder
