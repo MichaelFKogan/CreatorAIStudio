@@ -5,6 +5,8 @@
 //  Spooky Video Filters: Kling O1 reference-to-video (user image + style reference image).
 //
 
+import AVFoundation
+import AVKit
 import PhotosUI
 import SwiftUI
 
@@ -26,6 +28,9 @@ struct SpookyVideoFilterDetailPage: View {
     
     @State private var selectedAspectIndex: Int = 0
     @State private var selectedDurationIndex: Int = 0
+    @State private var videoPlayer: AVPlayer? = nil
+    @State private var playerItemObserver: NSKeyValueObservation? = nil
+    @AppStorage("videoFilterPreviewMuted") private var isVideoMuted: Bool = true // Default muted for autoplay; preference persisted
     
     @EnvironmentObject var authViewModel: AuthViewModel
     
@@ -67,8 +72,14 @@ struct SpookyVideoFilterDetailPage: View {
                 AnimatedTitle(text: item.display.title)
                     .padding(.top, 16)
                 
-                // Banner: filter thumbnail, model name, price
-                spookyBannerCard
+                LazyView(
+                    SpookyBannerSection(
+                        item: item,
+                        price: currentPrice,
+                        videoPlayer: $videoPlayer,
+                        isVideoMuted: $isVideoMuted
+                    )
+                )
                 
                 Divider().padding(.horizontal)
                 
@@ -194,6 +205,24 @@ struct SpookyVideoFilterDetailPage: View {
                 color: .orange
             )
         }
+        .onAppear {
+            do {
+                try AVAudioSession.sharedInstance().setCategory(
+                    .playback,
+                    mode: .default,
+                    options: [.mixWithOthers, .duckOthers]
+                )
+                try AVAudioSession.sharedInstance().setActive(true, options: [])
+            } catch {
+                print("Failed to configure audio session on appear: \(error)")
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                setupVideoPlayer()
+            }
+        }
+        .onDisappear {
+            cleanupVideoPlayer()
+        }
         .onChange(of: selectedPhotoItem) { _, newItem in
             Task {
                 if let data = try? await newItem?.loadTransferable(type: Data.self),
@@ -207,56 +236,6 @@ struct SpookyVideoFilterDetailPage: View {
                 Task { await creditsViewModel.fetchBalance(userId: userId) }
             }
         }
-    }
-    
-    private var spookyBannerCard: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            HStack(alignment: .top, spacing: 16) {
-                Image(item.display.imageName)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(width: 100, height: 100)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(item.display.title)
-                        .font(.title2)
-                        .fontWeight(.bold)
-                        .foregroundColor(.primary)
-                    Text("Kling VIDEO O1 Standard")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                    HStack(spacing: 6) {
-                        Image(systemName: "wand.and.stars")
-                            .font(.caption)
-                        Text("Spooky Video Filter")
-                            .font(.caption)
-                    }
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 5)
-                    .background(Capsule().fill(Color.orange.opacity(0.8)))
-                    PriceDisplayView(
-                        price: currentPrice ?? 0.40,
-                        showUnit: true,
-                        font: .title3,
-                        fontWeight: .bold,
-                        foregroundColor: .primary
-                    )
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-            }
-            .padding(16)
-        }
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color(UIColor.secondarySystemBackground))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(Color.orange.opacity(0.2), lineWidth: 1)
-        )
-        .padding(.horizontal)
     }
     
     private func generate() {
@@ -314,6 +293,80 @@ struct SpookyVideoFilterDetailPage: View {
         }
     }
     
+    private func getVideoURL(for item: InfoPacket) -> URL? {
+        let imageName = item.display.imageName
+        if imageName.hasPrefix("http://") || imageName.hasPrefix("https://") {
+            return URL(string: imageName)
+        }
+        let videoExtensions = ["mp4", "mov", "m4v", "webm"]
+        for ext in videoExtensions {
+            if let url = Bundle.main.url(forResource: imageName, withExtension: ext) {
+                return url
+            }
+        }
+        for ext in videoExtensions {
+            if let url = Bundle.main.url(forResource: imageName, withExtension: ext, subdirectory: "Video Filters") {
+                return url
+            }
+        }
+        return nil
+    }
+    
+    private func setupVideoPlayer() {
+        guard let videoURL = getVideoURL(for: item) else { return }
+        do {
+            try AVAudioSession.sharedInstance().setCategory(
+                .playback,
+                mode: .default,
+                options: [.mixWithOthers, .duckOthers]
+            )
+            try AVAudioSession.sharedInstance().setActive(true, options: [])
+        } catch {
+            print("Failed to configure audio session: \(error)")
+        }
+        let playerItem = AVPlayerItem(url: videoURL)
+        let player = AVPlayer(playerItem: playerItem)
+        player.isMuted = isVideoMuted
+        player.volume = 1.0
+        player.actionAtItemEnd = .none
+        playerItemObserver = playerItem.observe(\.status, options: [.new]) { [weak player] item, _ in
+            guard let player = player else { return }
+            if item.status == .readyToPlay {
+                DispatchQueue.main.async {
+                    try? AVAudioSession.sharedInstance().setActive(true, options: [])
+                    player.isMuted = isVideoMuted
+                    player.play()
+                }
+            }
+        }
+        NotificationCenter.default.addObserver(
+            forName: .AVPlayerItemDidPlayToEndTime,
+            object: playerItem,
+            queue: .main
+        ) { _ in
+            player.seek(to: .zero)
+            player.play()
+        }
+        videoPlayer = player
+        if playerItem.status == .readyToPlay {
+            player.play()
+        }
+    }
+    
+    private func cleanupVideoPlayer() {
+        playerItemObserver?.invalidate()
+        playerItemObserver = nil
+        if let player = videoPlayer {
+            player.pause()
+            NotificationCenter.default.removeObserver(
+                self,
+                name: .AVPlayerItemDidPlayToEndTime,
+                object: player.currentItem
+            )
+        }
+        videoPlayer = nil
+    }
+    
     /// Resolves the style reference image URL from item.referenceImageName (Supabase or bundle).
     private func getReferenceStyleImageURL() -> URL? {
         guard let name = item.referenceImageName, !name.isEmpty else { return nil }
@@ -330,6 +383,210 @@ struct SpookyVideoFilterDetailPage: View {
             }
         }
         return nil
+    }
+}
+
+// MARK: - Spooky banner (vertical video + Your Photo + arrow + model card)
+
+private struct SpookyDiagonalOverlappingVideoImages: View {
+    let leftImageName: String
+    let rightImageName: String
+    let videoPlayer: AVPlayer?
+    @Binding var isVideoMuted: Bool
+    
+    @State private var arrowWiggle: Bool = false
+    
+    var body: some View {
+        let availableWidth = UIScreen.main.bounds.width - 40
+        let leftImageWidth = availableWidth * 0.20625
+        let rightVideoWidth = availableWidth * 0.825
+        let leftImageHeight = leftImageWidth * 1.38
+        let rightVideoHeight = rightVideoWidth * 1.38
+        let contentHeight = max(leftImageHeight, rightVideoHeight) + 40
+        let calculatedHeight = max(280, min(400, contentHeight))
+        
+        GeometryReader { geometry in
+            let leftImageWidth = geometry.size.width * 0.20625
+            let rightVideoWidth = geometry.size.width * 0.825
+            let leftImageHeight = leftImageWidth * 1.38
+            let rightVideoHeight = rightVideoWidth * 1.38
+            let rightVideoX: CGFloat = 0
+            let rightVideoY: CGFloat = 0
+            let overlapOffset: CGFloat = 15
+            let leftImageX = -rightVideoWidth * 0.5 - leftImageWidth * 0.5 + overlapOffset
+            let leftImageY = -rightVideoHeight * 0.5 - leftImageHeight * 0.5 + overlapOffset + 30 + 50
+            let arrowX = leftImageX + leftImageWidth * 0.35
+            let arrowY = leftImageY + leftImageHeight * 0.35
+            let deltaX = rightVideoX - arrowX
+            let deltaY = rightVideoY - arrowY
+            let arrowAngle = atan2(deltaY, deltaX) * 180 / .pi
+            
+            ZStack(alignment: .center) {
+                if let player = videoPlayer {
+                    VideoPlayerWithMuteButton(
+                        player: player,
+                        isMuted: $isVideoMuted,
+                        width: rightVideoWidth,
+                        height: rightVideoHeight,
+                        cornerRadius: 16
+                    )
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16)
+                            .stroke(
+                                LinearGradient(
+                                    colors: [.white, .gray],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ),
+                                lineWidth: 2
+                            )
+                    )
+                    .shadow(color: Color.black.opacity(0.25), radius: 12, x: 4, y: 4)
+                    .offset(x: rightVideoX, y: rightVideoY)
+                } else {
+                    Image(rightImageName)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: rightVideoWidth, height: rightVideoHeight)
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 16)
+                                .stroke(
+                                    LinearGradient(
+                                        colors: [.white, .gray],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    ),
+                                    lineWidth: 2
+                                )
+                        )
+                        .shadow(color: Color.black.opacity(0.25), radius: 12, x: 4, y: 4)
+                        .offset(x: rightVideoX, y: rightVideoY)
+                }
+                
+                Image(leftImageName)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: leftImageWidth, height: leftImageHeight)
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16)
+                            .stroke(
+                                LinearGradient(
+                                    colors: [.white, .gray],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ),
+                                lineWidth: 2
+                            )
+                    )
+                    .shadow(color: Color.black.opacity(0.25), radius: 12, x: -4, y: 4)
+                    .rotationEffect(.degrees(-6))
+                    .offset(x: leftImageX, y: leftImageY)
+                
+                Image("arrow")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 30, height: 30)
+                    .rotationEffect(.degrees(arrowAngle + (arrowWiggle ? 6 : -6)))
+                    .animation(
+                        .easeInOut(duration: 0.6).repeatForever(autoreverses: true),
+                        value: arrowWiggle
+                    )
+                    .offset(x: arrowX, y: arrowY)
+            }
+            .onAppear { arrowWiggle = true }
+            .frame(width: geometry.size.width, height: geometry.size.height)
+        }
+        .frame(height: calculatedHeight)
+        .padding(.horizontal, 20)
+    }
+}
+
+private struct SpookyBannerSection: View {
+    let item: InfoPacket
+    let price: Decimal?
+    @Binding var videoPlayer: AVPlayer?
+    @Binding var isVideoMuted: Bool
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            SpookyDiagonalOverlappingVideoImages(
+                leftImageName: item.display.imageNameOriginal ?? "yourphoto",
+                rightImageName: item.display.imageName,
+                videoPlayer: videoPlayer,
+                isVideoMuted: $isVideoMuted
+            )
+            .padding(.bottom, 8)
+            
+            VStack(alignment: .leading, spacing: 0) {
+                HStack(alignment: .top, spacing: 16) {
+                    Image(item.display.imageName)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: 120, height: 120)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                    
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Kling VIDEO O1")
+                            .font(.title2).fontWeight(.bold).foregroundColor(.primary)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
+                        Text("Standard")
+                            .font(.headline).fontWeight(.semibold).foregroundColor(.primary)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
+                        HStack(spacing: 6) {
+                            Image(systemName: "wand.and.stars").font(.caption)
+                            Text("Spooky Video Filter").font(.caption)
+                        }
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                        .background(Capsule().fill(Color.orange.opacity(0.8)))
+                        HStack(spacing: 4) {
+                            PriceDisplayView(
+                                price: price ?? item.resolvedCost ?? 0.40,
+                                showUnit: true,
+                                font: .title3,
+                                fontWeight: .bold,
+                                foregroundColor: .white
+                            )
+                            Text("per video").font(.caption).foregroundColor(.secondary)
+                        }
+                        Spacer()
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .frame(height: 128)
+                .padding(.horizontal, 16)
+                .padding(.top, 16)
+                
+                if let description = item.resolvedModelDescription ?? item.display.description, !description.isEmpty {
+                    Text(description)
+                        .font(.system(size: 14))
+                        .foregroundColor(.secondary)
+                        .lineSpacing(4)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.horizontal, 16)
+                        .padding(.top, 12)
+                        .padding(.bottom, 16)
+                } else {
+                    Color.clear.frame(height: 16)
+                }
+            }
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(Color(UIColor.secondarySystemBackground))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(Color.orange.opacity(0.2), lineWidth: 1)
+            )
+            .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 2)
+        }
+        .padding(.horizontal)
     }
 }
 

@@ -37,7 +37,7 @@ struct YetiFilterDetailPage: View {
     @State private var selectedResolutionIndex: Int = 0
     @State private var generateAudio: Bool = true  // Default to ON for audio generation
     @State private var videoPlayer: AVPlayer? = nil
-    @State private var isVideoMuted: Bool = true
+    @AppStorage("videoFilterPreviewMuted") private var isVideoMuted: Bool = true // Default muted for autoplay; preference persisted
     @State private var keyboardHeight: CGFloat = 0
     
     @EnvironmentObject var authViewModel: AuthViewModel

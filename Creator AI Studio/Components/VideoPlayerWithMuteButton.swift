@@ -71,14 +71,30 @@ struct VideoPlayerWithMuteButton: View {
                         Button(action: {
                             isMuted.toggle()
                         }) {
-                            Image(systemName: isMuted ? "speaker.slash.fill" : "speaker.wave.2.fill")
-                                .font(.system(size: 16, weight: .semibold))
+                            if isMuted {
+                                HStack(spacing: 6) {
+                                    Text("Unmute")
+                                        .font(.system(size: 14, weight: .semibold))
+                                    Image(systemName: "speaker.slash.fill")
+                                        .font(.system(size: 16, weight: .semibold))
+                                }
                                 .foregroundColor(.white)
-                                .padding(10)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 10)
                                 .background(
-                                    Circle()
+                                    Capsule()
                                         .fill(Color.black.opacity(0.5))
                                 )
+                            } else {
+                                Image(systemName: "speaker.wave.2.fill")
+                                    .font(.system(size: 16, weight: .semibold))
+                                    .foregroundColor(.white)
+                                    .padding(10)
+                                    .background(
+                                        Circle()
+                                            .fill(Color.black.opacity(0.5))
+                                    )
+                            }
                         }
                         .padding(12)
                     }

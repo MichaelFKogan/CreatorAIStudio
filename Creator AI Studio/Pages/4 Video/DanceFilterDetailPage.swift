@@ -31,7 +31,7 @@ struct DanceFilterDetailPage: View {
     @State private var selectedDurationIndex: Int = 0
     @State private var videoPlayer: AVPlayer? = nil
     @State private var playerItemObserver: NSKeyValueObservation? = nil
-    @State private var isVideoMuted: Bool = true // Start muted for autoplay compliance
+    @AppStorage("videoFilterPreviewMuted") private var isVideoMuted: Bool = true // Default muted for autoplay; preference persisted
     
     @EnvironmentObject var authViewModel: AuthViewModel
     
