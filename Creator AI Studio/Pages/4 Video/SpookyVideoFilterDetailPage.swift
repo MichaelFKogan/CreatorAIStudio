@@ -294,6 +294,10 @@ struct SpookyVideoFilterDetailPage: View {
     }
     
     private func getVideoURL(for item: InfoPacket) -> URL? {
+        // Detail page banner: prefer full video with sound from Supabase (detailVideoURL)
+        if let urlString = item.display.detailVideoURL, !urlString.isEmpty, let url = URL(string: urlString) {
+            return url
+        }
         let imageName = item.display.imageName
         if imageName.hasPrefix("http://") || imageName.hasPrefix("https://") {
             return URL(string: imageName)

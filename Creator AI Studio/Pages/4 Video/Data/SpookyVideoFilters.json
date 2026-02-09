@@ -3,6 +3,7 @@
     "display": {
       "title": "Ghostface",
       "imageName": "ghostface1-video",
+      "detailVideoURL": "https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/reference-videos/spooky/ghostface1-video.mp4",
       "description": "Transform your photo into a Ghostface horror video"
     },
     "prompt": "Use @Image1 as a character and scene reference (not a starting frame). Use @Image2 as the visual style reference. 5-second clip. The video opens mid-motion with subtle handheld camera drift, moving film grain, and softly flickering lamp light. A woman lies on a red satin bed clutching a black 1990s-era corded telephone, a gold butterfly clip in her hair, layered gold necklaces, and a large gold ring. The warm glow of a desk lamp illuminates retro 1990s rock posters; popcorn and vintage magazines sit beside her. From the dark corridor behind her, a Ghostface figure emerges and walks into the room. He grabs her; she drops the phone and screams. Ghostface begins dragging her off the bed toward the doorway. Cinematic, grainy Y2K film look with warm highlights and deep shadows. Match the color, texture, and lighting style of @Image2.",
@@ -15,6 +16,7 @@
     "display": {
       "title": "Ghostface",
       "imageName": "ghostface2",
+      "detailVideoURL": "",
       "description": "Transform your photo into a dreamy Ghostface video"
     },
     "prompt": "Use @Image1 as a character and scene reference (not a starting frame). Use @Image2 as the visual style reference. 5-second clip. The video opens mid-motion with gentle camera movement, drifting film grain, and ambient room light already in motion. The subject lies on a pink satin bed clutching a 1990s-style corded telephone, a gold butterfly hairpin in her hair, delicate gold necklaces, and a large gold ring. The girly bedroom is filled with 90s posters, a dim table lamp, popcorn, and 90s magazines. From the dark hallway behind her, a Ghostface figure walks into the room, crosses the space, and grabs her. She screams and drops the phone. Ghostface starts dragging her off the bed toward the doorway. Grainy 90s film feel, eerie tone, cinematic lighting. Match the style and color treatment of @Image2.",
@@ -27,6 +29,7 @@
     "display": {
       "title": "Ghostface Polaroid",
       "imageName": "ghostfacepolaroid",
+      "detailVideoURL": "",
       "description": "Transform your photo into a Ghostface Polaroid video"
     },
     "prompt": "Take @Image1 as the start frame. The scene looks like a Polaroid come to life: slight blur, even flash-like light, simple white curtain background. The subject is photographed with a person in a white ghost mask and black robe; the ghost stands behind with one hand playfully on the subject's neck. The subject looks shocked. Eerie yet humorous atmosphere. Make sure to keep it as the style of @Image2.",
@@ -39,6 +42,7 @@
     "display": {
       "title": "Camp Crystal Lake",
       "imageName": "campcrystallake",
+      "detailVideoURL": "",
       "description": "Transform your photo into a Camp Crystal Lake video"
     },
     "prompt": "Take @Image1 as the start frame. The subject stands on a forest path with cabins in the far background, long hair in a ponytail, wearing dainty silver necklaces and chunky silver rings. Outfit: short red 70s gym shorts with white trim, white Camp Crystal Lake ringer sweatshirt, white knee-high socks with red stripes, black-and-white Converse. Grainy 70s vibe, fallen gold and red leaves. Ghostface stands dimly lit behind a tree watching. Make sure to keep it as the style of @Image2.",
@@ -51,6 +55,7 @@
     "display": {
       "title": "Chucky Bedroom Neon Scene",
       "imageName": "chuckyBedroomNeon",
+      "detailVideoURL": "",
       "description": "Transform your photo into a Chucky bedroom video"
     },
     "prompt": "Take @Image1 as the start frame. The subject has long red hair and Chucky-inspired makeup, lying on a bed in a chest-up shot, holding a 1988 magazine and a lollipop. Neon string lights and a glowing jack-o'-lantern illuminate the scene. Chucky sits beside her on the bed. Walls covered in Chucky posters, cobwebs, bats, spooky string lights. Satin sheets, boombox, colorful shag carpet. Cinematic lighting, spooky 1988 atmosphere. Make sure to keep it as the style of @Image2.",
@@ -63,6 +68,7 @@
     "display": {
       "title": "Vintage Halloween Kitchen Scene",
       "imageName": "vintageHalloweenKitchen",
+      "detailVideoURL": "",
       "description": "Transform your photo into a vintage Halloween kitchen video"
     },
     "prompt": "Take @Image1 as the start frame. The subject stands in a 70s kitchen with vintage Halloween decor, holding a 90s orange corded phone. Long loose curls with gold clips, dainty gold necklaces and rings. Dark wood, avocado green and orange kitchen, 1980s Halloween decorations, newspaper, pumpkin carving tools, jack-o'-lanterns on the counter. Grainy dim lamp lighting. In the dark hallway behind, Ghostface stands in the doorway watching. Make sure to keep it as the style of @Image2.",
@@ -75,6 +81,7 @@
     "display": {
       "title": "Retro Bathroom Scene",
       "imageName": "retroBathroomScene",
+      "detailVideoURL": "",
       "description": "Transform your photo into a retro bathroom horror video"
     },
     "prompt": "Take @Image1 as the start frame. Grungy-style portrait: the subject stands in front of a retro bathroom mirror applying black lipstick in a confident pose. Black shirt, dark distressed jeans, oversized black leather jacket, long dark brunette hair. Dainty silver necklaces and chunky silver rings, dark glamorous makeup. Grainy 90s look, makeup scattered on the counter, scary movie posters on the walls. A man in a Ghostface costume stands in the dimly lit doorway behind. Dark ominous background. Make sure to keep it as the style of @Image2.",
@@ -87,6 +94,7 @@
     "display": {
       "title": "Retro Movie Theater Scene",
       "imageName": "retroMovieTheater",
+      "detailVideoURL": "",
       "description": "Transform your photo into a retro movie theater video"
     },
     "prompt": "Take @Image1 as the start frame. A young woman in a leopard faux fur coat, black stockings, and red heels sits next to Ghostface in red movie theater seats, both holding popcorn. A red neon sign glows above. Behind them is a silver sequin curtain. Cinematic dark lighting. The frame has a Polaroid feel with the date DEC 24 '98. Make sure to keep it as the style of @Image2.",
@@ -99,6 +107,7 @@
     "display": {
       "title": "Ghostface",
       "imageName": "classicBedroomScene",
+      "detailVideoURL": "",
       "description": "Transform your photo into a classic Ghostface bedroom video"
     },
     "prompt": "Take @Image1 as the start frame. A young woman sits on her bed holding a vintage landline phone, looking nervous. Behind the slightly open bedroom door stands Ghostface in his black cloak and white mask, partially hidden in the shadows. Cinematic lighting, eerie atmosphere, horror movie still. Make sure to keep it as the style of @Image2.",
@@ -111,6 +120,7 @@
     "display": {
       "title": "Devil Horns Disposable Party",
       "imageName": "devilHornsDisposableParty",
+      "detailVideoURL": "",
       "description": "Transform your photo into a devil horns party video"
     },
     "prompt": "Take @Image1 as the start frame. Candid close-up as if shot with a disposable camera. The subject looks coyly over their shoulder at a Halloween party in 1992. Dark background with low ambient light and flash. Costume: simple red latex full body suit and a headband with red devil horns. Make sure to keep it as the style of @Image2.",
@@ -123,6 +133,7 @@
     "display": {
       "title": "Retro Bathroom Ghostface Portrait",
       "imageName": "retroBathroomGhostfacePortrait",
+      "detailVideoURL": "",
       "description": "Transform your photo into a retro bathroom Ghostface video"
     },
     "prompt": "Take @Image1 as the start frame. Grungy-style portrait: the subject bends over in front of a retro bathroom mirror applying lipstick in a confident pose. Red dress and oversized black leather jacket, long wavy dark brown hair with gold butterfly clips. Delicate gold jewelry and chunky gold rings, dark glamorous makeup. Grainy 90s aesthetic, makeup scattered on the counter, scary movie posters on the walls. A man in a Ghostface costume stands in the dimly lit hallway doorway, faintly illuminated, watching silently. Dark ominous background. Make sure to keep it as the style of @Image2.",
@@ -135,6 +146,7 @@
     "display": {
       "title": "80s VHS Horror Cover",
       "imageName": "vhs_horror_cover",
+      "detailVideoURL": "",
       "description": "Transform your photo into an 80s VHS horror video"
     },
     "prompt": "Take @Image1 as the start frame. The subject is styled like the main character on a 1980s VHS horror cover, looking over their shoulder with a tense, uneasy expression. Background: dark forest with faint silhouettes and atmospheric fog. Grainy texture, slightly faded colors, simple graphic shapes evoking vintage VHS cover art. No gore. Make sure to keep it as the style of @Image2.",

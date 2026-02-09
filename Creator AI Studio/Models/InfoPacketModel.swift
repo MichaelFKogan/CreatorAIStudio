@@ -129,6 +129,8 @@ struct DisplayInfo: Codable, Hashable {
     var title: String
     var imageName: String
     var imageNameOriginal: String?
+    /// Full video URL for the detail-page banner (Supabase Storage). Used only on video filter detail pages; Home/VideoRow keep using imageName (bundle).
+    var detailVideoURL: String?
     var description: String?
     var modelName: String?
     var modelDescription: String?

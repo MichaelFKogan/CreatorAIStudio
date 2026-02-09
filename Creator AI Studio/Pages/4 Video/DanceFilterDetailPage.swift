@@ -30,6 +30,7 @@ struct DanceFilterDetailPage: View {
     @State private var selectedAspectIndex: Int = 0
     @State private var selectedDurationIndex: Int = 0
     @State private var videoPlayer: AVPlayer? = nil
+    @State private var isBannerVideoReady: Bool = false
     @State private var playerItemObserver: NSKeyValueObservation? = nil
     @AppStorage("videoFilterPreviewMuted") private var isVideoMuted: Bool = true // Default muted for autoplay; preference persisted
     
@@ -115,7 +116,7 @@ struct DanceFilterDetailPage: View {
                         
                         LazyView(
                             BannerSectionFilter(
-                                item: item, price: currentPrice, videoPlayer: $videoPlayer, isVideoMuted: $isVideoMuted))
+                                item: item, price: currentPrice, videoPlayer: $videoPlayer, isVideoMuted: $isVideoMuted, isBannerVideoReady: isBannerVideoReady))
                         
                         Divider().padding(.horizontal)
                         
@@ -448,7 +449,7 @@ struct DanceFilterDetailPage: View {
         }
         
         // Construct Supabase URL
-        let supabaseVideoURL = "https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/reference-videos/\(referenceVideoName).mp4"
+        let supabaseVideoURL = "https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/reference-videos/dance/\(referenceVideoName).mp4"
         
         // Use the hosted URL if available (preferred for efficiency)
         if let url = URL(string: supabaseVideoURL) {
@@ -502,6 +503,10 @@ struct DanceFilterDetailPage: View {
     // MARK: VIDEO PLAYER HELPERS
     
     private func getVideoURL(for item: InfoPacket) -> URL? {
+        // Detail page banner: prefer full video with sound from Supabase (detailVideoURL)
+        if let urlString = item.display.detailVideoURL, !urlString.isEmpty, let url = URL(string: urlString) {
+            return url
+        }
         let imageName = item.display.imageName
         
         // Check if it's a URL string
@@ -530,6 +535,7 @@ struct DanceFilterDetailPage: View {
     
     private func setupVideoPlayer() {
         guard let videoURL = getVideoURL(for: item) else { return }
+        isBannerVideoReady = false
         
         // Configure audio session aggressively to allow playback
         // Use .playback category with .mixWithOthers option to allow audio even in silent mode
@@ -556,6 +562,7 @@ struct DanceFilterDetailPage: View {
             guard let player = player else { return }
             if item.status == .readyToPlay {
                 DispatchQueue.main.async {
+                    isBannerVideoReady = true
                     // Ensure audio session is still active
                     do {
                         try AVAudioSession.sharedInstance().setActive(true, options: [])
@@ -589,6 +596,7 @@ struct DanceFilterDetailPage: View {
     }
     
     private func cleanupVideoPlayer() {
+        isBannerVideoReady = false
         // Remove observer
         playerItemObserver?.invalidate()
         playerItemObserver = nil
@@ -666,6 +674,7 @@ struct DiagonalOverlappingVideoImages: View {
     let leftImageName: String
     let videoPlayer: AVPlayer?
     @Binding var isVideoMuted: Bool
+    var isVideoLoading: Bool = false
 
     @State private var arrowWiggle: Bool = false
 
@@ -710,8 +719,38 @@ struct DiagonalOverlappingVideoImages: View {
             let arrowAngle = atan2(deltaY, deltaX) * 180 / .pi  // Convert to degrees
 
             ZStack(alignment: .center) {
-                // Right video player (centered, larger)
-                if let player = videoPlayer {
+                // Right video player (centered, larger) or loading state
+                if isVideoLoading {
+                    // Loading: circular progress + "Loading..." until video is ready
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(Color(UIColor.tertiarySystemFill))
+                        .frame(width: rightVideoWidth, height: rightVideoHeight)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 16)
+                                .stroke(
+                                    LinearGradient(
+                                        colors: [.white, .gray],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing),
+                                    lineWidth: 2
+                                )
+                        )
+                        .overlay(
+                            VStack(spacing: 12) {
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle(tint: .primary))
+                                    .scaleEffect(1.2)
+                                Text("Loading...")
+                                    .font(.subheadline)
+                                    .fontWeight(.medium)
+                                    .foregroundColor(.secondary)
+                            }
+                        )
+                        .shadow(
+                            color: Color.black.opacity(0.25), radius: 12, x: 4, y: 4
+                        )
+                        .offset(x: rightVideoX, y: rightVideoY)
+                } else if let player = videoPlayer {
                     VideoPlayerWithMuteButton(
                         player: player,
                         isMuted: $isVideoMuted,
@@ -809,8 +848,13 @@ private struct BannerSectionFilter: View {
     let price: Decimal?
     @Binding var videoPlayer: AVPlayer?
     @Binding var isVideoMuted: Bool
+    let isBannerVideoReady: Bool
     
     private func getVideoURL(for item: InfoPacket) -> URL? {
+        // Detail page banner: prefer full video with sound from Supabase (detailVideoURL)
+        if let urlString = item.display.detailVideoURL, !urlString.isEmpty, let url = URL(string: urlString) {
+            return url
+        }
         let imageName = item.display.imageName
         
         // Check if it's a URL string
@@ -861,7 +905,8 @@ private struct BannerSectionFilter: View {
             DiagonalOverlappingVideoImages(
                 leftImageName: item.display.imageNameOriginal ?? "yourphoto",
                 videoPlayer: videoPlayer,
-                isVideoMuted: $isVideoMuted
+                isVideoMuted: $isVideoMuted,
+                isVideoLoading: getVideoURL(for: item) != nil && (videoPlayer == nil || !isBannerVideoReady)
             )
             .padding(.bottom, 8)
             
