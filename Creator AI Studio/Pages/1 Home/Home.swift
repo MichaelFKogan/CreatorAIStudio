@@ -28,6 +28,11 @@ struct Home: View {
     private var spookyVideoFilters: [InfoPacket] {
         videoFiltersViewModel.spookyVideoFilters
     }
+    
+    // Mermaid Video Filters (WaveSpeed video-effects)
+    private var mermaidVideoFilters: [InfoPacket] {
+        videoFiltersViewModel.mermaidVideoFilters
+    }
 
     var body: some View {
         NavigationStack {
@@ -46,6 +51,15 @@ struct Home: View {
                                 title: "🕺 Viral Dance Videos",
                                 items: videoFilters,
                                 seeAllDestination: nil // TODO: Add VideoFiltersPage when ready
+                            )
+                        }
+                        
+                        // Mermaid Video Filters Row (WaveSpeed video-effects)
+                        if !mermaidVideoFilters.isEmpty {
+                            VideoRow(
+                                title: "🧜 Mermaid Video Filters",
+                                items: mermaidVideoFilters,
+                                seeAllDestination: nil
                             )
                         }
 

@@ -69,6 +69,9 @@ struct WebhookConfig {
     /// Base URL for the Fal.ai proxy Edge Function
     static let falaiProxyURL = "https://\(supabaseProjectId).supabase.co/functions/v1/falai-proxy"
     
+    /// Base URL for the WaveSpeed proxy Edge Function
+    static let wavespeedProxyURL = "https://\(supabaseProjectId).supabase.co/functions/v1/wavespeed-proxy"
+    
     /// Secret token for webhook verification (should match Supabase Edge Function secret)
     /// Loaded from Info.plist via SupabaseConfig
     static let webhookSecret = SupabaseConfig.webhookSecret

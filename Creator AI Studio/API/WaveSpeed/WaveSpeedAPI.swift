@@ -20,22 +20,31 @@ struct WaveSpeedResponse: Decodable {
     let data: DataItem
 }
 
-// MARK: - WaveSpeed API Key
-// NOTE: WaveSpeed is currently disabled. To re-enable:
-// 1. Set WAVESPEED_API_KEY in your environment variables or Info.plist
-// 2. Uncomment the guard statement below
-// 3. Remove this placeholder key
+// MARK: - WaveSpeed Proxy (API key stored in Supabase Edge Function secrets)
 
-// TODO: Replace with environment variable or secure config when re-implementing WaveSpeed
-let wavespeedApiKey: String = {
-    // Try to get from environment variable first
-    if let envKey = ProcessInfo.processInfo.environment["WAVESPEED_API_KEY"], !envKey.isEmpty {
-        return envKey
+/// Sends a request to the WaveSpeed API via the wavespeed-proxy Edge Function.
+/// Proxy injects WAVESPEED_API_KEY server-side; app sends Supabase auth only.
+private func wavespeedProxyRequest(endpoint: String, body: [String: Any], methodGET: Bool = false) async throws -> Data {
+    let session = try await SupabaseManager.shared.client.auth.session
+    let proxyURL = URL(string: WebhookConfig.wavespeedProxyURL)!
+    var proxyBody: [String: Any] = ["endpoint": endpoint]
+    if methodGET {
+        proxyBody["method"] = "GET"
+        proxyBody["body"] = [String: Any]()
+    } else {
+        proxyBody["body"] = body
     }
-    // Fallback: throw error if WaveSpeed is used without configuration
-    // This prevents accidental usage with an invalid key
-    fatalError("WaveSpeed API key not configured. Set WAVESPEED_API_KEY environment variable or configure in Info.plist")
-}()
+    var request = URLRequest(url: proxyURL)
+    request.httpMethod = "POST"
+    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+    request.setValue("Bearer \(session.accessToken)", forHTTPHeaderField: "Authorization")
+    request.httpBody = try JSONSerialization.data(withJSONObject: proxyBody)
+    let (data, response) = try await URLSession.shared.data(for: request)
+    guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
+        throw URLError(.badServerResponse)
+    }
+    return data
+}
 
 // MARK: - WaveSpeed Webhook Submission Response
 
@@ -59,20 +68,9 @@ func sendImageToWaveSpeed(
     userId: String? = nil // Required for endpoints that need URL format (like nano-banana)
 
 ) async throws -> WaveSpeedResponse {
-    //    guard let wavespeedApiKey = ProcessInfo.processInfo.environment["WAVESPEED_API_KEY"] else {
-    //        throw URLError(.userAuthenticationRequired)
-    //    }
-
-    // MARK: REQUEST SETUP
+    // MARK: REQUEST SETUP (via proxy – API key in Supabase secrets)
 
     print("[WaveSpeed] Preparing request…")
-
-    let url = URL(string: endpoint)!
-
-    var request = URLRequest(url: url)
-    request.httpMethod = "POST"
-    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-    request.setValue("Bearer \(wavespeedApiKey)", forHTTPHeaderField: "Authorization")
 
     // MARK: DETERMINE ENDPOINT REQUIREMENTS
 
@@ -157,8 +155,6 @@ func sendImageToWaveSpeed(
         print("[WaveSpeed] Including aspect_ratio: \(aspectRatio)")
     }
 
-    request.httpBody = try JSONSerialization.data(withJSONObject: body)
-
     // Debug: Print request body structure (without full base64 data)
     var debugBody = body
     if let imageData = debugBody["image"] as? String, imageData.hasPrefix("data:image") {
@@ -170,23 +166,13 @@ func sendImageToWaveSpeed(
         print("[WaveSpeed] Request body: \(bodyString)")
     }
 
-    // MARK: SEND REQUEST + DECODE RESPONSE
+    // MARK: SEND REQUEST VIA PROXY + DECODE RESPONSE
 
-    print("[WaveSpeed] Sending request to API…")
+    print("[WaveSpeed] Sending request via proxy…")
 
     do {
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let data = try await wavespeedProxyRequest(endpoint: endpoint, body: body)
         print("[WaveSpeed] Response received from API.")
-
-        guard let httpResponse = response as? HTTPURLResponse else {
-            print("[WaveSpeed] Invalid response object.")
-            throw URLError(.badServerResponse)
-        }
-
-        guard (200 ... 299).contains(httpResponse.statusCode) else {
-            print("[WaveSpeed] HTTP error: \(httpResponse.statusCode)")
-            throw URLError(.badServerResponse)
-        }
 
         let decoder = JSONDecoder()
         decoder.keyDecodingStrategy = .convertFromSnakeCase
@@ -244,19 +230,8 @@ func sendImageToWaveSpeed(
 // MARK: - FUNCTION FETCH JOB STATUS (POLLING HELPER)
 
 func fetchWaveSpeedJobStatus(id: String) async throws -> WaveSpeedResponse {
-    let url = URL(string: "https://api.wavespeed.ai/api/v3/predictions/\(id)/result")!
-    var request = URLRequest(url: url)
-    request.httpMethod = "GET"
-    request.setValue("Bearer \(wavespeedApiKey)", forHTTPHeaderField: "Authorization")
-
-    let (data, response) = try await URLSession.shared.data(for: request)
-
-    guard let httpResponse = response as? HTTPURLResponse,
-          (200 ... 299).contains(httpResponse.statusCode)
-    else {
-        throw URLError(.badServerResponse)
-    }
-
+    let statusURL = "https://api.wavespeed.ai/api/v3/predictions/\(id)/result"
+    let data = try await wavespeedProxyRequest(endpoint: statusURL, body: [:], methodGET: true)
     let decoder = JSONDecoder()
     decoder.keyDecodingStrategy = .convertFromSnakeCase
     return try decoder.decode(WaveSpeedResponse.self, from: data)
@@ -289,12 +264,6 @@ func submitImageToWaveSpeedWithWebhook(
     }
     
     print("[WaveSpeed] Endpoint with webhook: \(endpointWithWebhook)")
-    
-    let url = URL(string: endpointWithWebhook)!
-    var request = URLRequest(url: url)
-    request.httpMethod = "POST"
-    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-    request.setValue("Bearer \(wavespeedApiKey)", forHTTPHeaderField: "Authorization")
     
     // Check if this endpoint requires URL format instead of base64
     let requiresURLFormat = endpoint.contains("nano-banana") || endpoint.contains("google/")
@@ -350,8 +319,6 @@ func submitImageToWaveSpeedWithWebhook(
         body["aspect_ratio"] = aspectRatio
     }
     
-    request.httpBody = try JSONSerialization.data(withJSONObject: body)
-    
     // Debug log
     var debugBody = body
     if let imageData = debugBody["image"] as? String, imageData.hasPrefix("data:image") {
@@ -362,15 +329,9 @@ func submitImageToWaveSpeedWithWebhook(
         print("[WaveSpeed] Webhook request body: \(bodyString)")
     }
     
-    print("[WaveSpeed] Sending webhook request to API…")
+    print("[WaveSpeed] Sending webhook request via proxy…")
     
-    let (data, response) = try await URLSession.shared.data(for: request)
-    
-    guard let httpResponse = response as? HTTPURLResponse,
-          (200 ... 299).contains(httpResponse.statusCode) else {
-        print("[WaveSpeed] HTTP error: \((response as? HTTPURLResponse)?.statusCode ?? -1)")
-        throw URLError(.badServerResponse)
-    }
+    let data = try await wavespeedProxyRequest(endpoint: endpointWithWebhook, body: body)
     
     let decoder = JSONDecoder()
     decoder.keyDecodingStrategy = .convertFromSnakeCase
@@ -385,4 +346,44 @@ func submitImageToWaveSpeedWithWebhook(
         jobId: wavespeedResponse.data.id,
         submitted: true
     )
+}
+
+// MARK: - Video Effects (e.g. video-effects/fishermen — mermaid-style image-to-video)
+
+/// Submits an image to a WaveSpeed video-effects endpoint (e.g. fishermen/mermaid).
+/// Returns the WaveSpeed job ID; use it as pending_jobs.task_id so the webhook can update the row.
+/// Image is uploaded to Supabase and passed as URL (API accepts URL or base64).
+func submitVideoEffectToWaveSpeedWithWebhook(
+    image: UIImage,
+    endpoint: String,
+    userId: String
+) async throws -> String {
+    print("[WaveSpeed] Video effect: preparing request, endpoint: \(endpoint)")
+    
+    let webhookURL = WebhookConfig.webhookURL(for: "wavespeed")
+    let endpointWithWebhook = endpoint.contains("?")
+        ? "\(endpoint)&webhook=\(webhookURL.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? webhookURL)"
+        : "\(endpoint)?webhook=\(webhookURL.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? webhookURL)"
+    
+    let imageURL = try await SupabaseManager.shared.uploadImage(
+        image: image,
+        userId: userId,
+        modelName: "temp-wavespeed-video-effect"
+    )
+    print("[WaveSpeed] Video effect: image uploaded, URL: \(imageURL)")
+    
+    let body: [String: Any] = ["image": imageURL]
+    let data = try await wavespeedProxyRequest(endpoint: endpointWithWebhook, body: body)
+    
+    // API may return { data: { id, status } } or top-level { id, status }
+    let decoder = JSONDecoder()
+    decoder.keyDecodingStrategy = .convertFromSnakeCase
+    if let wrapped = try? decoder.decode(WaveSpeedResponse.self, from: data) {
+        print("[WaveSpeed] Video effect job id: \(wrapped.data.id)")
+        return wrapped.data.id
+    }
+    struct FlatResponse: Decodable { let id: String }
+    let flat = try decoder.decode(FlatResponse.self, from: data)
+    print("[WaveSpeed] Video effect job id (flat): \(flat.id)")
+    return flat.id
 }

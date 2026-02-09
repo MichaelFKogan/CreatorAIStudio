@@ -472,6 +472,41 @@ class VideoGenerationTask: MediaGenerationTask {
         do {
             await onProgress(TaskProgress(progress: 0.1, message: "Preparing video request..."))
             
+            // MARK: WaveSpeed video effect (e.g. mermaid/fishermen) — submit first, then create pending job with API job id
+            if let effectEndpoint = item.wavespeedVideoEffectEndpoint, !effectEndpoint.isEmpty, let img = image {
+                await onProgress(TaskProgress(progress: 0.2, message: "Submitting to WaveSpeed..."))
+                let wavespeedJobId = try await submitVideoEffectToWaveSpeedWithWebhook(image: img, endpoint: effectEndpoint, userId: userId)
+                let modelName = item.display.modelName ?? "WaveSpeed Video Effect"
+                let jobMetadata = PendingJobMetadata(
+                    prompt: item.prompt,
+                    model: modelName,
+                    title: item.display.title,
+                    aspectRatio: aspectRatio,
+                    resolution: resolution,
+                    duration: duration,
+                    cost: item.resolvedCost != nil ? NSDecimalNumber(decimal: item.resolvedCost!).doubleValue : nil,
+                    type: item.type,
+                    endpoint: effectEndpoint
+                )
+                let deviceToken = await MainActor.run { PushNotificationManager.shared.deviceToken }
+                let pendingJob = PendingJob(
+                    userId: userId,
+                    taskId: wavespeedJobId,
+                    provider: .wavespeed,
+                    jobType: .video,
+                    metadata: jobMetadata,
+                    deviceToken: deviceToken
+                )
+                try await SupabaseManager.shared.createPendingJob(pendingJob)
+                createdTaskId = wavespeedJobId
+                print("✅ Pending WaveSpeed video effect job created with taskId: \(wavespeedJobId)")
+                await MainActor.run {
+                    VideoGenerationCoordinator.shared.markApiRequestSubmitted(notificationId: notificationId)
+                }
+                await onComplete(.queued(taskId: wavespeedJobId, jobType: .video))
+                return
+            }
+            
             // Generate a unique task ID
             let taskId = UUID().uuidString
             

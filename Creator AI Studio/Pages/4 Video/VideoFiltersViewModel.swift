@@ -4,6 +4,7 @@ import SwiftUI
 class VideoFiltersViewModel: ObservableObject {
     @Published var filters: [InfoPacket] = []
     @Published var spookyVideoFilters: [InfoPacket] = []
+    @Published var mermaidVideoFilters: [InfoPacket] = []
     @Published private var categorizedFiltersDict: [String: [InfoPacket]] = [:]
     
     // Use centralized category configuration manager
@@ -68,10 +69,17 @@ class VideoFiltersViewModel: ObservableObject {
             loadFromFile(url: spookyURL, categoryName: "Spooky Video", allFilters: &spooky, categorized: &categorized)
         }
         
+        // Load Mermaid Video Filters (WaveSpeed video-effects, e.g. fishermen)
+        var mermaid: [InfoPacket] = []
+        if let mermaidURL = Bundle.main.url(forResource: "MermaidVideoFilters", withExtension: "json") {
+            loadFromFile(url: mermaidURL, categoryName: "Mermaid Video", allFilters: &mermaid, categorized: &categorized)
+        }
+        
         // Update published properties
         categorizedFiltersDict = categorized
         filters = allFilters
         spookyVideoFilters = spooky
+        mermaidVideoFilters = mermaid
     }
     
     private func loadFromFile(url: URL, categoryName: String, allFilters: inout [InfoPacket], categorized: inout [String: [InfoPacket]]) {

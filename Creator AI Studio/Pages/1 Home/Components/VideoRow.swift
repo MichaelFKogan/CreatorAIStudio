@@ -160,8 +160,11 @@ struct VideoRow: View {
     
     @ViewBuilder
     private func destinationView(for item: InfoPacket) -> some View {
-        // Spooky Video Filters (Kling O1 reference-to-video, use referenceImageName)
-        if item.referenceImageName != nil {
+        // Mermaid Video Filters (WaveSpeed video-effects, e.g. fishermen)
+        if item.wavespeedVideoEffectEndpoint != nil {
+            MermaidFilterDetailPage(item: item)
+        } else if item.referenceImageName != nil {
+            // Spooky Video Filters (Kling O1 reference-to-video, use referenceImageName)
             SpookyVideoFilterDetailPage(item: item)
         } else if item.referenceVideoName != nil ||
             item.display.title.lowercased().contains("techno viking") ||

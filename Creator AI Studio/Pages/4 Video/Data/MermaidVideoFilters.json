@@ -1,0 +1,14 @@
+[
+  {
+    "display": {
+      "title": "Mermaid Transformation",
+      "imageName": "mermaid-fishermen",
+      "detailVideoURL": "",
+      "description": "Transform your photo into a lifelike mermaid-themed video with natural motion and emotion. Best with upper body or full body clearly visible from the front."
+    },
+    "prompt": "",
+    "cost": 0.2,
+    "type": "Video Filter",
+    "wavespeedVideoEffectEndpoint": "https://api.wavespeed.ai/api/v3/video-effects/fishermen"
+  }
+]

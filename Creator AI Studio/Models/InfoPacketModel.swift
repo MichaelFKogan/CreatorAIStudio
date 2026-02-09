@@ -17,10 +17,12 @@ struct InfoPacket: Codable, Identifiable, Hashable {
     var category: String?
     var referenceVideoName: String?  // Reference video name for motion control (used by dance filters)
     var referenceImageName: String?   // Reference image name for style (used by Spooky video filters, O1 reference-to-video)
+    /// WaveSpeed video-effects API endpoint (e.g. video-effects/fishermen for mermaid-style). When set, detail page uses WaveSpeed image→video.
+    var wavespeedVideoEffectEndpoint: String?
 
     // Tell the decoder to ignore 'id'
     enum CodingKeys: String, CodingKey {
-        case display, apiConfig, prompt, cost, type, capabilities, category, referenceVideoName, referenceImageName
+        case display, apiConfig, prompt, cost, type, capabilities, category, referenceVideoName, referenceImageName, wavespeedVideoEffectEndpoint
         // Notice: 'id' is NOT listed here
     }
     
