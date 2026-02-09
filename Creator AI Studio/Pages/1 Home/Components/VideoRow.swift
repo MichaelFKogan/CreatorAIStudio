@@ -7,6 +7,7 @@ struct VideoRow: View {
     let items: [InfoPacket]
     let seeAllDestination: AnyView?
     
+    @Environment(\.scenePhase) private var scenePhase
     @State private var lastOffset: CGFloat = 0
     @State private var feedback: UISelectionFeedbackGenerator?
     @State private var playingVideos: [UUID: AVPlayer] = [:]
@@ -85,6 +86,11 @@ struct VideoRow: View {
         }
         .onDisappear {
             pauseVideoPlayers()
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            if newPhase == .active {
+                resumeVideoPlayers()
+            }
         }
     }
     
@@ -244,6 +250,9 @@ private struct VideoRowPlayerView: View {
         Group {
             if let player = player {
                 VideoPlayer(player: player)
+                    .onAppear {
+                        player.play()
+                    }
             } else {
                 Color.clear
                     .onAppear {
@@ -254,9 +263,10 @@ private struct VideoRowPlayerView: View {
     }
     
     private func setupPlayer() {
-        // Check if player already exists
+        // Check if player already exists (e.g. after navigating back or app reopen)
         if let existingPlayer = playingVideos[item.id] {
             player = existingPlayer
+            existingPlayer.play()
             return
         }
         
