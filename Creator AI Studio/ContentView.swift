@@ -1,10 +1,20 @@
 import SwiftUI
 import UIKit
 
+/// Tracks the selected main tab (0=Home, 1=Photo Filters, 2=Post, 3=Models, 4=Profile).
+/// Video filter detail pages observe this and stop playback when the user switches away from Home.
+final class MainTabState: ObservableObject {
+    @Published var selectedTabIndex: Int
+    init(initialTab: Int = 0) {
+        self.selectedTabIndex = initialTab
+    }
+}
+
 struct ContentView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
     @StateObject private var notificationManager = NotificationManager.shared
     @StateObject private var pushNotificationManager = PushNotificationManager.shared
+    @StateObject private var mainTabState = MainTabState(initialTab: 0)
     @Environment(\.colorScheme) var colorScheme
     @Environment(\.scenePhase) private var scenePhase
 
@@ -97,6 +107,7 @@ struct ContentView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .environmentObject(notificationManager)
+            .environmentObject(mainTabState)
 
             // Notification Bar (above tab bar)
             VStack {
@@ -156,6 +167,7 @@ struct ContentView: View {
             if shouldNavigate {
                 currentTransitionEdge = 4 > selectedTab ? .trailing : .leading
                 previousTab = selectedTab
+                mainTabState.selectedTabIndex = 4
                 withAnimation(.easeInOut(duration: 0.3)) {
                     selectedTab = 4
                 }
@@ -189,6 +201,8 @@ struct ContentView: View {
             let edge: Edge = index < selectedTab ? .leading : .trailing
             currentTransitionEdge = edge
             previousTab = selectedTab
+            // Update main tab state first so video filter detail pages can stop playback before tab switch
+            mainTabState.selectedTabIndex = index
             withAnimation(.easeInOut(duration: 0.3)) {
                 selectedTab = index
             }
@@ -208,6 +222,7 @@ struct ContentView: View {
             let edge: Edge = 4 < selectedTab ? .leading : .trailing
             currentTransitionEdge = edge
             previousTab = selectedTab
+            mainTabState.selectedTabIndex = 4
             withAnimation(.easeInOut(duration: 0.3)) {
                 selectedTab = 4
             }

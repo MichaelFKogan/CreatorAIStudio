@@ -41,6 +41,7 @@ struct YetiFilterDetailPage: View {
     @State private var keyboardHeight: CGFloat = 0
     
     @EnvironmentObject var authViewModel: AuthViewModel
+    @EnvironmentObject var mainTabState: MainTabState
     
     // MARK: Constants - Default options for filter
     
@@ -426,6 +427,11 @@ struct YetiFilterDetailPage: View {
         .onDisappear {
             // Clean up video player
             cleanupVideoPlayer()
+        }
+        .onChange(of: mainTabState.selectedTabIndex) { _, newTab in
+            if newTab != 0 {
+                cleanupVideoPlayer()
+            }
         }
     }
     

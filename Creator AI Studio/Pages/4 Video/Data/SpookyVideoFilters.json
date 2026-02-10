@@ -2,7 +2,7 @@
   {
     "display": {
       "title": "Ghostface",
-      "imageName": "ghostface1-video",
+      "imageName": "ghostface-video",
       "detailVideoURL": "https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/reference-videos/spooky/ghostface-video.mp4",
       "description": "Transform your photo into a Ghostface horror video"
     },

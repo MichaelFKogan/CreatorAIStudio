@@ -33,6 +33,7 @@ struct SpookyVideoFilterDetailPage: View {
     @AppStorage("videoFilterPreviewMuted") private var isVideoMuted: Bool = true // Default muted for autoplay; preference persisted
     
     @EnvironmentObject var authViewModel: AuthViewModel
+    @EnvironmentObject var mainTabState: MainTabState
     
     private let defaultDurationOptions: [DurationOption] = [
         DurationOption(id: "5", label: "5 seconds", duration: 5.0, description: "Standard duration"),
@@ -222,6 +223,11 @@ struct SpookyVideoFilterDetailPage: View {
         }
         .onDisappear {
             cleanupVideoPlayer()
+        }
+        .onChange(of: mainTabState.selectedTabIndex) { _, newTab in
+            if newTab != 0 {
+                cleanupVideoPlayer()
+            }
         }
         .onChange(of: selectedPhotoItem) { _, newItem in
             Task {

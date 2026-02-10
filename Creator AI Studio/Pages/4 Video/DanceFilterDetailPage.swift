@@ -35,6 +35,7 @@ struct DanceFilterDetailPage: View {
     @AppStorage("videoFilterPreviewMuted") private var isVideoMuted: Bool = true // Default muted for autoplay; preference persisted
     
     @EnvironmentObject var authViewModel: AuthViewModel
+    @EnvironmentObject var mainTabState: MainTabState
     
     // MARK: Constants - Default options for filter
     
@@ -300,6 +301,12 @@ struct DanceFilterDetailPage: View {
         .onDisappear {
             // Clean up video player
             cleanupVideoPlayer()
+        }
+        .onChange(of: mainTabState.selectedTabIndex) { _, newTab in
+            // Stop playback when user switches to another tab (e.g. Profile) so music doesn’t keep playing
+            if newTab != 0 {
+                cleanupVideoPlayer()
+            }
         }
     }
     
