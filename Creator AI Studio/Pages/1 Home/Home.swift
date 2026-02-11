@@ -62,6 +62,29 @@ struct Home: View {
                                 seeAllDestination: nil
                             )
                         }
+                        
+                        // WaveSpeed video-effect rows by category (Magical, Fashion, Video Games)
+                        if !videoFiltersViewModel.wavespeedFilters(forCategory: "Magical").isEmpty {
+                            VideoRow(
+                                title: "✨ Magical",
+                                items: videoFiltersViewModel.wavespeedFilters(forCategory: "Magical"),
+                                seeAllDestination: nil
+                            )
+                        }
+                        if !videoFiltersViewModel.wavespeedFilters(forCategory: "Fashion").isEmpty {
+                            VideoRow(
+                                title: "👗 Fashion",
+                                items: videoFiltersViewModel.wavespeedFilters(forCategory: "Fashion"),
+                                seeAllDestination: nil
+                            )
+                        }
+                        if !videoFiltersViewModel.wavespeedFilters(forCategory: "Video Games").isEmpty {
+                            VideoRow(
+                                title: "🎮 Video Games",
+                                items: videoFiltersViewModel.wavespeedFilters(forCategory: "Video Games"),
+                                seeAllDestination: nil
+                            )
+                        }
 
                         // Category Rows - manually listed
                         if hasCategoryItems("Anime") {

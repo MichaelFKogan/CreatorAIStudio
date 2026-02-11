@@ -3,7 +3,7 @@
     "display": {
       "title": "Ghostface",
       "imageName": "ghostface-video",
-      "detailVideoURL": "https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/reference-videos/spooky/ghostface-video.mp4",
+      "detailVideoURL": "https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/videos/ghostface-video.mp4",
       "description": "Transform your photo into a Ghostface horror video"
     },
     "prompt": "Use @Image1 as a character and scene reference (not a starting frame). Use @Image2 as the visual style reference. 5-second clip. The video opens mid-motion with subtle handheld camera drift, moving film grain, and softly flickering lamp light. A woman lies on a red satin bed clutching a black 1990s-era corded telephone, a gold butterfly clip in her hair, layered gold necklaces, and a large gold ring. The warm glow of a desk lamp illuminates retro 1990s rock posters; popcorn and vintage magazines sit beside her. From the dark corridor behind her, a Ghostface figure emerges and walks into the room. He grabs her; she drops the phone and screams. Ghostface begins dragging her off the bed toward the doorway. Cinematic, grainy Y2K film look with warm highlights and deep shadows. Match the color, texture, and lighting style of @Image2.",

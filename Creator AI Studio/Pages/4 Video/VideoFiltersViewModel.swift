@@ -5,6 +5,7 @@ class VideoFiltersViewModel: ObservableObject {
     @Published var filters: [InfoPacket] = []
     @Published var spookyVideoFilters: [InfoPacket] = []
     @Published var mermaidVideoFilters: [InfoPacket] = []
+    @Published var wavespeedVideoFilters: [InfoPacket] = []
     @Published private var categorizedFiltersDict: [String: [InfoPacket]] = [:]
     
     // Use centralized category configuration manager
@@ -30,6 +31,11 @@ class VideoFiltersViewModel: ObservableObject {
     // Get filters by category name
     func filters(for category: String) -> [InfoPacket] {
         return categorizedFiltersDict[category] ?? []
+    }
+    
+    /// WaveSpeed video-effect filters for a given Home row category (e.g. "Magical", "Fashion", "Video Games").
+    func wavespeedFilters(forCategory category: String) -> [InfoPacket] {
+        return wavespeedVideoFilters.filter { $0.category == category }
     }
     
     // Get all video filters (for the home row)
@@ -75,11 +81,34 @@ class VideoFiltersViewModel: ObservableObject {
             loadFromFile(url: mermaidURL, categoryName: "Mermaid Video", allFilters: &mermaid, categorized: &categorized)
         }
         
+        // Load WaveSpeed video-effect filters (Fairy, Runway Model, Minecraft, etc.) with per-item category
+        var wavespeed: [InfoPacket] = []
+        if let wavespeedURL = Bundle.main.url(forResource: "WavespeedVideoFilters", withExtension: "json") {
+            loadWavespeedFilters(url: wavespeedURL, allFilters: &wavespeed)
+        }
+        
         // Update published properties
         categorizedFiltersDict = categorized
         filters = allFilters
         spookyVideoFilters = spooky
         mermaidVideoFilters = mermaid
+        wavespeedVideoFilters = wavespeed
+    }
+    
+    /// Loads WaveSpeed video-effect JSON; preserves each item's category from JSON (for Home row grouping).
+    private func loadWavespeedFilters(url: URL, allFilters: inout [InfoPacket]) {
+        do {
+            let data = try Data(contentsOf: url)
+            var decoded = try JSONDecoder().decode([InfoPacket].self, from: data)
+            decoded = decoded.map { var item = $0
+                item.type = "Video Filter"
+                // Keep item.category from JSON (do not overwrite)
+                return item
+            }
+            allFilters.append(contentsOf: decoded)
+        } catch {
+            print("Failed to decode \(url.lastPathComponent): \(error)")
+        }
     }
     
     private func loadFromFile(url: URL, categoryName: String, allFilters: inout [InfoPacket], categorized: inout [String: [InfoPacket]]) {

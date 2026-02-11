@@ -3,7 +3,7 @@
     "display": {
       "title": "Techno Viking Dance",
       "imageName": "techno-viking",
-      "detailVideoURL": "https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/reference-videos/dance/techno-viking.mp4",
+      "detailVideoURL": "https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/videos/techno-viking.mp4",
       "description": "Transform your image into a Techno Viking video"
     },
     "prompt": "The subject in the image performs the same movements and poses from the reference video, while maintaining their original appearance, anatomy, and physical characteristics. Only the motion pattern is applied, not the body structure.",
@@ -15,7 +15,7 @@
     "display": {
       "title": "Gangnam Style Dance",
       "imageName": "gangnam-style",
-      "detailVideoURL": "https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/reference-videos/dance/gangnam-style.mp4",
+      "detailVideoURL": "https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/videos/gangnam-style.mp4",
       "description": "Transform your image into a Gangnam Style video"
     },
     "prompt": "The subject in the image performs the same movements and poses from the reference video, while maintaining their original appearance, anatomy, and physical characteristics. Only the motion pattern is applied, not the body structure.",
@@ -27,7 +27,7 @@
     "display": {
       "title": "Fortnite Default Dance",
       "imageName": "fortnite-default",
-      "detailVideoURL": "https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/reference-videos/dance/fortnite-default.mp4",
+      "detailVideoURL": "https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/videos/fortnite-default.mp4",
       "description": "Transform your image into a Fortnite Dance video"
     },
     "prompt": "The subject in the image performs the same movements and poses from the reference video, while maintaining their original appearance, anatomy, and physical characteristics. Only the motion pattern is applied, not the body structure.",
@@ -39,7 +39,7 @@
     "display": {
       "title": "Rat Dance",
       "imageName": "rat-dance",
-      "detailVideoURL": "https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/reference-videos/dance/rat-dance.mp4",
+      "detailVideoURL": "https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/videos/rat-dance.mp4",
       "description": "Transform your image into a Rat Dance video"
     },
     "prompt": "The subject in the image performs the same movements and poses from the reference video, while maintaining their original appearance, anatomy, and physical characteristics. Only the motion pattern is applied, not the body structure.",
@@ -51,7 +51,7 @@
     "display": {
       "title": "Mamushi",
       "imageName": "mamushi",
-      "detailVideoURL": "https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/reference-videos/dance/mamushi.mp4",
+      "detailVideoURL": "https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/videos/mamushi.mp4",
       "description": "Transform your image into a Mamushi video"
     },
     "prompt": "The subject in the image performs the same movements and poses from the reference video, while maintaining their original appearance, anatomy, and physical characteristics. Only the motion pattern is applied, not the body structure.",
@@ -63,7 +63,7 @@
     "display": {
       "title": "Yeti Vlog",
       "imageName": "yeti",
-      "detailVideoURL": "https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/reference-videos/vlog/yeti.mp4",
+      "detailVideoURL": "https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/videos/yeti.mp4",
       "description": ""
     },
     "prompt": "Create a video with this style",

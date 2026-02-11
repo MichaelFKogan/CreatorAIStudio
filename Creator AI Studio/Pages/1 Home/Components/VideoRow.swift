@@ -160,9 +160,9 @@ struct VideoRow: View {
     
     @ViewBuilder
     private func destinationView(for item: InfoPacket) -> some View {
-        // Mermaid Video Filters (WaveSpeed video-effects, e.g. fishermen)
+        // WaveSpeed video-effect filters (Mermaid, Fairy, Runway Model, Minecraft, etc.)
         if item.wavespeedVideoEffectEndpoint != nil {
-            MermaidFilterDetailPage(item: item)
+            WavespeedFilterDetailPage(item: item)
         } else if item.referenceImageName != nil {
             // Spooky Video Filters (Kling O1 reference-to-video, use referenceImageName)
             SpookyVideoFilterDetailPage(item: item)

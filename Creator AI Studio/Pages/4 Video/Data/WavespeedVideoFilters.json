@@ -1,0 +1,41 @@
+[
+  {
+    "display": {
+      "title": "Fairy",
+      "imageName": "fairy",
+      "detailVideoURL": "https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/videos/fairy.mp4",
+      "description": "Turn photos into enchanting fairy clips with magical, ethereal effects for motion portraits. Ideal for fantasy content, kids, cosplay, and dreamy edits."
+    },
+    "prompt": "",
+    "cost": 0.2,
+    "type": "Video Filter",
+    "category": "Magical",
+    "wavespeedVideoEffectEndpoint": "https://api.wavespeed.ai/api/v3/video-effects/fairy-me"
+  },
+  {
+    "display": {
+      "title": "Runway Model",
+      "imageName": "fashion-stride",
+      "detailVideoURL": "https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/videos/fashion-stride.mp4",
+      "description": "Turn any photo or selfie into a high-fashion runway walk video instantly. No skills or editing required."
+    },
+    "prompt": "",
+    "cost": 0.2,
+    "type": "Video Filter",
+    "category": "Fashion",
+    "wavespeedVideoEffectEndpoint": "https://api.wavespeed.ai/api/v3/video-effects/fashion-stride"
+  },
+  {
+    "display": {
+      "title": "Minecraft",
+      "imageName": "minecraft",
+      "detailVideoURL": "https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/videos/minecraft.mp4",
+      "description": "Turn photos into Minecraft-style cubic videos with particle effects, smooth transitions, and blocky animation ideal for gaming-inspired clips."
+    },
+    "prompt": "",
+    "cost": 0.2,
+    "type": "Video Filter",
+    "category": "Video Games",
+    "wavespeedVideoEffectEndpoint": "https://api.wavespeed.ai/api/v3/video-effects/minecraft"
+  }
+]

@@ -456,7 +456,7 @@ struct DanceFilterDetailPage: View {
         }
         
         // Construct Supabase URL
-        let supabaseVideoURL = "https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/reference-videos/dance/\(referenceVideoName).mp4"
+        let supabaseVideoURL = "https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/reference-videos/\(referenceVideoName).mp4"
         
         // Use the hosted URL if available (preferred for efficiency)
         if let url = URL(string: supabaseVideoURL) {
