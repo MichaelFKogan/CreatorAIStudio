@@ -1,41 +1,18 @@
 [
-  {
-    "display": {
-      "title": "Fairy",
-      "imageName": "fairy",
-      "detailVideoURL": "https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/videos/fairy.mp4",
-      "description": "Turn photos into enchanting fairy clips with magical, ethereal effects for motion portraits. Ideal for fantasy content, kids, cosplay, and dreamy edits."
-    },
-    "prompt": "",
-    "cost": 0.2,
-    "type": "Video Filter",
-    "category": "Magical",
-    "wavespeedVideoEffectEndpoint": "https://api.wavespeed.ai/api/v3/video-effects/fairy-me"
-  },
-  {
-    "display": {
-      "title": "Runway Model",
-      "imageName": "fashion-stride",
-      "detailVideoURL": "https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/videos/fashion-stride.mp4",
-      "description": "Turn any photo or selfie into a high-fashion runway walk video instantly. No skills or editing required."
-    },
-    "prompt": "",
-    "cost": 0.2,
-    "type": "Video Filter",
-    "category": "Fashion",
-    "wavespeedVideoEffectEndpoint": "https://api.wavespeed.ai/api/v3/video-effects/fashion-stride"
-  },
-  {
-    "display": {
-      "title": "Minecraft",
-      "imageName": "minecraft",
-      "detailVideoURL": "https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/videos/minecraft.mp4",
-      "description": "Turn photos into Minecraft-style cubic videos with particle effects, smooth transitions, and blocky animation ideal for gaming-inspired clips."
-    },
-    "prompt": "",
-    "cost": 0.2,
-    "type": "Video Filter",
-    "category": "Video Games",
-    "wavespeedVideoEffectEndpoint": "https://api.wavespeed.ai/api/v3/video-effects/minecraft"
-  }
+  {"display":{"title":"Fairy","imageName":"fairy","detailVideoURL":"https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/videos/fairy.mp4","description":"Turn photos into enchanting fairy clips with magical, ethereal effects for motion portraits. Ideal for fantasy content, kids, cosplay, and dreamy edits."},"prompt":"","cost":0.2,"type":"Video Filter","category":"Magical","wavespeedVideoEffectEndpoint":"https://api.wavespeed.ai/api/v3/video-effects/fairy-me"},
+  {"display":{"title":"Runway Model","imageName":"fashion-stride","detailVideoURL":"https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/videos/fashion-stride.mp4","description":"Turn any photo or selfie into a high-fashion runway walk video instantly. No skills or editing required."},"prompt":"","cost":0.2,"type":"Video Filter","category":"Fashion","wavespeedVideoEffectEndpoint":"https://api.wavespeed.ai/api/v3/video-effects/fashion-stride"},
+  {"display":{"title":"Minecraft","imageName":"minecraft","detailVideoURL":"https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/videos/minecraft.mp4","description":"Turn photos into Minecraft-style cubic videos with particle effects, smooth transitions, and blocky animation ideal for gaming-inspired clips."},"prompt":"","cost":0.2,"type":"Video Filter","category":"Video Games","wavespeedVideoEffectEndpoint":"https://api.wavespeed.ai/api/v3/video-effects/minecraft"},
+  {"display":{"title":"Melt","imageName":"melt","detailVideoURL":"","description":"Turns photos into mesmerizing image-to-video melting effect clips with smooth transitions. Best with full-body or upper-body, front-facing poses."},"prompt":"","cost":0.2,"type":"Video Filter","category":"Creative","wavespeedVideoEffectEndpoint":"https://api.wavespeed.ai/api/v3/video-effects/melt"},
+  {"display":{"title":"Balloon Flyaway","imageName":"balloon-flyaway","detailVideoURL":"","description":"Transform photos into playful balloon flyaway videos—subjects float away with charming motion. Great for single or multiple subjects and animals."},"prompt":"","cost":0.2,"type":"Video Filter","category":"Just For Fun","wavespeedVideoEffectEndpoint":"https://api.wavespeed.ai/api/v3/video-effects/balloon-flyaway"},
+  {"display":{"title":"Flying","imageName":"flying","detailVideoURL":"","description":"Transform photos into superhero-style flying videos with dynamic camera movement. Ideal for full-body shots with scenic backgrounds."},"prompt":"","cost":0.2,"type":"Video Filter","category":"Superhero","wavespeedVideoEffectEndpoint":"https://api.wavespeed.ai/api/v3/video-effects/flying"},
+  {"display":{"title":"Ghibli","imageName":"ghibli","detailVideoURL":"","description":"Turn photos into Ghibli-style animated videos with dreamy colors, smooth transitions, and a hand-painted, storybook look."},"prompt":"","cost":0.3,"type":"Video Filter","category":"Art","wavespeedVideoEffectEndpoint":"https://api.wavespeed.ai/api/v3/video-effects/ghibli"},
+  {"display":{"title":"Captain America","imageName":"captain-america","detailVideoURL":"","description":"AI-generated Captain America costume effect that turns photos into epic image-to-video transformation clips."},"prompt":"","cost":0.3,"type":"Video Filter","category":"Superhero","wavespeedVideoEffectEndpoint":"https://api.wavespeed.ai/api/v3/video-effects/captain-america"},
+  {"display":{"title":"Oscar Gala","imageName":"oscar-gala","detailVideoURL":"","description":"Convert photos into Oscar-style acceptance speech videos with red-carpet attire, glamorous lighting, and a prestigious atmosphere."},"prompt":"","cost":0.3,"type":"Video Filter","category":"Red Carpet","wavespeedVideoEffectEndpoint":"https://api.wavespeed.ai/api/v3/video-effects/oscar-gala"},
+  {"display":{"title":"Dust Me Away","imageName":"dust-me-away","detailVideoURL":"","description":"Cinematic dissolve filter that turns photos into dust-away image-to-video clips with smooth, dramatic transitions."},"prompt":"","cost":0.25,"type":"Video Filter","category":"Creative","wavespeedVideoEffectEndpoint":"https://api.wavespeed.ai/api/v3/video-effects/dust-me-away"},
+  {"display":{"title":"Star Carpet","imageName":"star-carpet","detailVideoURL":"","description":"Create red-carpet walk videos from a single photo with elegant motion and confident expressions."},"prompt":"","cost":0.3,"type":"Video Filter","category":"Red Carpet","wavespeedVideoEffectEndpoint":"https://api.wavespeed.ai/api/v3/video-effects/star-carpet"},
+  {"display":{"title":"Pinch","imageName":"pinch","detailVideoURL":"","description":"Turn photos into humorous pinch-and-squeeze videos that warp faces and objects into playful short clips great for social sharing."},"prompt":"","cost":0.2,"type":"Video Filter","category":"Just For Fun","wavespeedVideoEffectEndpoint":"https://api.wavespeed.ai/api/v3/video-effects/pinch"},
+  {"display":{"title":"Paperman","imageName":"paperman","detailVideoURL":"","description":"Paperman turns photos into playful paper-puppet image-to-video clips with hand interactions and stop-motion style."},"prompt":"","cost":0.2,"type":"Video Filter","category":"Art","wavespeedVideoEffectEndpoint":"https://api.wavespeed.ai/api/v3/video-effects/paperman"},
+  {"display":{"title":"Hulk","imageName":"hulk","detailVideoURL":"","description":"Turn photos into powerful AI-generated Hulk-style transformation videos that convert ordinary images into giant transformation scenes."},"prompt":"","cost":0.3,"type":"Video Filter","category":"Superhero","wavespeedVideoEffectEndpoint":"https://api.wavespeed.ai/api/v3/video-effects/hulk"},
+  {"display":{"title":"Hulk Dive","imageName":"hulk-dive","detailVideoURL":"","description":"Transform photos into dramatic Hulk dive videos with natural motion and emotion, creating cinematic clips from a single image."},"prompt":"","cost":0.3,"type":"Video Filter","category":"Superhero","wavespeedVideoEffectEndpoint":"https://api.wavespeed.ai/api/v3/video-effects/hulk-dive"},
+  {"display":{"title":"Exotic Princess","imageName":"exotic-princess","detailVideoURL":"","description":"Photo-to-video conversion that turns photos into exotic princess videos with diverse cultural styles and elegant expressions."},"prompt":"","cost":0.3,"type":"Video Filter","category":"Fashion","wavespeedVideoEffectEndpoint":"https://api.wavespeed.ai/api/v3/video-effects/exotic-princess"}
 ]

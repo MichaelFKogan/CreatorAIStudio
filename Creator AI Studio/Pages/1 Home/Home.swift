@@ -85,6 +85,41 @@ struct Home: View {
                                 seeAllDestination: nil
                             )
                         }
+                        if !videoFiltersViewModel.wavespeedFilters(forCategory: "Creative").isEmpty {
+                            VideoRow(
+                                title: "🎨 Creative",
+                                items: videoFiltersViewModel.wavespeedFilters(forCategory: "Creative"),
+                                seeAllDestination: nil
+                            )
+                        }
+                        if !videoFiltersViewModel.wavespeedFilters(forCategory: "Just For Fun").isEmpty {
+                            VideoRow(
+                                title: "😄 Just For Fun",
+                                items: videoFiltersViewModel.wavespeedFilters(forCategory: "Just For Fun"),
+                                seeAllDestination: nil
+                            )
+                        }
+                        if !videoFiltersViewModel.wavespeedFilters(forCategory: "Superhero").isEmpty {
+                            VideoRow(
+                                title: "🦸 Superhero",
+                                items: videoFiltersViewModel.wavespeedFilters(forCategory: "Superhero"),
+                                seeAllDestination: nil
+                            )
+                        }
+                        if !videoFiltersViewModel.wavespeedFilters(forCategory: "Art").isEmpty {
+                            VideoRow(
+                                title: "🖼️ Art",
+                                items: videoFiltersViewModel.wavespeedFilters(forCategory: "Art"),
+                                seeAllDestination: nil
+                            )
+                        }
+                        if !videoFiltersViewModel.wavespeedFilters(forCategory: "Red Carpet").isEmpty {
+                            VideoRow(
+                                title: "🌟 Red Carpet",
+                                items: videoFiltersViewModel.wavespeedFilters(forCategory: "Red Carpet"),
+                                seeAllDestination: nil
+                            )
+                        }
 
                         // Category Rows - manually listed
                         if hasCategoryItems("Anime") {
