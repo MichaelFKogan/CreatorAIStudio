@@ -47,74 +47,74 @@ struct Home: View {
 
                         // Video Filters Row
                         if !videoFilters.isEmpty {
-                            VideoRow(
+                            VideoRowGrid(
                                 title: "🕺 Viral Dance Videos",
                                 items: videoFilters,
                                 seeAllDestination: nil // TODO: Add VideoFiltersPage when ready
                             )
                         }
                         
-                        // Mermaid Video Filters Row (WaveSpeed video-effects)
-                        if !mermaidVideoFilters.isEmpty {
-                            VideoRow(
-                                title: "🧜 Mermaid Video Filters",
-                                items: mermaidVideoFilters,
-                                seeAllDestination: nil
-                            )
-                        }
+                        // // Mermaid Video Filters Row (WaveSpeed video-effects)
+                        // if !mermaidVideoFilters.isEmpty {
+                        //     VideoRowGrid(
+                        //         title: "🧜 Mermaid Video Filters",
+                        //         items: mermaidVideoFilters,
+                        //         seeAllDestination: nil
+                        //     )
+                        // }
                         
                         // WaveSpeed video-effect rows by category (Magical, Fashion, Video Games)
                         if !videoFiltersViewModel.wavespeedFilters(forCategory: "Magical").isEmpty {
-                            VideoRow(
+                            VideoRowGrid(
                                 title: "✨ Magical",
                                 items: videoFiltersViewModel.wavespeedFilters(forCategory: "Magical"),
                                 seeAllDestination: nil
                             )
                         }
                         if !videoFiltersViewModel.wavespeedFilters(forCategory: "Fashion").isEmpty {
-                            VideoRow(
+                            VideoRowGrid(
                                 title: "👗 Fashion",
                                 items: videoFiltersViewModel.wavespeedFilters(forCategory: "Fashion"),
                                 seeAllDestination: nil
                             )
                         }
                         if !videoFiltersViewModel.wavespeedFilters(forCategory: "Video Games").isEmpty {
-                            VideoRow(
+                            VideoRowGrid(
                                 title: "🎮 Video Games",
                                 items: videoFiltersViewModel.wavespeedFilters(forCategory: "Video Games"),
                                 seeAllDestination: nil
                             )
                         }
                         if !videoFiltersViewModel.wavespeedFilters(forCategory: "Creative").isEmpty {
-                            VideoRow(
+                            VideoRowGrid(
                                 title: "🎨 Creative",
                                 items: videoFiltersViewModel.wavespeedFilters(forCategory: "Creative"),
                                 seeAllDestination: nil
                             )
                         }
                         if !videoFiltersViewModel.wavespeedFilters(forCategory: "Just For Fun").isEmpty {
-                            VideoRow(
+                            VideoRowGrid(
                                 title: "😄 Just For Fun",
                                 items: videoFiltersViewModel.wavespeedFilters(forCategory: "Just For Fun"),
                                 seeAllDestination: nil
                             )
                         }
                         if !videoFiltersViewModel.wavespeedFilters(forCategory: "Superhero").isEmpty {
-                            VideoRow(
+                            VideoRowGrid(
                                 title: "🦸 Superhero",
                                 items: videoFiltersViewModel.wavespeedFilters(forCategory: "Superhero"),
                                 seeAllDestination: nil
                             )
                         }
                         if !videoFiltersViewModel.wavespeedFilters(forCategory: "Art").isEmpty {
-                            VideoRow(
+                            VideoRowGrid(
                                 title: "🖼️ Art",
                                 items: videoFiltersViewModel.wavespeedFilters(forCategory: "Art"),
                                 seeAllDestination: nil
                             )
                         }
                         if !videoFiltersViewModel.wavespeedFilters(forCategory: "Red Carpet").isEmpty {
-                            VideoRow(
+                            VideoRowGrid(
                                 title: "🌟 Red Carpet",
                                 items: videoFiltersViewModel.wavespeedFilters(forCategory: "Red Carpet"),
                                 seeAllDestination: nil
@@ -123,7 +123,7 @@ struct Home: View {
 
                         // Category Rows - manually listed
                         if hasCategoryItems("Anime") {
-                            CategoryRow(categoryName: "Anime", animationType: .scanHorizontal)
+                            CategoryRowGrid(categoryName: "Anime", animationType: .scanHorizontal)
                                 .padding(.top, 16)
                         }
                         
@@ -152,29 +152,29 @@ struct Home: View {
                         }
                         
                         if hasCategoryItems("Character") {
-                            CategoryRow(categoryName: "Character", animationType: .flipCard)
+                            CategoryRowGrid(categoryName: "Character", animationType: .flipCard)
                         }
                         
                         if hasCategoryItems("Video Games") {
-                            CategoryRow(categoryName: "Video Games", animationType: .scanHorizontal)
+                            CategoryRowGrid(categoryName: "Video Games", animationType: .scanHorizontal)
                         }
                         if hasCategoryItems("Photography") {
                             CategoryRowGrid(categoryName: "Photography", animationType: .cameraAperture)
                         }
                         if hasCategoryItems("Instagram") {
-                            CategoryRow(categoryName: "Instagram", animationType: nil)
+                            CategoryRowGrid(categoryName: "Instagram", animationType: nil)
                         }
                         if hasCategoryItems("Photobooth") {
-                            CategoryRow(categoryName: "Photobooth", animationType: nil)
+                            CategoryRowGrid(categoryName: "Photobooth", animationType: nil)
                         }
                         if hasCategoryItems("Fashion") {
                             CategoryRowGrid(categoryName: "Fashion", animationType: nil)
                         }
                         if hasCategoryItems("Spooky") {
-                            CategoryRow(categoryName: "Spooky", animationType: nil)
+                            CategoryRowGrid(categoryName: "Spooky", animationType: nil)
                         }
                         if !spookyVideoFilters.isEmpty {
-                            VideoRow(
+                            VideoRowGrid(
                                 title: "Spooky Video Filters",
                                 items: spookyVideoFilters,
                                 seeAllDestination: nil
@@ -184,19 +184,19 @@ struct Home: View {
                             CategoryRowGrid(categoryName: "Luxury", animationType: nil)
                         }
                         if hasCategoryItems("Professional") {
-                            CategoryRow(categoryName: "Professional", animationType: nil)
+                            CategoryRowGrid(categoryName: "Professional", animationType: nil)
                         }
                         if hasCategoryItems("Chibi") {
-                            CategoryRow(categoryName: "Chibi", animationType: nil)
+                            CategoryRowGrid(categoryName: "Chibi", animationType: nil)
                         }
                         if hasCategoryItems("Just For Fun") {
                             CategoryRowGrid(categoryName: "Just For Fun", animationType: nil)
                         }
                         if hasCategoryItems("Back In Time") {
-                            CategoryRow(categoryName: "Back In Time", animationType: nil)
+                            CategoryRowGrid(categoryName: "Back In Time", animationType: nil)
                         }
                         if hasCategoryItems("Men's") {
-                            CategoryRow(categoryName: "Men's", animationType: nil)
+                            CategoryRowGrid(categoryName: "Men's", animationType: nil)
                         }
                         
                         Color.clear.frame(height: 160)
