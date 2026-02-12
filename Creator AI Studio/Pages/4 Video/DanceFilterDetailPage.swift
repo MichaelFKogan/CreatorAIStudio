@@ -682,6 +682,8 @@ struct DiagonalOverlappingVideoImages: View {
     let videoPlayer: AVPlayer?
     @Binding var isVideoMuted: Bool
     var isVideoLoading: Bool = false
+    /// When false, the mute/unmute overlay is hidden (e.g. for silent previews like WaveSpeed filters).
+    var showMuteButton: Bool = true
 
     @State private var arrowWiggle: Bool = false
 
@@ -763,7 +765,8 @@ struct DiagonalOverlappingVideoImages: View {
                         isMuted: $isVideoMuted,
                         width: rightVideoWidth,
                         height: rightVideoHeight,
-                        cornerRadius: 16
+                        cornerRadius: 16,
+                        showMuteButton: showMuteButton
                     )
                     .clipShape(RoundedRectangle(cornerRadius: 16))
                     .overlay(

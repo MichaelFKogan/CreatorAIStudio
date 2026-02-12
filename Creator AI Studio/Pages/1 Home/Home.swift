@@ -53,7 +53,7 @@ struct Home: View {
                         // Video Filters Row
                         if !videoFilters.isEmpty {
                             VideoRowGrid(
-                                title: "🕺 Viral Dance Videos",
+                                title: "🕺 Viral Dance",
                                 items: videoFilters,
                                 seeAllDestination: nil // TODO: Add VideoFiltersPage when ready
                             )

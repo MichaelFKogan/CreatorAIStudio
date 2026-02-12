@@ -395,7 +395,8 @@ private struct WavespeedBannerSection: View {
                 leftImageName: item.display.imageNameOriginal ?? "yourphoto",
                 videoPlayer: videoPlayer,
                 isVideoMuted: $isVideoMuted,
-                isVideoLoading: getVideoURL(for: item) != nil && (videoPlayer == nil || !isBannerVideoReady)
+                isVideoLoading: getVideoURL(for: item) != nil && (videoPlayer == nil || !isBannerVideoReady),
+                showMuteButton: false
             )
             .padding(.bottom, 8)
             

@@ -328,35 +328,35 @@ struct PromptSection: View {
                 .animation(.easeInOut(duration: 0.2), value: isFocused)
                 .focused($isFocused)
 
-            HStack {
-                Spacer(minLength: 0)
-                HStack(spacing: 6) {
-                    VStack(alignment: .trailing, spacing: 2) {
-                        Text("Take a photo of a prompt")
-                            .font(.caption2)
-                            .foregroundColor(.secondary.opacity(0.7))
-                        Text("to add it to the box above")
-                            .font(.caption2)
-                            .foregroundColor(.secondary.opacity(0.7))
-                    }
-                    Button(action: onCameraTap) {
-                        Group {
-                            if isProcessingOCR {
-                                ProgressView()
-                                    .progressViewStyle(
-                                        CircularProgressViewStyle(tint: .blue)
-                                    )
-                                    .scaleEffect(0.8)
-                            } else {
-                                Image(systemName: "viewfinder")
-                                    .font(.system(size: 18))
-                                    .foregroundColor(.blue)
-                            }
-                        }
-                    }
-                    .buttonStyle(PlainButtonStyle())
-                }
-            }
+            // HStack {
+            //     Spacer(minLength: 0)
+            //     HStack(spacing: 6) {
+            //         VStack(alignment: .trailing, spacing: 2) {
+            //             Text("Take a photo of a prompt")
+            //                 .font(.caption2)
+            //                 .foregroundColor(.secondary.opacity(0.7))
+            //             Text("to add it to the box above")
+            //                 .font(.caption2)
+            //                 .foregroundColor(.secondary.opacity(0.7))
+            //         }
+            //         Button(action: onCameraTap) {
+            //             Group {
+            //                 if isProcessingOCR {
+            //                     ProgressView()
+            //                         .progressViewStyle(
+            //                             CircularProgressViewStyle(tint: .blue)
+            //                         )
+            //                         .scaleEffect(0.8)
+            //                 } else {
+            //                     Image(systemName: "viewfinder")
+            //                         .font(.system(size: 18))
+            //                         .foregroundColor(.blue)
+            //                 }
+            //             }
+            //         }
+            //         .buttonStyle(PlainButtonStyle())
+            //     }
+            // }
 
             Button(action: { isExamplePromptsPresented = true }) {
                 HStack {

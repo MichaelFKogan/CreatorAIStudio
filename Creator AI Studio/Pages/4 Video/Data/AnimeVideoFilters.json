@@ -1,7 +1,7 @@
 [
   {
     "display": {
-      "title": "Anime 1",
+      "title": "Anime",
       "imageName": "animedragon1",
       "imageNameOriginal": "yourphoto",
       "detailVideoURL": "https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/videos/anime/animedragon1.mp4",
@@ -13,7 +13,7 @@
   },
   {
     "display": {
-      "title": "Anime 2",
+      "title": "Anime",
       "imageName": "animedragon2",
       "imageNameOriginal": "yourphoto",
       "detailVideoURL": "https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/videos/anime/animedragon2.mp4",
@@ -25,7 +25,7 @@
   },
   {
     "display": {
-      "title": "Anime 3",
+      "title": "Anime",
       "imageName": "animewolf1",
       "imageNameOriginal": "yourphoto",
       "detailVideoURL": "https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/videos/anime/animewolf1.mp4",
@@ -37,7 +37,7 @@
   },
   {
     "display": {
-      "title": "Anime 4",
+      "title": "Anime",
       "imageName": "animewolf2",
       "imageNameOriginal": "yourphoto",
       "detailVideoURL": "https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/videos/anime/animewolf2.mp4",

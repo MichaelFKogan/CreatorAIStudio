@@ -49,13 +49,15 @@ struct VideoPlayerWithMuteButton: View {
     let width: CGFloat
     let height: CGFloat
     let cornerRadius: CGFloat
+    var showMuteButton: Bool = true
     
-    init(player: AVPlayer?, isMuted: Binding<Bool>, width: CGFloat, height: CGFloat, cornerRadius: CGFloat = 12) {
+    init(player: AVPlayer?, isMuted: Binding<Bool>, width: CGFloat, height: CGFloat, cornerRadius: CGFloat = 12, showMuteButton: Bool = true) {
         self.player = player
         self._isMuted = isMuted
         self.width = width
         self.height = height
         self.cornerRadius = cornerRadius
+        self.showMuteButton = showMuteButton
     }
     
     var body: some View {
@@ -64,43 +66,45 @@ struct VideoPlayerWithMuteButton: View {
                 CustomVideoPlayerView(player: player, isMuted: $isMuted, cornerRadius: cornerRadius)
                     .frame(width: width, height: height)
                 
-                // Mute/Unmute button overlay - positioned in top right
-                VStack {
-                    HStack {
-                        Spacer()
-                        Button(action: {
-                            isMuted.toggle()
-                        }) {
-                            if isMuted {
-                                HStack(spacing: 6) {
-                                    Text("Unmute")
-                                        .font(.system(size: 14, weight: .semibold))
-                                    Image(systemName: "speaker.slash.fill")
-                                        .font(.system(size: 16, weight: .semibold))
-                                }
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 10)
-                                .background(
-                                    Capsule()
-                                        .fill(Color.black.opacity(0.5))
-                                )
-                            } else {
-                                Image(systemName: "speaker.wave.2.fill")
-                                    .font(.system(size: 16, weight: .semibold))
+                // Mute/Unmute button overlay - positioned in top right (optional)
+                if showMuteButton {
+                    VStack {
+                        HStack {
+                            Spacer()
+                            Button(action: {
+                                isMuted.toggle()
+                            }) {
+                                if isMuted {
+                                    HStack(spacing: 6) {
+                                        Text("Unmute")
+                                            .font(.system(size: 14, weight: .semibold))
+                                        Image(systemName: "speaker.slash.fill")
+                                            .font(.system(size: 16, weight: .semibold))
+                                    }
                                     .foregroundColor(.white)
-                                    .padding(10)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 10)
                                     .background(
-                                        Circle()
+                                        Capsule()
                                             .fill(Color.black.opacity(0.5))
                                     )
+                                } else {
+                                    Image(systemName: "speaker.wave.2.fill")
+                                        .font(.system(size: 16, weight: .semibold))
+                                        .foregroundColor(.white)
+                                        .padding(10)
+                                        .background(
+                                            Circle()
+                                                .fill(Color.black.opacity(0.5))
+                                        )
+                                }
                             }
+                            .padding(12)
                         }
-                        .padding(12)
+                        Spacer()
                     }
-                    Spacer()
+                    .frame(width: width, height: height)
                 }
-                .frame(width: width, height: height)
             }
         }
         .frame(width: width, height: height)

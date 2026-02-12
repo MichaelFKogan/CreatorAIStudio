@@ -783,6 +783,12 @@ struct VideoModelDetailPage: View {
 
                         Divider().padding(.horizontal)
 
+                        // Input mode pickers (extracted to reduce type-checker load)
+                        googleVeoInputModePicker
+                        klingAI25InputModePicker
+                        klingVideo26InputModePicker
+                        textImageInputModePicker
+
                         LazyView(
                             PromptSectionVideo(
                                 prompt: $prompt,
@@ -797,12 +803,6 @@ struct VideoModelDetailPage: View {
                                 onExpandTap: { showFullPromptSheet = true },
                                 isProcessingOCR: $isProcessingOCR
                             ))
-
-                        // Input mode pickers (extracted to reduce type-checker load)
-                        googleVeoInputModePicker
-                        klingAI25InputModePicker
-                        klingVideo26InputModePicker
-                        textImageInputModePicker
 
                         // Reference media sections (extracted to reduce type-checker load)
                         referenceImagesSection
@@ -1375,35 +1375,35 @@ private struct PromptSectionVideo: View {
                 .animation(.easeInOut(duration: 0.2), value: isFocused)
                 .focused($isFocused)
 
-            HStack {
-                Spacer(minLength: 0)
-                HStack(spacing: 6) {
-                    VStack(alignment: .trailing, spacing: 2) {
-                        Text("Take a photo of a prompt")
-                            .font(.caption2)
-                            .foregroundColor(.secondary.opacity(0.7))
-                        Text("to add it to the box above")
-                            .font(.caption2)
-                            .foregroundColor(.secondary.opacity(0.7))
-                    }
-                    Button(action: onCameraTap) {
-                        Group {
-                            if isProcessingOCR {
-                                ProgressView()
-                                    .progressViewStyle(
-                                        CircularProgressViewStyle(tint: .purple)
-                                    )
-                                    .scaleEffect(0.8)
-                            } else {
-                                Image(systemName: "viewfinder")
-                                    .font(.system(size: 18))
-                                    .foregroundColor(.purple)
-                            }
-                        }
-                    }
-                    .buttonStyle(PlainButtonStyle())
-                }
-            }
+            // HStack {
+            //     Spacer(minLength: 0)
+            //     HStack(spacing: 6) {
+            //         VStack(alignment: .trailing, spacing: 2) {
+            //             Text("Take a photo of a prompt")
+            //                 .font(.caption2)
+            //                 .foregroundColor(.secondary.opacity(0.7))
+            //             Text("to add it to the box above")
+            //                 .font(.caption2)
+            //                 .foregroundColor(.secondary.opacity(0.7))
+            //         }
+            //         Button(action: onCameraTap) {
+            //             Group {
+            //                 if isProcessingOCR {
+            //                     ProgressView()
+            //                         .progressViewStyle(
+            //                             CircularProgressViewStyle(tint: .purple)
+            //                         )
+            //                         .scaleEffect(0.8)
+            //                 } else {
+            //                     Image(systemName: "viewfinder")
+            //                         .font(.system(size: 18))
+            //                         .foregroundColor(.purple)
+            //                 }
+            //             }
+            //         }
+            //         .buttonStyle(PlainButtonStyle())
+            //     }
+            // }
 
             // Button(action: { isExamplePromptsPresented = true }) {
             //     HStack {

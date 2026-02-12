@@ -179,10 +179,13 @@ struct ImageModelDetailPage: View {
 
     // MARK: BODY (split into sections to reduce compiler type-checking load)
 
-    @ViewBuilder private var scrollBannerAndPrompt: some View {
+    @ViewBuilder private var scrollBanner: some View {
         LazyView(
             BannerSection(item: item, costString: costString, displayPrice: isGPTImage15 ? Decimal(requiredCredits) : nil))
         Divider().padding(.horizontal)
+    }
+
+    @ViewBuilder private var scrollPrompt: some View {
         LazyView(
             PromptSection(
                 prompt: $prompt,
@@ -202,7 +205,7 @@ struct ImageModelDetailPage: View {
                 ChipOptionPicker(
                     options: [
                         ("Text", "doc.text"),
-                        ("Image", "photo")
+                        ("Image and Text", "photo")
                     ],
                     selection: Binding(
                         get: { ImageTextInputMode.allCases.firstIndex(of: imageTextInputMode) ?? 0 },
@@ -322,8 +325,9 @@ struct ImageModelDetailPage: View {
     private var scrollContent: some View {
         ScrollView {
             VStack(spacing: 24) {
-                scrollBannerAndPrompt
+                scrollBanner
                 scrollInputModeAndRefs
+                scrollPrompt
                 scrollGenerateAndCost
                 scrollQualityAspectResolution
                 if isGPTImage15 || isNanoBananaPro, let modelName = item.display.modelName {

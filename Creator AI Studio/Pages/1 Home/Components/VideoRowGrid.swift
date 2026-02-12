@@ -52,14 +52,19 @@ struct VideoRowGrid: View {
                 feedback = UISelectionFeedbackGenerator()
                 feedback?.prepare()
             }
-            resumeVideoPlayers()
+            // Defer resume so AVPlayerLayer views are attached before we seek/play
+            DispatchQueue.main.async {
+                resumeVideoPlayers()
+            }
         }
         .onDisappear {
             pauseVideoPlayers()
         }
         .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .active {
-                resumeVideoPlayers()
+                DispatchQueue.main.async {
+                    resumeVideoPlayers()
+                }
             }
         }
     }
@@ -253,7 +258,9 @@ struct VideoRowGrid: View {
 
     private func resumeVideoPlayers() {
         for (_, player) in playingVideos {
-            player.play()
+            player.seek(to: .zero) { _ in
+                player.play()
+            }
         }
     }
 
@@ -281,7 +288,9 @@ private struct VideoRowGridPlayerView: View {
             if let player = player {
                 FillVideoPlayerView(player: player)
                     .onAppear {
-                        player.play()
+                        player.seek(to: .zero) { _ in
+                            player.play()
+                        }
                     }
             } else {
                 Color.clear
@@ -295,7 +304,9 @@ private struct VideoRowGridPlayerView: View {
     private func setupPlayer() {
         if let existingPlayer = playingVideos[item.id] {
             player = existingPlayer
-            existingPlayer.play()
+            existingPlayer.seek(to: .zero) { _ in
+                existingPlayer.play()
+            }
             return
         }
         let newPlayer = AVPlayer(url: videoURL)

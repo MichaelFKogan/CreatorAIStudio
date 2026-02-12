@@ -82,14 +82,19 @@ struct VideoRow: View {
                 feedback?.prepare()
             }
             setupVideoPlayers()
-            resumeVideoPlayers()
+            // Defer resume so AVPlayerLayer views are attached before we seek/play
+            DispatchQueue.main.async {
+                resumeVideoPlayers()
+            }
         }
         .onDisappear {
             pauseVideoPlayers()
         }
         .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .active {
-                resumeVideoPlayers()
+                DispatchQueue.main.async {
+                    resumeVideoPlayers()
+                }
             }
         }
     }
@@ -154,7 +159,9 @@ struct VideoRow: View {
     /// Resume playback when the row appears again so videos play continuously when returning to Home.
     private func resumeVideoPlayers() {
         for (_, player) in playingVideos {
-            player.play()
+            player.seek(to: .zero) { _ in
+                player.play()
+            }
         }
     }
     
@@ -264,7 +271,9 @@ private struct VideoRowPlayerView: View {
             if let player = player {
                 FillVideoPlayerView(player: player)
                     .onAppear {
-                        player.play()
+                        player.seek(to: .zero) { _ in
+                            player.play()
+                        }
                     }
             } else {
                 Color.clear
@@ -279,7 +288,9 @@ private struct VideoRowPlayerView: View {
         // Check if player already exists (e.g. after navigating back or app reopen)
         if let existingPlayer = playingVideos[item.id] {
             player = existingPlayer
-            existingPlayer.play()
+            existingPlayer.seek(to: .zero) { _ in
+                existingPlayer.play()
+            }
             return
         }
         
