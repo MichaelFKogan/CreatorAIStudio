@@ -118,9 +118,9 @@ struct WavespeedFilterDetailPage: View {
                         .padding(.horizontal)
                         .padding(.top, -8)
                         
-                        LazyView(WavespeedAspectRatioInfoSection())
+                        // LazyView(WavespeedAspectRatioInfoSection())
                         
-                        Divider().padding(.horizontal)
+                        // Divider().padding(.horizontal)
                         
                         Color.clear.frame(height: 130)
                     }
@@ -399,43 +399,43 @@ private struct WavespeedBannerSection: View {
             )
             .padding(.bottom, 8)
             
-            // Credits + description card (no second title)
-            VStack(alignment: .leading, spacing: 0) {
-                HStack(spacing: 6) {
-                    Text("Credits:")
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.primary)
-                    Text(PricingManager.formatPrice(price ?? item.resolvedCost ?? 0))
-                        .font(.headline)
-                        .foregroundColor(.cyan)
-                }
-                .padding(.horizontal, 16)
-                .padding(.top, 16)
-                .padding(.bottom, 12)
+            // // Credits + description card (no second title)
+            // VStack(alignment: .leading, spacing: 0) {
+            //     HStack(spacing: 6) {
+            //         Text("Credits:")
+            //             .font(.subheadline)
+            //             .fontWeight(.semibold)
+            //             .foregroundColor(.primary)
+            //         Text(PricingManager.formatPrice(price ?? item.resolvedCost ?? 0))
+            //             .font(.headline)
+            //             .foregroundColor(.cyan)
+            //     }
+            //     .padding(.horizontal, 16)
+            //     .padding(.top, 16)
+            //     .padding(.bottom, 12)
                 
-                if let desc = item.display.description, !desc.isEmpty {
-                    Text(desc)
-                        .font(.system(size: 14))
-                        .foregroundColor(.secondary)
-                        .lineSpacing(4)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .padding(.horizontal, 16)
-                        .padding(.bottom, 16)
-                } else {
-                    Color.clear.frame(height: 16)
-                }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(Color(UIColor.secondarySystemBackground))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 16)
-                    .stroke(Color.cyan.opacity(0.2), lineWidth: 1)
-            )
-            .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 2)
+            //     if let desc = item.display.description, !desc.isEmpty {
+            //         Text(desc)
+            //             .font(.system(size: 14))
+            //             .foregroundColor(.secondary)
+            //             .lineSpacing(4)
+            //             .fixedSize(horizontal: false, vertical: true)
+            //             .padding(.horizontal, 16)
+            //             .padding(.bottom, 16)
+            //     } else {
+            //         Color.clear.frame(height: 16)
+            //     }
+            // }
+            // .frame(maxWidth: .infinity, alignment: .leading)
+            // .background(
+            //     RoundedRectangle(cornerRadius: 16)
+            //         .fill(Color(UIColor.secondarySystemBackground))
+            // )
+            // .overlay(
+            //     RoundedRectangle(cornerRadius: 16)
+            //         .stroke(Color.cyan.opacity(0.2), lineWidth: 1)
+            // )
+            // .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 2)
         }
         .padding(.horizontal)
     }

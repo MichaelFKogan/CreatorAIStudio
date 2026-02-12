@@ -902,10 +902,9 @@ struct ProfileViewContent: View {
             isSaving = true
         }
 
-        // Get selected images
-        let selectedImages = viewModel.userImages.filter {
-            selectedImageIds.contains($0.id)
-        }
+        // Resolve selected IDs from all loaded gallery sources (not just userImages),
+        // so selection works correctly in Videos/model/playlist tabs.
+        let selectedImages = getSelectedImagesFromLoadedSources()
 
         // Request photo library permission
         let status = await PHPhotoLibrary.requestAuthorization(for: .addOnly)
@@ -987,10 +986,9 @@ struct ProfileViewContent: View {
             shareItems.removeAll()
         }
 
-        // Get selected images
-        let selectedImages = viewModel.userImages.filter {
-            selectedImageIds.contains($0.id)
-        }
+        // Resolve selected IDs from all loaded gallery sources (not just userImages),
+        // so selection works correctly in Videos/model/playlist tabs.
+        let selectedImages = getSelectedImagesFromLoadedSources()
 
         var tempURLs: [URL] = []
 
@@ -1038,5 +1036,34 @@ struct ProfileViewContent: View {
                 try? FileManager.default.removeItem(at: tempURL)
             }
         }
+    }
+
+    private func getSelectedImagesFromLoadedSources() -> [UserImage] {
+        let selectedIds = selectedImageIds
+
+        // Prefer current filtered content first to preserve visible ordering.
+        var ordered: [UserImage] = getFilteredImages().filter {
+            selectedIds.contains($0.id)
+        }
+
+        var seenIds = Set(ordered.map(\.id))
+        let additionalSources: [[UserImage]] = [
+            viewModel.userImages,
+            viewModel.favoriteImages,
+            viewModel.tabImagesOnly,
+            viewModel.tabVideosOnly,
+            viewModel.currentModelVideos,
+            viewModel.currentPlaylistImages,
+            viewModel.userVideos
+        ]
+
+        for source in additionalSources {
+            for item in source where selectedIds.contains(item.id) && !seenIds.contains(item.id) {
+                ordered.append(item)
+                seenIds.insert(item.id)
+            }
+        }
+
+        return ordered
     }
 }

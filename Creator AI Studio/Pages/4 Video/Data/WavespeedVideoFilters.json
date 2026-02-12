@@ -9,7 +9,7 @@
     "prompt": "",
     "cost": 0.2,
     "type": "Video Filter",
-    "category": "Magical",
+    "category": "Enchanted",
     "wavespeedVideoEffectEndpoint": "https://api.wavespeed.ai/api/v3/video-effects/fairy-me"
   },
   {
@@ -22,7 +22,7 @@
     "prompt": "",
     "cost": 0.2,
     "type": "Video Filter",
-    "category": "Magical",
+    "category": "Enchanted",
     "wavespeedVideoEffectEndpoint": "https://api.wavespeed.ai/api/v3/video-effects/fairy-me"
   },
   {
@@ -35,21 +35,74 @@
     "prompt": "",
     "cost": 0.2,
     "type": "Video Filter",
-    "category": "Fashion",
+    "category": "Enchanted",
     "wavespeedVideoEffectEndpoint": "https://api.wavespeed.ai/api/v3/video-effects/fashion-stride"
   },
   {
     "display": {
-      "title": "Minecraft",
-      "imageName": "minecraft",
-      "detailVideoURL": "https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/videos/minecraft.mp4",
-      "description": "Turn photos into Minecraft-style cubic videos with particle effects, smooth transitions, and blocky animation ideal for gaming-inspired clips."
+      "title": "Exotic Princess",
+      "imageName": "exoticprincess",
+      "detailVideoURL": "https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/videos/exoticprincess.mp4",
+      "description": "Photo-to-video conversion that turns photos into exotic princess videos with diverse cultural styles and elegant expressions."
+    },
+    "prompt": "",
+    "cost": 0.3,
+    "type": "Video Filter",
+    "category": "Enchanted",
+    "wavespeedVideoEffectEndpoint": "https://api.wavespeed.ai/api/v3/video-effects/exotic-princess"
+  },
+  {
+    "display": {
+      "title": "Oscar Gala",
+      "imageName": "oscargala",
+      "detailVideoURL": "https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/videos/oscargala.mp4",
+      "description": "Convert photos into Oscar-style acceptance speech videos with red-carpet attire, glamorous lighting, and a prestigious atmosphere."
+    },
+    "prompt": "",
+    "cost": 0.3,
+    "type": "Video Filter",
+    "category": "Enchanted",
+    "wavespeedVideoEffectEndpoint": "https://api.wavespeed.ai/api/v3/video-effects/oscar-gala"
+  },
+  {
+    "display": {
+      "title": "Red Carpet",
+      "imageName": "star-carpet",
+      "detailVideoURL": "https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/videos/star-carpet.mp4",
+      "description": "Create red-carpet walk videos from a single photo with elegant motion and confident expressions."
+    },
+    "prompt": "",
+    "cost": 0.3,
+    "type": "Video Filter",
+    "category": "Enchanted",
+    "wavespeedVideoEffectEndpoint": "https://api.wavespeed.ai/api/v3/video-effects/star-carpet"
+  },
+  {
+    "display": {
+      "title": "Ghibli",
+      "imageName": "ghibli",
+      "detailVideoURL": "https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/videos/ghibli.mp4",
+      "description": "Turn photos into Ghibli-style animated videos with dreamy colors, smooth transitions, and a hand-painted, storybook look."
+    },
+    "prompt": "",
+    "cost": 0.3,
+    "type": "Video Filter",
+    "category": "Enchanted",
+    "wavespeedVideoEffectEndpoint": "https://api.wavespeed.ai/api/v3/video-effects/ghibli"
+  },
+
+  {
+    "display": {
+      "title": "Pinch",
+      "imageName": "pinch",
+      "detailVideoURL": "https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/videos/pinch.mp4",
+      "description": "Turn photos into humorous pinch-and-squeeze videos that warp faces and objects into playful short clips great for social sharing."
     },
     "prompt": "",
     "cost": 0.2,
     "type": "Video Filter",
-    "category": "Video Games",
-    "wavespeedVideoEffectEndpoint": "https://api.wavespeed.ai/api/v3/video-effects/minecraft"
+    "category": "Creative",
+    "wavespeedVideoEffectEndpoint": "https://api.wavespeed.ai/api/v3/video-effects/pinch"
   },
   {
     "display": {
@@ -79,58 +132,6 @@
   },
   {
     "display": {
-      "title": "Flying",
-      "imageName": "flyaway",
-      "detailVideoURL": "https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/videos/flyaway.mp4",
-      "description": "Transform photos into superhero-style flying videos with dynamic camera movement. Ideal for full-body shots with scenic backgrounds."
-    },
-    "prompt": "",
-    "cost": 0.2,
-    "type": "Video Filter",
-    "category": "Creative",
-    "wavespeedVideoEffectEndpoint": "https://api.wavespeed.ai/api/v3/video-effects/flying"
-  },
-  {
-    "display": {
-      "title": "Ghibli",
-      "imageName": "ghibli",
-      "detailVideoURL": "https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/videos/ghibli.mp4",
-      "description": "Turn photos into Ghibli-style animated videos with dreamy colors, smooth transitions, and a hand-painted, storybook look."
-    },
-    "prompt": "",
-    "cost": 0.3,
-    "type": "Video Filter",
-    "category": "Art",
-    "wavespeedVideoEffectEndpoint": "https://api.wavespeed.ai/api/v3/video-effects/ghibli"
-  },
-  {
-    "display": {
-      "title": "Captain America",
-      "imageName": "captainamerica",
-      "detailVideoURL": "https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/videos/captainamerica.mp4",
-      "description": "AI-generated Captain America costume effect that turns photos into epic image-to-video transformation clips."
-    },
-    "prompt": "",
-    "cost": 0.3,
-    "type": "Video Filter",
-    "category": "Superhero",
-    "wavespeedVideoEffectEndpoint": "https://api.wavespeed.ai/api/v3/video-effects/captain-america"
-  },
-  {
-    "display": {
-      "title": "Oscar Gala",
-      "imageName": "oscargala",
-      "detailVideoURL": "https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/videos/oscargala.mp4",
-      "description": "Convert photos into Oscar-style acceptance speech videos with red-carpet attire, glamorous lighting, and a prestigious atmosphere."
-    },
-    "prompt": "",
-    "cost": 0.3,
-    "type": "Video Filter",
-    "category": "Red Carpet",
-    "wavespeedVideoEffectEndpoint": "https://api.wavespeed.ai/api/v3/video-effects/oscar-gala"
-  },
-  {
-    "display": {
       "title": "Dust Me Away",
       "imageName": "dustaway",
       "detailVideoURL": "https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/videos/dustaway.mp4",
@@ -144,29 +145,16 @@
   },
   {
     "display": {
-      "title": "Star Carpet",
-      "imageName": "star-carpet",
-      "detailVideoURL": "https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/videos/star-carpet.mp4",
-      "description": "Create red-carpet walk videos from a single photo with elegant motion and confident expressions."
-    },
-    "prompt": "",
-    "cost": 0.3,
-    "type": "Video Filter",
-    "category": "Red Carpet",
-    "wavespeedVideoEffectEndpoint": "https://api.wavespeed.ai/api/v3/video-effects/star-carpet"
-  },
-  {
-    "display": {
-      "title": "Pinch",
-      "imageName": "pinch",
-      "detailVideoURL": "https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/videos/pinch.mp4",
-      "description": "Turn photos into humorous pinch-and-squeeze videos that warp faces and objects into playful short clips great for social sharing."
+      "title": "Flying",
+      "imageName": "flyaway",
+      "detailVideoURL": "https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/videos/flyaway.mp4",
+      "description": "Transform photos into Superpower-style flying videos with dynamic camera movement. Ideal for full-body shots with scenic backgrounds."
     },
     "prompt": "",
     "cost": 0.2,
     "type": "Video Filter",
     "category": "Creative",
-    "wavespeedVideoEffectEndpoint": "https://api.wavespeed.ai/api/v3/video-effects/pinch"
+    "wavespeedVideoEffectEndpoint": "https://api.wavespeed.ai/api/v3/video-effects/flying"
   },
   {
     "display": {
@@ -181,6 +169,34 @@
     "category": "Creative",
     "wavespeedVideoEffectEndpoint": "https://api.wavespeed.ai/api/v3/video-effects/paperman"
   },
+
+  {
+    "display": {
+      "title": "Minecraft",
+      "imageName": "minecraft",
+      "detailVideoURL": "https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/videos/minecraft.mp4",
+      "description": "Turn photos into Minecraft-style cubic videos with particle effects, smooth transitions, and blocky animation ideal for gaming-inspired clips."
+    },
+    "prompt": "",
+    "cost": 0.2,
+    "type": "Video Filter",
+    "category": "Superpower",
+    "wavespeedVideoEffectEndpoint": "https://api.wavespeed.ai/api/v3/video-effects/minecraft"
+  },
+  {
+    "display": {
+      "title": "Captain America",
+      "imageName": "captainamerica",
+      "detailVideoURL": "https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/videos/captainamerica.mp4",
+      "description": "AI-generated Captain America costume effect that turns photos into epic image-to-video transformation clips."
+    },
+    "prompt": "",
+    "cost": 0.3,
+    "type": "Video Filter",
+    "category": "Superpower",
+    "wavespeedVideoEffectEndpoint": "https://api.wavespeed.ai/api/v3/video-effects/captain-america"
+  },
+
   {
     "display": {
       "title": "Hulk",
@@ -191,7 +207,7 @@
     "prompt": "",
     "cost": 0.3,
     "type": "Video Filter",
-    "category": "Superhero",
+    "category": "Superpower",
     "wavespeedVideoEffectEndpoint": "https://api.wavespeed.ai/api/v3/video-effects/hulk"
   },
   {
@@ -204,20 +220,7 @@
     "prompt": "",
     "cost": 0.3,
     "type": "Video Filter",
-    "category": "Superhero",
+    "category": "Superpower",
     "wavespeedVideoEffectEndpoint": "https://api.wavespeed.ai/api/v3/video-effects/hulk-dive"
-  },
-  {
-    "display": {
-      "title": "Exotic Princess",
-      "imageName": "exoticprincess",
-      "detailVideoURL": "https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/videos/exoticprincess.mp4",
-      "description": "Photo-to-video conversion that turns photos into exotic princess videos with diverse cultural styles and elegant expressions."
-    },
-    "prompt": "",
-    "cost": 0.3,
-    "type": "Video Filter",
-    "category": "Fashion",
-    "wavespeedVideoEffectEndpoint": "https://api.wavespeed.ai/api/v3/video-effects/exotic-princess"
   }
 ]

@@ -191,9 +191,19 @@ struct RowTitle: View {
     
     var body: some View {
         HStack {
-            Text(title)
-                .font(.system(size: 20, weight: .bold, design: .rounded))
-                .foregroundColor(.primary)
+            HStack(spacing: 8) {
+                Text(title)
+                    .font(.system(size: 20, weight: .bold, design: .rounded))
+                    .foregroundColor(.primary)
+
+                Text("Photo Filters")
+                    .font(.system(size: 11, weight: .semibold, design: .rounded))
+                    .foregroundColor(.blue)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color.blue.opacity(0.16))
+                    .clipShape(Capsule())
+            }
             Spacer()
             NavigationLink(destination: CategoryDetailView(categoryName: categoryName, items: items)) {
                 HStack(spacing: 8) {

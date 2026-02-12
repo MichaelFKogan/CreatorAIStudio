@@ -34,6 +34,11 @@ struct Home: View {
         videoFiltersViewModel.mermaidVideoFilters
     }
 
+    // Anime Video Filters (Kling 2.6 image-to-video)
+    private var animeVideoFilters: [InfoPacket] {
+        videoFiltersViewModel.animeVideoFilters
+    }
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -53,6 +58,14 @@ struct Home: View {
                                 seeAllDestination: nil // TODO: Add VideoFiltersPage when ready
                             )
                         }
+
+                        if !animeVideoFilters.isEmpty {
+                            VideoRowGrid(
+                                title: "🌸 Anime Videos",
+                                items: animeVideoFilters,
+                                seeAllDestination: nil
+                            )
+                        }
                         
                         // // Mermaid Video Filters Row (WaveSpeed video-effects)
                         // if !mermaidVideoFilters.isEmpty {
@@ -64,17 +77,10 @@ struct Home: View {
                         // }
                         
                         // WaveSpeed video-effect rows by category (Magical, Fashion, Video Games)
-                        if !videoFiltersViewModel.wavespeedFilters(forCategory: "Magical").isEmpty {
+                        if !videoFiltersViewModel.wavespeedFilters(forCategory: "Enchanted").isEmpty {
                             VideoRowGrid(
-                                title: "✨ Magical",
-                                items: videoFiltersViewModel.wavespeedFilters(forCategory: "Magical"),
-                                seeAllDestination: nil
-                            )
-                        }
-                        if !videoFiltersViewModel.wavespeedFilters(forCategory: "Fashion").isEmpty {
-                            VideoRowGrid(
-                                title: "👗 Fashion",
-                                items: videoFiltersViewModel.wavespeedFilters(forCategory: "Fashion"),
+                                title: "✨ Enchanted",
+                                items: videoFiltersViewModel.wavespeedFilters(forCategory: "Enchanted"),
                                 seeAllDestination: nil
                             )
                         }
@@ -92,17 +98,10 @@ struct Home: View {
                                 seeAllDestination: nil
                             )
                         }
-                        if !videoFiltersViewModel.wavespeedFilters(forCategory: "Just For Fun").isEmpty {
+                        if !videoFiltersViewModel.wavespeedFilters(forCategory: "Superpower").isEmpty {
                             VideoRowGrid(
-                                title: "😄 Just For Fun",
-                                items: videoFiltersViewModel.wavespeedFilters(forCategory: "Just For Fun"),
-                                seeAllDestination: nil
-                            )
-                        }
-                        if !videoFiltersViewModel.wavespeedFilters(forCategory: "Superhero").isEmpty {
-                            VideoRowGrid(
-                                title: "🦸 Superhero",
-                                items: videoFiltersViewModel.wavespeedFilters(forCategory: "Superhero"),
+                                title: "🦸 Superpower",
+                                items: videoFiltersViewModel.wavespeedFilters(forCategory: "Superpower"),
                                 seeAllDestination: nil
                             )
                         }
@@ -175,7 +174,7 @@ struct Home: View {
                         }
                         if !spookyVideoFilters.isEmpty {
                             VideoRowGrid(
-                                title: "Spooky Video Filters",
+                                title: "👻 Spooky Video Filters",
                                 items: spookyVideoFilters,
                                 seeAllDestination: nil
                             )

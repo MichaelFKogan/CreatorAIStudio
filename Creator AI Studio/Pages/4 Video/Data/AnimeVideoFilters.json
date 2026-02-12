@@ -1,0 +1,50 @@
+[
+  {
+    "display": {
+      "title": "Anime 1",
+      "imageName": "animedragon1",
+      "imageNameOriginal": "yourphoto",
+      "detailVideoURL": "https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/videos/anime/animedragon1.mp4",
+      "description": ""
+    },
+    "prompt": "Transform this image into a cinematic anime-inspired video while preserving the person identity, pose, and clothing details.",
+    "cost": 0.7,
+    "type": "Video Filter"
+  },
+  {
+    "display": {
+      "title": "Anime 2",
+      "imageName": "animedragon2",
+      "imageNameOriginal": "yourphoto",
+      "detailVideoURL": "https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/videos/anime/animedragon2.mp4",
+      "description": ""
+    },
+    "prompt": "Transform this image into a cinematic anime-inspired video while preserving the person identity, pose, and clothing details.",
+    "cost": 0.7,
+    "type": "Video Filter"
+  },
+  {
+    "display": {
+      "title": "Anime 3",
+      "imageName": "animewolf1",
+      "imageNameOriginal": "yourphoto",
+      "detailVideoURL": "https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/videos/anime/animewolf1.mp4",
+      "description": ""
+    },
+    "prompt": "Transform this image into a cinematic anime-inspired video while preserving the person identity, pose, and clothing details.",
+    "cost": 0.7,
+    "type": "Video Filter"
+  },
+  {
+    "display": {
+      "title": "Anime 4",
+      "imageName": "animewolf2",
+      "imageNameOriginal": "yourphoto",
+      "detailVideoURL": "https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/videos/anime/animewolf2.mp4",
+      "description": ""
+    },
+    "prompt": "Transform this image into a cinematic anime-inspired video while preserving the person identity, pose, and clothing details.",
+    "cost": 0.7,
+    "type": "Video Filter"
+  }
+]

@@ -5,6 +5,7 @@ class VideoFiltersViewModel: ObservableObject {
     @Published var filters: [InfoPacket] = []
     @Published var spookyVideoFilters: [InfoPacket] = []
     @Published var mermaidVideoFilters: [InfoPacket] = []
+    @Published var animeVideoFilters: [InfoPacket] = []
     @Published var wavespeedVideoFilters: [InfoPacket] = []
     @Published private var categorizedFiltersDict: [String: [InfoPacket]] = [:]
     
@@ -80,6 +81,12 @@ class VideoFiltersViewModel: ObservableObject {
         if let mermaidURL = Bundle.main.url(forResource: "MermaidVideoFilters", withExtension: "json") {
             loadFromFile(url: mermaidURL, categoryName: "Mermaid Video", allFilters: &mermaid, categorized: &categorized)
         }
+
+        // Load Anime Video Filters (Kling 2.6 image-to-video)
+        var anime: [InfoPacket] = []
+        if let animeURL = Bundle.main.url(forResource: "AnimeVideoFilters", withExtension: "json") {
+            loadFromFile(url: animeURL, categoryName: "Anime Video", allFilters: &anime, categorized: &categorized)
+        }
         
         // Load WaveSpeed video-effect filters (Fairy, Runway Model, Minecraft, etc.) with per-item category
         var wavespeed: [InfoPacket] = []
@@ -92,6 +99,7 @@ class VideoFiltersViewModel: ObservableObject {
         filters = allFilters
         spookyVideoFilters = spooky
         mermaidVideoFilters = mermaid
+        animeVideoFilters = anime
         wavespeedVideoFilters = wavespeed
     }
     

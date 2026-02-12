@@ -161,7 +161,9 @@ struct VideoRow: View {
     @ViewBuilder
     private func destinationView(for item: InfoPacket) -> some View {
         // WaveSpeed video-effect filters (Mermaid, Fairy, Runway Model, Minecraft, etc.)
-        if item.wavespeedVideoEffectEndpoint != nil {
+        if item.category == "Anime Video" {
+            AnimeFilterDetailPage(item: item)
+        } else if item.wavespeedVideoEffectEndpoint != nil {
             WavespeedFilterDetailPage(item: item)
         } else if item.referenceImageName != nil {
             // Spooky Video Filters (Kling O1 reference-to-video, use referenceImageName)
@@ -207,6 +209,14 @@ struct VideoRowTitle: View {
                 Text(title)
                     .font(.system(size: 20, weight: .bold, design: .rounded))
                     .foregroundColor(.primary)
+
+                Text("Video Filters")
+                    .font(.system(size: 11, weight: .semibold, design: .rounded))
+                    .foregroundColor(.purple)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color.purple.opacity(0.16))
+                    .clipShape(Capsule())
             }
             Spacer()
             if let destination = seeAllDestination {

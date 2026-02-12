@@ -226,7 +226,9 @@ struct VideoRowGrid: View {
 
     @ViewBuilder
     private func destinationView(for item: InfoPacket) -> some View {
-        if item.wavespeedVideoEffectEndpoint != nil {
+        if item.category == "Anime Video" {
+            AnimeFilterDetailPage(item: item)
+        } else if item.wavespeedVideoEffectEndpoint != nil {
             WavespeedFilterDetailPage(item: item)
         } else if item.referenceImageName != nil {
             SpookyVideoFilterDetailPage(item: item)
