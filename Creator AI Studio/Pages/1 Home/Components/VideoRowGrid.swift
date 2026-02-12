@@ -31,7 +31,7 @@ struct VideoRowGrid: View {
             VideoRowTitle(title: title, items: items, seeAllDestination: seeAllDestination)
 
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: itemSpacing) {
+                HStack(alignment: .top, spacing: itemSpacing) {
                     ForEach(Array(groupedItems.enumerated()), id: \.offset) { _, group in
                         if group.count == 1 {
                             largeItemView(item: group[0])
@@ -167,35 +167,25 @@ struct VideoRowGrid: View {
     @ViewBuilder
     private func smallItemView(item: InfoPacket) -> some View {
         NavigationLink(destination: destinationView(for: item)) {
-            VStack(spacing: 6) {
-                videoView(for: item, width: smallVideoWidth, height: smallVideoHeight)
-                    .frame(width: smallVideoWidth, height: smallVideoHeight)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(Color.gray.opacity(0.2), lineWidth: 1)
-                    )
-                    .overlay(alignment: .topTrailing) {
-                        if let cost = item.resolvedCost {
-                            Text(PricingManager.formatPrice(cost))
-                                .font(.custom("Nunito-Bold", size: 8))
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 4)
-                                .padding(.vertical, 2)
-                                .background(Color.black.opacity(0.8))
-                                .clipShape(Capsule())
-                                .padding(3)
-                        }
+            videoView(for: item, width: smallVideoWidth, height: smallVideoHeight)
+                .frame(width: smallVideoWidth, height: smallVideoHeight)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                )
+                .overlay(alignment: .topTrailing) {
+                    if let cost = item.resolvedCost {
+                        Text(PricingManager.formatPrice(cost))
+                            .font(.custom("Nunito-Bold", size: 8))
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 4)
+                            .padding(.vertical, 2)
+                            .background(Color.black.opacity(0.8))
+                            .clipShape(Capsule())
+                            .padding(3)
                     }
-
-                Text(item.display.title)
-                    .font(.custom("Nunito-ExtraBold", size: 10))
-                    .lineLimit(2)
-                    .multilineTextAlignment(.center)
-                    .foregroundColor(.primary)
-                    .frame(width: smallVideoWidth)
-                    .truncationMode(.tail)
-            }
+                }
         }
     }
 
@@ -287,7 +277,7 @@ private struct VideoRowGridPlayerView: View {
     var body: some View {
         Group {
             if let player = player {
-                VideoPlayer(player: player)
+                FillVideoPlayerView(player: player)
                     .onAppear {
                         player.play()
                     }

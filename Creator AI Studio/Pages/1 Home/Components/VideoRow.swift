@@ -252,7 +252,7 @@ private struct VideoRowPlayerView: View {
     var body: some View {
         Group {
             if let player = player {
-                VideoPlayer(player: player)
+                FillVideoPlayerView(player: player)
                     .onAppear {
                         player.play()
                     }
