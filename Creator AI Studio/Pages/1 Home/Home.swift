@@ -163,9 +163,9 @@ struct Home: View {
                         if hasCategoryItems("Instagram") {
                             CategoryRowGrid(categoryName: "Instagram", animationType: nil)
                         }
-                        if hasCategoryItems("Photobooth") {
-                            CategoryRowGrid(categoryName: "Photobooth", animationType: nil)
-                        }
+                        // if hasCategoryItems("Photobooth") {
+                        //     CategoryRowGrid(categoryName: "Photobooth", animationType: nil)
+                        // }
                         if hasCategoryItems("Fashion") {
                             CategoryRowGrid(categoryName: "Fashion", animationType: nil)
                         }

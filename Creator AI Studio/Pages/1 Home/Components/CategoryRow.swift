@@ -196,13 +196,18 @@ struct RowTitle: View {
                     .font(.system(size: 20, weight: .bold, design: .rounded))
                     .foregroundColor(.primary)
 
-                Text("Photo Filters")
-                    .font(.system(size: 11, weight: .semibold, design: .rounded))
-                    .foregroundColor(.blue)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(Color.blue.opacity(0.16))
-                    .clipShape(Capsule())
+                HStack(spacing: 4) {
+                    Image(systemName: "photo.on.rectangle.angled")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundColor(.blue)
+                    Text("Photo Filters")
+                        .font(.system(size: 11, weight: .semibold, design: .rounded))
+                        .foregroundColor(.blue)
+                }
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(Color.blue.opacity(0.16))
+                .clipShape(Capsule())
             }
             Spacer()
             NavigationLink(destination: CategoryDetailView(categoryName: categoryName, items: items)) {

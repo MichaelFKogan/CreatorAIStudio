@@ -217,13 +217,18 @@ struct VideoRowTitle: View {
                     .font(.system(size: 20, weight: .bold, design: .rounded))
                     .foregroundColor(.primary)
 
-                Text("Video Filters")
-                    .font(.system(size: 11, weight: .semibold, design: .rounded))
-                    .foregroundColor(.purple)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(Color.purple.opacity(0.16))
-                    .clipShape(Capsule())
+                HStack(spacing: 4) {
+                    Image(systemName: "video.fill")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundColor(.purple)
+                    Text("Video Filters")
+                        .font(.system(size: 11, weight: .semibold, design: .rounded))
+                        .foregroundColor(.purple)
+                }
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(Color.purple.opacity(0.16))
+                .clipShape(Capsule())
             }
             Spacer()
             if let destination = seeAllDestination {

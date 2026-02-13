@@ -76,6 +76,15 @@
     },
     "prompt": "Transform the subject of the uploaded photo into a vibrant festival-style portrait while preserving the subject’s facial identity, hair color, hairstyle, and body shape.\n\nThe subject wears playful glitter makeup and is framed from the shoulders up. The expression is energetic and candid.\n\nThe background includes colorful lights, lens flares, and a softly blurred crowd. Lighting is dynamic and high-energy.\n\nUse high saturation and bokeh effects while keeping the subject’s likeness intact."
   },
+  {
+    "display": {
+      "title": "90s Polaroid",
+      "imageName": "90spolaroid",
+      "imageNameOriginal": "yourphoto",
+      "modelName": "Nano Banana"
+    },
+    "prompt": "Flash Photography with Grain\n\nRender the image as if it were an authentic 90s Polaroid snapshot taken indoors. Apply the look of a harsh on-camera flash, resulting in bright highlights, deep, dark shadows, and a slight red-eye effect. The photograph must exhibit noticeable film grain and the characteristic blue-green tint often found in instant film. Enclose the photo in a clean, white Polaroid 600-style frame with a slight vignette effect within the image area."
+  },
 
   {
     "display": {

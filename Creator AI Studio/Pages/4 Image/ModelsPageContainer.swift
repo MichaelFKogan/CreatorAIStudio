@@ -108,7 +108,8 @@ private struct ModelTypeTabSwitcher: View {
         )
         .padding(.horizontal, 20)
         .padding(.top, 8)
-        .padding(.bottom, 68) // Extend padding to match navbar height (55 + 8 + 5)
+        .padding(.bottom, 8)
+        // .padding(.bottom, 68) // Extend padding to match navbar height (55 + 8 + 5)
         .background(
             Color.black
                 .ignoresSafeArea(edges: .bottom)
