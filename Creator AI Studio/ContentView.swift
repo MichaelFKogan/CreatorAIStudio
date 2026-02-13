@@ -69,6 +69,22 @@ struct ContentView: View {
             // Notification bar above stock tab bar
             NotificationBar(notificationManager: notificationManager)
                 .padding(.bottom, 50)
+
+            // Gallery tab: show spinning progress overlay when a generation is active
+            if hasActiveGeneration {
+                HStack(spacing: 0) {
+                    ForEach(0..<4, id: \.self) { _ in
+                        Color.clear.frame(maxWidth: .infinity)
+                    }
+                    ZStack {
+                        SpinningProgressRing()
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+                .frame(height: 49)
+                .padding(.horizontal, 8)
+                .allowsHitTesting(false)
+            }
         }
         .ignoresSafeArea(.keyboard)
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
@@ -94,5 +110,12 @@ struct ContentView: View {
     /// Badge count for Gallery tab; 0 is hidden by the system.
     private var galleryBadgeCount: Int {
         notificationManager.newCompletedCount + notificationManager.newFailedCount
+    }
+
+    /// True when any image/video generation is in progress (for Gallery tab spinner).
+    private var hasActiveGeneration: Bool {
+        !notificationManager.notifications.filter {
+            $0.isActive && $0.state != .completed && $0.state != .failed
+        }.isEmpty
     }
 }

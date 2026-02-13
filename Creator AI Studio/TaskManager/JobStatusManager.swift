@@ -405,22 +405,23 @@ class JobStatusManager: ObservableObject {
         startPeriodicPolling(userId: userId)
     }
     
-    /// Start periodic polling to check for timed-out jobs (fallback if Realtime fails)
+    /// Start periodic polling to refresh pending jobs and process completed/timed-out jobs (fallback if Realtime misses updates)
     private func startPeriodicPolling(userId: String) {
         // Cancel any existing polling task
         pollingTask?.cancel()
         
         pollingTask = Task { [weak self] in
             while !Task.isCancelled {
-                // Wait 30 seconds before checking
-                try? await Task.sleep(nanoseconds: 30_000_000_000) // 30 seconds
+                // Wait 15 seconds so we pick up completed jobs even if Realtime UPDATE was missed
+                try? await Task.sleep(nanoseconds: 15_000_000_000) // 15 seconds
                 
                 guard let self = self, self.currentUserId == userId else {
                     break
                 }
                 
-                // Check for timed-out jobs
-                await self.checkForTimedOutJobs(userId: userId)
+                // Full refresh: fetches latest pending jobs, processes any completed (e.g. webhook finished),
+                // and handles timed-out jobs. Fixes "loading forever" when Realtime doesn't deliver the UPDATE.
+                await self.fetchPendingJobs(userId: userId)
             }
         }
     }
@@ -623,6 +624,10 @@ class JobStatusManager: ObservableObject {
             print("[JobStatusManager] ❌ Error decoding updated job: \(error)")
             if let decodingError = error as? DecodingError {
                 print("[JobStatusManager] Decoding error details: \(decodingError)")
+            }
+            // Fallback: refresh from DB so we still process completed jobs (e.g. video webhook) even if Realtime payload failed to decode
+            if let uid = currentUserId {
+                await fetchPendingJobs(userId: uid)
             }
         }
     }

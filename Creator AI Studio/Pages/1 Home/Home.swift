@@ -61,7 +61,7 @@ struct Home: View {
 
                         if !animeVideoFilters.isEmpty {
                             VideoRowGrid(
-                                title: "🌸 Anime Videos",
+                                title: "🌀 Anime",
                                 items: animeVideoFilters,
                                 seeAllDestination: nil
                             )
