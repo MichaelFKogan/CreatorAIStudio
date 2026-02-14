@@ -765,29 +765,36 @@ func sendVideoToRunware(
         task.removeValue(forKey: "duration")
         print("[Runware] Kling VIDEO 2.6 Pro motion control: removed width/height/duration (inferred from inputs)")
     }
-    // Handle Kling VIDEO 2.6 Pro standard image-to-video (NO motion control)
-    else if isKlingVideo26Pro && isImageToVideo && !isMotionControlMode, let seedImage = image {
-        // Upload image first to get UUID (required for inputs.frameImages)
-        let imageUUID = try await uploadImageToRunware(image: seedImage)
-        
-        // Initialize inputs object if it doesn't exist
+    // Handle Kling VIDEO 2.6 Pro standard image-to-video (NO motion control); supports first and optional last frame
+    else if isKlingVideo26Pro && isImageToVideo && !isMotionControlMode {
         var inputs = task["inputs"] as? [String: Any] ?? [:]
-        
-        // Standard image-to-video uses inputs.frameImages
-        inputs["frameImages"] = [
-            [
-                "image": imageUUID,
-                "frame": "first"
-            ]
-        ]
-        print("[Runware] Kling VIDEO 2.6 Pro image-to-video enabled with inputs.frameImages: \(imageUUID)")
-        
-        task["inputs"] = inputs
-        
-        // For image-to-video, dimensions are inferred from input image
-        task.removeValue(forKey: "width")
-        task.removeValue(forKey: "height")
-        print("[Runware] Kling VIDEO 2.6 Pro image-to-video: dimensions will be inferred from input image")
+        var frameImagesArray: [[String: Any]] = []
+
+        // First frame: prefer firstFrameImage, else seed image
+        if let firstFrame = firstFrameImage {
+            let firstUUID = try await uploadImageToRunware(image: firstFrame)
+            frameImagesArray.append(["image": firstUUID, "frame": "first"])
+            print("[Runware] Kling VIDEO 2.6 Pro image-to-video: first frame \(firstUUID)")
+        } else if let seedImage = image {
+            let firstUUID = try await uploadImageToRunware(image: seedImage)
+            frameImagesArray.append(["image": firstUUID, "frame": "first"])
+            print("[Runware] Kling VIDEO 2.6 Pro image-to-video: first frame (from seed) \(firstUUID)")
+        }
+
+        // Optional last frame
+        if let lastFrame = lastFrameImage {
+            let lastUUID = try await uploadImageToRunware(image: lastFrame)
+            frameImagesArray.append(["image": lastUUID, "frame": "last"])
+            print("[Runware] Kling VIDEO 2.6 Pro image-to-video: last frame \(lastUUID)")
+        }
+
+        if !frameImagesArray.isEmpty {
+            inputs["frameImages"] = frameImagesArray
+            task["inputs"] = inputs
+            task.removeValue(forKey: "width")
+            task.removeValue(forKey: "height")
+            print("[Runware] Kling VIDEO 2.6 Pro image-to-video: dimensions inferred from input image(s)")
+        }
     }
     
     // Note: Motion control reference video is handled above in the isMotionControlMode block
@@ -1520,29 +1527,34 @@ func submitVideoToRunwareWithWebhook(
         task.removeValue(forKey: "duration")
         print("[Runware] Kling VIDEO 2.6 Pro motion control (webhook): removed width/height/duration (inferred from inputs)")
     }
-    // Handle Kling VIDEO 2.6 Pro standard image-to-video (NO motion control) - webhook
-    else if isKlingVideo26Pro && isImageToVideo && !isMotionControlMode, let seedImage = image {
-        // Upload image first to get UUID (required for inputs.frameImages)
-        let imageUUID = try await uploadImageToRunware(image: seedImage)
-        
-        // Initialize inputs object if it doesn't exist
+    // Handle Kling VIDEO 2.6 Pro standard image-to-video (NO motion control) - webhook; supports first and optional last frame
+    else if isKlingVideo26Pro && isImageToVideo && !isMotionControlMode {
         var inputs = task["inputs"] as? [String: Any] ?? [:]
-        
-        // Standard image-to-video uses inputs.frameImages
-        inputs["frameImages"] = [
-            [
-                "image": imageUUID,
-                "frame": "first"
-            ]
-        ]
-        print("[Runware] Kling VIDEO 2.6 Pro image-to-video (webhook) enabled with inputs.frameImages: \(imageUUID)")
-        
-        task["inputs"] = inputs
-        
-        // For image-to-video, dimensions are inferred from input image
-        task.removeValue(forKey: "width")
-        task.removeValue(forKey: "height")
-        print("[Runware] Kling VIDEO 2.6 Pro image-to-video (webhook): dimensions will be inferred from input image")
+        var frameImagesArray: [[String: Any]] = []
+
+        if let firstFrame = firstFrameImage {
+            let firstUUID = try await uploadImageToRunware(image: firstFrame)
+            frameImagesArray.append(["image": firstUUID, "frame": "first"])
+            print("[Runware] Kling VIDEO 2.6 Pro image-to-video (webhook): first frame \(firstUUID)")
+        } else if let seedImage = image {
+            let firstUUID = try await uploadImageToRunware(image: seedImage)
+            frameImagesArray.append(["image": firstUUID, "frame": "first"])
+            print("[Runware] Kling VIDEO 2.6 Pro image-to-video (webhook): first frame (from seed) \(firstUUID)")
+        }
+
+        if let lastFrame = lastFrameImage {
+            let lastUUID = try await uploadImageToRunware(image: lastFrame)
+            frameImagesArray.append(["image": lastUUID, "frame": "last"])
+            print("[Runware] Kling VIDEO 2.6 Pro image-to-video (webhook): last frame \(lastUUID)")
+        }
+
+        if !frameImagesArray.isEmpty {
+            inputs["frameImages"] = frameImagesArray
+            task["inputs"] = inputs
+            task.removeValue(forKey: "width")
+            task.removeValue(forKey: "height")
+            print("[Runware] Kling VIDEO 2.6 Pro image-to-video (webhook): dimensions inferred from input image(s)")
+        }
     }
     
     // Note: Motion control reference video is handled above in the isMotionControlMode block

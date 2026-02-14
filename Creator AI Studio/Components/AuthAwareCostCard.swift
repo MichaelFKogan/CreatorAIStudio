@@ -97,7 +97,7 @@ struct AuthAwareCostCard: View {
             }
             .buttonStyle(.plain)
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, 6)
     }
     
     /// No-internet message shown below Generate/Upload button when user is logged in but offline
@@ -111,6 +111,6 @@ struct AuthAwareCostCard: View {
                 .foregroundColor(.red)
             Spacer()
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, 6)
     }
 }

@@ -9,6 +9,8 @@ struct ReferenceImagesSection: View {
     @Binding var showCameraSheet: Bool
     let color: Color
     var disclaimer: String? = nil  // Optional disclaimer text
+    /// When set (e.g. Kling VIDEO 2.6 Pro Image mode), show "Start Frame" title + description above the image box.
+    var startFrameHeader: (title: String, description: String)? = nil
 
     @State private var showActionSheet: Bool = false
 
@@ -18,6 +20,23 @@ struct ReferenceImagesSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
+            if let header = startFrameHeader {
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "photo.on.rectangle.angled")
+                            .foregroundColor(color)
+                        Text(header.title)
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.secondary)
+                        Spacer()
+                    }
+                    Text(header.description)
+                        .font(.caption)
+                        .foregroundColor(.secondary.opacity(0.8))
+                        .padding(.bottom, 4)
+                }
+            }
             if referenceImages.isEmpty {
                 // Dashed-border box sized to match Frames / Motion Control slots (same as KlingAI 2.5 Turbo Pro Frames)
                 HStack(alignment: .top, spacing: 12) {

@@ -1,12 +1,31 @@
 import SwiftUI
 
+// MARK: - Container State (hide tab switcher when model detail is pushed)
+
+/// Shared state so the container can hide the Image/Video tab switcher when a model detail page is showing.
+final class ModelsPageContainerState: ObservableObject {
+    @Published var isShowingModelDetail: Bool = false
+}
+
+private struct ModelsPageContainerStateKey: EnvironmentKey {
+    static let defaultValue: ModelsPageContainerState? = nil
+}
+
+extension EnvironmentValues {
+    var modelsPageContainerState: ModelsPageContainerState? {
+        get { self[ModelsPageContainerStateKey.self] }
+        set { self[ModelsPageContainerStateKey.self] = newValue }
+    }
+}
+
 // MARK: - Models Page Container
 
 struct ModelsPageContainer: View {
     @AppStorage("selectedModelType") private var savedModelType: Int = 0 // 0 = Image, 1 = Video (persisted)
     @State private var selectedModelType: Int = 0 // Local state for animation
     @State private var previousModelType: Int = 0 // Track previous selection for animation direction
-    
+    @StateObject private var containerState = ModelsPageContainerState()
+
     var body: some View {
         GeometryReader { geometry in
             ZStack {
@@ -18,18 +37,22 @@ struct ModelsPageContainer: View {
                     .opacity(selectedModelType == 0 ? 1 : 0)
                     .offset(x: selectedModelType == 0 ? 0 : -geometry.size.width)
                     .allowsHitTesting(selectedModelType == 0)
-                
+                    .environment(\.modelsPageContainerState, containerState)
+
                 VideoModelsPageContent()
                     .id("video") // Force view identity for proper state management
                     .opacity(selectedModelType == 1 ? 1 : 0)
                     .offset(x: selectedModelType == 1 ? 0 : geometry.size.width)
                     .allowsHitTesting(selectedModelType == 1)
-                
-                // Tab Switcher at bottom (above navbar)
-                VStack {
-                    Spacer()
-                    ModelTypeTabSwitcher(selectedType: $selectedModelType, previousType: $previousModelType, savedType: $savedModelType)
-                        .padding(.bottom, 0) // No padding - background extends to navbar
+                    .environment(\.modelsPageContainerState, containerState)
+
+                // Tab Switcher at bottom (above navbar) — hidden when a model detail page is pushed
+                if !containerState.isShowingModelDetail {
+                    VStack {
+                        Spacer()
+                        ModelTypeTabSwitcher(selectedType: $selectedModelType, previousType: $previousModelType, savedType: $savedModelType)
+                            .padding(.bottom, 0) // No padding - background extends to navbar
+                    }
                 }
             }
             .animation(.easeInOut(duration: 0.3), value: selectedModelType)

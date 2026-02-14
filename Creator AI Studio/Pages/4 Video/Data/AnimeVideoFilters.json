@@ -7,7 +7,7 @@
       "detailVideoURL": "https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/videos/anime/animedragon1.mp4",
       "description": ""
     },
-    "prompt": "Transform this image into a cinematic anime-inspired video while preserving the person identity, pose, and clothing details.",
+    "prompt": "Ultra-fast anime aerial fight, agile warrior launching upward to intercept a massive dragon, mid-air slashes and evasive flips, violent wind pressure, exaggerated motion arcs, split-second freezes during near-collisions, cinematic camera soaring alongside the combat, chaotic skyborne intensity.",
     "cost": 0.7,
     "type": "Video Filter"
   },
@@ -19,7 +19,7 @@
       "detailVideoURL": "https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/videos/anime/animedragon2.mp4",
       "description": ""
     },
-    "prompt": "Transform this image into a cinematic anime-inspired video while preserving the person identity, pose, and clothing details.",
+    "prompt": "Ultra-fast anime aerial fight, agile warrior launching upward to intercept a massive dragon, mid-air slashes and evasive flips, violent wind pressure, exaggerated motion arcs, split-second freezes during near-collisions, cinematic camera soaring alongside the combat, chaotic skyborne intensity.",
     "cost": 0.7,
     "type": "Video Filter"
   },
@@ -31,7 +31,7 @@
       "detailVideoURL": "https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/videos/anime/animewolf1.mp4",
       "description": ""
     },
-    "prompt": "Transform this image into a cinematic anime-inspired video while preserving the person identity, pose, and clothing details.",
+    "prompt": "Savage anime chase and transformation, warrior running uncontrollably through a dark forest, camera whipping erratically with extreme speed, breathing heavy, energy cracking around the body, sudden violent transformation mid-sprint, bones shifting and silhouette snapping into a wolf form, ground tearing under paws, wolf charging with unstoppable force, rapid zigzag movement between tress, final leap toward enemy warrior, claws and fangs striking in a brutal collision, exaggerated anime speed and impact, feral violence.",
     "cost": 0.7,
     "type": "Video Filter"
   },
@@ -43,7 +43,19 @@
       "detailVideoURL": "https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/videos/anime/animewolf2.mp4",
       "description": ""
     },
-    "prompt": "Transform this image into a cinematic anime-inspired video while preserving the person identity, pose, and clothing details.",
+    "prompt": "Savage anime chase and transformation, warrior running uncontrollably through a dark forest, camera whipping erratically with extreme speed, breathing heavy, energy cracking around the body, sudden violent transformation mid-sprint, bones shifting and silhouette snapping into a wolf form, ground tearing under paws, wolf charging with unstoppable force, rapid zigzag movement between tress, final leap toward enemy warrior, claws and fangs striking in a brutal collision, exaggerated anime speed and impact, feral violence.",
+    "cost": 0.7,
+    "type": "Video Filter"
+  },
+  {
+    "display": {
+      "title": "Anime",
+      "imageName": "animerooftops1",
+      "imageNameOriginal": "yourphoto",
+      "detailVideoURL": "https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/videos/anime/animerooftops1.mp4",
+      "description": ""
+    },
+    "prompt": "Savage high-speed anime fight across collapsing rooftops, rival fighters sprinting with exaggerated motion arcs, brutal kinetic chaos tearing tiles free beneath their feet, explosive supernatural energy igniting mid-air collisions, anime-style action timing with suspended mid-air freeze before final strike, cinematic camera orbiting and whipping through the chaos, camera shaking violently during structural collapse.",
     "cost": 0.7,
     "type": "Video Filter"
   }

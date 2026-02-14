@@ -60,6 +60,7 @@ struct ImageModelDetailPage: View {
     @ObservedObject private var networkMonitor = NetworkMonitor.shared
 
     @EnvironmentObject var authViewModel: AuthViewModel
+    @Environment(\.modelsPageContainerState) private var modelsPageContainerState
 
     init(item: InfoPacket, capturedImage: UIImage? = nil) {
         self._item = State(initialValue: item)
@@ -233,46 +234,61 @@ struct ImageModelDetailPage: View {
         }
     }
 
-    @ViewBuilder private var scrollGenerateAndCost: some View {
-        if isMidjourney {
-            HStack(spacing: 4) {
-                Image(systemName: "info.circle")
-                    .font(.caption)
-                    .foregroundColor(.red)
-                Text("Midjourney creates 4 images by default: Total cost: $0.10")
-                    .font(.caption)
-                    .foregroundColor(.red)
-                Spacer()
+    /// Floating bar at bottom: optional Midjourney warning, cost card (sign-in / credits), Generate button
+    @ViewBuilder private var floatingGenerateBar: some View {
+        VStack(spacing: 8) {
+            if isMidjourney {
+                HStack(spacing: 4) {
+                    Image(systemName: "info.circle")
+                        .font(.caption)
+                        .foregroundColor(.red)
+                    Text("Midjourney creates 4 images by default: Total cost: $0.10")
+                        .font(.caption)
+                        .foregroundColor(.red)
+                    Spacer()
+                }
+                .padding(.horizontal)
+            }
+            VStack(spacing: 12) {
+                AuthAwareCostCard(
+                    price: isGPTImage15 ? Decimal(requiredCredits) : (item.resolvedCost ?? 0),
+                    requiredCredits: requiredCredits,
+                    primaryColor: .blue,
+                    secondaryColor: .cyan,
+                    loginMessage: "Log in to generate an image",
+                    isConnected: networkMonitor.isConnected,
+                    onSignIn: { showSignInSheet = true },
+                    onBuyCredits: { showPurchaseCreditsView = true }
+                )
             }
             .padding(.horizontal)
-            .padding(.bottom, -16)
-        }
-        LazyView(
-            GenerateButton(
-                prompt: prompt,
-                isGenerating: $isGenerating,
-                keyboardHeight: $keyboardHeight,
-                costString: costString,
-                isLoggedIn: authViewModel.user != nil,
-                hasCredits: hasEnoughCredits,
-                isConnected: networkMonitor.isConnected,
-                onSignInTap: { showSignInSheet = true },
-                action: generate
-            ))
-        VStack(spacing: 12) {
-            AuthAwareCostCard(
-                price: isGPTImage15 ? Decimal(requiredCredits) : (item.resolvedCost ?? 0),
-                requiredCredits: requiredCredits,
-                primaryColor: .blue,
-                secondaryColor: .cyan,
-                loginMessage: "Log in to generate an image",
-                isConnected: networkMonitor.isConnected,
-                onSignIn: { showSignInSheet = true },
-                onBuyCredits: { showPurchaseCreditsView = true }
-            )
+            .padding(.top, 4)
+            LazyView(
+                GenerateButton(
+                    prompt: prompt,
+                    isGenerating: $isGenerating,
+                    keyboardHeight: $keyboardHeight,
+                    costString: costString,
+                    isLoggedIn: authViewModel.user != nil,
+                    hasCredits: hasEnoughCredits,
+                    isConnected: networkMonitor.isConnected,
+                    onSignInTap: { showSignInSheet = true },
+                    action: generate
+                ))
         }
         .padding(.horizontal)
-        .padding(.top, -16)
+        .padding(.top, 8)
+        .padding(.bottom, 24)
+        .background(
+            Color(UIColor.systemBackground)
+                .overlay(alignment: .top) {
+                    Rectangle()
+                        .fill(Color.gray.opacity(0.25))
+                        .frame(height: 0.5)
+                }
+                .shadow(color: Color.black.opacity(0.08), radius: 12, x: 0, y: -4)
+        )
+        .ignoresSafeArea(edges: .bottom)
     }
 
     private var scrollQualityAspectResolution: some View {
@@ -328,14 +344,13 @@ struct ImageModelDetailPage: View {
                 scrollBanner
                 scrollInputModeAndRefs
                 scrollPrompt
-                scrollGenerateAndCost
                 scrollQualityAspectResolution
                 if isGPTImage15 || isNanoBananaPro, let modelName = item.display.modelName {
                     LazyView(PricingTableSectionImage(modelName: modelName))
                     Divider().padding(.horizontal)
                 }
                 scrollGallery
-                Color.clear.frame(height: 130)
+                Color.clear.frame(height: 200)  // bottom padding so content clears floating Generate bar
             }
         }
         .scrollDismissesKeyboard(.interactively)
@@ -345,6 +360,7 @@ struct ImageModelDetailPage: View {
         GeometryReader { _ in
             ZStack(alignment: .bottom) {
                 scrollContent
+                floatingGenerateBar
             }
         }
     }
@@ -355,9 +371,13 @@ struct ImageModelDetailPage: View {
             .contentShape(Rectangle())
             .onTapGesture { isPromptFocused = false }
             .onAppear {
+                modelsPageContainerState?.isShowingModelDetail = true
                 if let capturedImage = capturedImage, referenceImages.isEmpty {
                     referenceImages = [capturedImage]
                 }
+            }
+            .onDisappear {
+                modelsPageContainerState?.isShowingModelDetail = false
             }
             .onChange(of: showSignInSheet) { isPresented in
                 if !isPresented, let userId = authViewModel.user?.id {

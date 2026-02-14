@@ -39,11 +39,10 @@ private enum GoogleVeoInputMode: String, CaseIterable {
     case frameImages = "Frames"
 }
 
-/// Input mode for KlingAI 2.5 Turbo Pro (Text | Image | Frames), same options as Google Veo 3.1 Fast.
+/// Input mode for KlingAI 2.5 Turbo Pro (Text | Image). Image mode shows Start Frame + End Frame (optional), like Kling VIDEO 2.6 Pro.
 private enum KlingAI25TurboProInputMode: String, CaseIterable {
     case textToVideo = "Text"
     case imageToVideo = "Image"
-    case frameImages = "Frames"
 }
 
 /// Input mode for Kling VIDEO 2.6 Pro: Text | Image | Motion Control.
@@ -85,7 +84,7 @@ struct VideoModelDetailPage: View {
     /// Google Veo 3.1 Fast only: Text to Video | Image to Video | Frame Images
     @State private var googleVeoInputMode: GoogleVeoInputMode = .imageToVideo
 
-    /// KlingAI 2.5 Turbo Pro only: Text | Image | Frames
+    /// KlingAI 2.5 Turbo Pro only: Text | Image (Image shows Start/End frame boxes)
     @State private var klingAI25InputMode: KlingAI25TurboProInputMode = .imageToVideo
 
     /// Kling VIDEO 2.6 Pro only: Text | Image | Motion Control
@@ -124,12 +123,14 @@ struct VideoModelDetailPage: View {
     @State private var showPurchaseCreditsView: Bool = false
     @State private var showInsufficientCreditsAlert: Bool = false
     @State private var showMotionControlMissingAlert: Bool = false
+    @State private var motionControlMissingAlertTitle: String = "Motion Control Required"
     @State private var motionControlMissingAlertMessage: String = ""
     @State private var showImageRequiredAlert: Bool = false
     @ObservedObject private var creditsViewModel = CreditsViewModel.shared
     @ObservedObject private var networkMonitor = NetworkMonitor.shared
 
     @EnvironmentObject var authViewModel: AuthViewModel
+    @Environment(\.modelsPageContainerState) private var modelsPageContainerState
 
     // MARK: Constants - Default fallback options
 
@@ -415,7 +416,7 @@ struct VideoModelDetailPage: View {
         }
     }
 
-    /// Input mode picker for KlingAI 2.5 Turbo Pro
+    /// Input mode picker for KlingAI 2.5 Turbo Pro (Text | Image; Image shows Start/End frame)
     @ViewBuilder
     private var klingAI25InputModePicker: some View {
         if isKlingAI25TurboPro {
@@ -423,8 +424,7 @@ struct VideoModelDetailPage: View {
                 ChipOptionPicker(
                     options: [
                         ("Text", "doc.text"),
-                        ("Image", "photo"),
-                        ("Frames", "photo.on.rectangle.angled")
+                        ("Image", "photo")
                     ],
                     selection: Binding(
                         get: { KlingAI25TurboProInputMode.allCases.firstIndex(of: klingAI25InputMode) ?? 0 },
@@ -506,18 +506,19 @@ struct VideoModelDetailPage: View {
             && !isKlingAI25TurboPro
             && !isKlingVideo26Pro
 
+        // KlingAI 2.5 and Kling VIDEO 2.6 Pro Image modes use frame section (Start + End frame), not reference images
         let isPickerModeImageToVideo = (showsTextImageInputModePicker && sora2InputMode == .imageToVideo)
             || (isGoogleVeo31Fast && googleVeoInputMode == .imageToVideo)
-            || (isKlingAI25TurboPro && klingAI25InputMode == .imageToVideo)
-            || (isKlingVideo26Pro && klingVideo26InputMode == .imageToVideo)
+        // (Kling 2.5 Image and Kling 2.6 Image use frame section instead)
 
         return isBasicImageToVideo || isPickerModeImageToVideo
     }
 
     /// Whether to show frame images section
     private var shouldShowFrameImages: Bool {
-        (isKlingAI25TurboPro && klingAI25InputMode == .frameImages)
+        (isKlingAI25TurboPro && klingAI25InputMode == .imageToVideo)
             || (isGoogleVeo31Fast && googleVeoInputMode == .frameImages)
+            || (isKlingVideo26Pro && klingVideo26InputMode == .imageToVideo)
     }
 
     /// Reference images section
@@ -532,15 +533,20 @@ struct VideoModelDetailPage: View {
                     color: .purple,
                     disclaimer: item.display.modelName == "Sora 2"
                         ? "Sora 2 does not allow reference images with people - these will be rejected. Images of cartoons, animated figures, or landscapes are allowed."
-                        : nil
+                        : nil,
+                    // Kling 2.6 Image mode uses frame section (Start/End frame), not reference section
+                    startFrameHeader: nil
                 ))
         }
     }
 
-    /// Frame images section for KlingAI 2.5 / Google Veo in Frames mode
+    /// Frame images section for KlingAI 2.5 / Google Veo in Frames mode, and Kling VIDEO 2.6 Pro in Image mode
     @ViewBuilder
     private var frameImagesSection: some View {
         if shouldShowFrameImages {
+            let isKling25Image = isKlingAI25TurboPro && klingAI25InputMode == .imageToVideo
+            let isKling26Image = isKlingVideo26Pro && klingVideo26InputMode == .imageToVideo
+            let useStartEndFrameUI = isKling25Image || isKling26Image
             LazyView(
                 FrameImagesSection(
                     firstFrameImage: $firstFrameImage,
@@ -548,7 +554,9 @@ struct VideoModelDetailPage: View {
                     showFirstFrameCameraSheet: $showFirstFrameCameraSheet,
                     showLastFrameCameraSheet: $showLastFrameCameraSheet,
                     color: .purple,
-                    showTitleAndDescription: false
+                    showTitleAndDescription: useStartEndFrameUI,
+                    sectionDescription: useStartEndFrameUI ? "Start frame and end frame are the first and last things you'll see in the generated video." : nil,
+                    endFrameTitle: useStartEndFrameUI ? "End Frame (optional)" : "End Frame"
                 ))
         }
     }
@@ -698,7 +706,6 @@ struct VideoModelDetailPage: View {
             )
         }
         .padding(.horizontal)
-        .padding(.top, -16)
     }
 
     /// Settings section (aspect ratio, resolution, duration)
@@ -812,10 +819,6 @@ struct VideoModelDetailPage: View {
                         // Midjourney warning
                         midjourneyWarning
 
-                        // Generate button and cost card (extracted)
-                        generateButtonView
-                        costCardView
-
                         // Settings (extracted)
                         settingsSection
                         audioToggleSection
@@ -824,12 +827,37 @@ struct VideoModelDetailPage: View {
                         pricingTableSection
                         exampleGallerySection
 
-                        Color.clear.frame(height: 130)  // bottom padding for floating button
+                        Color.clear.frame(height: 200)  // bottom padding so content clears floating Generate bar
                     }
                 }
                 .scrollDismissesKeyboard(.interactively)
+
+                // Floating Generate button and cost/disclaimer card at bottom
+                floatingGenerateBar
             }
         }
+    }
+
+    /// Floating bar at bottom: cost card (sign-in / credits disclaimer) + Generate button
+    private var floatingGenerateBar: some View {
+        VStack(spacing: 8) {
+            costCardView
+                .padding(.top, 4)
+            generateButtonView
+        }
+        .padding(.horizontal)
+        .padding(.top, 8)
+        .padding(.bottom, 24)
+        .background(
+            Color(UIColor.systemBackground)
+                .overlay(alignment: .top) {
+                    Rectangle()
+                        .fill(Color.gray.opacity(0.25))
+                        .frame(height: 0.5)
+                }
+                .shadow(color: Color.black.opacity(0.08), radius: 12, x: 0, y: -4)
+        )
+        .ignoresSafeArea(edges: .bottom)
     }
 
     /// Navigation chrome — toolbar, nav title, keyboard handlers
@@ -947,6 +975,7 @@ struct VideoModelDetailPage: View {
                 Text(ocrAlertMessage)
             }
             .onAppear {
+                modelsPageContainerState?.isShowingModelDetail = true
                 // Validate and reset indices if they're out of bounds for model-specific options
                 if selectedAspectIndex >= videoAspectOptions.count {
                     selectedAspectIndex = 0
@@ -968,6 +997,9 @@ struct VideoModelDetailPage: View {
                     }
                 }
                 // Note: Credit balance fetching is now handled by AuthAwareCostCard
+            }
+            .onDisappear {
+                modelsPageContainerState?.isShowingModelDetail = false
             }
             .onChange(of: showSignInSheet) { isPresented in
                 // When sign-in sheet is dismissed, refresh credits if user signed in
@@ -993,7 +1025,7 @@ struct VideoModelDetailPage: View {
             } message: {
                 Text("You need \(String(format: "$%.2f", requiredCredits)) to generate this. Your current balance is \(creditsViewModel.formattedBalance()).")
             }
-            .alert("Motion Control Required", isPresented: $showMotionControlMissingAlert) {
+            .alert(motionControlMissingAlertTitle, isPresented: $showMotionControlMissingAlert) {
                 Button("OK", role: .cancel) {}
             } message: {
                 Text(motionControlMissingAlertMessage)
@@ -1038,14 +1070,17 @@ struct VideoModelDetailPage: View {
             return googleVeoInputMode == .imageToVideo ? referenceImages.first : nil
         }
         if isKlingAI25TurboPro {
-            return klingAI25InputMode == .imageToVideo ? referenceImages.first : nil
+            return klingAI25InputMode == .imageToVideo ? (firstFrameImage ?? referenceImages.first) : nil
         }
         if isKlingVideo26Pro {
-            // Motion Control uses motionControlCharacterImage, Image mode uses referenceImages
+            // Motion Control uses motionControlCharacterImage; Image mode uses Start/End frame (firstFrameImage)
             if klingVideo26InputMode == .motionControl {
                 return motionControlCharacterImage
             }
-            return klingVideo26InputMode == .imageToVideo ? referenceImages.first : nil
+            if klingVideo26InputMode == .imageToVideo {
+                return firstFrameImage ?? referenceImages.first
+            }
+            return nil
         }
         if showsTextImageInputModePicker {
             return sora2InputMode == .imageToVideo ? referenceImages.first : nil
@@ -1062,8 +1097,19 @@ struct VideoModelDetailPage: View {
         }
         guard !isGenerating else { return }
 
+        // Check Kling 2.5 / Kling 2.6 Pro Image mode: require start frame
+        if (isKlingAI25TurboPro && klingAI25InputMode == .imageToVideo) || (isKlingVideo26Pro && klingVideo26InputMode == .imageToVideo) {
+            if firstFrameImage == nil {
+                motionControlMissingAlertTitle = "Start Frame Required"
+                motionControlMissingAlertMessage = "Please add a start frame image. It will be the first thing seen in the generated video."
+                showMotionControlMissingAlert = true
+                return
+            }
+        }
+
         // Check Motion Control validation for Kling VIDEO 2.6 Pro
         if isKlingVideo26Pro && klingVideo26InputMode == .motionControl {
+            motionControlMissingAlertTitle = "Motion Control Required"
             if motionControlCharacterImage == nil && motionControlVideoURL == nil {
                 motionControlMissingAlertMessage = "Please add both a character image and a reference video for Motion Control."
                 showMotionControlMissingAlert = true
@@ -1127,7 +1173,8 @@ struct VideoModelDetailPage: View {
         // Reference image: only in Image mode for models with segmented input; else use when available
         let imageToUse = resolveImageToUse()
         let useFirstLastFrame: Bool = (isGoogleVeo31Fast && googleVeoInputMode == .frameImages)
-            || (isKlingAI25TurboPro && klingAI25InputMode == .frameImages)
+            || (isKlingAI25TurboPro && klingAI25InputMode == .imageToVideo)
+            || (isKlingVideo26Pro && klingVideo26InputMode == .imageToVideo)
 
         // Motion Control: determine if we need to pass a reference video URL
         let referenceVideoForGeneration: URL? = isMotionControlMode ? motionControlVideoURL : nil
@@ -2349,7 +2396,7 @@ private struct TextImageModeDescriptionBlock: View {
 
 // MARK: KLINGAI 2.5 TURBO PRO MODE DESCRIPTION BLOCK
 
-/// Title + icon + short instructions for KlingAI 2.5 Turbo Pro (Text | Image | Frames).
+/// Title + icon + short instructions for KlingAI 2.5 Turbo Pro (Text | Image). Image mode uses Start Frame + End Frame (optional).
 private struct KlingAI25ModeDescriptionBlock: View {
     let mode: KlingAI25TurboProInputMode
     let color: Color
@@ -2358,7 +2405,6 @@ private struct KlingAI25ModeDescriptionBlock: View {
         switch mode {
         case .textToVideo: return "Text To Video"
         case .imageToVideo: return "Image To Video"
-        case .frameImages: return "Frame Images"
         }
     }
 
@@ -2366,15 +2412,13 @@ private struct KlingAI25ModeDescriptionBlock: View {
         switch mode {
         case .textToVideo: return "doc.text"
         case .imageToVideo: return "photo"
-        case .frameImages: return "photo.on.rectangle.angled"
         }
     }
 
     private var instructions: String {
         switch mode {
         case .textToVideo: return "Describe your video with a prompt. No reference or frame images are used."
-        case .imageToVideo: return "Upload one or more reference images to guide the style and content of your video."
-        case .frameImages: return "Add first and last frame images to control the video start and end."
+        case .imageToVideo: return "Add start and optional end frame. They are the first and last things you'll see in the generated video."
         }
     }
 
@@ -2800,11 +2844,19 @@ private struct FrameImagesSection: View {
     let color: Color
     /// When false (e.g. Google Veo Frames mode), title and description are hidden; caller shows them via VeoModeDescriptionBlock.
     var showTitleAndDescription: Bool = true
+    /// When set (e.g. Kling VIDEO 2.6 Pro Image mode), use this description instead of the default.
+    var sectionDescription: String? = nil
+    /// Title for the end frame card (e.g. "End Frame (optional)" for Kling 2.6).
+    var endFrameTitle: String = "End Frame"
 
     @State private var showFirstFrameActionSheet: Bool = false
     @State private var showLastFrameActionSheet: Bool = false
     @State private var selectedFirstFramePhotoItem: PhotosPickerItem? = nil
     @State private var selectedLastFramePhotoItem: PhotosPickerItem? = nil
+
+    private var descriptionText: String {
+        sectionDescription ?? "Add first and last frame images to control the video start and end. Use a prompt to guide the action."
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -2819,7 +2871,7 @@ private struct FrameImagesSection: View {
                     Spacer()
                 }
 
-                Text("Add first and last frame images to control the video start and end. Use a prompt to guide the action.")
+                Text(descriptionText)
                     .font(.caption)
                     .foregroundColor(.secondary.opacity(0.8))
                     .padding(.bottom, 4)
@@ -2849,7 +2901,7 @@ private struct FrameImagesSection: View {
                 
                 // Last Frame Image - takes 50% of width
                 FrameImageCard(
-                    title: "End Frame",
+                    title: endFrameTitle,
                     image: $lastFrameImage,
                     showCameraSheet: $showLastFrameCameraSheet,
                     showActionSheet: $showLastFrameActionSheet,

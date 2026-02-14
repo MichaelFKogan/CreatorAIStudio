@@ -1144,6 +1144,7 @@ struct EnhancedCostCard: View {
                 }
                 .buttonStyle(.plain)
             }
+            .padding(.vertical, 6)
         }
     }
 }
