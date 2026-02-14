@@ -31,6 +31,7 @@ struct ProfileViewContent: View {
     @State private var showNoSelectionAlert: Bool = false
     @State private var noSelectionAlertMessage: String = ""
     @State private var showBulkAddToPlaylistSheet: Bool = false
+    @State private var showPurchaseCreditsView: Bool = false
 
     // Load model data to get images - cache at static level to avoid repeated loading
     private static var cachedImageModels: [InfoPacket]?
@@ -216,6 +217,11 @@ struct ProfileViewContent: View {
                     }
                 }
             }
+            .sheet(isPresented: $showPurchaseCreditsView) {
+                PurchaseCreditsView()
+                    .environmentObject(authViewModel)
+                    .presentationDragIndicator(.visible)
+            }
             .sheet(item: $selectedUserImage) { userImage in
                 FullScreenImageView(
                     userImage: userImage,
@@ -329,7 +335,11 @@ struct ProfileViewContent: View {
                         .foregroundColor(.gray)
                 }
             }
-            
+            if !isSignedIn {
+                Button("Pricing") { showPurchaseCreditsView = true }
+                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                    .foregroundColor(.primary)
+            }
             NavigationLink(
                 destination: Settings(profileViewModel: viewModel)
                     .environmentObject(authViewModel)

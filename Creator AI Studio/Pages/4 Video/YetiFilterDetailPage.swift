@@ -37,6 +37,7 @@ struct YetiFilterDetailPage: View {
     @State private var selectedResolutionIndex: Int = 0
     @State private var generateAudio: Bool = true  // Default to ON for audio generation
     @State private var videoPlayer: AVPlayer? = nil
+    @State private var showFullScreenVideo: Bool = false
     @AppStorage("videoFilterPreviewMuted") private var isVideoMuted: Bool = true // Default muted for autoplay; preference persisted
     @State private var keyboardHeight: CGFloat = 0
     
@@ -219,7 +220,8 @@ struct YetiFilterDetailPage: View {
                         
                         LazyView(
                             BannerSectionYeti(
-                                item: item, price: currentPrice, videoPlayer: $videoPlayer, isVideoMuted: $isVideoMuted))
+                                item: item, price: currentPrice, videoPlayer: $videoPlayer, isVideoMuted: $isVideoMuted,
+                                onVideoTap: { showFullScreenVideo = true }))
                         
                         Divider().padding(.horizontal)
                         
@@ -433,6 +435,11 @@ struct YetiFilterDetailPage: View {
                 cleanupVideoPlayer()
             }
         }
+        .sheet(isPresented: $showFullScreenVideo) {
+            if let url = getVideoURL(for: item) {
+                FullScreenVideoSheet(isPresented: $showFullScreenVideo, videoURL: url)
+            }
+        }
     }
     
     // MARK: FUNCTION GENERATE
@@ -573,6 +580,7 @@ private struct BannerSectionYeti: View {
     let price: Decimal?
     @Binding var videoPlayer: AVPlayer?
     @Binding var isVideoMuted: Bool
+    var onVideoTap: (() -> Void)? = nil
     
     private func getVideoURL(for item: InfoPacket) -> URL? {
         // Detail page banner: prefer full video with sound from Supabase (detailVideoURL)
@@ -607,33 +615,39 @@ private struct BannerSectionYeti: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            // Video centered
+            // Video centered — tappable to open full-screen
             HStack {
                 Spacer()
-                if let player = videoPlayer {
-                    VideoPlayerWithMuteButton(
-                        player: player,
-                        isMuted: $isVideoMuted,
-                        width: 230,
-                        height: 254,
-                        cornerRadius: 12
-                    )
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                } else if getVideoURL(for: item) != nil {
-                    // Video URL exists but player not ready yet - show placeholder
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(Color.gray.opacity(0.2))
-                        .frame(width: 230, height: 254)
-                        .overlay(
-                            ProgressView()
+                Group {
+                    if let player = videoPlayer {
+                        VideoPlayerWithMuteButton(
+                            player: player,
+                            isMuted: $isVideoMuted,
+                            width: 230,
+                            height: 254,
+                            cornerRadius: 12
                         )
-                } else {
-                    // Fallback to image
-                    Image(item.resolvedModelImageName ?? item.display.imageName)
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: 230, height: 254)
                         .clipShape(RoundedRectangle(cornerRadius: 12))
+                    } else if getVideoURL(for: item) != nil {
+                        // Video URL exists but player not ready yet - show placeholder
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color.gray.opacity(0.2))
+                            .frame(width: 230, height: 254)
+                            .overlay(
+                                ProgressView()
+                            )
+                    } else {
+                        // Fallback to image
+                        Image(item.resolvedModelImageName ?? item.display.imageName)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: 230, height: 254)
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                    }
+                }
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    onVideoTap?()
                 }
                 Spacer()
             }

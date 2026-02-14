@@ -32,6 +32,7 @@ struct DanceFilterDetailPage: View {
     @State private var videoPlayer: AVPlayer? = nil
     @State private var isBannerVideoReady: Bool = false
     @State private var playerItemObserver: NSKeyValueObservation? = nil
+    @State private var showFullScreenVideo: Bool = false
     @AppStorage("videoFilterPreviewMuted") private var isVideoMuted: Bool = true // Default muted for autoplay; preference persisted
     
     @EnvironmentObject var authViewModel: AuthViewModel
@@ -117,7 +118,8 @@ struct DanceFilterDetailPage: View {
                         
                         LazyView(
                             BannerSectionFilter(
-                                item: item, price: currentPrice, videoPlayer: $videoPlayer, isVideoMuted: $isVideoMuted, isBannerVideoReady: isBannerVideoReady))
+                                item: item, price: currentPrice, videoPlayer: $videoPlayer, isVideoMuted: $isVideoMuted, isBannerVideoReady: isBannerVideoReady,
+                                onVideoTap: { showFullScreenVideo = true }))
                         
                         Divider().padding(.horizontal)
                         
@@ -252,6 +254,11 @@ struct DanceFilterDetailPage: View {
                 image: $referenceImage,
                 color: .purple
             )
+        }
+        .sheet(isPresented: $showFullScreenVideo) {
+            if let url = getVideoURL(for: item) {
+                FullScreenVideoSheet(isPresented: $showFullScreenVideo, videoURL: url)
+            }
         }
         .onAppear {
             // Configure audio session immediately when view appears
@@ -684,6 +691,8 @@ struct DiagonalOverlappingVideoImages: View {
     var isVideoLoading: Bool = false
     /// When false, the mute/unmute overlay is hidden (e.g. for silent previews like WaveSpeed filters).
     var showMuteButton: Bool = true
+    /// Called when user taps the large banner video (e.g. to open full-screen sheet).
+    var onVideoTap: (() -> Void)? = nil
 
     @State private var arrowWiggle: Bool = false
 
@@ -728,67 +737,47 @@ struct DiagonalOverlappingVideoImages: View {
             let arrowAngle = atan2(deltaY, deltaX) * 180 / .pi  // Convert to degrees
 
             ZStack(alignment: .center) {
-                // Right video player (centered, larger) or loading state
-                if isVideoLoading {
-                    // Loading: circular progress + "Loading..." until video is ready
-                    RoundedRectangle(cornerRadius: 16)
-                        .fill(Color.black)
-                        .frame(width: rightVideoWidth, height: rightVideoHeight)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 16)
-                                .stroke(
-                                    LinearGradient(
-                                        colors: [.white, .gray],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing),
-                                    lineWidth: 2
-                                )
-                        )
-                        .overlay(
-                            VStack(spacing: 12) {
-                                ProgressView()
-                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                    .scaleEffect(1.2)
-                                Text("Loading...")
-                                    .font(.subheadline)
-                                    .fontWeight(.medium)
-                                    .foregroundColor(.white)
-                            }
-                        )
-                        .shadow(
-                            color: Color.black.opacity(0.25), radius: 12, x: 4, y: 4
-                        )
-                        .offset(x: rightVideoX, y: rightVideoY)
-                } else if let player = videoPlayer {
-                    VideoPlayerWithMuteButton(
-                        player: player,
-                        isMuted: $isVideoMuted,
-                        width: rightVideoWidth,
-                        height: rightVideoHeight,
-                        cornerRadius: 16,
-                        showMuteButton: showMuteButton
-                    )
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
-                    .overlay(
+                // Right video player (centered, larger) or loading state — tappable to open full-screen
+                Group {
+                    if isVideoLoading {
+                        // Loading: circular progress + "Loading..." until video is ready
                         RoundedRectangle(cornerRadius: 16)
-                            .stroke(
-                                LinearGradient(
-                                    colors: [.white, .gray],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing),
-                                lineWidth: 2
+                            .fill(Color.black)
+                            .frame(width: rightVideoWidth, height: rightVideoHeight)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 16)
+                                    .stroke(
+                                        LinearGradient(
+                                            colors: [.white, .gray],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing),
+                                        lineWidth: 2
+                                    )
                             )
-                    )
-                    .shadow(
-                        color: Color.black.opacity(0.25), radius: 12, x: 4, y: 4
-                    )
-                    .offset(x: rightVideoX, y: rightVideoY)
-                } else {
-                    // Fallback to image if video player is not available
-                    Image(leftImageName)
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: rightVideoWidth, height: rightVideoHeight)
+                            .overlay(
+                                VStack(spacing: 12) {
+                                    ProgressView()
+                                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                        .scaleEffect(1.2)
+                                    Text("Loading...")
+                                        .font(.subheadline)
+                                        .fontWeight(.medium)
+                                        .foregroundColor(.white)
+                                }
+                            )
+                            .shadow(
+                                color: Color.black.opacity(0.25), radius: 12, x: 4, y: 4
+                            )
+                            .offset(x: rightVideoX, y: rightVideoY)
+                    } else if let player = videoPlayer {
+                        VideoPlayerWithMuteButton(
+                            player: player,
+                            isMuted: $isVideoMuted,
+                            width: rightVideoWidth,
+                            height: rightVideoHeight,
+                            cornerRadius: 16,
+                            showMuteButton: showMuteButton
+                        )
                         .clipShape(RoundedRectangle(cornerRadius: 16))
                         .overlay(
                             RoundedRectangle(cornerRadius: 16)
@@ -804,6 +793,32 @@ struct DiagonalOverlappingVideoImages: View {
                             color: Color.black.opacity(0.25), radius: 12, x: 4, y: 4
                         )
                         .offset(x: rightVideoX, y: rightVideoY)
+                    } else {
+                        // Fallback to image if video player is not available
+                        Image(leftImageName)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: rightVideoWidth, height: rightVideoHeight)
+                            .clipShape(RoundedRectangle(cornerRadius: 16))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 16)
+                                    .stroke(
+                                        LinearGradient(
+                                            colors: [.white, .gray],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing),
+                                        lineWidth: 2
+                                    )
+                            )
+                            .shadow(
+                                color: Color.black.opacity(0.25), radius: 12, x: 4, y: 4
+                            )
+                            .offset(x: rightVideoX, y: rightVideoY)
+                    }
+                }
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    onVideoTap?()
                 }
                 
                 // Left image (smaller, overlapping top-left corner)
@@ -859,6 +874,7 @@ private struct BannerSectionFilter: View {
     @Binding var videoPlayer: AVPlayer?
     @Binding var isVideoMuted: Bool
     let isBannerVideoReady: Bool
+    var onVideoTap: (() -> Void)? = nil
     
     private func getVideoURL(for item: InfoPacket) -> URL? {
         // Detail page banner: prefer full video with sound from Supabase (detailVideoURL)
@@ -916,7 +932,8 @@ private struct BannerSectionFilter: View {
                 leftImageName: item.display.imageNameOriginal ?? "yourphoto",
                 videoPlayer: videoPlayer,
                 isVideoMuted: $isVideoMuted,
-                isVideoLoading: getVideoURL(for: item) != nil && (videoPlayer == nil || !isBannerVideoReady)
+                isVideoLoading: getVideoURL(for: item) != nil && (videoPlayer == nil || !isBannerVideoReady),
+                onVideoTap: onVideoTap
             )
             .padding(.bottom, 8)
             

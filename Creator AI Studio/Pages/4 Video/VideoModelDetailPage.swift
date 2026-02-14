@@ -555,7 +555,7 @@ struct VideoModelDetailPage: View {
                     showLastFrameCameraSheet: $showLastFrameCameraSheet,
                     color: .purple,
                     showTitleAndDescription: useStartEndFrameUI,
-                    sectionDescription: useStartEndFrameUI ? "Start frame and end frame are the first and last things you'll see in the generated video." : nil,
+                    sectionDescription: useStartEndFrameUI ? "Start frame and end frame are the first and last things you'll see in the generated video. The end frame is optional." : nil,
                     endFrameTitle: useStartEndFrameUI ? "End Frame (optional)" : "End Frame"
                 ))
         }
@@ -2324,7 +2324,7 @@ private struct VeoModeDescriptionBlock: View {
 
     private var instructions: String {
         switch mode {
-        case .textToVideo: return "Describe your video with a prompt. No reference or frame images are used."
+        case .textToVideo: return "Describe your video with a prompt. No images are used."
         case .imageToVideo: return "Upload one or more reference images to guide the style and content of your video. Use a prompt to guide the action."
         case .frameImages: return "Add first and last frame images to control the video start and end. Use a prompt to guide the action."
         }
@@ -2417,7 +2417,7 @@ private struct KlingAI25ModeDescriptionBlock: View {
 
     private var instructions: String {
         switch mode {
-        case .textToVideo: return "Describe your video with a prompt. No reference or frame images are used."
+        case .textToVideo: return "Describe your video with a prompt. No images are used."
         case .imageToVideo: return "Add start and optional end frame. They are the first and last things you'll see in the generated video."
         }
     }
@@ -2465,7 +2465,7 @@ private struct KlingVideo26ModeDescriptionBlock: View {
 
     private var instructions: String {
         switch mode {
-        case .textToVideo: return "Describe your video with a prompt. No reference or motion control inputs are used."
+        case .textToVideo: return "Describe your video with a prompt. No images are used."
         case .imageToVideo: return "Upload one or more reference images to guide the style and content of your video."
         case .motionControl: return "Transfer movements from a reference video to any character image."
         }
@@ -2864,7 +2864,7 @@ private struct FrameImagesSection: View {
                 HStack(spacing: 6) {
                     Image(systemName: "photo.on.rectangle.angled")
                         .foregroundColor(color)
-                    Text("Frame Images (Optional)")
+                    Text("Frame Images")
                         .font(.subheadline)
                         .fontWeight(.semibold)
                         .foregroundColor(.secondary)

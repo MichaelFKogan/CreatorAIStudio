@@ -130,6 +130,7 @@ struct PhotoFilters: View {
     @State private var selectedCategoryTab: String? = nil
     @State private var isMultiSelectMode: Bool = false
     @State private var selectedFilterIds: Set<UUID> = []
+    @State private var showPurchaseCreditsView: Bool = false
     // // Convert presets to InfoPacket format
     // private var presetInfoPackets: [InfoPacket] {
     //     let allModels = ImageModelsViewModel.loadImageModels()
@@ -417,6 +418,18 @@ struct PhotoFilters: View {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     OfflineToolbarIcon()
                 }
+                if authViewModel.user == nil {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button("Pricing") { showPurchaseCreditsView = true }
+                            .font(.system(size: 14, weight: .semibold, design: .rounded))
+                            .foregroundColor(.primary)
+                    }
+                }
+            }
+            .sheet(isPresented: $showPurchaseCreditsView) {
+                PurchaseCreditsView()
+                    .environmentObject(authViewModel)
+                    .presentationDragIndicator(.visible)
             }
 
             NavigationLink(

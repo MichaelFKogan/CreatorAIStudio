@@ -8,6 +8,7 @@ struct ImageModelsPage: View {
     @StateObject private var viewModel = ImageModelsViewModel()
     @AppStorage("imageModelsIsGridView") private var isGridView = true
     @EnvironmentObject var authViewModel: AuthViewModel
+    @State private var showPurchaseCreditsView: Bool = false
 
     var body: some View {
         NavigationView {
@@ -34,6 +35,18 @@ struct ImageModelsPage: View {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     OfflineToolbarIcon()
                 }
+                if authViewModel.user == nil {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button("Pricing") { showPurchaseCreditsView = true }
+                            .font(.system(size: 14, weight: .semibold, design: .rounded))
+                            .foregroundColor(.primary)
+                    }
+                }
+            }
+            .sheet(isPresented: $showPurchaseCreditsView) {
+                PurchaseCreditsView()
+                    .environmentObject(authViewModel)
+                    .presentationDragIndicator(.visible)
             }
         }
     }
@@ -44,6 +57,7 @@ struct ImageModelsPageContent: View {
     @StateObject private var viewModel = ImageModelsViewModel()
     @AppStorage("imageModelsIsGridView") private var isGridView = true
     @EnvironmentObject var authViewModel: AuthViewModel
+    @State private var showPurchaseCreditsView: Bool = false
 
     var body: some View {
         NavigationView {
@@ -70,6 +84,18 @@ struct ImageModelsPageContent: View {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     OfflineToolbarIcon()
                 }
+                if authViewModel.user == nil {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button("Pricing") { showPurchaseCreditsView = true }
+                            .font(.system(size: 14, weight: .semibold, design: .rounded))
+                            .foregroundColor(.primary)
+                    }
+                }
+            }
+            .sheet(isPresented: $showPurchaseCreditsView) {
+                PurchaseCreditsView()
+                    .environmentObject(authViewModel)
+                    .presentationDragIndicator(.visible)
             }
         }
     }

@@ -30,6 +30,7 @@ struct WavespeedFilterDetailPage: View {
     @State private var videoPlayer: AVPlayer? = nil
     @State private var isBannerVideoReady: Bool = false
     @State private var playerItemObserver: NSKeyValueObservation? = nil
+    @State private var showFullScreenVideo: Bool = false
     @AppStorage("videoFilterPreviewMuted") private var isVideoMuted: Bool = true
     
     @EnvironmentObject var authViewModel: AuthViewModel
@@ -63,7 +64,8 @@ struct WavespeedFilterDetailPage: View {
                                 price: currentPrice,
                                 videoPlayer: $videoPlayer,
                                 isVideoMuted: $isVideoMuted,
-                                isBannerVideoReady: isBannerVideoReady
+                                isBannerVideoReady: isBannerVideoReady,
+                                onVideoTap: { showFullScreenVideo = true }
                             )
                         )
                         
@@ -208,6 +210,11 @@ struct WavespeedFilterDetailPage: View {
         }
         .sheet(isPresented: $showPurchaseCreditsView) {
             PurchaseCreditsView()
+        }
+        .sheet(isPresented: $showFullScreenVideo) {
+            if let url = getVideoURL(for: item) {
+                FullScreenVideoSheet(isPresented: $showFullScreenVideo, videoURL: url)
+            }
         }
     }
     
@@ -366,6 +373,7 @@ private struct WavespeedBannerSection: View {
     @Binding var videoPlayer: AVPlayer?
     @Binding var isVideoMuted: Bool
     let isBannerVideoReady: Bool
+    var onVideoTap: (() -> Void)? = nil
     
     private func getVideoURL(for item: InfoPacket) -> URL? {
         if let urlString = item.display.detailVideoURL, !urlString.isEmpty, let url = URL(string: urlString) {
@@ -396,7 +404,8 @@ private struct WavespeedBannerSection: View {
                 videoPlayer: videoPlayer,
                 isVideoMuted: $isVideoMuted,
                 isVideoLoading: getVideoURL(for: item) != nil && (videoPlayer == nil || !isBannerVideoReady),
-                showMuteButton: false
+                showMuteButton: false,
+                onVideoTap: onVideoTap
             )
             .padding(.bottom, 8)
             
