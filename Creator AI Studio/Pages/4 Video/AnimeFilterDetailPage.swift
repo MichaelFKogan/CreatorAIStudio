@@ -562,6 +562,7 @@ private struct AnimeBannerSection: View {
                 videoPlayer: videoPlayer,
                 isVideoMuted: $isVideoMuted,
                 isVideoLoading: getVideoURL(for: item) != nil && (videoPlayer == nil || !isBannerVideoReady),
+                showLeftImageAndArrow: false,
                 onVideoTap: onVideoTap
             )
             .padding(.bottom, 8)

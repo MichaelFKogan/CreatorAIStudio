@@ -691,6 +691,8 @@ struct DiagonalOverlappingVideoImages: View {
     var isVideoLoading: Bool = false
     /// When false, the mute/unmute overlay is hidden (e.g. for silent previews like WaveSpeed filters).
     var showMuteButton: Bool = true
+    /// When false, the "your photo" frame and arrow are hidden (video only).
+    var showLeftImageAndArrow: Bool = true
     /// Called when user taps the large banner video (e.g. to open full-screen sheet).
     var onVideoTap: (() -> Void)? = nil
 
@@ -704,7 +706,7 @@ struct DiagonalOverlappingVideoImages: View {
         let rightVideoWidth = availableWidth * 0.825  // 10% bigger (0.75 * 1.10)
         let leftImageHeight = leftImageWidth * 1.38
         let rightVideoHeight = rightVideoWidth * 1.38
-        let contentHeight = max(leftImageHeight, rightVideoHeight) + 40  // Extra space for shadows and arrow
+        let contentHeight = showLeftImageAndArrow ? (max(leftImageHeight, rightVideoHeight) + 40) : (rightVideoHeight + 20)
         let calculatedHeight = max(280, min(400, contentHeight))  // Clamp between 280 and 400
 
         GeometryReader { geometry in
@@ -821,43 +823,45 @@ struct DiagonalOverlappingVideoImages: View {
                     onVideoTap?()
                 }
                 
-                // Left image (smaller, overlapping top-left corner)
-                Image(leftImageName)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(width: leftImageWidth, height: leftImageHeight)
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 16)
-                            .stroke(
-                                LinearGradient(
-                                    colors: [.white, .gray],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing),
-                                lineWidth: 2
-                            )
-                    )
-                    .shadow(
-                        color: Color.black.opacity(0.25), radius: 12, x: -4,
-                        y: 4
-                    )
-                    .rotationEffect(.degrees(-6))
-                    .offset(x: leftImageX, y: leftImageY)
+                if showLeftImageAndArrow {
+                    // Left image (smaller, overlapping top-left corner)
+                    Image(leftImageName)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: leftImageWidth, height: leftImageHeight)
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 16)
+                                .stroke(
+                                    LinearGradient(
+                                        colors: [.white, .gray],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing),
+                                    lineWidth: 2
+                                )
+                        )
+                        .shadow(
+                            color: Color.black.opacity(0.25), radius: 12, x: -4,
+                            y: 4
+                        )
+                        .rotationEffect(.degrees(-6))
+                        .offset(x: leftImageX, y: leftImageY)
 
-                // Arrow pointing from left image center to right video center
-                Image("arrow")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 30, height: 30)  // 25% smaller (40 * 0.75 = 30)
-                    .rotationEffect(.degrees(arrowAngle + (arrowWiggle ? 6 : -6)))
-                    .animation(
-                        .easeInOut(duration: 0.6).repeatForever(
-                            autoreverses: true), value: arrowWiggle
-                    )
-                    .offset(x: arrowX, y: arrowY)
+                    // Arrow pointing from left image center to right video center
+                    Image("arrow")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 30, height: 30)  // 25% smaller (40 * 0.75 = 30)
+                        .rotationEffect(.degrees(arrowAngle + (arrowWiggle ? 6 : -6)))
+                        .animation(
+                            .easeInOut(duration: 0.6).repeatForever(
+                                autoreverses: true), value: arrowWiggle
+                        )
+                        .offset(x: arrowX, y: arrowY)
+                }
             }
             .onAppear {
-                arrowWiggle = true
+                if showLeftImageAndArrow { arrowWiggle = true }
             }
             .frame(width: geometry.size.width, height: geometry.size.height)
         }
