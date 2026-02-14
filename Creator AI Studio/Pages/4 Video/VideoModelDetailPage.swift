@@ -1335,21 +1335,21 @@ private struct BannerSectionVideo: View {
                 .padding(.horizontal, 16)
                 .padding(.top, 16)
 
-                // Model description at bottom of card
-                if let description = item.resolvedModelDescription,
-                    !description.isEmpty
-                {
-                    Text(description)
-                        .font(.system(size: 14))
-                        .foregroundColor(.secondary)
-                        .lineSpacing(4)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .padding(.horizontal, 16)
-                        .padding(.top, 12)
-                        .padding(.bottom, 16)
-                } else {
-                    Color.clear.frame(height: 16)
-                }
+                // // Model description at bottom of card
+                // if let description = item.resolvedModelDescription,
+                //     !description.isEmpty
+                // {
+                //     Text(description)
+                //         .font(.system(size: 14))
+                //         .foregroundColor(.secondary)
+                //         .lineSpacing(4)
+                //         .fixedSize(horizontal: false, vertical: true)
+                //         .padding(.horizontal, 16)
+                //         .padding(.top, 12)
+                //         .padding(.bottom, 16)
+                // } else {
+                //     Color.clear.frame(height: 16)
+                // }
             }
             .background(
                 RoundedRectangle(cornerRadius: 16)
