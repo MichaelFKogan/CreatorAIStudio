@@ -152,20 +152,6 @@ struct AnimeFilterDetailPage: View {
                             showActionSheet: $showActionSheet
                         )
 
-                        VStack(spacing: 6) {
-                            HStack(spacing: 6) {
-                                Spacer()
-                                Image(systemName: "sparkles")
-                                    .font(.system(size: 14))
-                                    .foregroundColor(.pink)
-                                Text("Best results: use a clear portrait or full-body photo")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                Spacer()
-                            }
-                        }
-                        .padding(.horizontal)
-
                         AnimeAspectRatioSection(
                             options: videoAspectOptions,
                             selectedIndex: $selectedAspectIndex
