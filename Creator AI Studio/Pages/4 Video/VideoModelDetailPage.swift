@@ -555,7 +555,7 @@ struct VideoModelDetailPage: View {
                     showLastFrameCameraSheet: $showLastFrameCameraSheet,
                     color: .purple,
                     showTitleAndDescription: useStartEndFrameUI,
-                    sectionDescription: useStartEndFrameUI ? "Start frame and end frame are the first and last things you'll see in the generated video. The end frame is optional." : nil,
+                    sectionDescription: useStartEndFrameUI ? "The start frame will be used as the exact first frame of the generated video. Motion begins from this image. The end frame (optional) will be the final frame." : nil,
                     endFrameTitle: useStartEndFrameUI ? "End Frame (optional)" : "End Frame"
                 ))
         }

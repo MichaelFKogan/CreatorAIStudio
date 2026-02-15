@@ -6,6 +6,7 @@ class VideoFiltersViewModel: ObservableObject {
     @Published var spookyVideoFilters: [InfoPacket] = []
     @Published var mermaidVideoFilters: [InfoPacket] = []
     @Published var animeVideoFilters: [InfoPacket] = []
+    @Published var yetiVideoFilters: [InfoPacket] = []
     @Published var wavespeedVideoFilters: [InfoPacket] = []
     @Published private var categorizedFiltersDict: [String: [InfoPacket]] = [:]
     
@@ -87,6 +88,12 @@ class VideoFiltersViewModel: ObservableObject {
         if let animeURL = Bundle.main.url(forResource: "AnimeVideoFilters", withExtension: "json") {
             loadFromFile(url: animeURL, categoryName: "Anime Video", allFilters: &anime, categorized: &categorized)
         }
+
+        // Load Yeti Video Filters
+        var yeti: [InfoPacket] = []
+        if let yetiURL = Bundle.main.url(forResource: "YetiVideoFilters", withExtension: "json") {
+            loadFromFile(url: yetiURL, categoryName: "Yeti Video", allFilters: &yeti, categorized: &categorized)
+        }
         
         // Load WaveSpeed video-effect filters (Fairy, Runway Model, Minecraft, etc.) with per-item category
         var wavespeed: [InfoPacket] = []
@@ -100,6 +107,7 @@ class VideoFiltersViewModel: ObservableObject {
         spookyVideoFilters = spooky
         mermaidVideoFilters = mermaid
         animeVideoFilters = anime
+        yetiVideoFilters = yeti
         wavespeedVideoFilters = wavespeed
     }
     

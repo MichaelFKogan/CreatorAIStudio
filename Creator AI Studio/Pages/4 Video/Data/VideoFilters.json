@@ -58,16 +58,5 @@
     "cost": 1.1,
     "type": "Video Filter",
     "referenceVideoName": "mamushiReference"
-  },
-  {
-    "display": {
-      "title": "Yeti Vlog",
-      "imageName": "yeti",
-      "detailVideoURL": "https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/videos/yeti.mp4",
-      "description": ""
-    },
-    "prompt": "Create a video with this style",
-    "cost": 1.3,
-    "type": "Video Filter"
   }
 ]

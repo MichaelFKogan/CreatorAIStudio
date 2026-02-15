@@ -8,19 +8,24 @@ struct ExamplePromptsSheet: View {
     @Binding var selectedPrompt: String
     @Binding var isPresented: Bool
     let title: String
+    /// When true, tabs are hidden and only examplePrompts are shown (single list).
+    var singleList: Bool = false
+    /// When true, prompt text is not truncated (no line limit). Default false uses 3 lines.
+    var unlimitedLines: Bool = false
 
     @State private var selectedTab: Int = 0
 
     private var currentPrompts: [String] {
-        selectedTab == 0 ? examplePrompts : examplePromptsTransform
+        singleList ? examplePrompts : (selectedTab == 0 ? examplePrompts : examplePromptsTransform)
     }
 
     var body: some View {
         NavigationView {
             VStack(spacing: 0) {
-                // Tab Switcher
-                TabSwitcher(selectedMode: $selectedTab)
-                    .padding(.top, 8)
+                if !singleList {
+                    TabSwitcher(selectedMode: $selectedTab)
+                        .padding(.top, 8)
+                }
 
                 ScrollView {
                     VStack(spacing: 12) {
@@ -35,7 +40,7 @@ struct ExamplePromptsSheet: View {
                                         .font(.system(size: 14))
                                         .foregroundColor(.primary)
                                         .multilineTextAlignment(.leading)
-                                        .lineLimit(3)
+                                        .lineLimit(unlimitedLines ? nil : 3)
                                         .frame(maxWidth: .infinity, alignment: .leading)
 
                                     // Arrow icon

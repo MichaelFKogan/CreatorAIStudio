@@ -39,6 +39,11 @@ struct Home: View {
         videoFiltersViewModel.animeVideoFilters
     }
 
+    // Yeti Video Filters
+    private var yetiVideoFilters: [InfoPacket] {
+        videoFiltersViewModel.yetiVideoFilters
+    }
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -63,6 +68,14 @@ struct Home: View {
                             VideoRowGrid(
                                 title: "🌀 Anime",
                                 items: animeVideoFilters,
+                                seeAllDestination: nil
+                            )
+                        }
+
+                        if !yetiVideoFilters.isEmpty {
+                            VideoRowGrid(
+                                title: "🦣 Yeti Vlog",
+                                items: yetiVideoFilters,
                                 seeAllDestination: nil
                             )
                         }

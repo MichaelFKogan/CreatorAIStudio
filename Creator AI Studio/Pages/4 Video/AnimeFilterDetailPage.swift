@@ -18,13 +18,17 @@ private enum AnimeInputMode: CaseIterable {
 struct AnimeFilterDetailPage: View {
     @State var item: InfoPacket
 
-    @State private var referenceImage: UIImage? = nil
-    @State private var selectedPhotoItem: PhotosPickerItem? = nil
+    @State private var firstFrameImage: UIImage? = nil
+    @State private var lastFrameImage: UIImage? = nil
+    @State private var showFirstFrameCameraSheet: Bool = false
+    @State private var showLastFrameCameraSheet: Bool = false
+    @State private var showFirstFrameActionSheet: Bool = false
+    @State private var showLastFrameActionSheet: Bool = false
+    @State private var selectedFirstFramePhotoItem: PhotosPickerItem? = nil
+    @State private var selectedLastFramePhotoItem: PhotosPickerItem? = nil
 
     @State private var isGenerating: Bool = false
     @State private var showEmptyImageAlert: Bool = false
-    @State private var showCameraSheet: Bool = false
-    @State private var showActionSheet: Bool = false
     @State private var showSignInSheet: Bool = false
     @State private var showPurchaseCreditsView: Bool = false
     @State private var showInsufficientCreditsAlert: Bool = false
@@ -45,6 +49,7 @@ struct AnimeFilterDetailPage: View {
     @State private var selectedAspectIndex: Int = 0
     @State private var selectedDurationIndex: Int = 0
     @State private var selectedResolutionIndex: Int = 0
+    @State private var generateAudio: Bool = false
     @State private var videoPlayer: AVPlayer? = nil
     @State private var isBannerVideoReady: Bool = false
     @State private var playerItemObserver: NSKeyValueObservation? = nil
@@ -69,20 +74,37 @@ struct AnimeFilterDetailPage: View {
         ResolutionOption(id: "1080p", label: "1080p", description: "Full HD")
     ]
 
+    /// Use Kling VIDEO 2.6 Pro for option lookups so pricing and options match the model page.
+    private var kling26ProItem: InfoPacket {
+        var copy = item
+        copy.display.modelName = "Kling VIDEO 2.6 Pro"
+        return copy
+    }
+
     private var videoDurationOptions: [DurationOption] {
-        ModelConfigurationManager.shared.allowedDurations(for: item) ?? defaultDurationOptions
+        ModelConfigurationManager.shared.allowedDurations(for: kling26ProItem) ?? defaultDurationOptions
     }
 
     private var videoAspectOptions: [AspectRatioOption] {
-        ModelConfigurationManager.shared.allowedAspectRatios(for: item) ?? defaultAspectOptions
+        ModelConfigurationManager.shared.allowedAspectRatios(for: kling26ProItem) ?? defaultAspectOptions
     }
 
     private var videoResolutionOptions: [ResolutionOption] {
-        ModelConfigurationManager.shared.allowedResolutions(for: item) ?? defaultResolutionOptions
+        ModelConfigurationManager.shared.allowedResolutions(for: kling26ProItem) ?? defaultResolutionOptions
     }
 
-    private var examplePrompts: [String] { VideoPromptConstants.examplePrompts }
-    private var transformPrompts: [String] { VideoPromptConstants.transformPrompts }
+    private static let animeExamplePrompts: [String] = [
+        "High-speed anime battle above a collapsing city skyline, two warriors colliding mid-air with explosive supernatural energy, extreme kinetic energy tearing through skyscrapers, exaggerated motion arcs during blade exchanges, brutal kinetic chaos as shockwaves ripple outward, anime-style action timing with split-second freezes before impact, cinematic camera flying alongside the action, camera shaking violently to sell scale and danger.",
+        "Savage high-speed anime fight in a burning forest, warrior sprinting with exaggerated anime speed through falling embers, enemy beast lunging with explosive supernatural energy, brutal kinetic chaos in rapid hit-and-run slashes, exaggerated physics as trees split from pressure alone, cinematic camera weaving through destruction, cinematic camera orbiting and whipping through the chaos.",
+        "Ultra-fast anime fight on a storm-split ocean, fighters skipping across the water surface with exaggerated motion arcs, lightning detonating around them, extreme kinetic energy bursting outward with each clash, anime-style action timing with micro-freezes before violent knockback, cinematic camera flying alongside the action through thunderclouds, camera shaking violently during impacts.",
+        "High-speed anime battle inside a shattered canyon, masked assassin wall-running at exaggerated anime speed, enemy launching explosive supernatural energy blasts, brutal kinetic chaos as rocks disintegrate mid-air, exaggerated physics sending debris spiraling upward, cinematic camera whipping through tight cliff spaces, cinematic camera pans and whip movements amplifying vertigo.",
+        "Uncontrolled savage anime fight in a ruined throne hall, armored warrior charging with extreme kinetic energy, villain descending through floating debris, exaggerated motion arcs in spinning halberd strikes, explosive supernatural energy detonating on contact, anime-style action timing with delayed shockwave release, cinematic camera orbiting and whipping through the chaos, camera shaking violently to sell impact.",
+        "High-speed anime battle on a frozen mountain summit, fighters vanishing and reappearing with exaggerated anime speed, brutal kinetic chaos fracturing the ice beneath them, extreme kinetic energy spiraling upward in visible shock columns, exaggerated physics splitting the ridge apart, cinematic camera flying alongside the action across the cliff edge, cinematic camera pans and whip movements during aerial exchanges.",
+        "Chaotic anime fight in a neon-lit cyberpunk alley, energy-infused martial artist darting between walls, enemy cyborg firing explosive supernatural energy bursts, exaggerated motion arcs during spinning kicks, brutal kinetic chaos shattering holographic billboards, anime-style action timing with rapid speed ramps, cinematic camera weaving through sparks and debris, camera shaking violently at every collision.",
+        "High-speed anime battle inside a volcanic crater, magma erupting under extreme kinetic energy pressure, warrior leaping with exaggerated anime speed toward a towering demon, explosive supernatural energy erupting from blade strikes, exaggerated physics launching lava skyward, brutal kinetic chaos in close-quarters clashes, cinematic camera flying alongside the action through ash clouds.",
+        "Savage high-speed anime fight across collapsing rooftops, rival fighters sprinting with exaggerated motion arcs, brutal kinetic chaos tearing tiles free beneath their feet, explosive supernatural energy igniting mid-air collisions, anime-style action timing with suspended mid-air freeze before final strike, cinematic camera orbiting and whipping through the chaos, camera shaking violently during structural collapse.",
+        "High-speed anime battle in a dimension of floating stone islands, warrior boosting upward with extreme kinetic energy, opponent countering with explosive supernatural energy sphere, exaggerated physics bending the environment around them, brutal kinetic chaos as islands shatter from shockwaves, exaggerated motion arcs in aerial blade spins, cinematic camera flying alongside the action through fragmented sky."
+    ]
 
     private var currentPrice: Decimal? {
         guard selectedAspectIndex < videoAspectOptions.count,
@@ -94,9 +116,14 @@ struct AnimeFilterDetailPage: View {
         let duration = videoDurationOptions[selectedDurationIndex].duration
         let resolution = videoResolutionOptions[selectedResolutionIndex].id
         let aspectRatio = videoAspectOptions[selectedAspectIndex].id
-        return PricingManager.shared.variablePrice(for: modelName, aspectRatio: aspectRatio, resolution: resolution, duration: duration)
+        var price = PricingManager.shared.variablePrice(for: modelName, aspectRatio: aspectRatio, resolution: resolution, duration: duration)
             ?? item.resolvedCost
             ?? item.cost
+        // Kling VIDEO 2.6 Pro: base price includes audio; subtract addon when audio is OFF
+        if !generateAudio, let audioAddon = PricingManager.shared.audioPriceAddon(for: modelName, duration: duration), let p = price {
+            price = p - audioAddon
+        }
+        return price
     }
 
     private var requiredCredits: Double {
@@ -110,7 +137,7 @@ struct AnimeFilterDetailPage: View {
     }
 
     private var hasRequiredImage: Bool {
-        inputMode == .textToVideo || referenceImage != nil
+        inputMode == .textToVideo || firstFrameImage != nil
     }
 
     var body: some View {
@@ -134,6 +161,8 @@ struct AnimeFilterDetailPage: View {
 
                         Divider().padding(.horizontal)
 
+                        AnimeInputModeSection(inputMode: $inputMode)
+
                         AnimePromptSection(
                             prompt: $prompt,
                             isFocused: $isPromptFocused,
@@ -143,14 +172,18 @@ struct AnimeFilterDetailPage: View {
                             isProcessingOCR: $isProcessingOCR
                         )
 
-                        AnimeInputModeSection(inputMode: $inputMode)
-
-                        AnimeImageUploadSection(
-                            referenceImage: $referenceImage,
-                            selectedPhotoItem: $selectedPhotoItem,
-                            showCameraSheet: $showCameraSheet,
-                            showActionSheet: $showActionSheet
-                        )
+                        if inputMode == .imageToVideo {
+                            AnimeFrameImagesSection(
+                                firstFrameImage: $firstFrameImage,
+                                lastFrameImage: $lastFrameImage,
+                                showFirstFrameCameraSheet: $showFirstFrameCameraSheet,
+                                showLastFrameCameraSheet: $showLastFrameCameraSheet,
+                                showFirstFrameActionSheet: $showFirstFrameActionSheet,
+                                showLastFrameActionSheet: $showLastFrameActionSheet,
+                                selectedFirstFramePhotoItem: $selectedFirstFramePhotoItem,
+                                selectedLastFramePhotoItem: $selectedLastFramePhotoItem
+                            )
+                        }
 
                         AnimeAspectRatioSection(
                             options: videoAspectOptions,
@@ -167,6 +200,8 @@ struct AnimeFilterDetailPage: View {
                             selectedIndex: $selectedDurationIndex
                         )
 
+                        AnimeAudioToggleSection(generateAudio: $generateAudio)
+
                         LazyView(
                             AnimeGenerateButton(
                                 isGenerating: $isGenerating,
@@ -179,6 +214,7 @@ struct AnimeFilterDetailPage: View {
                                 action: generate
                             )
                         )
+                        .id("\(selectedAspectIndex)-\(selectedDurationIndex)-\(selectedResolutionIndex)-\(generateAudio)")
 
                         VStack(spacing: 12) {
                             AuthAwareCostCard(
@@ -192,6 +228,7 @@ struct AnimeFilterDetailPage: View {
                                 onBuyCredits: { showPurchaseCreditsView = true }
                             )
                         }
+                        .id("cost-\(selectedAspectIndex)-\(selectedDurationIndex)-\(selectedResolutionIndex)-\(generateAudio)")
                         .padding(.horizontal)
                         .padding(.top, -8)
 
@@ -236,17 +273,30 @@ struct AnimeFilterDetailPage: View {
                 .environmentObject(authViewModel)
                 .presentationDragIndicator(.visible)
         }
-        .sheet(isPresented: $showCameraSheet) {
-            SimpleCameraPicker(isPresented: $showCameraSheet) { capturedImage in
-                referenceImage = capturedImage
+        .sheet(isPresented: $showFirstFrameCameraSheet) {
+            SimpleCameraPicker(isPresented: $showFirstFrameCameraSheet) { capturedImage in
+                firstFrameImage = capturedImage
             }
         }
-        .sheet(isPresented: $showActionSheet) {
+        .sheet(isPresented: $showLastFrameCameraSheet) {
+            SimpleCameraPicker(isPresented: $showLastFrameCameraSheet) { capturedImage in
+                lastFrameImage = capturedImage
+            }
+        }
+        .sheet(isPresented: $showFirstFrameActionSheet) {
             AnimeImageSourceSheet(
-                showCameraSheet: $showCameraSheet,
-                selectedPhotoItem: $selectedPhotoItem,
-                showActionSheet: $showActionSheet,
-                image: $referenceImage
+                showCameraSheet: $showFirstFrameCameraSheet,
+                selectedPhotoItem: $selectedFirstFramePhotoItem,
+                showActionSheet: $showFirstFrameActionSheet,
+                image: $firstFrameImage
+            )
+        }
+        .sheet(isPresented: $showLastFrameActionSheet) {
+            AnimeImageSourceSheet(
+                showCameraSheet: $showLastFrameCameraSheet,
+                selectedPhotoItem: $selectedLastFramePhotoItem,
+                showActionSheet: $showLastFrameActionSheet,
+                image: $lastFrameImage
             )
         }
         .sheet(isPresented: $showPromptCameraSheet) {
@@ -265,11 +315,13 @@ struct AnimeFilterDetailPage: View {
         }
         .sheet(isPresented: $isExamplePromptsPresented) {
             ExamplePromptsSheet(
-                examplePrompts: examplePrompts,
-                examplePromptsTransform: transformPrompts,
+                examplePrompts: Self.animeExamplePrompts,
+                examplePromptsTransform: [],
                 selectedPrompt: $prompt,
                 isPresented: $isExamplePromptsPresented,
-                title: "Example Prompts"
+                title: "Example Prompts",
+                singleList: true,
+                unlimitedLines: true
             )
         }
         .onAppear {
@@ -314,7 +366,7 @@ struct AnimeFilterDetailPage: View {
         .alert("Image Required", isPresented: $showImageRequiredAlert) {
             Button("OK", role: .cancel) {}
         } message: {
-            Text("Please add a reference image for Image to Video.")
+            Text("Please add a start frame image. It will be the first thing seen in the generated video.")
         }
         .alert("Text Recognition", isPresented: $showOCRAlert) {
             Button("OK", role: .cancel) {}
@@ -337,7 +389,7 @@ struct AnimeFilterDetailPage: View {
             return
         }
         guard !isGenerating else { return }
-        if inputMode == .imageToVideo, referenceImage == nil {
+        if inputMode == .imageToVideo, firstFrameImage == nil {
             showImageRequiredAlert = true
             return
         }
@@ -373,15 +425,15 @@ struct AnimeFilterDetailPage: View {
             }
             _ = VideoGenerationCoordinator.shared.startVideoGeneration(
                 item: modifiedItem,
-                image: inputMode == .imageToVideo ? referenceImage : nil,
+                image: nil,
                 userId: userId,
                 duration: selectedDuration,
                 aspectRatio: selectedAspectRatio,
                 resolution: selectedResolution,
                 storedDuration: selectedDuration,
-                generateAudio: false,
-                firstFrameImage: nil,
-                lastFrameImage: nil,
+                generateAudio: generateAudio,
+                firstFrameImage: inputMode == .imageToVideo ? firstFrameImage : nil,
+                lastFrameImage: inputMode == .imageToVideo ? lastFrameImage : nil,
                 referenceVideoURL: nil,
                 motionControlTier: nil,
                 onVideoGenerated: { _ in
@@ -557,73 +609,133 @@ private struct AnimeBannerSection: View {
     }
 }
 
-private struct AnimeImageUploadSection: View {
-    @Binding var referenceImage: UIImage?
-    @Binding var selectedPhotoItem: PhotosPickerItem?
-    @Binding var showCameraSheet: Bool
-    @Binding var showActionSheet: Bool
+private struct AnimeFrameImagesSection: View {
+    @Binding var firstFrameImage: UIImage?
+    @Binding var lastFrameImage: UIImage?
+    @Binding var showFirstFrameCameraSheet: Bool
+    @Binding var showLastFrameCameraSheet: Bool
+    @Binding var showFirstFrameActionSheet: Bool
+    @Binding var showLastFrameActionSheet: Bool
+    @Binding var selectedFirstFramePhotoItem: PhotosPickerItem?
+    @Binding var selectedLastFramePhotoItem: PhotosPickerItem?
+
+    private let color: Color = .purple
+    private let sectionDescription = "The start frame will be used as the exact first frame of the generated video. Motion begins from this image. The end frame (optional) will be the final frame."
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 6) {
-                Image(systemName: "photo.on.rectangle")
-                    .foregroundColor(.purple)
-                Text("Upload Your Image")
+                Image(systemName: "photo.on.rectangle.angled")
+                    .foregroundColor(color)
+                Text("Frame Images")
                     .font(.subheadline)
                     .fontWeight(.semibold)
                     .foregroundColor(.secondary)
                 Spacer()
             }
-            Text("Upload an image to transform into an anime video")
+
+            Text(sectionDescription)
                 .font(.caption)
                 .foregroundColor(.secondary.opacity(0.8))
                 .padding(.bottom, 4)
-            if let image = referenceImage {
+
+            HStack(spacing: 0) {
+                AnimeFrameImageCard(
+                    title: "Start Frame",
+                    image: $firstFrameImage,
+                    showCameraSheet: $showFirstFrameCameraSheet,
+                    showActionSheet: $showFirstFrameActionSheet,
+                    selectedPhotoItem: $selectedFirstFramePhotoItem,
+                    color: color
+                )
+                .frame(maxWidth: .infinity)
+
+                HStack(spacing: 0) {
+                    Spacer().frame(width: 12)
+                    Image(systemName: "arrow.right")
+                        .font(.system(size: 20))
+                        .foregroundColor(color.opacity(0.6))
+                    Spacer().frame(width: 12)
+                }
+
+                AnimeFrameImageCard(
+                    title: "End Frame (optional)",
+                    image: $lastFrameImage,
+                    showCameraSheet: $showLastFrameCameraSheet,
+                    showActionSheet: $showLastFrameActionSheet,
+                    selectedPhotoItem: $selectedLastFramePhotoItem,
+                    color: color
+                )
+                .frame(maxWidth: .infinity)
+            }
+        }
+        .padding(.horizontal)
+    }
+}
+
+private struct AnimeFrameImageCard: View {
+    let title: String
+    @Binding var image: UIImage?
+    @Binding var showCameraSheet: Bool
+    @Binding var showActionSheet: Bool
+    @Binding var selectedPhotoItem: PhotosPickerItem?
+    let color: Color
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title)
+                .font(.caption)
+                .fontWeight(.medium)
+                .foregroundColor(.secondary)
+
+            if let image = image {
                 ZStack(alignment: .topTrailing) {
                     Image(uiImage: image)
                         .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(maxWidth: 140, maxHeight: 196)
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: DesignConstants.frameStyleSlotWidth, height: DesignConstants.frameStyleSlotHeight)
                         .clipShape(RoundedRectangle(cornerRadius: 12))
-                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.purple.opacity(0.6), lineWidth: 2))
-                    Button(action: { referenceImage = nil }) {
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(color.opacity(0.6), lineWidth: 1)
+                        )
+
+                    Button(action: { self.image = nil }) {
                         Image(systemName: "xmark.circle.fill")
-                            .font(.title2)
-                            .foregroundColor(.white)
-                            .background(Circle().fill(Color.red))
+                            .font(.title3)
+                            .foregroundStyle(.white)
+                            .background(Circle().fill(Color.gray))
                     }
-                    .padding(8)
+                    .padding(6)
                 }
             } else {
-                Button { showActionSheet = true } label: {
-                    VStack(spacing: 16) {
-                        Image(systemName: "camera")
-                            .font(.system(size: 40))
-                            .foregroundColor(.gray.opacity(0.5))
-                        VStack(spacing: 4) {
-                            Text("Add Image")
-                                .font(.headline)
-                                .fontWeight(.medium)
-                                .foregroundColor(.gray)
-                            Text("Camera or Gallery")
-                                .font(.caption)
-                                .foregroundColor(.gray.opacity(0.7))
-                        }
+                Button {
+                    showActionSheet = true
+                } label: {
+                    VStack(spacing: 8) {
+                        Image(systemName: "photo")
+                            .font(.system(size: 28))
+                            .foregroundColor(color.opacity(0.7))
+                        Text(title)
+                            .font(.caption)
+                            .fontWeight(.medium)
+                            .foregroundColor(.secondary)
+                        Text("Tap to add")
+                            .font(.caption2)
+                            .foregroundColor(.secondary.opacity(0.8))
                     }
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 120)
-                    .background(Color.gray.opacity(0.03))
+                    .frame(width: DesignConstants.frameStyleSlotWidth, height: DesignConstants.frameStyleSlotHeight)
+                    .background(color.opacity(0.06))
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                     .overlay(
                         RoundedRectangle(cornerRadius: 12)
-                            .strokeBorder(style: StrokeStyle(lineWidth: 3.5, dash: [6, 4]))
-                            .foregroundColor(.gray.opacity(0.4))
+                            .strokeBorder(style: StrokeStyle(lineWidth: 2, dash: [6, 4]))
+                            .foregroundColor(color.opacity(0.3))
                     )
                 }
                 .buttonStyle(PlainButtonStyle())
             }
         }
-        .padding(.horizontal)
     }
 }
 
@@ -778,14 +890,8 @@ private struct AnimeAspectRatioSection: View {
     @Binding var selectedIndex: Int
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text("Size")
-                .font(.caption)
-                .foregroundColor(.secondary)
-                .padding(.top, -6)
-            AspectRatioSelector(options: options, selectedIndex: $selectedIndex, color: .purple)
-        }
-        .padding(.horizontal)
+        AspectRatioSelector(options: options, selectedIndex: $selectedIndex, color: .purple)
+            .padding(.horizontal)
     }
 }
 
@@ -794,14 +900,8 @@ private struct AnimeResolutionSection: View {
     @Binding var selectedIndex: Int
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text("Resolution")
-                .font(.caption)
-                .foregroundColor(.secondary)
-                .padding(.top, -6)
-            ResolutionSelector(options: options, selectedIndex: $selectedIndex, color: .purple)
-        }
-        .padding(.horizontal)
+        ResolutionSelector(options: options, selectedIndex: $selectedIndex, color: .purple)
+            .padding(.horizontal)
     }
 }
 
@@ -810,12 +910,49 @@ private struct AnimeDurationSection: View {
     @Binding var selectedIndex: Int
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text("Duration")
-                .font(.caption)
-                .foregroundColor(.secondary)
-                .padding(.top, -6)
-            DurationSelector(options: options, selectedIndex: $selectedIndex, color: .purple)
+        DurationSelector(options: options, selectedIndex: $selectedIndex, color: .purple)
+            .padding(.horizontal)
+    }
+}
+
+private struct AnimeAudioToggleSection: View {
+    @Binding var generateAudio: Bool
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "waveform")
+                            .foregroundColor(.purple)
+                            .font(.system(size: 14))
+                        Text("Audio Generation")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundColor(.primary)
+                    }
+                    Text("Generate synchronized audio, dialogue, and sound effects")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                Spacer()
+                Toggle("", isOn: $generateAudio)
+                    .toggleStyle(SwitchToggleStyle(tint: .purple))
+                    .labelsHidden()
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color.purple.opacity(0.06))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(
+                        generateAudio ? Color.purple.opacity(0.3) : Color.gray.opacity(0.2),
+                        lineWidth: 1
+                    )
+            )
         }
         .padding(.horizontal)
     }
