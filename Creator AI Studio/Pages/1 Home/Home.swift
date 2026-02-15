@@ -90,20 +90,7 @@ struct Home: View {
                         // }
                         
                         // WaveSpeed video-effect rows by category (Magical, Fashion, Video Games)
-                        if !videoFiltersViewModel.wavespeedFilters(forCategory: "Enchanted").isEmpty {
-                            VideoRowGrid(
-                                title: "✨ Enchanted",
-                                items: videoFiltersViewModel.wavespeedFilters(forCategory: "Enchanted"),
-                                seeAllDestination: nil
-                            )
-                        }
-                        if !videoFiltersViewModel.wavespeedFilters(forCategory: "Video Games").isEmpty {
-                            VideoRowGrid(
-                                title: "🎮 Video Games",
-                                items: videoFiltersViewModel.wavespeedFilters(forCategory: "Video Games"),
-                                seeAllDestination: nil
-                            )
-                        }
+
                         if !videoFiltersViewModel.wavespeedFilters(forCategory: "Creative").isEmpty {
                             VideoRowGrid(
                                 title: "🎨 Creative",
@@ -111,6 +98,23 @@ struct Home: View {
                                 seeAllDestination: nil
                             )
                         }
+
+                        if !videoFiltersViewModel.wavespeedFilters(forCategory: "Enchanted").isEmpty {
+                            VideoRowGrid(
+                                title: "✨ Enchanted",
+                                items: videoFiltersViewModel.wavespeedFilters(forCategory: "Enchanted"),
+                                seeAllDestination: nil
+                            )
+                        }
+
+                        // if !videoFiltersViewModel.wavespeedFilters(forCategory: "Video Games").isEmpty {
+                        //     VideoRowGrid(
+                        //         title: "🎮 Video Games",
+                        //         items: videoFiltersViewModel.wavespeedFilters(forCategory: "Video Games"),
+                        //         seeAllDestination: nil
+                        //     )
+                        // }
+
                         if !videoFiltersViewModel.wavespeedFilters(forCategory: "Superpower").isEmpty {
                             VideoRowGrid(
                                 title: "🦸 Superpower",
@@ -118,20 +122,21 @@ struct Home: View {
                                 seeAllDestination: nil
                             )
                         }
-                        if !videoFiltersViewModel.wavespeedFilters(forCategory: "Art").isEmpty {
-                            VideoRowGrid(
-                                title: "🖼️ Art",
-                                items: videoFiltersViewModel.wavespeedFilters(forCategory: "Art"),
-                                seeAllDestination: nil
-                            )
-                        }
-                        if !videoFiltersViewModel.wavespeedFilters(forCategory: "Red Carpet").isEmpty {
-                            VideoRowGrid(
-                                title: "🌟 Red Carpet",
-                                items: videoFiltersViewModel.wavespeedFilters(forCategory: "Red Carpet"),
-                                seeAllDestination: nil
-                            )
-                        }
+                        
+                        // if !videoFiltersViewModel.wavespeedFilters(forCategory: "Art").isEmpty {
+                        //     VideoRowGrid(
+                        //         title: "🖼️ Art",
+                        //         items: videoFiltersViewModel.wavespeedFilters(forCategory: "Art"),
+                        //         seeAllDestination: nil
+                        //     )
+                        // }
+                        // if !videoFiltersViewModel.wavespeedFilters(forCategory: "Red Carpet").isEmpty {
+                        //     VideoRowGrid(
+                        //         title: "🌟 Red Carpet",
+                        //         items: videoFiltersViewModel.wavespeedFilters(forCategory: "Red Carpet"),
+                        //         seeAllDestination: nil
+                        //     )
+                        // }
 
                         // Category Rows - manually listed
                         if hasCategoryItems("Anime") {

@@ -27,8 +27,14 @@ struct InfoPacket: Codable, Identifiable, Hashable {
     }
     
     /// Resolved cost from centralized PricingManager.
-    /// Falls back to the stored cost property if PricingManager doesn't have a price.
+    /// For variable-priced video models, when the detail page has set an explicit cost (e.g. duration-specific),
+    /// that value is used so the correct price is stored and deducted. Otherwise falls back to PricingManager
+    /// (default config for display) or the stored cost property.
     var resolvedCost: Decimal? {
+        let modelName = display.modelName ?? ""
+        if PricingManager.shared.hasVariablePricing(for: modelName), let explicitCost = cost {
+            return explicitCost
+        }
         return PricingManager.shared.price(for: self) ?? cost
     }
     

@@ -49,7 +49,7 @@ struct AnimeFilterDetailPage: View {
     @State private var selectedAspectIndex: Int = 0
     @State private var selectedDurationIndex: Int = 0
     @State private var selectedResolutionIndex: Int = 0
-    @State private var generateAudio: Bool = false
+    @State private var generateAudio: Bool = true
     @State private var videoPlayer: AVPlayer? = nil
     @State private var isBannerVideoReady: Bool = false
     @State private var playerItemObserver: NSKeyValueObservation? = nil
@@ -231,6 +231,10 @@ struct AnimeFilterDetailPage: View {
                         .id("cost-\(selectedAspectIndex)-\(selectedDurationIndex)-\(selectedResolutionIndex)-\(generateAudio)")
                         .padding(.horizontal)
                         .padding(.top, -8)
+
+                        Divider().padding(.horizontal)
+
+                        AnimePricingTableSection(modelName: "Kling VIDEO 2.6 Pro")
 
                         Color.clear.frame(height: 130)
                     }
@@ -955,6 +959,376 @@ private struct AnimeAudioToggleSection: View {
             )
         }
         .padding(.horizontal)
+    }
+}
+
+// MARK: - Pricing Table (Kling VIDEO 2.6 Pro, no Motion Control)
+
+private struct AnimePricingTableSection: View {
+    let modelName: String
+    @State private var showPricingSheet: Bool = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Button(action: { showPricingSheet = true }) {
+                HStack {
+                    HStack(spacing: 6) {
+                        Image(systemName: "tablecells")
+                            .foregroundColor(.purple)
+                            .font(.system(size: 14))
+                        Text("Pricing Table")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundColor(.primary)
+                    }
+                    Spacer()
+                    HStack(spacing: 4) {
+                        Text("View")
+                            .font(.caption)
+                            .foregroundColor(.purple)
+                        Image(systemName: "chevron.down")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(.purple)
+                    }
+                }
+            }
+            .buttonStyle(PlainButtonStyle())
+        }
+        .padding(.horizontal, 32)
+        .sheet(isPresented: $showPricingSheet) {
+            AnimePricingTableSheetView(modelName: modelName)
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+        }
+    }
+}
+
+private struct AnimePricingTableSheetView: View {
+    let modelName: String
+    @Environment(\.dismiss) private var dismiss
+
+    private var pricingConfig: VideoPricingConfiguration? {
+        PricingManager.shared.pricingConfiguration(for: modelName)
+    }
+
+    private var hasAudioPricing: Bool {
+        PricingManager.shared.hasAudioPricing(for: modelName)
+    }
+
+    var body: some View {
+        NavigationView {
+            ScrollView {
+                VStack(spacing: 20) {
+                    if let config = pricingConfig {
+                        if hasAudioPricing {
+                            AnimePricingTableContentWithAudio(config: config, modelName: modelName)
+                        } else {
+                            AnimePricingTableContent(config: config, showAudioLabel: false)
+                        }
+                    }
+                }
+                .padding()
+            }
+            .navigationTitle("Pricing Table")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") { dismiss() }
+                }
+            }
+        }
+    }
+}
+
+private struct AnimePricingTableContentWithAudio: View {
+    let config: VideoPricingConfiguration
+    let modelName: String
+
+    private var aspectRatios: [String] {
+        Array(config.pricing.keys).sorted { lhs, rhs in
+            let order = ["9:16", "3:4", "1:1", "4:3", "16:9"]
+            let lhsIdx = order.firstIndex(of: lhs) ?? 99
+            let rhsIdx = order.firstIndex(of: rhs) ?? 99
+            return lhsIdx < rhsIdx
+        }
+    }
+
+    private var resolutions: [String] {
+        var resSet = Set<String>()
+        for (_, resDict) in config.pricing {
+            for res in resDict.keys { resSet.insert(res) }
+        }
+        return resSet.sorted { lhs, rhs in
+            let order = ["480p", "720p", "1080p"]
+            let lhsIdx = order.firstIndex(of: lhs) ?? 99
+            let rhsIdx = order.firstIndex(of: rhs) ?? 99
+            return lhsIdx < rhsIdx
+        }
+    }
+
+    private var durations: [Double] {
+        var durSet = Set<Double>()
+        for (_, resDict) in config.pricing {
+            for (_, durDict) in resDict {
+                for dur in durDict.keys { durSet.insert(dur) }
+            }
+        }
+        return durSet.sorted()
+    }
+
+    private func audioAddon(for duration: Double) -> Decimal {
+        PricingManager.shared.audioPriceAddon(for: modelName, duration: duration) ?? 0
+    }
+
+    var body: some View {
+        VStack(spacing: 20) {
+            AnimeAudioPricingCard(
+                title: "With Audio",
+                icon: "speaker.wave.2.fill",
+                aspectRatios: aspectRatios,
+                resolutions: resolutions,
+                durations: durations,
+                config: config,
+                audioAddonProvider: { _ in 0 }
+            )
+            AnimeAudioPricingCard(
+                title: "Without Audio",
+                icon: "speaker.slash",
+                aspectRatios: aspectRatios,
+                resolutions: resolutions,
+                durations: durations,
+                config: config,
+                audioAddonProvider: { duration in -audioAddon(for: duration) }
+            )
+        }
+    }
+}
+
+private struct AnimeAudioPricingCard: View {
+    let title: String
+    let icon: String
+    let aspectRatios: [String]
+    let resolutions: [String]
+    let durations: [Double]
+    let config: VideoPricingConfiguration
+    let audioAddonProvider: (Double) -> Decimal
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 6) {
+                Image(systemName: icon)
+                    .font(.system(size: 12))
+                    .foregroundColor(.purple)
+                Text(title)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.primary)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(Capsule().fill(Color.purple.opacity(0.12)))
+
+            ForEach(resolutions, id: \.self) { resolution in
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(resolution)
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundColor(.secondary)
+                        .padding(.leading, 4)
+
+                    HStack(spacing: 0) {
+                        Text("Size")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundColor(.secondary)
+                            .frame(width: 50, alignment: .leading)
+                        ForEach(durations, id: \.self) { duration in
+                            Text("\(Int(duration))s")
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundColor(.secondary)
+                                .frame(maxWidth: .infinity)
+                        }
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 4)
+
+                    VStack(spacing: 0) {
+                        ForEach(Array(aspectRatios.enumerated()), id: \.element) { index, aspectRatio in
+                            HStack(spacing: 0) {
+                                Text(aspectRatio)
+                                    .font(.system(size: 12, weight: .medium, design: .monospaced))
+                                    .foregroundColor(.primary)
+                                    .frame(width: 50, alignment: .leading)
+                                ForEach(durations, id: \.self) { duration in
+                                    if let basePrice = config.price(aspectRatio: aspectRatio, resolution: resolution, duration: duration) {
+                                        let adjustedPrice = basePrice + audioAddonProvider(duration)
+                                        PriceDisplayView(
+                                            price: adjustedPrice,
+                                            font: .system(size: 12, weight: .medium, design: .rounded),
+                                            foregroundColor: .white
+                                        )
+                                        .frame(maxWidth: .infinity)
+                                    } else {
+                                        Text("-")
+                                            .font(.system(size: 12))
+                                            .foregroundColor(.secondary.opacity(0.5))
+                                            .frame(maxWidth: .infinity)
+                                    }
+                                }
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(index % 2 == 0 ? Color.clear : Color.purple.opacity(0.03))
+                        }
+                    }
+                    .background(
+                        RoundedRectangle(cornerRadius: 10)
+                            .fill(Color.gray.opacity(0.04))
+                    )
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 10)
+                            .stroke(Color.purple.opacity(0.15), lineWidth: 1)
+                    )
+                }
+            }
+        }
+    }
+}
+
+private struct AnimePricingTableContent: View {
+    let config: VideoPricingConfiguration
+    var showAudioLabel: Bool = false
+
+    private var aspectRatios: [String] {
+        Array(config.pricing.keys).sorted { lhs, rhs in
+            let order = ["9:16", "3:4", "1:1", "4:3", "16:9"]
+            let lhsIdx = order.firstIndex(of: lhs) ?? 99
+            let rhsIdx = order.firstIndex(of: rhs) ?? 99
+            return lhsIdx < rhsIdx
+        }
+    }
+
+    private var resolutions: [String] {
+        var resSet = Set<String>()
+        for (_, resDict) in config.pricing {
+            for res in resDict.keys { resSet.insert(res) }
+        }
+        return resSet.sorted { lhs, rhs in
+            let order = ["480p", "720p", "1080p"]
+            let lhsIdx = order.firstIndex(of: lhs) ?? 99
+            let rhsIdx = order.firstIndex(of: rhs) ?? 99
+            return lhsIdx < rhsIdx
+        }
+    }
+
+    private var durations: [Double] {
+        var durSet = Set<Double>()
+        for (_, resDict) in config.pricing {
+            for (_, durDict) in resDict {
+                for dur in durDict.keys { durSet.insert(dur) }
+            }
+        }
+        return durSet.sorted()
+    }
+
+    var body: some View {
+        VStack(spacing: 16) {
+            if showAudioLabel {
+                HStack(spacing: 6) {
+                    Image(systemName: "speaker.wave.2.fill")
+                        .font(.system(size: 12))
+                        .foregroundColor(.purple)
+                    Text("With Audio")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.primary)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(Capsule().fill(Color.purple.opacity(0.12)))
+            }
+            ForEach(resolutions, id: \.self) { resolution in
+                AnimeResolutionPricingCard(
+                    resolution: resolution,
+                    aspectRatios: aspectRatios,
+                    durations: durations,
+                    config: config
+                )
+            }
+        }
+    }
+}
+
+private struct AnimeResolutionPricingCard: View {
+    let resolution: String
+    let aspectRatios: [String]
+    let durations: [Double]
+    let config: VideoPricingConfiguration
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 6) {
+                Image(systemName: "sparkles.tv")
+                    .font(.system(size: 12))
+                    .foregroundColor(.purple)
+                Text(resolution)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.primary)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(Capsule().fill(Color.purple.opacity(0.12)))
+
+            HStack(spacing: 0) {
+                Text("Size")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundColor(.secondary)
+                    .frame(width: 50, alignment: .leading)
+                ForEach(durations, id: \.self) { duration in
+                    Text("\(Int(duration))s")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundColor(.secondary)
+                        .frame(maxWidth: .infinity)
+                }
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 4)
+
+            VStack(spacing: 0) {
+                ForEach(Array(aspectRatios.enumerated()), id: \.element) { index, aspectRatio in
+                    HStack(spacing: 0) {
+                        Text(aspectRatio)
+                            .font(.system(size: 12, weight: .medium, design: .monospaced))
+                            .foregroundColor(.primary)
+                            .frame(width: 50, alignment: .leading)
+                        ForEach(durations, id: \.self) { duration in
+                            if let price = config.price(aspectRatio: aspectRatio, resolution: resolution, duration: duration) {
+                                PriceDisplayView(
+                                    price: price,
+                                    font: .system(size: 12, weight: .medium, design: .rounded),
+                                    foregroundColor: .white
+                                )
+                                .frame(maxWidth: .infinity)
+                            } else {
+                                Text("-")
+                                    .font(.system(size: 12))
+                                    .foregroundColor(.secondary.opacity(0.5))
+                                    .frame(maxWidth: .infinity)
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(index % 2 == 0 ? Color.clear : Color.purple.opacity(0.03))
+                }
+            }
+            .background(
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(Color.gray.opacity(0.04))
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .overlay(
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke(Color.purple.opacity(0.15), lineWidth: 1)
+            )
+        }
     }
 }
 

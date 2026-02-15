@@ -2,6 +2,18 @@
   {
     "display": {
       "title": "Anime",
+      "imageName": "ruinedcity1",
+      "imageNameOriginal": "yourphoto",
+      "detailVideoURL": "https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/videos/anime/ruinedcity1.mp4",
+      "description": ""
+    },
+    "prompt": "High-speed anime combat in a ruined city, samurai sprinting along collapsing buildings, giant mech smashing structures, rapid aerial slashes during jumps, extreme vertical motion, exaggerated physics, cinematic camera flying between skyscrapers, overwhelming momentum.",
+    "cost": 0.7,
+    "type": "Video Filter"
+  },
+  {
+    "display": {
+      "title": "Anime",
       "imageName": "animedragon1",
       "imageNameOriginal": "yourphoto",
       "detailVideoURL": "https://inaffymocuppuddsewyq.supabase.co/storage/v1/object/public/videos/anime/animedragon1.mp4",
